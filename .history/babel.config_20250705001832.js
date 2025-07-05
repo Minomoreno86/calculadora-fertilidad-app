@@ -17,7 +17,8 @@ module.exports = function (api) {
           },
         },
       ],
-      // 🔥 NO incluir expo-router/babel en SDK 50
+      // Asegúrese de que 'expo-router/babel' sea el último plugin
+      'expo-router/babel',
     ],
   };
 };

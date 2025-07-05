@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import { theme } from '@/config/theme';
+import { theme } from '@/config/theme'; // Use this alias path
 
 export default function AppLayout() {
   return (

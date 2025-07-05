@@ -17,7 +17,7 @@ module.exports = function (api) {
           },
         },
       ],
-      // 🔥 NO incluir expo-router/babel en SDK 50
+      // La línea "expo-router/babel" ha sido eliminada.
     ],
   };
 };
