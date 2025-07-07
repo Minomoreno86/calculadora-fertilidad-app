@@ -1,6 +1,5 @@
-// src/presentation/components/common/Text.tsx
 import { Text as RNText, TextProps, StyleSheet } from 'react-native';
-import { theme } from '@/config/theme';
+import { theme } from '../../../config/theme'; // <- Ruta relativa correcta
 
 type TextVariant = keyof typeof theme.typography;
 

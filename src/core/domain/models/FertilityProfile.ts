@@ -1,9 +1,9 @@
 /**
- * Modelo de datos para el perfil de fertilidad y el resultado del cálculo.
+ * Define las estructuras de datos para el perfil de cálculo y el resultado.
  */
 
-// Este es el perfil que la UI deberá construir para pasarlo al calculador.
-// Las claves opcionales corresponden a los modificadores que tenemos.
+// Perfil de cálculo que se construye a partir de los datos del usuario.
+// Contiene todos los posibles factores que modifican la probabilidad.
 export interface CalculationProfile {
   womanAge: number;
   factors: {
@@ -18,28 +18,32 @@ export interface CalculationProfile {
     myoma_submucosal_unreated?: boolean;
     myoma_submucosal_treated?: boolean;
     myoma_intramural_large?: boolean;
-    myoma_subserosal_large?: boolean;
+    myoma_intramural_treated?: boolean; // <-- AÑADIDO
     polyp_unreated?: boolean;
     polyp_multiple_unreated?: boolean;
     polyp_treated?: boolean;
     pelvic_surgery_adhesions?: boolean;
-    pelvic_surgery_adhesiolysis?: boolean;
     cycle_irregular?: boolean;
     infertility_duration_1_2_years?: boolean;
     infertility_duration_over_2_years?: boolean;
+    adenomyosis_diffuse?: boolean; // <-- AÑADIDO
+    adenomyosis_focal?: boolean;   // <-- AÑADIDO
+    uterine_malformation?: boolean; // <-- AÑADIDO
     homa_ir_high?: boolean;
     hypothyroidism_untreated?: boolean;
     hypothyroidism_treated?: boolean;
     hyperprolactinemia_untreated?: boolean;
     hyperprolactinemia_treated?: boolean;
     tubal_obstruction_unilateral?: boolean;
+    tubal_obstruction_bilateral?: boolean;
     semen_moderate_abnormality?: boolean;
     semen_severe_abnormality?: boolean;
   };
 }
 
+// Estructura del resultado final que se entrega
 export interface FertilityResult {
-  anualProbability: number; // Renombrado para mayor claridad
-  perCycleProbability: number; // <-- AÑADIDO
+  anualProbability: number;      // Probabilidad acumulada a 12 meses
+  perCycleProbability: number;   // Probabilidad mensual estimada
   explanation: string;
 }

@@ -1,21 +1,16 @@
 import { Stack } from 'expo-router';
-import { theme } from '@/config/theme';
+import { theme } from '../../src/config/theme'; // <- Ruta relativa
 
 export default function AppLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: {
-          backgroundColor: theme.colors.card,
-        },
+        headerStyle: { backgroundColor: theme.colors.card },
         headerTintColor: theme.colors.text,
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
+        headerTitleStyle: { fontWeight: 'bold' },
       }}
     >
       <Stack.Screen name="index" options={{ title: 'Calculadora' }} />
-      {/* Add a screen for the results page later */}
     </Stack>
   );
 }
