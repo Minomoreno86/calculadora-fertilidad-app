@@ -14,7 +14,7 @@ export function calculateProbability(userInput: UserInput): EvaluationState {
     probabilidad_base_edad_num: 0,
     pronostico_numerico: 0,
     imc_factor: 1.0, ciclo_factor: 1.0, sop_factor: 1.0,
-    endometriosis_factor: 1.0, mioma_factor: 1.0, adenomiosis_factor: 1.0, // Se agregó adenomiosis_factor para cumplir con EvaluationState
+    endometriosis_factor: 1.0, mioma_factor: 1.0, adenomiosis_factor: 1.0,
     polipo_factor: 1.0, hsg_factor: 1.0, otb_factor: 1.0,
     myomaType: userInput.myomaType ?? "",
 
@@ -22,7 +22,7 @@ export function calculateProbability(userInput: UserInput): EvaluationState {
     homa_factor: 1.0, male_factor: 1.0,
     infertility_duration_factor: 1.0,
     pelvic_surgery_factor: 1.0,
-    numero_cirugias_pelvicas: userInput.numero_cirugias_pelvicas ?? 0,
+    numero_cirugias_pelvicas: userInput.numero_cirugias_pelvicas ?? 0, // <-- Added initialization
     diagnostico_potencial_edad: "", comentario_imc: "", comentario_ciclo: "",
     severidad_sop: "No aplica", comentario_endometriosis: "", comentario_miomas: "",
     comentario_adenomiosis: "", comentario_polipo: "", comentario_hsg: "",
@@ -44,7 +44,7 @@ export function calculateProbability(userInput: UserInput): EvaluationState {
   ) || {};
   const endometriosisResult = factorEvaluators.evaluateEndometriosis(evaluation.grado_endometriosis) || {};
   const myomasResult = factorEvaluators.evaluateMyomas(evaluation.myomaType ?? "") || {};
-  const adenomiosisResult = factorEvaluators.evaluateAdenomyosis(userInput.adenomiosisType ?? "");
+  const adenomyosisResult = factorEvaluators.evaluateAdenomiosis(evaluation.tipo_adenomiosis) || {};
   const polypsResult = factorEvaluators.evaluatePolyps(evaluation.tipo_polipo) || {};
   const hsgResult = factorEvaluators.evaluateHsg(evaluation.resultado_hsg) || {};
   const otbResult = factorEvaluators.evaluateOtb(evaluation.tiene_otb) || {};
@@ -53,25 +53,25 @@ export function calculateProbability(userInput: UserInput): EvaluationState {
   const tshResult = factorEvaluators.evaluateTsh(evaluation.tsh) || {};
   const maleFactorResult = factorEvaluators.evaluateMaleFactor(userInput) || {};
 
-  const infertilityResult = factorEvaluators.evaluateInfertilityYears(evaluation.duracion_infertilidad ?? 0) || {};
-  const pelvicSurgeryResult = factorEvaluators.evaluatePelvicSurgeries(evaluation.numero_cirugias_pelvicas ?? 0) || {};
-  const homaResult = factorEvaluators.evaluateHOMA(evaluation.homaIr ?? 0) || {};
+  // 🔧 Nuevos evaluadores corregidos
+ const infertilityResult = factorEvaluators.evaluateInfertilityYears(evaluation.duracion_infertilidad ?? 0) || {};
+ const pelvicSurgeryResult = factorEvaluators.evaluatePelvicSurgeries(evaluation.numero_cirugias_pelvicas ?? 0) || {};
+ const homaResult = factorEvaluators.evaluateHOMA(evaluation.homaIr ?? 0) || {};
 
   // 3. Actualizar el estado con todos los resultados
   evaluation = {
     ...evaluation,
     ...ageBaselineResult, ...imcResult, ...cycleResult, ...pcosResult,
-    ...endometriosisResult, ...myomasResult, ...polypsResult,
+    ...endometriosisResult, ...myomasResult, ...adenomyosisResult, ...polypsResult,
     ...hsgResult, ...otbResult, ...amhResult, ...prolactinResult, ...tshResult,
     ...homaResult, ...maleFactorResult,
     ...infertilityResult, ...pelvicSurgeryResult,
-    comentario_adenomiosis: '', // No 'comentario' property in adenomiosisResult
   };
 
   // 4. Recopilar todos los factores numéricos para la multiplicación
   const factorsToMultiply = [
     evaluation.imc_factor, evaluation.ciclo_factor, evaluation.sop_factor,
-    evaluation.endometriosis_factor, evaluation.mioma_factor, adenomiosisResult.spontaneousFactor,
+    evaluation.endometriosis_factor, evaluation.mioma_factor, evaluation.adenomiosis_factor,
     evaluation.polipo_factor, evaluation.hsg_factor, evaluation.otb_factor,
     evaluation.amh_factor, evaluation.prolactina_factor, evaluation.tsh_factor,
     evaluation.homa_factor, evaluation.male_factor,

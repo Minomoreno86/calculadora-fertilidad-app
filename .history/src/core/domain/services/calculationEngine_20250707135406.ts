@@ -14,7 +14,7 @@ export function calculateProbability(userInput: UserInput): EvaluationState {
     probabilidad_base_edad_num: 0,
     pronostico_numerico: 0,
     imc_factor: 1.0, ciclo_factor: 1.0, sop_factor: 1.0,
-    endometriosis_factor: 1.0, mioma_factor: 1.0, adenomiosis_factor: 1.0, // Se agregó adenomiosis_factor para cumplir con EvaluationState
+    endometriosis_factor: 1.0, mioma_factor: 1.0, // Removido adenomiosis_factor porque ahora se calcula directo
     polipo_factor: 1.0, hsg_factor: 1.0, otb_factor: 1.0,
     myomaType: userInput.myomaType ?? "",
 
@@ -44,7 +44,7 @@ export function calculateProbability(userInput: UserInput): EvaluationState {
   ) || {};
   const endometriosisResult = factorEvaluators.evaluateEndometriosis(evaluation.grado_endometriosis) || {};
   const myomasResult = factorEvaluators.evaluateMyomas(evaluation.myomaType ?? "") || {};
-  const adenomiosisResult = factorEvaluators.evaluateAdenomyosis(userInput.adenomiosisType ?? "");
+  const adenomiosisResult = factorEvaluators.evaluateAdenomyosis(userInput.tipo_adenomiosis);
   const polypsResult = factorEvaluators.evaluatePolyps(evaluation.tipo_polipo) || {};
   const hsgResult = factorEvaluators.evaluateHsg(evaluation.resultado_hsg) || {};
   const otbResult = factorEvaluators.evaluateOtb(evaluation.tiene_otb) || {};
@@ -65,7 +65,7 @@ export function calculateProbability(userInput: UserInput): EvaluationState {
     ...hsgResult, ...otbResult, ...amhResult, ...prolactinResult, ...tshResult,
     ...homaResult, ...maleFactorResult,
     ...infertilityResult, ...pelvicSurgeryResult,
-    comentario_adenomiosis: '', // No 'comentario' property in adenomiosisResult
+    comentario_adenomiosis: adenomiosisResult.comentario ?? '',
   };
 
   // 4. Recopilar todos los factores numéricos para la multiplicación

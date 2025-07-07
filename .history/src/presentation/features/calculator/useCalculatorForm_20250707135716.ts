@@ -36,6 +36,7 @@ export interface FormState {
     spermConcentration: string;
     spermMotility: string;
     spermMorphology: string;
+    numberOfPelvicSurgeries: string; // NUEVO CAMPO
 }
 
 export const useCalculatorForm = () => {
@@ -65,6 +66,7 @@ export const useCalculatorForm = () => {
     spermConcentration: '',
     spermMotility: '',
     spermMorphology: '',
+    numberOfPelvicSurgeries: '0', // <-- CAMPO AÑADIDO
   });
 
   const [calculatedBmi, setCalculatedBmi] = useState<number | null>(null);
@@ -110,12 +112,8 @@ export const useCalculatorForm = () => {
       imc: calculatedBmi,
       duracion_ciclo: formState.cycleLength ? parseInt(formState.cycleLength, 10) : undefined,
       tiene_sop: formState.hasPcos,
-      grado_endometriosis: formState.endometriosisStage === 'stage_1_2' ? 1 : (formState.endometriosisStage === 'stage_3_4' ? 3 : 0),
-      tiene_miomas: formState.myomaType !== 'none',
-      mioma_submucoso: formState.myomaType === 'submucosal',
-      mioma_intramural_significativo: formState.myomaType === 'intramural_large',
-      mioma_subseroso_grande: false,
-      tipo_adenomiosis: formState.adenomyosisType,
+      grado_endometriosis: formState.endometriosisStage ? parseInt(formState.endometriosisStage, 10) : 0,
+      adenomiosisType: formState.adenomyosisType,
       tipo_polipo: formState.polypType,
       resultado_hsg: formState.hsgResult,
       tiene_otb: formState.hasOtb,
@@ -130,7 +128,10 @@ export const useCalculatorForm = () => {
       motilidad_progresiva: formState.spermMotility ? parseFloat(formState.spermMotility) : undefined,
       morfologia_normal: formState.spermMorphology ? parseFloat(formState.spermMorphology) : undefined,
       vitalidad_esperm: undefined,
-    };
+      homaIr: calculatedHoma ?? 0,
+      duracion_infertilidad: formState.infertilityDuration ? parseInt(formState.infertilityDuration, 10) : 0,
+      numero_cirugias_pelvicas: formState.numberOfPelvicSurgeries ? parseInt(formState.numberOfPelvicSurgeries, 10) : 0,
+      myomaType: formState.myomaType,    };
 
     const finalReport = calculateProbability(userInput);
 

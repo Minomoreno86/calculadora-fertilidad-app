@@ -124,12 +124,12 @@ function getMiomaRecommendation(evaluation: EvaluationState): string[] {
 }
 
 function getAdenomiosisRecommendation(evaluation: EvaluationState): string | null {
-  if (evaluation.adenomiosisType === 'focal') {
-  return 'Se detectó adenomiosis focal, lo que puede reducir moderadamente la probabilidad de embarazo espontáneo. Puede considerarse seguimiento y optimización de otros factores antes de tratamientos invasivos.';
-  } else if (evaluation.adenomiosisType === 'diffuse') {
-    return 'Se detectó adenomiosis difusa, lo que impacta significativamente la probabilidad de embarazo espontáneo. Se recomienda valoración por especialista y considerar estrategias avanzadas si no se logra concepción espontánea en un tiempo razonable.';
+  if (evaluation.adenomiosis_factor < 1.0) {
+    return evaluation.comentario_adenomiosis === "Difusa"
+      ? RECOMENDACIONES.ADENO_DIFUSA
+      : RECOMENDACIONES.ADENO_FOCAL;
   }
-  return null; // Si no hay adenomiosis, no se recomienda nada.
+  return null;
 }
 
 function getPolipoRecommendation(evaluation: EvaluationState): string | null {

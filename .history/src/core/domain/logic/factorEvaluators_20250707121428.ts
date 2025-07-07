@@ -85,18 +85,11 @@ export const evaluateMyomas = (type: string) => {
   return { mioma_factor: myomaFactor };
 };
 
-export function evaluateAdenomyosis(adenomyosisType: 'none' | 'focal' | 'diffuse') {
-  switch (adenomyosisType) {
-    case 'none':
-      return { spontaneousFactor: 1.0, ivfFactor: 1.0 };
-    case 'focal':
-      return { spontaneousFactor: 0.8, ivfFactor: 0.85 };
-    case 'diffuse':
-      return { spontaneousFactor: 0.5, ivfFactor: 0.7 };
-    default:
-      return { spontaneousFactor: 1.0, ivfFactor: 1.0 };
-  }
-}
+export const evaluateAdenomiosis = (tipo: string): Partial<EvaluationState> => {
+  if (!tipo || tipo === 'none') return {};
+  if (tipo === "focal") return { comentario_adenomiosis: "Focal", adenomiosis_factor: 0.85 };
+  return { comentario_adenomiosis: "Difusa", adenomiosis_factor: 0.5 };
+};
 
 export const evaluatePolyps = (tipo: string): Partial<EvaluationState> => {
   if (!tipo || tipo === 'none') return {};

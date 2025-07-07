@@ -14,7 +14,7 @@ export interface UserInput {
   tiene_sop: boolean;
   grado_endometriosis: number; // 0 para no, 1-4 para los grados
   myomaType?: string; 
-  adenomiosisType: 'none' | 'focal' | 'diffuse';
+  tipo_adenomiosis: string; // 'focal', 'diffuse', o ''
   tipo_polipo: string; // 'pequeno_unico', etc. o ''
   resultado_hsg: string; // 'normal', 'unilateral', 'bilateral', 'defecto_uterino'
   tiene_otb: boolean;

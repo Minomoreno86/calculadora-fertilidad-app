@@ -1,5 +1,7 @@
-import { StyleSheet, TextInput, View, Switch } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, TextInput, View, Switch, TouchableOpacity } from 'react-native';
 import Text from '../../../../presentation/components/common/Text';
+import { OptionSelectorModal } from '../../../../presentation/components/common/OptionSelectorModal';
 import { SegmentedControl } from '../../../../presentation/components/common/SegmentedControl';
 import {
   EndometriosisStage,
@@ -36,6 +38,10 @@ type Props = {
 };
 
 export const GynecologyHistoryForm = (props: Props) => {
+  const [showEndometriosisModal, setShowEndometriosisModal] = useState(false);
+
+  const [showMyomaModal, setShowMyomaModal] = useState(false);
+
   return (
     <>
       <Text style={styles.groupLabel}>Historia Ginecológica</Text>
@@ -58,19 +64,50 @@ export const GynecologyHistoryForm = (props: Props) => {
         placeholder="Ej: 28"
       />
 
-      <Text style={styles.label}>Endometriosis</Text>
-      <SegmentedControl
-        options={['none', 'stage_1_2', 'stage_3_4']}
-        selectedValue={props.endometriosisStage}
-        onSelect={(value) => props.setEndometriosisStage(value as EndometriosisStage)}
-      />
+   <Text style={styles.label}>Endometriosis</Text>
+<TouchableOpacity
+  style={styles.input}
+  onPress={() => setShowEndometriosisModal(true)}
+>
+  <Text>
+    {props.endometriosisStage === 'none' ? 'Seleccione una opción' : props.endometriosisStage}
+  </Text>
+</TouchableOpacity>
 
-      <Text style={styles.label}>Miomas Uterinos</Text>
-      <SegmentedControl
-        options={['none', 'submucosal', 'intramural_large']}
-        selectedValue={props.myomaType}
-        onSelect={(value) => props.setMyomaType(value as MyomaType)}
-      />
+<OptionSelectorModal
+  visible={showEndometriosisModal}
+  selectedValue={props.endometriosisStage}
+  options={[
+    { label: 'Sin endometriosis', value: '0' }, // ✅ Opción de limpieza (obligatoria)
+    { label: 'Grado 1 - Mínima', value: '1' },
+    { label: 'Grado 2 - Leve', value: '2' },
+    { label: 'Grado 3 - Moderada', value: '3' },
+    { label: 'Grado 4 - Severa', value: '4' },
+  ]}
+  onSelect={(value) => props.setEndometriosisStage(value as EndometriosisStage)}
+  onClose={() => setShowEndometriosisModal(false)}
+/>
+<OptionSelectorModal
+  visible={showMyomaModal}
+  selectedValue={props.myomaType}
+  options={[
+    { label: 'Sin miomas', value: 'none' }, // ✅ Opción de limpieza
+    { label: 'Submucoso (> 1 cm)', value: 'submucosal' },
+    { label: 'Intramural (> 4 cm)', value: 'intramural_large' },
+    { label: 'Subseroso', value: 'subserosal' },
+  ]}
+  onSelect={(value) => props.setMyomaType(value as MyomaType)}
+  onClose={() => setShowMyomaModal(false)}
+/>
+   <Text style={styles.label}>Miomas Uterinos</Text>
+<TouchableOpacity
+  style={styles.input}
+  onPress={() => setShowMyomaModal(true)}
+>
+  <Text>
+    {props.myomaType === 'none' ? 'Seleccione una opción' : props.myomaType}
+  </Text>
+</TouchableOpacity>
 
       <Text style={styles.label}>Pólipos Endometriales</Text>
       <SegmentedControl
