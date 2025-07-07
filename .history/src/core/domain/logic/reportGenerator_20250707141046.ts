@@ -124,18 +124,25 @@ function getMiomaRecommendation(evaluation: EvaluationState): string[] {
 }
 
 function getAdenomiosisRecommendation(evaluation: EvaluationState): string | null {
-  if (evaluation.adenomiosis_factor < 1.0) {
-    return evaluation.comentario_adenomiosis === "Difusa"
-      ? RECOMENDACIONES.ADENO_DIFUSA
-      : RECOMENDACIONES.ADENO_FOCAL;
+  if (evaluation.adenomiosisType === 'focal') {
+  return 'Se detectó adenomiosis focal, lo que puede reducir moderadamente la probabilidad de embarazo espontáneo. Puede considerarse seguimiento y optimización de otros factores antes de tratamientos invasivos.';
+  } else if (evaluation.adenomiosisType === 'diffuse') {
+    return 'Se detectó adenomiosis difusa, lo que impacta significativamente la probabilidad de embarazo espontáneo. Se recomienda valoración por especialista y considerar estrategias avanzadas si no se logra concepción espontánea en un tiempo razonable.';
   }
-  return null;
+  return null; // Si no hay adenomiosis, no se recomienda nada.
 }
 
 function getPolipoRecommendation(evaluation: EvaluationState): string | null {
-  return evaluation.tipo_polipo && evaluation.tipo_polipo !== 'none'
-    ? RECOMENDACIONES.POLIPO
-    : null;
+  if (evaluation.tipo_polipo === 'small') {
+    return 'Se detectó un pólipo pequeño (< 1 cm). Puede considerarse seguimiento o resección según síntomas.';
+  }
+  if (evaluation.tipo_polipo === 'large') {
+    return 'Se detectó un pólipo grande (≥ 1 cm) o múltiples. Se recomienda resección histeroscópica previa a intentar embarazo.';
+  }
+  if (evaluation.tipo_polipo === 'ostium') {
+    return 'Se detectó un pólipo sobre ostium tubárico. Se recomienda resección histeroscópica, ya que puede obstruir el paso espermático.';
+  }
+  return null;
 }
 
 function getHsgRecommendation(evaluation: EvaluationState): string[] {

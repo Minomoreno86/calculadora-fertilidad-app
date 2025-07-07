@@ -15,7 +15,7 @@ export interface UserInput {
   grado_endometriosis: number; // 0 para no, 1-4 para los grados
   myomaType?: string; 
   adenomiosisType: 'none' | 'focal' | 'diffuse';
-  tipo_polipo: string; // 'pequeno_unico', etc. o ''
+  tipo_polipo: 'none' | 'small' | 'large' | 'ostium';
   resultado_hsg: string; // 'normal', 'unilateral', 'bilateral', 'defecto_uterino'
   tiene_otb: boolean;
    hasPelvicSurgery?: boolean; // Corregido para que coincida con el hook

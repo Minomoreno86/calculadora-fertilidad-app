@@ -133,9 +133,16 @@ function getAdenomiosisRecommendation(evaluation: EvaluationState): string | nul
 }
 
 function getPolipoRecommendation(evaluation: EvaluationState): string | null {
-  return evaluation.tipo_polipo && evaluation.tipo_polipo !== 'none'
-    ? RECOMENDACIONES.POLIPO
-    : null;
+  if (evaluation.tipo_polipo === 'small') {
+    return 'Se detectó un pólipo pequeño (< 1 cm). Puede considerarse seguimiento o resección según síntomas.';
+  }
+  if (evaluation.tipo_polipo === 'large') {
+    return 'Se detectó un pólipo grande (≥ 1 cm) o múltiples. Se recomienda resección histeroscópica previa a intentar embarazo.';
+  }
+  if (evaluation.tipo_polipo === 'ostium') {
+    return 'Se detectó un pólipo sobre ostium tubárico. Se recomienda resección histeroscópica, ya que puede obstruir el paso espermático.';
+  }
+  return null;
 }
 
 function getHsgRecommendation(evaluation: EvaluationState): string[] {

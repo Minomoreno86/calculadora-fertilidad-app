@@ -111,9 +111,9 @@ export const GynecologyHistoryForm = (props: Props) => {
 
       <Text style={styles.label}>Pólipos Endometriales</Text>
       <SegmentedControl
-  options={['none', 'small', 'large', 'ostium']}
-  selectedValue={props.polypType}
-  onSelect={(value) => props.setPolypType(value as PolypType)}
+        options={['none', 'single', 'multiple']}
+        selectedValue={props.polypType}
+        onSelect={(value) => props.setPolypType(value as PolypType)}
       />
 
       <Text style={styles.label}>Adenomiosis</Text>

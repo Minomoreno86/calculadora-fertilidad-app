@@ -85,16 +85,33 @@ export const evaluateMyomas = (type: string) => {
   return { mioma_factor: myomaFactor };
 };
 
-export const evaluateAdenomiosis = (tipo: string): Partial<EvaluationState> => {
-  if (!tipo || tipo === 'none') return {};
-  if (tipo === "focal") return { comentario_adenomiosis: "Focal", adenomiosis_factor: 0.85 };
-  return { comentario_adenomiosis: "Difusa", adenomiosis_factor: 0.5 };
-};
+export function evaluateAdenomyosis(adenomyosisType: 'none' | 'focal' | 'diffuse') {
+  switch (adenomyosisType) {
+    case 'none':
+      return { spontaneousFactor: 1.0, ivfFactor: 1.0 };
+    case 'focal':
+      return { spontaneousFactor: 0.8, ivfFactor: 0.85 };
+    case 'diffuse':
+      return { spontaneousFactor: 0.5, ivfFactor: 0.7 };
+    default:
+      return { spontaneousFactor: 1.0, ivfFactor: 1.0 };
+  }
+}
 
-export const evaluatePolyps = (tipo: string): Partial<EvaluationState> => {
-  if (!tipo || tipo === 'none') return {};
-  return { comentario_polipo: "Pólipo(s) endometrial(es)", polipo_factor: 0.7 };
-};
+export function evaluatePolyps(polypType: 'none' | 'small' | 'large' | 'ostium') {
+  switch (polypType) {
+    case 'none':
+      return { polipo_factor: 1.0, comentario_polipo: 'No se detectan pólipos endometriales.' };
+    case 'small':
+      return { polipo_factor: 0.85, comentario_polipo: 'Se detectó un pólipo endometrial pequeño (< 1 cm).' };
+    case 'large':
+      return { polipo_factor: 0.7, comentario_polipo: 'Se detectó un pólipo grande (≥ 1 cm) o múltiples.' };
+    case 'ostium':
+      return { polipo_factor: 0.5, comentario_polipo: 'Se detectó un pólipo sobre ostium tubárico. Se recomienda resección.' };
+    default:
+      return { polipo_factor: 1.0, comentario_polipo: 'No se detectan pólipos endometriales.' };
+  }
+}
 
 export const evaluateHsg = (resultado?: string): Partial<EvaluationState> => {
   if (!resultado) return { datos_faltantes: ["Resultado de HSG"] };

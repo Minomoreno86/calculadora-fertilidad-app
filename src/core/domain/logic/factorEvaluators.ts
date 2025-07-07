@@ -98,10 +98,20 @@ export function evaluateAdenomyosis(adenomyosisType: 'none' | 'focal' | 'diffuse
   }
 }
 
-export const evaluatePolyps = (tipo: string): Partial<EvaluationState> => {
-  if (!tipo || tipo === 'none') return {};
-  return { comentario_polipo: "Pólipo(s) endometrial(es)", polipo_factor: 0.7 };
-};
+export function evaluatePolyps(polypType: 'none' | 'small' | 'large' | 'ostium') {
+  switch (polypType) {
+    case 'none':
+      return { polipo_factor: 1.0, comentario_polipo: 'No se detectan pólipos endometriales.' };
+    case 'small':
+      return { polipo_factor: 0.85, comentario_polipo: 'Se detectó un pólipo endometrial pequeño (< 1 cm).' };
+    case 'large':
+      return { polipo_factor: 0.7, comentario_polipo: 'Se detectó un pólipo grande (≥ 1 cm) o múltiples.' };
+    case 'ostium':
+      return { polipo_factor: 0.5, comentario_polipo: 'Se detectó un pólipo sobre ostium tubárico. Se recomienda resección.' };
+    default:
+      return { polipo_factor: 1.0, comentario_polipo: 'No se detectan pólipos endometriales.' };
+  }
+}
 
 export const evaluateHsg = (resultado?: string): Partial<EvaluationState> => {
   if (!resultado) return { datos_faltantes: ["Resultado de HSG"] };

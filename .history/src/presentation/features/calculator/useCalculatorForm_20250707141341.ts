@@ -113,8 +113,17 @@ export const useCalculatorForm = () => {
       duracion_ciclo: formState.cycleLength ? parseInt(formState.cycleLength, 10) : undefined,
       tiene_sop: formState.hasPcos,
       grado_endometriosis: formState.endometriosisStage ? parseInt(formState.endometriosisStage, 10) : 0,
-      tipo_adenomiosis: formState.adenomyosisType,
-      tipo_polipo: formState.polypType,
+      adenomiosisType: formState.adenomyosisType,
+      tipo_polipo: (() => {
+        switch (formState.polypType) {
+          case 'single':
+            return 'small';
+          case 'multiple':
+            return 'large';
+          default:
+            return formState.polypType; // 'none'
+        }
+      })(),
       resultado_hsg: formState.hsgResult,
       tiene_otb: formState.hasOtb,
       amh: formState.amhValue ? parseFloat(formState.amhValue) : undefined,
