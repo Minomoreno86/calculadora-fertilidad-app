@@ -133,7 +133,7 @@ export const useCalculatorForm = () => {
       morfologia_normal: formState.spermMorphology ? parseFloat(formState.spermMorphology) : undefined,
       vitalidad_esperm: undefined,
       duracion_infertilidad: formState.infertilityDuration ? parseInt(formState.infertilityDuration, 10) : 0,
-      numero_cirugias_pelvicas: formState.numberOfPelvicSurgeries ? parseInt(formState.numberOfPelvicSurgeries, 10) : 0,
+numero_cirugias_pelvicas: formState.numberOfPelvicSurgeries ? parseInt(formState.numberOfPelvicSurgeries, 10) : 0,
     };
 
     const finalReport = calculateProbability(userInput);

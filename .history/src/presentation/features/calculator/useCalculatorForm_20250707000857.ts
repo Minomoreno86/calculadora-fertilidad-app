@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { runFullEvaluation } from '../../../core/domain/services/calculationEngine';
+import { calculateProbability } from '../../../core/domain/services/calculationEngine';
 
 // If UserInput and EvaluationState are needed, import them from the correct path or define them here
 import { UserInput } from '../../../core/domain/models';
@@ -43,11 +43,11 @@ export const useCalculatorForm = () => {
 
   // Se inicializa el estado con todos los campos, incluyendo el que faltaba
   const [formState, setFormState] = useState<FormState>({
-    age: '32',
-    weight: '65',
+    age: '20',
+    weight: '60',
     height: '165',
     cycleLength: '28',
-    infertilityDuration: '1',
+    infertilityDuration: '0',
     hasPcos: false,
     endometriosisStage: 'none',
     myomaType: 'none',
@@ -132,7 +132,7 @@ export const useCalculatorForm = () => {
       vitalidad_esperm: undefined,
     };
 
-    const finalReport = runFullEvaluation(userInput);
+    const finalReport = calculateProbability(userInput);
 
     router.push({
       pathname: '/results',

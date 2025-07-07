@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { runFullEvaluation } from '../../../core/services/calculationEngine';
-import { UserInput, EvaluationState } from '../../../core/models';
+import { calculateProbability } from '../../../core/domain/services/calculationEngine';
+
+// If UserInput and EvaluationState are needed, import them from the correct path or define them here
+import { UserInput } from '../../../core/domain/models';
 
 // Tipos para las opciones de selección, que también serán usados por los componentes de la UI
 export type EndometriosisStage = 'none' | 'stage_1_2' | 'stage_3_4';
@@ -41,11 +43,11 @@ export const useCalculatorForm = () => {
 
   // Se inicializa el estado con todos los campos, incluyendo el que faltaba
   const [formState, setFormState] = useState<FormState>({
-    age: '32',
-    weight: '65',
+    age: '20',
+    weight: '60',
     height: '165',
     cycleLength: '28',
-    infertilityDuration: '1',
+    infertilityDuration: '0',
     hasPcos: false,
     endometriosisStage: 'none',
     myomaType: 'none',

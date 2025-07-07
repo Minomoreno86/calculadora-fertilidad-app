@@ -9,7 +9,7 @@ export interface UserInput {
   edad: number;
   imc: number | null;
   duracion_ciclo?: number;
-  
+  infertilityDuration?: number;
   // Historial Clínico
   tiene_sop: boolean;
   grado_endometriosis: number; // 0 para no, 1-4 para los grados
@@ -21,7 +21,7 @@ export interface UserInput {
   tipo_polipo: string; // 'pequeno_unico', etc. o ''
   resultado_hsg: string; // 'normal', 'unilateral', 'bilateral', 'defecto_uterino'
   tiene_otb: boolean;
-  
+   hasPelvicSurgery?: boolean; // Corregido para que coincida con el hook
   // Laboratorio
   amh?: number;
   prolactina?: number;
@@ -30,7 +30,8 @@ export interface UserInput {
   insulina_ayunas?: number;
   glicemia_ayunas?: number;
   homaIr?: number; 
-  
+  duracion_infertilidad?: number; // Años de infertilidad
+  numero_cirugias_pelvicas?: number; // Número de cirugías pélvicas
   // Factor Masculino
   volumen_seminal?: number;
   concentracion_esperm?: number;
@@ -60,6 +61,8 @@ export interface EvaluationState extends UserInput {
   tsh_factor: number;
   homa_factor: number;
   male_factor: number;
+  infertility_duration_factor: number; // <-- LÍNEA AÑADIDA
+  pelvic_surgery_factor: number;       // <-- LÍNEA AÑADIDA
   pronostico_numerico: number; // El resultado final en %
   
   // Textos y Diagnósticos

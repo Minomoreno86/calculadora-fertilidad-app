@@ -105,7 +105,8 @@ export const collectClinicalInsights = (
   if (evaluation.adenomiosis_factor < 1.0) {
     recomendaciones.push(evaluation.comentario_adenomiosis === "Difusa" ? RECOMENDACIONES.ADENO_DIFUSA : RECOMENDACIONES.ADENO_FOCAL);
   }
-  if (evaluation.polipo_factor < 1.0) {
+  // La recomendación ahora depende de si el usuario seleccionó un tipo de pólipo diferente a 'none'.
+  if (evaluation.tipo_polipo && evaluation.tipo_polipo !== 'none') {
     recomendaciones.push(RECOMENDACIONES.POLIPO);
   }
   if (evaluation.hsg_factor < 1.0 && evaluation.hsg_factor > 0.0) {

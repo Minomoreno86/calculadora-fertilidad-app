@@ -31,8 +31,6 @@ type Props = {
   setHasPelvicSurgery: (value: boolean) => void;
   hasOtb: boolean;
   setHasOtb: (value: boolean) => void;
-  numberOfPelvicSurgeries: string;
-  setNumberOfPelvicSurgeries: (value: string) => void;
 };
 
 export const GynecologyHistoryForm = (props: Props) => {
@@ -102,18 +100,6 @@ export const GynecologyHistoryForm = (props: Props) => {
         <Text style={styles.labelSwitch}>¿Cirugías pélvicas previas?</Text>
         <Switch onValueChange={props.setHasPelvicSurgery} value={props.hasPelvicSurgery} trackColor={{ false: '#767577', true: theme.colors.primary }}/>
       </View>
-      {props.hasPelvicSurgery && (
-  <>
-    <Text style={styles.label}>Número de cirugías pélvicas</Text>
-    <TextInput
-      style={styles.input}
-      value={props.numberOfPelvicSurgeries}
-      onChangeText={props.setNumberOfPelvicSurgeries}
-      keyboardType="number-pad"
-      placeholder="Ej: 1"
-    />
-  </>
-)}
 
       <View style={styles.switchContainer}>
         <Text style={styles.labelSwitch}>¿Ligadura de trompas (OTB)?</Text>

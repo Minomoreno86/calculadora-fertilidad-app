@@ -57,8 +57,6 @@ export default function CalculatorScreen() {
           setHasPelvicSurgery={(val) => setFormField('hasPelvicSurgery', val)}
           hasOtb={formState.hasOtb}
           setHasOtb={(val) => setFormField('hasOtb', val)}
-          numberOfPelvicSurgeries={formState.numberOfPelvicSurgeries}
-          setNumberOfPelvicSurgeries={(val) => setFormField('numberOfPelvicSurgeries', val)}
         />
         
         {/* Componente 3: Pruebas de Laboratorio */}
