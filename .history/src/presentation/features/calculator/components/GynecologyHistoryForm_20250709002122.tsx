@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, TextInput, View, Switch, TouchableOpacity } from 'react-native';
 import Text from '../../../../presentation/components/common/Text';
 import { OptionSelectorModal } from '../../../../presentation/components/common/OptionSelectorModal';
-import { MyomaType, AdenomyosisType, PolypType, HsgResult } from '../../../../core/domain/models';
+import { MyomaType, AdenomyosisType, PolypType, HsgResult } from '../../../core/domain/models';
 import { theme } from '../../../../config/theme';
 
 type Props = {

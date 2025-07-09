@@ -87,7 +87,7 @@ export interface Report {
   clinicalInsights: string[];
 }
 
-// Interfaz principal que agrupa todos los datos de la evaluación.
+// La interfaz principal que une todo.
 export interface EvaluationState {
   input: UserInput;
   factors: Factors;

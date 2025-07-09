@@ -7,10 +7,15 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
-    }
+    },
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true
   },
   "include": [
     "src",
+    "app",
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",

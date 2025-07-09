@@ -1,5 +1,6 @@
 import { StyleSheet, TextInput } from 'react-native';
 import Text from '../../../../presentation/components/common/Text';
+import { theme } from '../../../../config/theme';
 
 type Props = {
   spermConcentration: string;

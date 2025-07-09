@@ -1,17 +1,10 @@
-// ===================================================================
-// TIPOS ESPECÍFICOS PARA CAMPOS DEL FORMULARIO
-// ===================================================================
-
+// Tipos de String Literal para máxima seguridad
 export type MyomaType = 'none' | 'submucosal' | 'intramural_large' | 'subserosal';
 export type AdenomyosisType = 'none' | 'focal' | 'diffuse';
 export type PolypType = 'none' | 'small' | 'large' | 'ostium';
-export type HsgResult = 'unknown' | 'normal' | 'unilateral' | 'bilateral' | 'malformacion';
+export type HsgResult = 'normal' | 'unilateral' | 'bilateral' | 'malformacion' | 'unknown';
 
-// ===================================================================
-// INTERFACES PRINCIPALES DE DATOS
-// ===================================================================
-
-// Contiene los datos crudos que el usuario introduce.
+// Interfaz con los datos crudos del usuario
 export interface UserInput {
   age: number;
   bmi: number | null;
@@ -36,7 +29,8 @@ export interface UserInput {
   spermNormalMorphology?: number;
 }
 
-// Contiene todos los factores numéricos calculados.
+// **TIPO EXPORTADO AÑADIDO**
+// Contiene todos los factores numéricos que modifican la probabilidad.
 export interface Factors {
   baseAgeProbability: number;
   bmi: number;
@@ -57,7 +51,8 @@ export interface Factors {
   pelvicSurgery: number;
 }
 
-// Contiene todos los textos y comentarios de diagnóstico.
+// **TIPO EXPORTADO AÑADIDO**
+// Contiene todos los textos y comentarios generados durante la evaluación.
 export interface Diagnostics {
   agePotential: string;
   bmiComment: string;
@@ -76,6 +71,7 @@ export interface Diagnostics {
   missingData: string[];
 }
 
+// **TIPO EXPORTADO AÑADIDO**
 // Contiene los resultados finales formateados para la UI.
 export interface Report {
   numericPrognosis: number;
@@ -87,7 +83,7 @@ export interface Report {
   clinicalInsights: string[];
 }
 
-// Interfaz principal que agrupa todos los datos de la evaluación.
+// La interfaz principal ahora usa los tipos anidados.
 export interface EvaluationState {
   input: UserInput;
   factors: Factors;

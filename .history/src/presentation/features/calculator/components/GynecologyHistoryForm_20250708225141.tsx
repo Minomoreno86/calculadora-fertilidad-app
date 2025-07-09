@@ -41,7 +41,9 @@ export const GynecologyHistoryForm = (props: Props) => {
   const [showEndometriosisModal, setShowEndometriosisModal] = useState(false);
 
   const [showMyomaModal, setShowMyomaModal] = useState(false);
-
+  const [showPolypModal, setShowPolypModal] = useState(false);
+  const [showAdenomyosisModal, setShowAdenomyosisModal] = useState(false);
+  const [showHsgModal, setShowHsgModal] = useState(false);
   return (
     <>
       <Text style={styles.groupLabel}>Historia Ginecológica</Text>
@@ -109,26 +111,73 @@ export const GynecologyHistoryForm = (props: Props) => {
   </Text>
 </TouchableOpacity>
 
-      <Text style={styles.label}>Pólipos Endometriales</Text>
-      <SegmentedControl
-        options={['none', 'single', 'multiple']}
-        selectedValue={props.polypType}
-        onSelect={(value) => props.setPolypType(value as PolypType)}
-      />
+     <Text style={styles.label}>Pólipos Endometriales</Text>
+<TouchableOpacity
+  style={styles.input}
+  onPress={() => setShowPolypModal(true)}
+>
+  <Text>
+    {props.polypType === 'none' ? 'Seleccione una opción' : props.polypType}
+  </Text>
+</TouchableOpacity>
 
-      <Text style={styles.label}>Adenomiosis</Text>
-      <SegmentedControl
-        options={['none', 'focal', 'diffuse']}
-        selectedValue={props.adenomyosisType}
-        onSelect={(value) => props.setAdenomyosisType(value as AdenomyosisType)}
-      />
+<OptionSelectorModal
+  visible={showPolypModal}
+  selectedValue={props.polypType}
+  options={[
+    { label: 'Sin pólipos', value: 'none' },
+    { label: 'Pólipo pequeño (< 1 cm)', value: 'small' },
+    { label: 'Pólipo grande (≥ 1 cm o múltiples)', value: 'large' },
+    { label: 'Pólipo sobre ostium tubárico', value: 'ostium' },
+  ]}
+  onSelect={(value) => props.setPolypType(value as PolypType)}
+  onClose={() => setShowPolypModal(false)}
+/>
 
-      <Text style={styles.label}>Resultado Histerosalpingografía (HSG)</Text>
-      <SegmentedControl
-        options={['normal', 'unilateral', 'bilateral', 'malformacion']}
-        selectedValue={props.hsgResult}
-        onSelect={(value) => props.setHsgResult(value as HsgResult)}
-      />
+     <Text style={styles.label}>Adenomiosis</Text>
+<TouchableOpacity
+  style={styles.input}
+  onPress={() => setShowAdenomyosisModal(true)}
+>
+  <Text>
+    {props.adenomyosisType === 'none' ? 'Seleccione una opción' : props.adenomyosisType}
+  </Text>
+</TouchableOpacity>
+
+<OptionSelectorModal
+  visible={showAdenomyosisModal}
+  selectedValue={props.adenomyosisType}
+  options={[
+    { label: 'Sin adenomiosis', value: 'none' },
+    { label: 'Adenomiosis focal', value: 'focal' },
+    { label: 'Adenomiosis difusa', value: 'diffuse' },
+  ]}
+  onSelect={(value) => props.setAdenomyosisType(value as AdenomyosisType)}
+  onClose={() => setShowAdenomyosisModal(false)}
+/>
+
+    <Text style={styles.label}>Resultado Histerosalpingografía (HSG)</Text>
+<TouchableOpacity
+  style={styles.input}
+  onPress={() => setShowHsgModal(true)}
+>
+  <Text>
+    {props.hsgResult === 'normal' ? 'Seleccione una opción' : props.hsgResult}
+  </Text>
+</TouchableOpacity>
+
+<OptionSelectorModal
+  visible={showHsgModal}
+  selectedValue={props.hsgResult}
+  options={[
+    { label: 'Normal', value: 'normal' },
+    { label: 'Obstrucción unilateral', value: 'unilateral' },
+    { label: 'Obstrucción bilateral', value: 'bilateral' },
+    { label: 'Malformación uterina', value: 'malformacion' },
+  ]}
+  onSelect={(value) => props.setHsgResult(value as HsgResult)}
+  onClose={() => setShowHsgModal(false)}
+/>
       
       <View style={styles.switchContainer}>
         <Text style={styles.labelSwitch}>¿Tiene SOP diagnosticado?</Text>
