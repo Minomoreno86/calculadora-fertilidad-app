@@ -3,6 +3,7 @@
   "compilerOptions": {
     "strict": true,
     "jsx": "react-jsx",
+    "types": ["expo", "jest"], // <-- ASEGÚRATE DE QUE "jest" ESTÉ AQUÍ
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
