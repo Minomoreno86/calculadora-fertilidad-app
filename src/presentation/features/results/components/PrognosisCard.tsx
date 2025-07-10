@@ -9,8 +9,8 @@ type Props = { report: Report };
 
 export const PrognosisCard: React.FC<Props> = ({ report }) => {
   const getPrognosisColor = () => {
-    if (report.category === 'BUENO') return theme.colors.primary;
-    if (report.category === 'MODERADO') return theme.colors.secondary;
+    if (report.category === 'BUENO') return theme.colors.success;
+    if (report.category === 'MODERADO') return theme.colors.warning;
     return theme.colors.error;
   };
 
@@ -29,44 +29,35 @@ export const PrognosisCard: React.FC<Props> = ({ report }) => {
 
 const styles = StyleSheet.create({
   mainResultCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 24,
+    ...theme.card,
+    padding: theme.spacing.l,
     alignItems: 'center',
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
+    marginBottom: theme.spacing.m,
   },
   emoji: {
     fontSize: 60,
-    marginBottom: 12,
+    marginBottom: theme.spacing.m,
   },
   prognosisValue: {
-    fontSize: 72,
-    fontWeight: 'bold',
+    ...theme.typography.h1,
+    fontSize: 72, // Override for extra large display
     lineHeight: 80,
   },
   prognosisLabel: {
-    fontSize: 16,
+    ...theme.typography.body,
     color: theme.colors.subtleText,
-    marginTop: -8,
-    marginBottom: 16,
+    marginTop: -theme.spacing.xs,
+    marginBottom: theme.spacing.m,
   },
   prognosisPhrase: {
-    fontSize: 18,
-    fontWeight: '600',
+    ...theme.typography.h3,
     textAlign: 'center',
     color: theme.colors.text,
-    lineHeight: 26,
-    marginBottom: 12,
+    marginBottom: theme.spacing.s,
   },
   benchmarkPhrase: {
-    fontSize: 14,
+    ...theme.typography.small,
     textAlign: 'center',
     color: theme.colors.subtleText,
-    lineHeight: 20,
   },
 });

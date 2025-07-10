@@ -90,16 +90,48 @@ export const SimulatorSection: React.FC<Props> = ({ evaluation }) => {
 };
 
 const styles = StyleSheet.create({
-    card: { padding: 16, borderRadius: 12, backgroundColor: '#FFFFFF', marginBottom: 16 },
-    title: { fontSize: 18, fontWeight: 'bold', marginBottom: 12 },
-    insightRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
-    insightText: { flex: 1, fontWeight: 'bold', paddingRight: 8 },
-    simulateButton: { paddingHorizontal: 10, paddingVertical: 6, backgroundColor: theme.colors.secondary, borderRadius: 15 },
-    simulateButtonText: { color: 'white', fontWeight: 'bold', fontSize: 12 },
-    simulatedCard: { backgroundColor: '#E6F4EA', borderColor: theme.colors.primary, borderWidth: 1 },
-    simulatedText: { fontSize: 16, textAlign: 'center', lineHeight: 24 },
-    prognosisHighlight: { fontSize: 24, fontWeight: 'bold', color: theme.colors.primary, textAlign: 'center', marginVertical: 8 },
-    improvementText: { fontSize: 14, fontStyle: 'italic', textAlign: 'center', color: theme.colors.subtleText },
-    simulateAllButton: { marginTop: 20, padding: 12, backgroundColor: theme.colors.primary, borderRadius: 8, alignItems: 'center' },
-    simulateAllButtonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+    card: { ...theme.card, padding: theme.spacing.l, marginBottom: theme.spacing.m },
+    title: { ...theme.typography.h3, marginBottom: theme.spacing.m },
+    insightRow: { 
+      flexDirection: 'row', 
+      justifyContent: 'space-between', 
+      alignItems: 'center', 
+      paddingVertical: theme.spacing.s,
+      borderBottomWidth: 1, 
+      borderBottomColor: theme.colors.border 
+    },
+    insightText: { flex: 1, ...theme.typography.bodyBold, paddingRight: theme.spacing.xs },
+    simulateButton: { 
+      paddingHorizontal: theme.spacing.s, 
+      paddingVertical: theme.spacing.xs, 
+      backgroundColor: theme.colors.secondary, 
+      borderRadius: 15 
+    },
+    simulateButtonText: { color: theme.colors.buttonText, ...theme.typography.small, fontWeight: 'bold' },
+    simulatedCard: { 
+      backgroundColor: theme.colors.success, 
+      borderColor: theme.colors.primary, 
+      borderWidth: 1 
+    },
+    simulatedText: { ...theme.typography.body, textAlign: 'center' },
+    prognosisHighlight: { 
+      ...theme.typography.h2, 
+      color: theme.colors.primary, 
+      textAlign: 'center', 
+      marginVertical: theme.spacing.s 
+    },
+    improvementText: { 
+      ...theme.typography.small, 
+      fontStyle: 'italic', 
+      textAlign: 'center', 
+      color: theme.colors.subtleText 
+    },
+    simulateAllButton: { 
+      marginTop: theme.spacing.m, 
+      padding: theme.spacing.s, 
+      backgroundColor: theme.colors.primary, 
+      borderRadius: theme.card.borderRadius, 
+      alignItems: 'center' 
+    },
+    simulateAllButtonText: { color: theme.colors.buttonText, ...theme.typography.bodyBold },
 });

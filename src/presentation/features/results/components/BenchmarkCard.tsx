@@ -16,22 +16,20 @@ export const BenchmarkCard: React.FC<Props> = ({ report }) => (
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#F8F9FA',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
+    ...theme.card,
+    backgroundColor: theme.colors.background,
+    padding: theme.spacing.l,
+    marginBottom: theme.spacing.m,
   },
   title: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    ...theme.typography.h3,
     color: theme.colors.subtleText,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: theme.spacing.s,
   },
   text: {
+    ...theme.typography.body,
     textAlign: 'center',
-    fontSize: 16,
-    lineHeight: 24,
     color: theme.colors.text,
   },
 });

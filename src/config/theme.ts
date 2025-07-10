@@ -1,13 +1,15 @@
-// src/config/theme.ts
-
 const PALETTE = {
   primary: '#006B7D',       // Un azul verdoso profesional y calmado
   secondary: '#495D6E',     // Gris azulado para acentos
   white: '#FFFFFF',
-  black: '#0A0A0A',
-  lightGrey: '#F0F2F5',     // Fondo de la app
-  mediumGrey: '#A0AAB8',    // Texto secundario, bordes
-  danger: '#D94545',        // Para errores o alertas
+  black: '#212121',         // Softer black for text
+  lightGrey: '#F8F8F8',     // App background
+  mediumGrey: '#B0B0B0',    // For borders, placeholders
+  darkGrey: '#616161',      // For subtle text
+  success: '#4CAF50',       // Green for positive feedback
+  warning: '#FFC107',       // Amber for warnings
+  danger: '#D32F2F',        // Red for errors
+  info: '#2196F3',          // Blue for informational messages
 };
 
 export const theme = {
@@ -17,32 +19,76 @@ export const theme = {
     background: PALETTE.lightGrey,
     card: PALETTE.white,
     text: PALETTE.black,
-    subtleText: PALETTE.mediumGrey,
+    subtleText: PALETTE.darkGrey,
+    placeholder: PALETTE.mediumGrey,
     buttonPrimary: PALETTE.primary,
     buttonText: PALETTE.white,
     error: PALETTE.danger,
     border: PALETTE.mediumGrey,
+    success: PALETTE.success,
+    warning: PALETTE.warning,
+    info: PALETTE.info,
   },
   spacing: {
-    s: 8,
+    xxs: 4,
+    xs: 8,
+    s: 12,
     m: 16,
     l: 24,
-    xl: 40,
+    xl: 32,
+    xxl: 48,
   },
   typography: {
-    title: {
+    h1: {
+      fontSize: 32,
+      fontWeight: '700',
+      lineHeight: 38,
+      color: PALETTE.black,
+    },
+    h2: {
       fontSize: 24,
       fontWeight: '700',
+      lineHeight: 30,
+      color: PALETTE.black,
+    },
+    h3: {
+      fontSize: 20,
+      fontWeight: '600',
+      lineHeight: 26,
       color: PALETTE.black,
     },
     body: {
       fontSize: 16,
       fontWeight: '400',
+      lineHeight: 24,
+      color: PALETTE.black,
+    },
+    bodyBold: {
+      fontSize: 16,
+      fontWeight: '600',
+      lineHeight: 24,
       color: PALETTE.black,
     },
     caption: {
       fontSize: 12,
-      color: PALETTE.mediumGrey,
+      fontWeight: '400',
+      lineHeight: 18,
+      color: PALETTE.darkGrey,
     },
+    small: {
+      fontSize: 14,
+      fontWeight: '400',
+      lineHeight: 20,
+      color: PALETTE.darkGrey,
+    },
+  },
+  card: {
+    borderRadius: 12,
+    backgroundColor: PALETTE.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
 };
