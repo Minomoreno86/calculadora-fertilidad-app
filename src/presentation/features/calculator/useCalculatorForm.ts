@@ -3,35 +3,36 @@ import { useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { calculateProbability } from '@/core/domain/services/calculationEngine';
 import { UserInput, MyomaType, AdenomyosisType, PolypType, HsgResult } from '@/core/domain/models';
 
 // Zod schema for form validation
 const formSchema = z.object({
-  age: z.string().min(1, 'La edad es obligatoria'),
-  weight: z.string().min(1, 'El peso es obligatorio'),
-  height: z.string().min(1, 'La altura es obligatoria'),
-  cycleLength: z.string().optional(),
-  infertilityDuration: z.string().optional(),
+  age: z.coerce.number().min(1, 'La edad es obligatoria'),
+  weight: z.coerce.number().min(1, 'El peso es obligatorio'),
+  height: z.coerce.number().min(1, 'La altura es obligatoria'),
+  cycleLength: z.coerce.number().optional(),
+  infertilityDuration: z.coerce.number().optional(),
   hasPcos: z.boolean(),
-  endometriosisStage: z.string(),
+  endometriosisStage: z.coerce.number(),
   myomaType: z.nativeEnum(MyomaType),
   adenomyosisType: z.nativeEnum(AdenomyosisType),
   polypType: z.nativeEnum(PolypType),
   hsgResult: z.nativeEnum(HsgResult),
   hasPelvicSurgery: z.boolean(),
-  numberOfPelvicSurgeries: z.string().optional(),
+  numberOfPelvicSurgeries: z.coerce.number().optional(),
   hasOtb: z.boolean(),
-  amhValue: z.string().optional(),
-  tshValue: z.string().optional(),
-  prolactinValue: z.string().optional(),
+  amhValue: z.coerce.number().optional(),
+  tshValue: z.coerce.number().optional(),
+  prolactinValue: z.coerce.number().optional(),
   tpoAbPositive: z.boolean(),
-  insulinValue: z.string().optional(),
-  glucoseValue: z.string().optional(),
-  spermConcentration: z.string().optional(),
-  spermMotility: z.string().optional(),
-  spermMorphology: z.string().optional(),
-  semenVolume: z.string().optional(),
+  insulinValue: z.coerce.number().optional(),
+  glucoseValue: z.coerce.number().optional(),
+  spermConcentration: z.coerce.number().optional(),
+  spermMotility: z.coerce.number().optional(),
+  spermMorphology: z.coerce.number().optional(),
+  semenVolume: z.coerce.number().optional(),
 });
 
 export type FormState = z.infer<typeof formSchema>;
@@ -41,19 +42,19 @@ export const useCalculatorForm = () => {
   const { control, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormState>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      age: '30',
-      weight: '65',
-      height: '165',
-      cycleLength: '28',
-      infertilityDuration: '1',
+      age: 30,
+      weight: 65,
+      height: 165,
+      cycleLength: 28,
+      infertilityDuration: 1,
       hasPcos: false,
-      endometriosisStage: '0',
+      endometriosisStage: 0,
       myomaType: MyomaType.None,
       adenomyosisType: AdenomyosisType.None,
       polypType: PolypType.None,
       hsgResult: HsgResult.Unknown,
       hasPelvicSurgery: false,
-      numberOfPelvicSurgeries: '0',
+      numberOfPelvicSurgeries: 0,
       hasOtb: false,
       tpoAbPositive: false,
     },
@@ -62,8 +63,8 @@ export const useCalculatorForm = () => {
   const watchedFields: FormState = watch();
 
   const calculatedBmi = useMemo(() => {
-    const weightNum = parseFloat(watchedFields.weight);
-    const heightNum = parseFloat(watchedFields.height);
+    const weightNum = watchedFields.weight;
+    const heightNum = watchedFields.height;
     if (weightNum > 0 && heightNum > 0) {
       const heightInMeters = heightNum / 100;
       return weightNum / (heightInMeters * heightInMeters);
@@ -72,45 +73,52 @@ export const useCalculatorForm = () => {
   }, [watchedFields.weight, watchedFields.height]);
 
   const calculatedHoma = useMemo(() => {
-    const insulinNum = parseFloat(watchedFields.insulinValue || '0');
-    const glucoseNum = parseFloat(watchedFields.glucoseValue || '0');
+    const insulinNum = watchedFields.insulinValue || 0;
+    const glucoseNum = watchedFields.glucoseValue || 0;
     if (insulinNum > 0 && glucoseNum > 0) {
       return (insulinNum * glucoseNum) / 405;
     }
     return null;
   }, [watchedFields.insulinValue, watchedFields.glucoseValue]);
 
-  const handleCalculate = (data: FormState) => {
+  const handleCalculate = async (data: FormState) => {
     const userInput: UserInput = {
-      age: parseInt(data.age, 10),
+      age: data.age,
       bmi: calculatedBmi,
-      cycleDuration: data.cycleLength ? parseInt(data.cycleLength, 10) : undefined,
-      infertilityDuration: data.infertilityDuration ? parseInt(data.infertilityDuration, 10) : 0,
+      cycleDuration: data.cycleLength,
+      infertilityDuration: data.infertilityDuration || 0,
       hasPcos: data.hasPcos,
-      endometriosisGrade: parseInt(data.endometriosisStage, 10),
+      endometriosisGrade: data.endometriosisStage,
       myomaType: data.myomaType,
       adenomyosisType: data.adenomyosisType,
       polypType: data.polypType,
       hsgResult: data.hsgResult,
       hasOtb: data.hasOtb,
       hasPelvicSurgery: data.hasPelvicSurgery,
-      pelvicSurgeriesNumber: data.numberOfPelvicSurgeries ? parseInt(data.numberOfPelvicSurgeries, 10) : 0,
-      amh: data.amhValue ? parseFloat(data.amhValue) : undefined,
-      prolactin: data.prolactinValue ? parseFloat(data.prolactinValue) : undefined,
-      tsh: data.tshValue ? parseFloat(data.tshValue) : undefined,
+      pelvicSurgeriesNumber: data.numberOfPelvicSurgeries || 0,
+      amh: data.amhValue,
+      prolactin: data.prolactinValue,
+      tsh: data.tshValue,
       tpoAbPositive: data.tpoAbPositive,
       homaIr: calculatedHoma ?? undefined,
-      spermConcentration: data.spermConcentration ? parseFloat(data.spermConcentration) : undefined,
-      spermProgressiveMotility: data.spermMotility ? parseFloat(data.spermMotility) : undefined,
-      spermNormalMorphology: data.spermMorphology ? parseFloat(data.spermMorphology) : undefined,
+      spermConcentration: data.spermConcentration,
+      spermProgressiveMotility: data.spermMotility,
+      spermNormalMorphology: data.spermMorphology,
     };
 
     const finalReport = calculateProbability(userInput);
 
-    router.push({
-      pathname: '/results',
-      params: { report: JSON.stringify(finalReport) },
-    });
+    try {
+      const reportKey = `report-${Date.now()}`;
+      await AsyncStorage.setItem(reportKey, JSON.stringify(finalReport));
+      router.push({
+        pathname: '/results',
+        params: { reportKey: reportKey },
+      });
+    } catch (error) {
+      console.error('Error saving report to AsyncStorage:', error);
+      // Optionally, handle the error, e.g., show an alert to the user
+    }
   };
 
   return {

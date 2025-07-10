@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, ScrollView, View, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EvaluationState } from 'src/core/domain/models';
 import { suggestTreatments } from 'src/core/domain/services/treatmentSuggester';
 import { theme } from 'src/config/theme';
@@ -16,25 +17,50 @@ import { TreatmentCard } from 'src/presentation/features/results/components/Trea
 
 // --- Pantalla Principal de Resultados ---
 export default function ResultsScreen() {
-  const params = useLocalSearchParams<{ report: string }>();
+  const params = useLocalSearchParams<{ reportKey: string }>();
+  const [evaluation, setEvaluation] = useState<EvaluationState | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Parseo de datos con manejo de errores básico
-  let evaluation: EvaluationState | null = null;
-  try {
-    if (params.report) {
-      evaluation = JSON.parse(params.report);
-    }
-  } catch (error) {
-    console.error('Error parsing evaluation report:', error);
-    // Opcional: podrías navegar hacia atrás o mostrar un mensaje de error
-  }
+  useEffect(() => {
+    const fetchReport = async () => {
+      if (params.reportKey) {
+        try {
+          const storedReport = await AsyncStorage.getItem(params.reportKey);
+          if (storedReport) {
+            setEvaluation(JSON.parse(storedReport));
+            // Optionally, remove the item after reading if it's a one-time use report
+            // await AsyncStorage.removeItem(params.reportKey);
+          } else {
+            console.warn('No report found for key:', params.reportKey);
+          }
+        } catch (error) {
+          console.error('Error fetching or parsing evaluation report:', error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+        console.warn('No reportKey found in params.');
+      }
+    };
+
+    fetchReport();
+  }, [params.reportKey]);
 
   // Estado de carga o error
-  if (!evaluation) {
+  if (loading) {
     return (
       <View style={styles.centeredContainer}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
         <Text style={styles.loadingText}>Cargando tu informe...</Text>
+      </View>
+    );
+  }
+
+  if (!evaluation) {
+    return (
+      <View style={styles.centeredContainer}>
+        <Text style={styles.loadingText}>No se pudo cargar el informe. Por favor, inténtalo de nuevo.</Text>
       </View>
     );
   }
@@ -81,17 +107,19 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 32,
   },
   centeredContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: theme.colors.background,
     padding: 16,
   },
   loadingText: {
-    marginTop: 12,
+    marginTop: 16,
     fontSize: 16,
     color: theme.colors.text,
+    textAlign: 'center',
   },
 });

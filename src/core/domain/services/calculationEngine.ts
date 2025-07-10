@@ -2,115 +2,227 @@ import { UserInput, EvaluationState, Factors, Diagnostics, Report } from '../mod
 import * as factorEvaluators from '../logic/factorEvaluators';
 import * as reportGenerator from '../logic/reportGenerator';
 
+// Constantes para valores por defecto y cadenas comunes
+const DEFAULT_FACTOR_VALUE = 1.0;
+const DEFAULT_AGE_PROBABILITY = 0;
+const DEFAULT_DIAGNOSTIC_COMMENT = '';
+const DEFAULT_PCOS_SEVERITY = 'No Aplica';
+const DEFAULT_OVARIAN_RESERVE = 'No evaluada';
+const DEFAULT_MALE_FACTOR_DETAILED = 'Normal o sin datos';
+
 function _initializeEvaluationState(): { factors: Factors; diagnostics: Diagnostics } {
   const factors: Factors = {
-    baseAgeProbability: 0,
-    bmi: 1.0,
-    cycle: 1.0,
-    pcos: 1.0,
-    endometriosis: 1.0,
-    myoma: 1.0,
-    adenomyosis: 1.0,
-    polyp: 1.0,
-    hsg: 1.0,
-    otb: 1.0,
-    amh: 1.0,
-    prolactin: 1.0,
-    tsh: 1.0,
-    homa: 1.0,
-    male: 1.0,
-    infertilityDuration: 1.0,
-    pelvicSurgery: 1.0,
+    baseAgeProbability: DEFAULT_AGE_PROBABILITY,
+    bmi: DEFAULT_FACTOR_VALUE,
+    cycle: DEFAULT_FACTOR_VALUE,
+    pcos: DEFAULT_FACTOR_VALUE,
+    endometriosis: DEFAULT_FACTOR_VALUE,
+    myoma: DEFAULT_FACTOR_VALUE,
+    adenomyosis: DEFAULT_FACTOR_VALUE,
+    polyp: DEFAULT_FACTOR_VALUE,
+    hsg: DEFAULT_FACTOR_VALUE,
+    otb: DEFAULT_FACTOR_VALUE,
+    amh: DEFAULT_FACTOR_VALUE,
+    prolactin: DEFAULT_FACTOR_VALUE,
+    tsh: DEFAULT_FACTOR_VALUE,
+    homa: DEFAULT_FACTOR_VALUE,
+    male: DEFAULT_FACTOR_VALUE,
+    infertilityDuration: DEFAULT_FACTOR_VALUE,
+    pelvicSurgery: DEFAULT_FACTOR_VALUE,
   };
 
   const diagnostics: Diagnostics = {
-    agePotential: '',
-    bmiComment: '',
-    cycleComment: '',
-    pcosSeverity: 'No Aplica',
-    endometriosisComment: '',
-    myomaComment: '',
-    adenomyosisComment: '',
-    polypComment: '',
-    hsgComment: '',
-    ovarianReserve: 'No evaluada',
-    prolactinComment: '',
-    tshComment: '',
-    homaComment: '',
-    maleFactorDetailed: 'Normal o sin datos',
+    agePotential: DEFAULT_DIAGNOSTIC_COMMENT,
+    bmiComment: DEFAULT_DIAGNOSTIC_COMMENT,
+    cycleComment: DEFAULT_DIAGNOSTIC_COMMENT,
+    pcosSeverity: DEFAULT_PCOS_SEVERITY,
+    endometriosisComment: DEFAULT_DIAGNOSTIC_COMMENT,
+    myomaComment: DEFAULT_DIAGNOSTIC_COMMENT,
+    adenomyosisComment: DEFAULT_DIAGNOSTIC_COMMENT,
+    polypComment: DEFAULT_DIAGNOSTIC_COMMENT,
+    hsgComment: DEFAULT_DIAGNOSTIC_COMMENT,
+    ovarianReserve: DEFAULT_OVARIAN_RESERVE,
+    prolactinComment: DEFAULT_DIAGNOSTIC_COMMENT,
+    tshComment: DEFAULT_DIAGNOSTIC_COMMENT,
+    homaComment: DEFAULT_DIAGNOSTIC_COMMENT,
+    maleFactorDetailed: DEFAULT_MALE_FACTOR_DETAILED,
     missingData: [],
   };
   return { factors, diagnostics };
 }
 
+type FactorEvaluationResult = {
+  factors?: Partial<Factors>;
+  diagnostics?: Partial<Diagnostics>;
+};
+
+/**
+ * Helper function to evaluate a factor and update the factors and diagnostics objects.
+ * It handles default values and accumulates missing data.
+ */
+function _updateEvaluationState<K extends keyof Factors, D extends keyof Diagnostics>(
+  result: FactorEvaluationResult,
+  factors: Factors,
+  diagnostics: Diagnostics,
+  factorKey?: K,
+  diagnosticKey?: D,
+  defaultFactorValue: number = DEFAULT_FACTOR_VALUE,
+  defaultDiagnosticValue: string = DEFAULT_DIAGNOSTIC_COMMENT,
+) {
+  if (factorKey && result.factors && result.factors[factorKey] !== undefined) {
+    factors[factorKey] = result.factors[factorKey] as Factors[K];
+  } else if (factorKey) {
+    factors[factorKey] = defaultFactorValue as Factors[K];
+  }
+
+  if (diagnosticKey && result.diagnostics && result.diagnostics[diagnosticKey] !== undefined) {
+    diagnostics[diagnosticKey] = result.diagnostics[diagnosticKey] as Diagnostics[D];
+  } else if (diagnosticKey) {
+    diagnostics[diagnosticKey] = defaultDiagnosticValue as Diagnostics[D];
+  }
+
+  if (result.diagnostics?.missingData) {
+    diagnostics.missingData.push(...result.diagnostics.missingData);
+  }
+}
+
 function _evaluateAllFactors(userInput: UserInput, factors: Factors, diagnostics: Diagnostics): void {
-  const ageResult = factorEvaluators.evaluateAgeBaseline(userInput.age);
-  factors.baseAgeProbability = ageResult.factors?.baseAgeProbability ?? 0;
-  diagnostics.agePotential = ageResult.diagnostics?.agePotential ?? 'No evaluada';
+  _updateEvaluationState(
+    factorEvaluators.evaluateAgeBaseline(userInput.age),
+    factors,
+    diagnostics,
+    'baseAgeProbability',
+    'agePotential',
+    DEFAULT_AGE_PROBABILITY,
+    DEFAULT_DIAGNOSTIC_COMMENT,
+  );
 
-  const bmiResult = factorEvaluators.evaluateBmi(userInput.bmi);
-  factors.bmi = bmiResult.factors?.bmi ?? 1.0;
-  diagnostics.bmiComment = bmiResult.diagnostics?.bmiComment ?? '';
-  diagnostics.missingData.push(...(bmiResult.diagnostics?.missingData || []));
+  _updateEvaluationState(
+    factorEvaluators.evaluateBmi(userInput.bmi),
+    factors,
+    diagnostics,
+    'bmi',
+    'bmiComment',
+  );
 
-  const cycleResult = factorEvaluators.evaluateCycle(userInput.cycleDuration);
-  factors.cycle = cycleResult.factors?.cycle ?? 1.0;
-  diagnostics.cycleComment = cycleResult.diagnostics?.cycleComment ?? '';
-  diagnostics.missingData.push(...(cycleResult.diagnostics?.missingData || []));
+  _updateEvaluationState(
+    factorEvaluators.evaluateCycle(userInput.cycleDuration),
+    factors,
+    diagnostics,
+    'cycle',
+    'cycleComment',
+  );
 
-  const pcosResult = factorEvaluators.evaluatePcos(userInput.hasPcos, userInput.bmi, userInput.cycleDuration);
-  factors.pcos = pcosResult.factors?.pcos ?? 1.0;
-  diagnostics.pcosSeverity = pcosResult.diagnostics?.pcosSeverity ?? 'No Aplica';
+  _updateEvaluationState(
+    factorEvaluators.evaluatePcos(userInput.hasPcos, userInput.bmi, userInput.cycleDuration),
+    factors,
+    diagnostics,
+    'pcos',
+    'pcosSeverity',
+    DEFAULT_FACTOR_VALUE,
+    DEFAULT_PCOS_SEVERITY,
+  );
 
-  const endometriosisResult = factorEvaluators.evaluateEndometriosis(userInput.endometriosisGrade);
-  factors.endometriosis = endometriosisResult.factors?.endometriosis ?? 1.0;
+  _updateEvaluationState(
+    factorEvaluators.evaluateEndometriosis(userInput.endometriosisGrade),
+    factors,
+    diagnostics,
+    'endometriosis',
+  );
 
-  const myomaResult = factorEvaluators.evaluateMyomas(userInput.myomaType);
-  factors.myoma = myomaResult.factors?.myoma ?? 1.0;
+  _updateEvaluationState(
+    factorEvaluators.evaluateMyomas(userInput.myomaType),
+    factors,
+    diagnostics,
+    'myoma',
+  );
 
-  const adenomyosisResult = factorEvaluators.evaluateAdenomyosis(userInput.adenomyosisType);
-  factors.adenomyosis = adenomyosisResult.factors?.adenomyosis ?? 1.0;
+  _updateEvaluationState(
+    factorEvaluators.evaluateAdenomyosis(userInput.adenomyosisType),
+    factors,
+    diagnostics,
+    'adenomyosis',
+  );
 
-  const polypResult = factorEvaluators.evaluatePolyps(userInput.polypType);
-  factors.polyp = polypResult.factors?.polyp ?? 1.0;
-  diagnostics.polypComment = polypResult.diagnostics?.polypComment ?? '';
+  _updateEvaluationState(
+    factorEvaluators.evaluatePolyps(userInput.polypType),
+    factors,
+    diagnostics,
+    'polyp',
+    'polypComment',
+  );
 
-  const hsgResult = factorEvaluators.evaluateHsg(userInput.hsgResult);
-  factors.hsg = hsgResult.factors?.hsg ?? 1.0;
-  diagnostics.hsgComment = hsgResult.diagnostics?.hsgComment ?? '';
-  diagnostics.missingData.push(...(hsgResult.diagnostics?.missingData || []));
+  _updateEvaluationState(
+    factorEvaluators.evaluateHsg(userInput.hsgResult),
+    factors,
+    diagnostics,
+    'hsg',
+    'hsgComment',
+  );
 
-  const otbResult = factorEvaluators.evaluateOtb(userInput.hasOtb);
-  factors.otb = otbResult.factors?.otb ?? 1.0;
+  _updateEvaluationState(
+    factorEvaluators.evaluateOtb(userInput.hasOtb),
+    factors,
+    diagnostics,
+    'otb',
+  );
 
-  const amhResult = factorEvaluators.evaluateAmh(userInput.amh);
-  factors.amh = amhResult.factors?.amh ?? 1.0;
-  diagnostics.ovarianReserve = amhResult.diagnostics?.ovarianReserve ?? 'No evaluada';
-  diagnostics.missingData.push(...(amhResult.diagnostics?.missingData || []));
+  _updateEvaluationState(
+    factorEvaluators.evaluateAmh(userInput.amh),
+    factors,
+    diagnostics,
+    'amh',
+    'ovarianReserve',
+    DEFAULT_FACTOR_VALUE,
+    DEFAULT_OVARIAN_RESERVE,
+  );
 
-  const prolactinResult = factorEvaluators.evaluateProlactin(userInput.prolactin);
-  factors.prolactin = prolactinResult.factors?.prolactin ?? 1.0;
-  diagnostics.prolactinComment = prolactinResult.diagnostics?.prolactinComment ?? '';
-  diagnostics.missingData.push(...(prolactinResult.diagnostics?.missingData || []));
+  _updateEvaluationState(
+    factorEvaluators.evaluateProlactin(userInput.prolactin),
+    factors,
+    diagnostics,
+    'prolactin',
+    'prolactinComment',
+  );
 
-  const tshResult = factorEvaluators.evaluateTsh(userInput.tsh);
-  factors.tsh = tshResult.factors?.tsh ?? 1.0;
-  diagnostics.tshComment = tshResult.diagnostics?.tshComment ?? '';
-  diagnostics.missingData.push(...(tshResult.diagnostics?.missingData || []));
+  _updateEvaluationState(
+    factorEvaluators.evaluateTsh(userInput.tsh),
+    factors,
+    diagnostics,
+    'tsh',
+    'tshComment',
+  );
 
-  const homaResult = factorEvaluators.evaluateHoma(userInput.homaIr);
-  factors.homa = homaResult.factors?.homa ?? 1.0;
+  _updateEvaluationState(
+    factorEvaluators.evaluateHoma(userInput.homaIr),
+    factors,
+    diagnostics,
+    'homa',
+  );
 
-  const infertilityResult = factorEvaluators.evaluateInfertilityDuration(userInput.infertilityDuration);
-  factors.infertilityDuration = infertilityResult.factors?.infertilityDuration ?? 1.0;
+  _updateEvaluationState(
+    factorEvaluators.evaluateInfertilityDuration(userInput.infertilityDuration),
+    factors,
+    diagnostics,
+    'infertilityDuration',
+  );
 
-  const pelvicSurgeryResult = factorEvaluators.evaluatePelvicSurgeries(userInput.pelvicSurgeriesNumber);
-  factors.pelvicSurgery = pelvicSurgeryResult.factors?.pelvicSurgery ?? 1.0;
+  _updateEvaluationState(
+    factorEvaluators.evaluatePelvicSurgeries(userInput.pelvicSurgeriesNumber),
+    factors,
+    diagnostics,
+    'pelvicSurgery',
+  );
 
-  const maleFactorResult = factorEvaluators.evaluateMaleFactor(userInput);
-  factors.male = maleFactorResult.factors?.male ?? 1.0;
-  diagnostics.maleFactorDetailed = maleFactorResult.diagnostics?.maleFactorDetailed ?? '';
-  diagnostics.missingData.push(...(maleFactorResult.diagnostics?.missingData || []));
+  _updateEvaluationState(
+    factorEvaluators.evaluateMaleFactor(userInput),
+    factors,
+    diagnostics,
+    'male',
+    'maleFactorDetailed',
+    DEFAULT_FACTOR_VALUE,
+    DEFAULT_MALE_FACTOR_DETAILED,
+  );
 }
 
 function _calculateFinalPrognosis(factors: Factors): number {

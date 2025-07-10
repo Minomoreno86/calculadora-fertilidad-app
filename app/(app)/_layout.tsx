@@ -11,6 +11,7 @@ export default function AppLayout() {
       }}
     >
       <Stack.Screen name="index" options={{ title: 'Calculadora' }} />
+      <Stack.Screen name="results" options={{ title: 'Resultados' }} />
     </Stack>
   );
 }

@@ -112,4 +112,39 @@ describe('calculateProbability Engine', () => {
     expect(result.diagnostics.missingData).toContain('Hormona Antimülleriana (AMH)');
     expect(result.diagnostics.missingData).toContain('Resultado de HSG');
   });
+
+  test('debería manejar valores indefinidos en userInput y aplicar valores por defecto', () => {
+    const userInputWithUndefined: UserInput = {
+      ...baseUserInput,
+      amh: undefined, // Simula un valor no proporcionado
+      prolactin: undefined,
+      tsh: undefined,
+      homaIr: undefined,
+      spermConcentration: undefined,
+      spermProgressiveMotility: undefined,
+      spermNormalMorphology: undefined,
+    };
+
+    // Mockear los evaluadores para que devuelvan undefined para los factores y diagnósticos
+    // que se espera que sean undefined en el resultado de la evaluación.
+    mockedFactorEvaluators.evaluateAmh.mockReturnValue({ factors: { amh: undefined }, diagnostics: { ovarianReserve: undefined } });
+    mockedFactorEvaluators.evaluateProlactin.mockReturnValue({ factors: { prolactin: undefined }, diagnostics: { prolactinComment: undefined } });
+    mockedFactorEvaluators.evaluateTsh.mockReturnValue({ factors: { tsh: undefined }, diagnostics: { tshComment: undefined } });
+    mockedFactorEvaluators.evaluateHoma.mockReturnValue({ factors: { homa: undefined } });
+    mockedFactorEvaluators.evaluateMaleFactor.mockReturnValue({ factors: { male: undefined }, diagnostics: { maleFactorDetailed: undefined } });
+
+    const result = calculateProbability(userInputWithUndefined);
+
+    // Verificar que los factores y diagnósticos se inicialicen con los valores por defecto (1.0 para factores, 'No evaluada' o '' para diagnósticos)
+    expect(result.factors.amh).toBe(1.0);
+    expect(result.factors.prolactin).toBe(1.0);
+    expect(result.factors.tsh).toBe(1.0);
+    expect(result.factors.homa).toBe(1.0);
+    expect(result.factors.male).toBe(1.0);
+
+    expect(result.diagnostics.ovarianReserve).toBe('No evaluada');
+    expect(result.diagnostics.prolactinComment).toBe('');
+    expect(result.diagnostics.tshComment).toBe('');
+    expect(result.diagnostics.maleFactorDetailed).toBe('Normal o sin datos');
+  });
 });
