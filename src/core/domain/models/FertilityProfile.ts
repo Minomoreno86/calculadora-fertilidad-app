@@ -27,7 +27,7 @@ export interface CalculationProfile {
     infertility_duration_1_2_years?: boolean;
     infertility_duration_over_2_years?: boolean;
     adenomyosis_diffuse?: boolean; // <-- AÑADIDO
-    adenomyosis_focal?: boolean;   // <-- AÑADIDO
+    adenomyosis_focal?: boolean; // <-- AÑADIDO
     uterine_malformation?: boolean; // <-- AÑADIDO
     homa_ir_high?: boolean;
     hypothyroidism_untreated?: boolean;
@@ -43,7 +43,7 @@ export interface CalculationProfile {
 
 // Estructura del resultado final que se entrega
 export interface FertilityResult {
-  anualProbability: number;      // Probabilidad acumulada a 12 meses
-  perCycleProbability: number;   // Probabilidad mensual estimada
+  anualProbability: number; // Probabilidad acumulada a 12 meses
+  perCycleProbability: number; // Probabilidad mensual estimada
   explanation: string;
 }

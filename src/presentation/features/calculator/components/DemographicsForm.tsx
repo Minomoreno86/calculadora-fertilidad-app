@@ -1,25 +1,22 @@
 import { StyleSheet, View } from 'react-native';
 import { Control, FieldValues, Path } from 'react-hook-form';
-import Text from '../../../../presentation/components/common/Text';
-import { ControlledTextInput } from '../../../../presentation/components/common/ControlledTextInput';
-import { theme } from '../../../../config/theme';
+import Text from '@/presentation/components/common/Text';
+import { ControlledTextInput } from '@/presentation/components/common/ControlledTextInput';
+import { theme } from '@/config/theme';
 
 type Props<TFormValues extends FieldValues> = {
   control: Control<TFormValues>;
   calculatedBmi: number | null;
 };
 
-export const DemographicsForm = <TFormValues extends FieldValues>({
-  control,
-  calculatedBmi,
-}: Props<TFormValues>) => {
+export const DemographicsForm = <TFormValues extends FieldValues>({ control, calculatedBmi }: Props<TFormValues>) => {
   return (
     <View style={styles.container}>
       <Text style={styles.groupLabel}>Perfil Básico</Text>
-      
+
       <ControlledTextInput
         control={control}
-        name={"age" as Path<TFormValues>}
+        name={'age' as Path<TFormValues>}
         label="Edad (años)"
         keyboardType="number-pad"
         placeholder="Ej: 32"
@@ -28,7 +25,7 @@ export const DemographicsForm = <TFormValues extends FieldValues>({
 
       <ControlledTextInput
         control={control}
-        name={"weight" as Path<TFormValues>}
+        name={'weight' as Path<TFormValues>}
         label="Peso (kg)"
         keyboardType="decimal-pad"
         placeholder="Ej: 65"
@@ -37,17 +34,15 @@ export const DemographicsForm = <TFormValues extends FieldValues>({
 
       <ControlledTextInput
         control={control}
-        name={"height" as Path<TFormValues>}
+        name={'height' as Path<TFormValues>}
         label="Altura (cm)"
         keyboardType="number-pad"
         placeholder="Ej: 165"
         iconName="resize-outline"
       />
-      
+
       {calculatedBmi !== null && (
-        <Text style={styles.calculatedValueText}>
-          IMC Calculado: {calculatedBmi.toFixed(2)}
-        </Text>
+        <Text style={styles.calculatedValueText}>IMC Calculado: {calculatedBmi.toFixed(2)}</Text>
       )}
     </View>
   );
@@ -60,8 +55,24 @@ const resolveFontWeight = (fw: any): any => {
     if (fw === 'bold') return '700';
     if (
       [
-        'normal', 'bold', '100', '200', '300', '400', '500', '600', '700', '800', '900',
-        'ultralight', 'thin', 'light', 'medium', 'semibold', 'extrabold', 'black'
+        'normal',
+        'bold',
+        '100',
+        '200',
+        '300',
+        '400',
+        '500',
+        '600',
+        '700',
+        '800',
+        '900',
+        'ultralight',
+        'thin',
+        'light',
+        'medium',
+        'semibold',
+        'extrabold',
+        'black',
       ].includes(fw)
     ) {
       return fw;

@@ -1,17 +1,17 @@
 import { TextStyle } from 'react-native';
 
 const PALETTE = {
-  primary: '#006B7D',       // Un azul verdoso profesional y calmado
-  secondary: '#495D6E',     // Gris azulado para acentos
+  primary: '#006B7D', // Un azul verdoso profesional y calmado
+  secondary: '#495D6E', // Gris azulado para acentos
   white: '#FFFFFF',
-  black: '#212121',         // Softer black for text
-  lightGrey: '#F8F8F8',     // App background
-  mediumGrey: '#B0B0B0',    // For borders, placeholders
-  darkGrey: '#616161',      // For subtle text
-  success: '#4CAF50',       // Green for positive feedback
-  warning: '#FFC107',       // Amber for warnings
-  danger: '#D32F2F',        // Red for errors
-  info: '#2196F3',          // Blue for informational messages
+  black: '#212121', // Softer black for text
+  lightGrey: '#F8F8F8', // App background
+  mediumGrey: '#B0B0B0', // For borders, placeholders
+  darkGrey: '#616161', // For subtle text
+  success: '#4CAF50', // Green for positive feedback
+  warning: '#FFC107', // Amber for warnings
+  danger: '#D32F2F', // Red for errors
+  info: '#2196F3', // Blue for informational messages
 };
 
 export const theme = {

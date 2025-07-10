@@ -26,17 +26,9 @@ const Accordion: React.FC<AccordionProps> = ({ title, children, initialExpanded 
     <View style={styles.container}>
       <TouchableOpacity onPress={toggleExpand} style={styles.header}>
         <Text style={styles.title}>{title}</Text>
-        <Ionicons 
-          name={isExpanded ? 'chevron-up' : 'chevron-down'} 
-          size={24} 
-          color={theme.colors.primary} 
-        />
+        <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={24} color={theme.colors.primary} />
       </TouchableOpacity>
-      {isExpanded && (
-        <View style={styles.content}>
-          {children}
-        </View>
-      )}
+      {isExpanded && <View style={styles.content}>{children}</View>}
     </View>
   );
 };

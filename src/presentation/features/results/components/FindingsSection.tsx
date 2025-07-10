@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import Text from '../../../../presentation/components/common/Text';
-import Box from '../../../../presentation/components/common/Box';
-import { ClinicalFinding } from '../../../../core/domain/models';
-import { theme } from '../../../../config/theme';
+import Text from '@/presentation/components/common/Text';
+import Box from '@/presentation/components/common/Box';
+import { ClinicalFinding } from '@/core/domain/models';
+import { theme } from '@/config/theme';
 
 type Props = { findings: ClinicalFinding[] };
 
@@ -12,7 +12,9 @@ export const FindingsSection: React.FC<Props> = ({ findings }) => {
     return (
       <Box style={styles.card}>
         <Text style={styles.cardTitle}>Hallazgos Clínicos</Text>
-        <Text style={styles.noFindingsText}>No se han identificado factores de riesgo específicos en tu perfil actual. ¡Es una buena noticia!</Text>
+        <Text style={styles.noFindingsText}>
+          No se han identificado factores de riesgo específicos en tu perfil actual. ¡Es una buena noticia!
+        </Text>
       </Box>
     );
   }
@@ -26,7 +28,9 @@ export const FindingsSection: React.FC<Props> = ({ findings }) => {
           <Text style={styles.explanation}>{finding.explanation}</Text>
           <Text style={styles.recTitle}>Recomendaciones:</Text>
           {finding.recommendations.map((rec, recIndex) => (
-            <Text key={recIndex} style={styles.recommendation}>• {rec}</Text>
+            <Text key={recIndex} style={styles.recommendation}>
+              • {rec}
+            </Text>
           ))}
         </View>
       ))}

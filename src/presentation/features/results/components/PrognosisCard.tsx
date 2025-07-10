@@ -17,9 +17,7 @@ export const PrognosisCard: React.FC<Props> = ({ report }) => {
   return (
     <Box style={styles.mainResultCard}>
       <Text style={styles.emoji}>{report.emoji}</Text>
-      <Text style={[styles.prognosisValue, { color: getPrognosisColor() }]}>
-        {report.numericPrognosis.toFixed(1)}%
-      </Text>
+      <Text style={[styles.prognosisValue, { color: getPrognosisColor() }]}>{report.numericPrognosis.toFixed(1)}%</Text>
       <Text style={styles.prognosisLabel}>Probabilidad por Ciclo</Text>
       <Text style={styles.prognosisPhrase}>{report.prognosisPhrase}</Text>
       <Text style={styles.benchmarkPhrase}>{report.benchmarkPhrase}</Text>

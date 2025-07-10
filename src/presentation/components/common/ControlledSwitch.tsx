@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { View, Text, Switch, StyleSheet } from 'react-native';
 import { Control, Controller, FieldValues, Path } from 'react-hook-form';
-import { theme } from '../../../config/theme';
+import { theme } from '@/config/theme';
 
 type ControlledSwitchProps<TFormValues extends FieldValues> = {
   control: Control<TFormValues>;

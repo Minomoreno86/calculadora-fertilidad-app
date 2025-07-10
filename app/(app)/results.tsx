@@ -17,7 +17,7 @@ import { TreatmentCard } from 'src/presentation/features/results/components/Trea
 // --- Pantalla Principal de Resultados ---
 export default function ResultsScreen() {
   const params = useLocalSearchParams<{ report: string }>();
-  
+
   // Parseo de datos con manejo de errores básico
   let evaluation: EvaluationState | null = null;
   try {
@@ -25,7 +25,7 @@ export default function ResultsScreen() {
       evaluation = JSON.parse(params.report);
     }
   } catch (error) {
-    console.error("Error parsing evaluation report:", error);
+    console.error('Error parsing evaluation report:', error);
     // Opcional: podrías navegar hacia atrás o mostrar un mensaje de error
   }
 
@@ -43,10 +43,7 @@ export default function ResultsScreen() {
   const treatmentSuggestions = suggestTreatments(evaluation);
 
   return (
-    <ScrollView 
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-    >
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <Stack.Screen options={{ title: 'Tu Informe de Fertilidad' }} />
 
       {/* --- Card de Resultado Principal --- */}
@@ -73,7 +70,6 @@ export default function ResultsScreen() {
           <TreatmentCard suggestions={treatmentSuggestions} />
         </Accordion>
       )}
-
     </ScrollView>
   );
 }

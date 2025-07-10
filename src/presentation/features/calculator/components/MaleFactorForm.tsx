@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Control, FieldValues, Path } from 'react-hook-form';
-import Text from '../../../../presentation/components/common/Text';
-import { ControlledTextInput } from '../../../../presentation/components/common/ControlledTextInput';
-import { theme } from '../../../../config/theme';
+import Text from '@/presentation/components/common/Text';
+import { ControlledTextInput } from '@/presentation/components/common/ControlledTextInput';
+import { theme } from '@/config/theme';
 
 type Props<TFormValues extends FieldValues> = {
   control: Control<TFormValues>;
@@ -15,11 +14,34 @@ export const MaleFactorForm = <TFormValues extends FieldValues>({ control }: Pro
     <View style={styles.container}>
       <Text style={styles.groupLabel}>Factor Masculino (Espermatograma)</Text>
 
-      <ControlledTextInput control={control} name={"spermConcentration" as Path<TFormValues>} label="Concentración (millones/mL)" keyboardType="decimal-pad" placeholder="Ej: 45" />
-      <ControlledTextInput control={control} name={"spermMotility" as Path<TFormValues>} label="Motilidad Progresiva (%)" keyboardType="decimal-pad" placeholder="Ej: 50" />
-      <ControlledTextInput control={control} name={"spermMorphology" as Path<TFormValues>} label="Morfología Normal (%)" keyboardType="decimal-pad" placeholder="Ej: 5" />
-      <ControlledTextInput control={control} name={"semenVolume" as Path<TFormValues>} label="Volumen (mL)" keyboardType="decimal-pad" placeholder="Ej: 2.5" />
-
+      <ControlledTextInput
+        control={control}
+        name={'spermConcentration' as Path<TFormValues>}
+        label="Concentración (millones/mL)"
+        keyboardType="decimal-pad"
+        placeholder="Ej: 45"
+      />
+      <ControlledTextInput
+        control={control}
+        name={'spermMotility' as Path<TFormValues>}
+        label="Motilidad Progresiva (%)"
+        keyboardType="decimal-pad"
+        placeholder="Ej: 50"
+      />
+      <ControlledTextInput
+        control={control}
+        name={'spermMorphology' as Path<TFormValues>}
+        label="Morfología Normal (%)"
+        keyboardType="decimal-pad"
+        placeholder="Ej: 5"
+      />
+      <ControlledTextInput
+        control={control}
+        name={'semenVolume' as Path<TFormValues>}
+        label="Volumen (mL)"
+        keyboardType="decimal-pad"
+        placeholder="Ej: 2.5"
+      />
     </View>
   );
 };

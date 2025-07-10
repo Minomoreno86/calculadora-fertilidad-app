@@ -1,17 +1,16 @@
-
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { calculateProbability } from '../../../core/domain/services/calculationEngine';
-import { UserInput, MyomaType, AdenomyosisType, PolypType, HsgResult } from '../../../core/domain/models';
+import { calculateProbability } from '@/core/domain/services/calculationEngine';
+import { UserInput, MyomaType, AdenomyosisType, PolypType, HsgResult } from '@/core/domain/models';
 
 // Zod schema for form validation
 const formSchema = z.object({
-  age: z.string().min(1, "La edad es obligatoria"),
-  weight: z.string().min(1, "El peso es obligatorio"),
-  height: z.string().min(1, "La altura es obligatoria"),
+  age: z.string().min(1, 'La edad es obligatoria'),
+  weight: z.string().min(1, 'El peso es obligatorio'),
+  height: z.string().min(1, 'La altura es obligatoria'),
   cycleLength: z.string().optional(),
   infertilityDuration: z.string().optional(),
   hasPcos: z.boolean(),

@@ -9,7 +9,7 @@ import { TouchableOpacity } from 'react-native-gesture-handler';
 type Props = { suggestions: TreatmentSuggestion[] };
 
 const openLink = (url: string) => {
-  Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
+  Linking.openURL(url).catch((err) => console.error("Couldn't load page", err));
 };
 
 export const TreatmentCard: React.FC<Props> = ({ suggestions }) => (

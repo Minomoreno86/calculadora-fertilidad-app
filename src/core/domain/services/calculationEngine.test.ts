@@ -33,11 +33,33 @@ const mockedFactorEvaluators = factorEvaluators as jest.Mocked<typeof factorEval
 const mockedReportGenerator = reportGenerator as jest.Mocked<typeof reportGenerator>;
 
 describe('calculateProbability Engine', () => {
-  const baseUserInput: UserInput = { age: 30, bmi: 22, cycleDuration: 28, infertilityDuration: 1, hasPcos: false, endometriosisGrade: 0, myomaType: MyomaType.None, adenomyosisType: AdenomyosisType.None, polypType: PolypType.None, hsgResult: HsgResult.Normal, hasOtb: false, hasPelvicSurgery: false, pelvicSurgeriesNumber: 0, amh: 2.5, prolactin: 15, tsh: 2.0, tpoAbPositive: false, homaIr: 1.5, spermConcentration: 40, spermProgressiveMotility: 50, spermNormalMorphology: 5 };
+  const baseUserInput: UserInput = {
+    age: 30,
+    bmi: 22,
+    cycleDuration: 28,
+    infertilityDuration: 1,
+    hasPcos: false,
+    endometriosisGrade: 0,
+    myomaType: MyomaType.None,
+    adenomyosisType: AdenomyosisType.None,
+    polypType: PolypType.None,
+    hsgResult: HsgResult.Normal,
+    hasOtb: false,
+    hasPelvicSurgery: false,
+    pelvicSurgeriesNumber: 0,
+    amh: 2.5,
+    prolactin: 15,
+    tsh: 2.0,
+    tpoAbPositive: false,
+    homaIr: 1.5,
+    spermConcentration: 40,
+    spermProgressiveMotility: 50,
+    spermNormalMorphology: 5,
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Ahora podemos configurar el valor de retorno de nuestros mocks explícitos con total seguridad.
     mockedFactorEvaluators.evaluateAgeBaseline.mockReturnValue({ factors: { baseAgeProbability: 17.5 } });
     mockedFactorEvaluators.evaluateBmi.mockReturnValue({ factors: { bmi: 1.0 } });
@@ -56,8 +78,10 @@ describe('calculateProbability Engine', () => {
     mockedFactorEvaluators.evaluateInfertilityDuration.mockReturnValue({ factors: { infertilityDuration: 1.0 } });
     mockedFactorEvaluators.evaluatePelvicSurgeries.mockReturnValue({ factors: { pelvicSurgery: 1.0 } });
     mockedFactorEvaluators.evaluateMaleFactor.mockReturnValue({ factors: { male: 1.0 } });
-    
-    mockedReportGenerator.generateFinalReport.mockImplementation((numericPrognosis) => ({ numericPrognosis } as Report));
+
+    mockedReportGenerator.generateFinalReport.mockImplementation(
+      (numericPrognosis) => ({ numericPrognosis }) as Report,
+    );
   });
 
   // Los tests siguen siendo los mismos, pero ahora se ejecutarán sobre una base sólida.
@@ -80,10 +104,12 @@ describe('calculateProbability Engine', () => {
   });
 
   test('debería recolectar los datos faltantes de múltiples evaluadores', () => {
-    mockedFactorEvaluators.evaluateAmh.mockReturnValue({ diagnostics: { missingData: ["Hormona Antimülleriana (AMH)"] } });
-    mockedFactorEvaluators.evaluateHsg.mockReturnValue({ diagnostics: { missingData: ["Resultado de HSG"] } });
+    mockedFactorEvaluators.evaluateAmh.mockReturnValue({
+      diagnostics: { missingData: ['Hormona Antimülleriana (AMH)'] },
+    });
+    mockedFactorEvaluators.evaluateHsg.mockReturnValue({ diagnostics: { missingData: ['Resultado de HSG'] } });
     const result = calculateProbability(baseUserInput);
-    expect(result.diagnostics.missingData).toContain("Hormona Antimülleriana (AMH)");
-    expect(result.diagnostics.missingData).toContain("Resultado de HSG");
+    expect(result.diagnostics.missingData).toContain('Hormona Antimülleriana (AMH)');
+    expect(result.diagnostics.missingData).toContain('Resultado de HSG');
   });
 });

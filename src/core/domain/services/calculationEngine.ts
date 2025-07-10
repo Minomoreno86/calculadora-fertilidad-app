@@ -2,8 +2,7 @@ import { UserInput, EvaluationState, Factors, Diagnostics, Report } from '../mod
 import * as factorEvaluators from '../logic/factorEvaluators';
 import * as reportGenerator from '../logic/reportGenerator';
 
-export function calculateProbability(userInput: UserInput): EvaluationState {
-  // 1. Inicializar el estado de la evaluación
+function _initializeEvaluationState(): { factors: Factors; diagnostics: Diagnostics } {
   const factors: Factors = {
     baseAgeProbability: 0,
     bmi: 1.0,
@@ -41,8 +40,10 @@ export function calculateProbability(userInput: UserInput): EvaluationState {
     maleFactorDetailed: 'Normal o sin datos',
     missingData: [],
   };
+  return { factors, diagnostics };
+}
 
-  // 2. Ejecutar cada evaluador y poblar 'factors' y 'diagnostics'
+function _evaluateAllFactors(userInput: UserInput, factors: Factors, diagnostics: Diagnostics): void {
   const ageResult = factorEvaluators.evaluateAgeBaseline(userInput.age);
   factors.baseAgeProbability = ageResult.factors?.baseAgeProbability ?? 0;
   diagnostics.agePotential = ageResult.diagnostics?.agePotential ?? 'No evaluada';
@@ -110,16 +111,24 @@ export function calculateProbability(userInput: UserInput): EvaluationState {
   factors.male = maleFactorResult.factors?.male ?? 1.0;
   diagnostics.maleFactorDetailed = maleFactorResult.diagnostics?.maleFactorDetailed ?? '';
   diagnostics.missingData.push(...(maleFactorResult.diagnostics?.missingData || []));
+}
 
-  // 3. Calcular la probabilidad final
+function _calculateFinalPrognosis(factors: Factors): number {
   const { baseAgeProbability, ...otherFactors } = factors;
   const productOfFactors = Object.values(otherFactors).reduce((acc, factor) => acc * factor, 1);
-  const numericPrognosis = baseAgeProbability * productOfFactors;
+  return baseAgeProbability * productOfFactors;
+}
 
-  // 4. Generar el informe final
-  const report: Report = reportGenerator.generateFinalReport(numericPrognosis, diagnostics, userInput, factors);
+function _generateReport(numericPrognosis: number, diagnostics: Diagnostics, userInput: UserInput, factors: Factors): Report {
+  return reportGenerator.generateFinalReport(numericPrognosis, diagnostics, userInput, factors);
+}
 
-  // 5. Ensamblar y retornar el estado final completo
+export function calculateProbability(userInput: UserInput): EvaluationState {
+  const { factors, diagnostics } = _initializeEvaluationState();
+  _evaluateAllFactors(userInput, factors, diagnostics);
+  const numericPrognosis = _calculateFinalPrognosis(factors);
+  const report = _generateReport(numericPrognosis, diagnostics, userInput, factors);
+
   const finalEvaluation: EvaluationState = {
     input: userInput,
     factors: factors,

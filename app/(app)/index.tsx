@@ -1,4 +1,3 @@
-
 import { StyleSheet, Button, ScrollView, View } from 'react-native';
 import Box from '../../src/presentation/components/common/Box';
 import Text from '../../src/presentation/components/common/Text';
@@ -10,12 +9,7 @@ import { MaleFactorForm } from '../../src/presentation/features/calculator/compo
 import { theme } from '../../src/config/theme';
 
 export default function CalculatorScreen() {
-  const {
-    control,
-    calculatedBmi,
-    calculatedHoma,
-    handleCalculate,
-  } = useCalculatorForm();
+  const { control, calculatedBmi, calculatedHoma, handleCalculate } = useCalculatorForm();
 
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
@@ -37,7 +31,6 @@ export default function CalculatorScreen() {
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -58,5 +51,5 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginHorizontal: 16,
     marginBottom: 24,
-  }
+  },
 });

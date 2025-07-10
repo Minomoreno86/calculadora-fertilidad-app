@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Control, Controller, FieldValues, Path } from 'react-hook-form';
 import { OptionSelectorModal } from './OptionSelectorModal';
-import { theme } from '../../../config/theme';
+import { theme } from '@/config/theme';
 
 type ControlledOptionSelectorProps<TFormValues extends FieldValues> = {
   control: Control<TFormValues>;
@@ -30,7 +29,7 @@ export const ControlledOptionSelector = <TFormValues extends FieldValues>({
           <>
             <TouchableOpacity style={styles.input} onPress={() => setModalVisible(true)}>
               <Text style={styles.inputText}>
-                {options.find(option => option.value === value)?.label || 'Seleccionar...'}
+                {options.find((option) => option.value === value)?.label || 'Seleccionar...'}
               </Text>
             </TouchableOpacity>
             <OptionSelectorModal

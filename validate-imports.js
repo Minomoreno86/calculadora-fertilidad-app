@@ -13,7 +13,6 @@ function findFiles(dir, fileList = []) {
     const stat = fs.statSync(filePath);
 
     if (stat.isDirectory() && !filePath.includes('node_modules') && !filePath.includes('.history')) {
-
       findFiles(filePath, fileList);
     } else if (fileExtensions.includes(path.extname(file))) {
       fileList.push(filePath);
