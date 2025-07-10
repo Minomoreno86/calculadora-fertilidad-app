@@ -1,15 +1,17 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Control, FieldValues, Path } from 'react-hook-form';
 import Text from '@/presentation/components/common/Text';
 import { ControlledTextInput } from '@/presentation/components/common/ControlledTextInput';
 import { theme } from '@/config/theme';
 
+import { Control, FieldValues, Path, FieldErrors } from 'react-hook-form';
+
 type Props<TFormValues extends FieldValues> = {
   control: Control<TFormValues>;
+  errors: FieldErrors<TFormValues>;
 };
 
-export const MaleFactorForm = <TFormValues extends FieldValues>({ control }: Props<TFormValues>) => {
+export const MaleFactorForm = <TFormValues extends FieldValues>({ control, errors }: Props<TFormValues>) => {
   return (
     <View style={styles.container}>
       <Text style={styles.groupLabel}>Factor Masculino (Espermatograma)</Text>
@@ -20,6 +22,7 @@ export const MaleFactorForm = <TFormValues extends FieldValues>({ control }: Pro
         label="Concentración (millones/mL)"
         keyboardType="decimal-pad"
         placeholder="Ej: 45"
+        error={errors.spermConcentration as import('react-hook-form').FieldError}
       />
       <ControlledTextInput
         control={control}
@@ -27,6 +30,7 @@ export const MaleFactorForm = <TFormValues extends FieldValues>({ control }: Pro
         label="Motilidad Progresiva (%)"
         keyboardType="decimal-pad"
         placeholder="Ej: 50"
+        error={errors.spermMotility as import('react-hook-form').FieldError}
       />
       <ControlledTextInput
         control={control}
@@ -34,6 +38,7 @@ export const MaleFactorForm = <TFormValues extends FieldValues>({ control }: Pro
         label="Morfología Normal (%)"
         keyboardType="decimal-pad"
         placeholder="Ej: 5"
+        error={errors.spermMorphology as import('react-hook-form').FieldError}
       />
       <ControlledTextInput
         control={control}
@@ -41,6 +46,7 @@ export const MaleFactorForm = <TFormValues extends FieldValues>({ control }: Pro
         label="Volumen (mL)"
         keyboardType="decimal-pad"
         placeholder="Ej: 2.5"
+        error={errors.semenVolume as import('react-hook-form').FieldError}
       />
     </View>
   );

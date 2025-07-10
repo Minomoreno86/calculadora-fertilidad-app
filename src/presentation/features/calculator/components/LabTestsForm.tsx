@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Control, FieldValues, Path } from 'react-hook-form';
+import { Control, FieldValues, Path, FieldErrors } from 'react-hook-form';
 import Text from '@/presentation/components/common/Text';
 import { ControlledTextInput } from '@/presentation/components/common/ControlledTextInput';
 import { theme } from '@/config/theme';
@@ -8,9 +8,10 @@ import { theme } from '@/config/theme';
 type Props<TFormValues extends FieldValues> = {
   control: Control<TFormValues>;
   calculatedHoma: number | null;
+  errors: FieldErrors<TFormValues>;
 };
 
-export const LabTestsForm = <TFormValues extends FieldValues>({ control, calculatedHoma }: Props<TFormValues>) => {
+export const LabTestsForm = <TFormValues extends FieldValues>({ control, calculatedHoma, errors }: Props<TFormValues>) => {
   return (
     <View style={styles.container}>
       <Text style={styles.groupLabel}>Resultados de Laboratorio</Text>
@@ -21,6 +22,7 @@ export const LabTestsForm = <TFormValues extends FieldValues>({ control, calcula
         label="Hormona Antimülleriana (AMH en ng/mL)"
         keyboardType="decimal-pad"
         placeholder="Ej: 1.8"
+        error={errors.amhValue as import('react-hook-form').FieldError}
       />
       <ControlledTextInput
         control={control}
@@ -28,6 +30,7 @@ export const LabTestsForm = <TFormValues extends FieldValues>({ control, calcula
         label="Hormona Tiroidea (TSH en µIU/mL)"
         keyboardType="decimal-pad"
         placeholder="Ej: 2.1"
+        error={errors.tshValue as import('react-hook-form').FieldError}
       />
       <ControlledTextInput
         control={control}
@@ -35,6 +38,7 @@ export const LabTestsForm = <TFormValues extends FieldValues>({ control, calcula
         label="Prolactina (ng/mL)"
         keyboardType="decimal-pad"
         placeholder="Ej: 15"
+        error={errors.prolactinValue as import('react-hook-form').FieldError}
       />
       <ControlledTextInput
         control={control}
@@ -42,6 +46,7 @@ export const LabTestsForm = <TFormValues extends FieldValues>({ control, calcula
         label="Insulina Basal (µU/mL)"
         keyboardType="decimal-pad"
         placeholder="Ej: 10"
+        error={errors.insulinValue as import('react-hook-form').FieldError}
       />
       <ControlledTextInput
         control={control}
@@ -49,6 +54,7 @@ export const LabTestsForm = <TFormValues extends FieldValues>({ control, calcula
         label="Glucosa en Ayunas (mg/dL)"
         keyboardType="decimal-pad"
         placeholder="Ej: 85"
+        error={errors.glucoseValue as import('react-hook-form').FieldError}
       />
 
       {calculatedHoma && (

@@ -1,15 +1,15 @@
 import { StyleSheet, Button, ScrollView, View } from 'react-native';
-import Box from '../../src/presentation/components/common/Box';
-import Text from '../../src/presentation/components/common/Text';
-import { useCalculatorForm } from '../../src/presentation/features/calculator/useCalculatorForm';
-import { DemographicsForm } from '../../src/presentation/features/calculator/components/DemographicsForm';
-import { GynecologyHistoryForm } from '../../src/presentation/features/calculator/components/GynecologyHistoryForm';
-import { LabTestsForm } from '../../src/presentation/features/calculator/components/LabTestsForm';
-import { MaleFactorForm } from '../../src/presentation/features/calculator/components/MaleFactorForm';
-import { theme } from '../../src/config/theme';
+import Box from '@/presentation/components/common/Box';
+import Text from '@/presentation/components/common/Text';
+import { useCalculatorForm } from '@/presentation/features/calculator/useCalculatorForm';
+import { DemographicsForm } from '@/presentation/features/calculator/components/DemographicsForm';
+import { GynecologyHistoryForm } from '@/presentation/features/calculator/components/GynecologyHistoryForm';
+import { LabTestsForm } from '@/presentation/features/calculator/components/LabTestsForm';
+import { MaleFactorForm } from '@/presentation/features/calculator/components/MaleFactorForm';
+import { theme } from '@/config/theme';
 
 export default function CalculatorScreen() {
-  const { control, calculatedBmi, calculatedHoma, handleCalculate } = useCalculatorForm();
+  const { control, calculatedBmi, calculatedHoma, handleCalculate, formState: { errors } } = useCalculatorForm();
 
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
@@ -18,10 +18,10 @@ export default function CalculatorScreen() {
       </Text>
 
       <Box style={styles.formContainer}>
-        <DemographicsForm control={control} calculatedBmi={calculatedBmi} />
-        <GynecologyHistoryForm control={control} />
-        <LabTestsForm control={control} calculatedHoma={calculatedHoma} />
-        <MaleFactorForm control={control} />
+        <DemographicsForm control={control} calculatedBmi={calculatedBmi} errors={errors} />
+        <GynecologyHistoryForm control={control} errors={errors} />
+        <LabTestsForm control={control} calculatedHoma={calculatedHoma} errors={errors} />
+        <MaleFactorForm control={control} errors={errors} />
       </Box>
 
       <View style={styles.buttonContainer}>

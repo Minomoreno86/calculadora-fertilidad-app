@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Control, Controller, FieldValues, Path } from 'react-hook-form';
+import { Control, Controller, FieldValues, Path, FieldError } from 'react-hook-form';
 import { OptionSelectorModal } from './OptionSelectorModal';
 import { theme } from '@/config/theme';
 
@@ -9,6 +9,7 @@ type ControlledOptionSelectorProps<TFormValues extends FieldValues> = {
   name: Path<TFormValues>;
   label: string;
   options: { label: string; value: string }[];
+  error?: FieldError;
 };
 
 export const ControlledOptionSelector = <TFormValues extends FieldValues>({
@@ -16,6 +17,7 @@ export const ControlledOptionSelector = <TFormValues extends FieldValues>({
   name,
   label,
   options,
+  error,
 }: ControlledOptionSelectorProps<TFormValues>) => {
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -27,7 +29,7 @@ export const ControlledOptionSelector = <TFormValues extends FieldValues>({
         name={name}
         render={({ field: { onChange, value } }) => (
           <>
-            <TouchableOpacity style={styles.input} onPress={() => setModalVisible(true)}>
+            <TouchableOpacity style={[styles.input, error && styles.inputError]} onPress={() => setModalVisible(true)}>
               <Text style={styles.inputText}>
                 {options.find((option) => option.value === value)?.label || 'Seleccionar...'}
               </Text>
@@ -45,6 +47,7 @@ export const ControlledOptionSelector = <TFormValues extends FieldValues>({
           </>
         )}
       />
+      {error && <Text style={styles.errorText}>{error.message}</Text>}
     </View>
   );
 };
@@ -66,8 +69,17 @@ const styles = StyleSheet.create({
     minHeight: 48,
     justifyContent: 'center',
   },
+  inputError: {
+    borderColor: theme.colors.error,
+  },
   inputText: {
     ...theme.typography.body,
     color: theme.colors.text,
+  },
+  errorText: {
+    ...theme.typography.caption,
+    color: theme.colors.error,
+    marginTop: theme.spacing.xxs,
+    marginLeft: theme.spacing.xs,
   },
 });

@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native';
-import { Control, FieldValues, Path } from 'react-hook-form';
+import { Control, FieldValues, Path, FieldErrors, FieldError, DeepRequired, FieldErrorsImpl, Merge } from 'react-hook-form';
 import Text from '@/presentation/components/common/Text';
 import { ControlledTextInput } from '@/presentation/components/common/ControlledTextInput';
 import { theme } from '@/config/theme';
@@ -7,13 +7,18 @@ import { theme } from '@/config/theme';
 type Props<TFormValues extends FieldValues> = {
   control: Control<TFormValues>;
   calculatedBmi: number | null;
+  errors: FieldErrors<TFormValues>;
 };
 
-export const DemographicsForm = <TFormValues extends FieldValues>({ control, calculatedBmi }: Props<TFormValues>) => {
+function isFieldError<TFormValues extends FieldValues>(
+  error: FieldError | Merge<FieldError, FieldErrorsImpl<DeepRequired<TFormValues>[string]>> | undefined
+): error is FieldError {
+  return !!error && typeof error === 'object' && typeof (error as FieldError).type === 'string';
+}
+
+export const DemographicsForm = <TFormValues extends FieldValues>({ control, calculatedBmi, errors }: Props<TFormValues>) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.groupLabel}>Perfil Básico</Text>
-
       <ControlledTextInput
         control={control}
         name={'age' as Path<TFormValues>}
@@ -21,6 +26,7 @@ export const DemographicsForm = <TFormValues extends FieldValues>({ control, cal
         keyboardType="number-pad"
         placeholder="Ej: 32"
         iconName="person-outline"
+        error={isFieldError<TFormValues>(errors.age) ? errors.age : undefined}
       />
 
       <ControlledTextInput
@@ -30,6 +36,7 @@ export const DemographicsForm = <TFormValues extends FieldValues>({ control, cal
         keyboardType="decimal-pad"
         placeholder="Ej: 65"
         iconName="fitness-outline"
+        error={isFieldError<TFormValues>(errors.weight) ? errors.weight : undefined}
       />
 
       <ControlledTextInput
@@ -39,6 +46,7 @@ export const DemographicsForm = <TFormValues extends FieldValues>({ control, cal
         keyboardType="number-pad"
         placeholder="Ej: 165"
         iconName="resize-outline"
+        error={isFieldError<TFormValues>(errors.height) ? errors.height : undefined}
       />
 
       {calculatedBmi !== null && (
@@ -104,3 +112,4 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.m,
   },
 });
+

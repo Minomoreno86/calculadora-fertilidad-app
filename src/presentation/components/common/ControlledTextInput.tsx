@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet, TextInputProps } from 'react-native';
-import { Control, Controller, FieldValues, Path } from 'react-hook-form';
+import { Control, Controller, FieldValues, Path, FieldError } from 'react-hook-form';
 import { theme } from '@/config/theme';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -9,6 +9,7 @@ type ControlledTextInputProps<TFormValues extends FieldValues> = TextInputProps 
   name: Path<TFormValues>;
   label: string;
   iconName?: keyof typeof Ionicons.glyphMap;
+  error?: FieldError;
 };
 
 export const ControlledTextInput = <TFormValues extends FieldValues>({
@@ -16,12 +17,13 @@ export const ControlledTextInput = <TFormValues extends FieldValues>({
   name,
   label,
   iconName,
+  error,
   ...textInputProps
 }: ControlledTextInputProps<TFormValues>) => {
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, error && styles.inputError]}>
         {iconName && <Ionicons name={iconName} size={20} color={theme.colors.text} style={styles.icon} />}
         <Controller
           control={control}
@@ -38,6 +40,7 @@ export const ControlledTextInput = <TFormValues extends FieldValues>({
           )}
         />
       </View>
+      {error && <Text style={styles.errorText}>{error.message}</Text>}
     </View>
   );
 };
@@ -58,6 +61,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
+  inputError: {
+    borderColor: theme.colors.error,
+  },
   icon: {
     paddingHorizontal: theme.spacing.s,
   },
@@ -66,5 +72,11 @@ const styles = StyleSheet.create({
     padding: theme.spacing.s,
     ...theme.typography.body,
     color: theme.colors.text,
+  },
+  errorText: {
+    ...theme.typography.caption,
+    color: theme.colors.error,
+    marginTop: theme.spacing.xxs,
+    marginLeft: theme.spacing.xs,
   },
 });

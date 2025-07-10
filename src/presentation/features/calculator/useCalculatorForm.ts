@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -38,7 +38,7 @@ export type FormState = z.infer<typeof formSchema>;
 
 export const useCalculatorForm = () => {
   const router = useRouter();
-  const { control, handleSubmit, watch, setValue } = useForm<FormState>({
+  const { control, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormState>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       age: '30',
@@ -61,7 +61,7 @@ export const useCalculatorForm = () => {
 
   const watchedFields: FormState = watch();
 
-  const calculatedBmi = (() => {
+  const calculatedBmi = useMemo(() => {
     const weightNum = parseFloat(watchedFields.weight);
     const heightNum = parseFloat(watchedFields.height);
     if (weightNum > 0 && heightNum > 0) {
@@ -69,16 +69,16 @@ export const useCalculatorForm = () => {
       return weightNum / (heightInMeters * heightInMeters);
     }
     return null;
-  })();
+  }, [watchedFields.weight, watchedFields.height]);
 
-  const calculatedHoma = (() => {
+  const calculatedHoma = useMemo(() => {
     const insulinNum = parseFloat(watchedFields.insulinValue || '0');
     const glucoseNum = parseFloat(watchedFields.glucoseValue || '0');
     if (insulinNum > 0 && glucoseNum > 0) {
       return (insulinNum * glucoseNum) / 405;
     }
     return null;
-  })();
+  }, [watchedFields.insulinValue, watchedFields.glucoseValue]);
 
   const handleCalculate = (data: FormState) => {
     const userInput: UserInput = {
@@ -119,5 +119,6 @@ export const useCalculatorForm = () => {
     calculatedHoma,
     handleCalculate: handleSubmit(handleCalculate),
     setValue,
+    formState: { errors },
   };
 };
