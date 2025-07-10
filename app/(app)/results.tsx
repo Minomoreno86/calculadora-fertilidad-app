@@ -7,6 +7,7 @@ import { theme } from 'src/config/theme';
 
 // Importación de componentes de UI reutilizables
 import Text from 'src/presentation/components/common/Text';
+import Accordion from 'src/presentation/components/common/Accordion'; // Importar el nuevo componente Accordion
 import { PrognosisCard } from 'src/presentation/features/results/components/PrognosisCard';
 import { BenchmarkCard } from 'src/presentation/features/results/components/BenchmarkCard';
 import { SimulatorSection } from 'src/presentation/features/results/components/SimulatorSection';
@@ -55,16 +56,22 @@ export default function ResultsScreen() {
       <BenchmarkCard report={report} />
 
       {/* --- Sección del Simulador de Potencial --- */}
-      <SimulatorSection evaluation={evaluation} />
+      <Accordion title="Simulador de Potencial">
+        <SimulatorSection evaluation={evaluation} />
+      </Accordion>
 
       {/* --- Sección de Hallazgos Clínicos --- */}
       {report.clinicalInsights && report.clinicalInsights.length > 0 && (
-        <FindingsSection findings={report.clinicalInsights} />
+        <Accordion title="Hallazgos y Recomendaciones">
+          <FindingsSection findings={report.clinicalInsights} />
+        </Accordion>
       )}
 
       {/* --- Sección de Sugerencias de Tratamiento --- */}
       {treatmentSuggestions && treatmentSuggestions.length > 0 && (
-        <TreatmentCard suggestions={treatmentSuggestions} />
+        <Accordion title="Sugerencias de Siguientes Pasos">
+          <TreatmentCard suggestions={treatmentSuggestions} />
+        </Accordion>
       )}
 
     </ScrollView>
