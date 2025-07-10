@@ -28,6 +28,7 @@ export interface FormState {
   spermConcentration: string;
   spermMotility: string;
   spermMorphology: string;
+  semenVolume: string
 }
 
 export const useCalculatorForm = () => {
@@ -57,6 +58,7 @@ export const useCalculatorForm = () => {
     spermConcentration: '',
     spermMotility: '',
     spermMorphology: '',
+    semenVolume: '',
   });
 
   const [calculatedBmi, setCalculatedBmi] = useState<number | null>(null);

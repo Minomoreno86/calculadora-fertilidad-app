@@ -2,22 +2,9 @@ module.exports = function (api) {
   api.cache(true);
   return {
     presets: ['babel-preset-expo'],
-    plugins: [],
-  };
-};module.exports = function (api) {
-  api.cache(true);
-  return {
-    presets: ['babel-preset-expo'],
     plugins: [
-      [
-        'module-resolver',
-        {
-          root: ['./'],
-          alias: {
-            '@': './src',
-          },
-        },
-      ],
+      // Plugin de Reanimated debe quedarse
+      'react-native-reanimated/plugin',
     ],
   };
 };

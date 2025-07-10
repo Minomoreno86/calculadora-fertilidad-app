@@ -8,6 +8,8 @@ type Props = {
   setSpermMotility: (value: string) => void;
   spermMorphology: string;
   setSpermMorphology: (value: string) => void;
+   semenVolume: string; // <-- NUEVA PROP
+  setSemenVolume: (value: string) => void; // <-- NUEVA PROP
 };
 
 export const MaleFactorForm = (props: Props) => {
@@ -40,6 +42,18 @@ export const MaleFactorForm = (props: Props) => {
         onChangeText={props.setSpermMorphology}
         keyboardType="decimal-pad"
         placeholder="Ej: 5"
+      />
+
+       <Text style={styles.groupLabel}>Factor Masculino (Espermatograma)</Text>
+
+      {/* NUEVO CAMPO DE VOLUMEN */}
+      <Text style={styles.label}>Volumen (mL)</Text>
+      <TextInput
+        style={styles.input}
+        value={props.semenVolume}
+        onChangeText={props.setSemenVolume}
+        keyboardType="decimal-pad"
+        placeholder="Ej: 2.5"
       />
     </>
   );

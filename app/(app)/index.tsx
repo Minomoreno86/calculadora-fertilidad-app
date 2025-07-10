@@ -86,6 +86,8 @@ export default function CalculatorScreen() {
           setSpermMotility={(val) => setFormField('spermMotility', val)}
           spermMorphology={formState.spermMorphology}
           setSpermMorphology={(val) => setFormField('spermMorphology', val)}
+          semenVolume={formState.semenVolume}
+          setSemenVolume={(val) => setFormField('semenVolume', val)}
         />
       </Box>
 

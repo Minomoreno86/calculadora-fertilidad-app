@@ -1,17 +1,32 @@
 // ===================================================================
-// TIPOS ESPECÍFICOS PARA CAMPOS DEL FORMULARIO
+// TIPOS ESPECÍFICOS Y DE AYUDA
 // ===================================================================
 
 export type MyomaType = 'none' | 'submucosal' | 'intramural_large' | 'subserosal';
 export type AdenomyosisType = 'none' | 'focal' | 'diffuse';
 export type PolypType = 'none' | 'small' | 'large' | 'ostium';
 export type HsgResult = 'unknown' | 'normal' | 'unilateral' | 'bilateral' | 'malformacion';
+export type SimulatableFactor = keyof Omit<Factors, 'baseAgeProbability'>;
+export type TreatmentCategory = 'Optimización Médica' | 'Baja Complejidad' | 'Alta Complejidad' | 'Estudio Adicional';
+
+export interface ClinicalFinding {
+  key: string;
+  title: string;
+  explanation: string;
+  recommendations: string[];
+}
+
+export interface TreatmentSuggestion {
+  category: TreatmentCategory;
+  title: string;
+  details: string;
+  source: string;
+}
 
 // ===================================================================
 // INTERFACES PRINCIPALES DE DATOS
 // ===================================================================
 
-// Contiene los datos crudos que el usuario introduce.
 export interface UserInput {
   age: number;
   bmi: number | null;
@@ -34,9 +49,9 @@ export interface UserInput {
   spermConcentration?: number;
   spermProgressiveMotility?: number;
   spermNormalMorphology?: number;
+  semenVolume?: number;
 }
 
-// Contiene todos los factores numéricos calculados.
 export interface Factors {
   baseAgeProbability: number;
   bmi: number;
@@ -57,7 +72,6 @@ export interface Factors {
   pelvicSurgery: number;
 }
 
-// Contiene todos los textos y comentarios de diagnóstico.
 export interface Diagnostics {
   agePotential: string;
   bmiComment: string;
@@ -76,22 +90,25 @@ export interface Diagnostics {
   missingData: string[];
 }
 
-// Contiene los resultados finales formateados para la UI.
 export interface Report {
   numericPrognosis: number;
   category: 'BUENO' | 'MODERADO' | 'BAJO' | 'ERROR';
   emoji: string;
   prognosisPhrase: string;
   benchmarkPhrase: string;
-  recommendations: string[];
-  clinicalInsights: string[];
+  clinicalInsights: ClinicalFinding[];
 }
 
-// Interfaz principal que agrupa todos los datos de la evaluación.
 export interface EvaluationState {
   input: UserInput;
   factors: Factors;
   diagnostics: Diagnostics;
   report: Report;
 }
-export type SimulatableFactor = keyof Omit<Factors, 'baseAgeProbability'>;
+export interface SimulationResult {
+  factor: SimulatableFactor | 'all';
+  explanation: string;
+  originalPrognosis: number;
+  newPrognosis: number;
+  improvement: number;
+}
