@@ -1,3 +1,5 @@
+import { TextStyle } from 'react-native';
+
 const PALETTE = {
   primary: '#006B7D',       // Un azul verdoso profesional y calmado
   secondary: '#495D6E',     // Gris azulado para acentos
@@ -28,6 +30,7 @@ export const theme = {
     success: PALETTE.success,
     warning: PALETTE.warning,
     info: PALETTE.info,
+    inputBackground: PALETTE.white,
   },
   spacing: {
     xxs: 4,
@@ -41,44 +44,49 @@ export const theme = {
   typography: {
     h1: {
       fontSize: 32,
-      fontWeight: '700',
+      fontWeight: '700' as TextStyle['fontWeight'],
       lineHeight: 38,
       color: PALETTE.black,
     },
     h2: {
       fontSize: 24,
-      fontWeight: '700',
+      fontWeight: '700' as TextStyle['fontWeight'],
       lineHeight: 30,
       color: PALETTE.black,
     },
     h3: {
       fontSize: 20,
-      fontWeight: '600',
+      fontWeight: '600' as TextStyle['fontWeight'],
       lineHeight: 26,
       color: PALETTE.black,
     },
     body: {
       fontSize: 16,
-      fontWeight: '400',
+      fontWeight: '400' as TextStyle['fontWeight'],
       lineHeight: 24,
       color: PALETTE.black,
     },
     bodyBold: {
       fontSize: 16,
-      fontWeight: '600',
+      fontWeight: '600' as TextStyle['fontWeight'],
       lineHeight: 24,
       color: PALETTE.black,
     },
     caption: {
       fontSize: 12,
-      fontWeight: '400',
+      fontWeight: '400' as TextStyle['fontWeight'],
       lineHeight: 18,
       color: PALETTE.darkGrey,
     },
     small: {
       fontSize: 14,
-      fontWeight: '400',
+      fontWeight: '400' as TextStyle['fontWeight'],
       lineHeight: 20,
+      color: PALETTE.darkGrey,
+    },
+    label: {
+      fontSize: 14,
+      fontWeight: '600' as TextStyle['fontWeight'],
       color: PALETTE.darkGrey,
     },
   },
@@ -90,5 +98,10 @@ export const theme = {
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
+  },
+  borderRadius: {
+    s: 8,
+    m: 12,
+    l: 16,
   },
 };

@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
       backgroundColor: theme.colors.secondary, 
       borderRadius: 15 
     },
-    simulateButtonText: { color: theme.colors.buttonText, ...theme.typography.small, fontWeight: 'bold' },
+    simulateButtonText: { ...theme.typography.small, fontWeight: 'bold', color: theme.colors.buttonText },
     simulatedCard: { 
       backgroundColor: theme.colors.success, 
       borderColor: theme.colors.primary, 
@@ -116,9 +116,9 @@ const styles = StyleSheet.create({
     simulatedText: { ...theme.typography.body, textAlign: 'center' },
     prognosisHighlight: { 
       ...theme.typography.h2, 
-      color: theme.colors.primary, 
       textAlign: 'center', 
-      marginVertical: theme.spacing.s 
+      marginVertical: theme.spacing.s, 
+      color: theme.colors.primary 
     },
     improvementText: { 
       ...theme.typography.small, 
@@ -133,5 +133,5 @@ const styles = StyleSheet.create({
       borderRadius: theme.card.borderRadius, 
       alignItems: 'center' 
     },
-    simulateAllButtonText: { color: theme.colors.buttonText, ...theme.typography.bodyBold },
+    simulateAllButtonText: { ...theme.typography.bodyBold, color: theme.colors.buttonText },
 });

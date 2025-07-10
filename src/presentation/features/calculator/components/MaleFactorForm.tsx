@@ -1,85 +1,38 @@
-import { StyleSheet, TextInput } from 'react-native';
-import Text from '../../../../presentation/components/common/Text';
 
-type Props = {
-  spermConcentration: string;
-  setSpermConcentration: (value: string) => void;
-  spermMotility: string;
-  setSpermMotility: (value: string) => void;
-  spermMorphology: string;
-  setSpermMorphology: (value: string) => void;
-   semenVolume: string; // <-- NUEVA PROP
-  setSemenVolume: (value: string) => void; // <-- NUEVA PROP
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Control, FieldValues, Path } from 'react-hook-form';
+import Text from '../../../../presentation/components/common/Text';
+import { ControlledTextInput } from '../../../../presentation/components/common/ControlledTextInput';
+import { theme } from '../../../../config/theme';
+
+type Props<TFormValues extends FieldValues> = {
+  control: Control<TFormValues>;
 };
 
-export const MaleFactorForm = (props: Props) => {
+export const MaleFactorForm = <TFormValues extends FieldValues>({ control }: Props<TFormValues>) => {
   return (
-    <>
+    <View style={styles.container}>
       <Text style={styles.groupLabel}>Factor Masculino (Espermatograma)</Text>
 
-      <Text style={styles.label}>Concentración (millones/mL)</Text>
-      <TextInput
-        style={styles.input}
-        value={props.spermConcentration}
-        onChangeText={props.setSpermConcentration}
-        keyboardType="decimal-pad"
-        placeholder="Ej: 45"
-      />
+      <ControlledTextInput control={control} name={"spermConcentration" as Path<TFormValues>} label="Concentración (millones/mL)" keyboardType="decimal-pad" placeholder="Ej: 45" />
+      <ControlledTextInput control={control} name={"spermMotility" as Path<TFormValues>} label="Motilidad Progresiva (%)" keyboardType="decimal-pad" placeholder="Ej: 50" />
+      <ControlledTextInput control={control} name={"spermMorphology" as Path<TFormValues>} label="Morfología Normal (%)" keyboardType="decimal-pad" placeholder="Ej: 5" />
+      <ControlledTextInput control={control} name={"semenVolume" as Path<TFormValues>} label="Volumen (mL)" keyboardType="decimal-pad" placeholder="Ej: 2.5" />
 
-      <Text style={styles.label}>Motilidad Progresiva (%)</Text>
-      <TextInput
-        style={styles.input}
-        value={props.spermMotility}
-        onChangeText={props.setSpermMotility}
-        keyboardType="decimal-pad"
-        placeholder="Ej: 50"
-      />
-
-      <Text style={styles.label}>Morfología Normal (%)</Text>
-      <TextInput
-        style={styles.input}
-        value={props.spermMorphology}
-        onChangeText={props.setSpermMorphology}
-        keyboardType="decimal-pad"
-        placeholder="Ej: 5"
-      />
-
-       <Text style={styles.groupLabel}>Factor Masculino (Espermatograma)</Text>
-
-      {/* NUEVO CAMPO DE VOLUMEN */}
-      <Text style={styles.label}>Volumen (mL)</Text>
-      <TextInput
-        style={styles.input}
-        value={props.semenVolume}
-        onChangeText={props.setSemenVolume}
-        keyboardType="decimal-pad"
-        placeholder="Ej: 2.5"
-      />
-    </>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  groupLabel: { 
-    fontSize: 18, 
-    fontWeight: 'bold', 
-    marginBottom: 16, 
-    borderBottomWidth: 1, 
-    borderBottomColor: '#eee', 
-    paddingBottom: 8, 
-    marginTop: 16 
+  container: {
+    marginBottom: theme.spacing.l,
   },
-  label: { 
-    marginBottom: 8, 
-    fontWeight: '500' 
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 4,
-    padding: 12,
-    marginBottom: 16,
-    fontSize: 16,
+  groupLabel: {
+    ...theme.typography.h3,
+    marginBottom: theme.spacing.m,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    paddingBottom: theme.spacing.xs,
   },
 });

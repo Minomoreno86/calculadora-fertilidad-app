@@ -1,93 +1,95 @@
-import { StyleSheet, TextInput } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Control, FieldValues, Path } from 'react-hook-form';
 import Text from '../../../../presentation/components/common/Text';
+import { ControlledTextInput } from '../../../../presentation/components/common/ControlledTextInput';
 import { theme } from '../../../../config/theme';
 
-type Props = {
-  age: string;
-  setAge: (value: string) => void;
-  weight: string;
-  setWeight: (value: string) => void;
-  height: string;
-  setHeight: (value: string) => void;
+type Props<TFormValues extends FieldValues> = {
+  control: Control<TFormValues>;
   calculatedBmi: number | null;
 };
 
-export const DemographicsForm = ({
-  age,
-  setAge,
-  weight,
-  setWeight,
-  height,
-  setHeight,
+export const DemographicsForm = <TFormValues extends FieldValues>({
+  control,
   calculatedBmi,
-}: Props) => {
+}: Props<TFormValues>) => {
   return (
-    <>
+    <View style={styles.container}>
       <Text style={styles.groupLabel}>Perfil Básico</Text>
       
-      <Text style={styles.label}>Edad (años)</Text>
-      <TextInput
-        style={styles.input}
-        value={age}
-        onChangeText={setAge}
+      <ControlledTextInput
+        control={control}
+        name={"age" as Path<TFormValues>}
+        label="Edad (años)"
         keyboardType="number-pad"
         placeholder="Ej: 32"
+        iconName="person-outline"
       />
 
-      <Text style={styles.label}>Peso (kg)</Text>
-      <TextInput
-        style={styles.input}
-        value={weight}
-        onChangeText={setWeight}
+      <ControlledTextInput
+        control={control}
+        name={"weight" as Path<TFormValues>}
+        label="Peso (kg)"
         keyboardType="decimal-pad"
         placeholder="Ej: 65"
+        iconName="fitness-outline"
       />
 
-      <Text style={styles.label}>Altura (cm)</Text>
-      <TextInput
-        style={styles.input}
-        value={height}
-        onChangeText={setHeight}
+      <ControlledTextInput
+        control={control}
+        name={"height" as Path<TFormValues>}
+        label="Altura (cm)"
         keyboardType="number-pad"
         placeholder="Ej: 165"
+        iconName="resize-outline"
       />
       
-      {calculatedBmi && (
+      {calculatedBmi !== null && (
         <Text style={styles.calculatedValueText}>
           IMC Calculado: {calculatedBmi.toFixed(2)}
         </Text>
       )}
-    </>
+    </View>
   );
 };
 
+// Extract fontWeight logic to variables to ensure valid values for React Native
+const resolveFontWeight = (fw: any): any => {
+  if (typeof fw === 'string') {
+    if (fw === 'regular') return '400';
+    if (fw === 'bold') return '700';
+    if (
+      [
+        'normal', 'bold', '100', '200', '300', '400', '500', '600', '700', '800', '900',
+        'ultralight', 'thin', 'light', 'medium', 'semibold', 'extrabold', 'black'
+      ].includes(fw)
+    ) {
+      return fw;
+    }
+    // If it's a numeric string, return as is
+    if (!isNaN(Number(fw))) return fw;
+    return '400';
+  }
+  return fw;
+};
+
 const styles = StyleSheet.create({
-  groupLabel: { 
-    fontSize: 18, 
-    fontWeight: 'bold', 
-    marginBottom: 16, 
-    borderBottomWidth: 1, 
-    borderBottomColor: '#eee', 
-    paddingBottom: 8 
+  container: {
+    marginBottom: theme.spacing.l,
   },
-  label: { 
-    marginBottom: 8, 
-    fontWeight: '500' 
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 4,
-    padding: 12,
-    marginBottom: 16,
-    fontSize: 16,
+  groupLabel: {
+    ...theme.typography.h3,
+    fontWeight: resolveFontWeight(theme.typography.h3.fontWeight),
+    marginBottom: theme.spacing.m,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    paddingBottom: theme.spacing.xs,
   },
   calculatedValueText: {
+    ...theme.typography.bodyBold,
+    fontWeight: resolveFontWeight(theme.typography.bodyBold.fontWeight),
     textAlign: 'center',
-    fontWeight: 'bold',
-    fontSize: 16,
     color: theme.colors.primary,
-    marginBottom: 16,
+    marginTop: theme.spacing.m,
   },
 });

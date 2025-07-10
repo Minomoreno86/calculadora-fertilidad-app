@@ -1,5 +1,5 @@
 import { calculateProbability } from './calculationEngine';
-import { UserInput, Report } from '@/core/domain/models';
+import { UserInput, Report, MyomaType, AdenomyosisType, PolypType, HsgResult } from '@/core/domain/models';
 import * as factorEvaluators from '@/core/domain/logic/factorEvaluators';
 import * as reportGenerator from '@/core/domain/logic/reportGenerator';
 
@@ -33,7 +33,7 @@ const mockedFactorEvaluators = factorEvaluators as jest.Mocked<typeof factorEval
 const mockedReportGenerator = reportGenerator as jest.Mocked<typeof reportGenerator>;
 
 describe('calculateProbability Engine', () => {
-  const baseUserInput: UserInput = { age: 30, bmi: 22, cycleDuration: 28, infertilityDuration: 1, hasPcos: false, endometriosisGrade: 0, myomaType: 'none', adenomyosisType: 'none', polypType: 'none', hsgResult: 'normal', hasOtb: false, hasPelvicSurgery: false, pelvicSurgeriesNumber: 0, amh: 2.5, prolactin: 15, tsh: 2.0, tpoAbPositive: false, homaIr: 1.5, spermConcentration: 40, spermProgressiveMotility: 50, spermNormalMorphology: 5 };
+  const baseUserInput: UserInput = { age: 30, bmi: 22, cycleDuration: 28, infertilityDuration: 1, hasPcos: false, endometriosisGrade: 0, myomaType: MyomaType.None, adenomyosisType: AdenomyosisType.None, polypType: PolypType.None, hsgResult: HsgResult.Normal, hasOtb: false, hasPelvicSurgery: false, pelvicSurgeriesNumber: 0, amh: 2.5, prolactin: 15, tsh: 2.0, tpoAbPositive: false, homaIr: 1.5, spermConcentration: 40, spermProgressiveMotility: 50, spermNormalMorphology: 5 };
 
   beforeEach(() => {
     jest.clearAllMocks();

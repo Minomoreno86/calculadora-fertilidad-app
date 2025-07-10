@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import Text from '../../../components/common/Text';
 import Box from '../../../components/common/Box';
 import { Report } from '../../../../core/domain/models';
@@ -16,20 +16,20 @@ export const BenchmarkCard: React.FC<Props> = ({ report }) => (
 
 const styles = StyleSheet.create({
   card: {
-    ...theme.card,
+    ...(theme.card as object),
     backgroundColor: theme.colors.background,
     padding: theme.spacing.l,
     marginBottom: theme.spacing.m,
-  },
+  } as ViewStyle,
   title: {
     ...theme.typography.h3,
     color: theme.colors.subtleText,
     textAlign: 'center',
     marginBottom: theme.spacing.s,
-  },
+  } as TextStyle,
   text: {
     ...theme.typography.body,
     textAlign: 'center',
     color: theme.colors.text,
-  },
+  } as TextStyle,
 });

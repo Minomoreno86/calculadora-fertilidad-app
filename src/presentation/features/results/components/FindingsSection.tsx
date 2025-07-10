@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import Text from '../../../components/common/Text';
-import Box from '../../../components/common/Box';
-import { ClinicalFinding } from '@/core/domain/models';
-import { theme } from '@/config/theme';
+import Text from '../../../../presentation/components/common/Text';
+import Box from '../../../../presentation/components/common/Box';
+import { ClinicalFinding } from '../../../../core/domain/models';
+import { theme } from '../../../../config/theme';
 
 type Props = { findings: ClinicalFinding[] };
 

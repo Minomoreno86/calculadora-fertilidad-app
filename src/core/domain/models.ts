@@ -2,10 +2,34 @@
 // TIPOS ESPECÍFICOS Y DE AYUDA
 // ===================================================================
 
-export type MyomaType = 'none' | 'submucosal' | 'intramural_large' | 'subserosal';
-export type AdenomyosisType = 'none' | 'focal' | 'diffuse';
-export type PolypType = 'none' | 'small' | 'large' | 'ostium';
-export type HsgResult = 'unknown' | 'normal' | 'unilateral' | 'bilateral' | 'malformacion';
+export enum MyomaType {
+  None = 'none',
+  Submucosal = 'submucosal',
+  IntramuralLarge = 'intramural_large',
+  Subserosal = 'subserosal',
+}
+
+export enum AdenomyosisType {
+  None = 'none',
+  Focal = 'focal',
+  Diffuse = 'diffuse',
+}
+
+export enum PolypType {
+  None = 'none',
+  Small = 'small',
+  Large = 'large',
+  Ostium = 'ostium',
+}
+
+export enum HsgResult {
+  Unknown = 'unknown',
+  Normal = 'normal',
+  Unilateral = 'unilateral',
+  Bilateral = 'bilateral',
+  Malformation = 'malformacion',
+}
+
 export type SimulatableFactor = keyof Omit<Factors, 'baseAgeProbability'>;
 export type TreatmentCategory = 'Optimización Médica' | 'Baja Complejidad' | 'Alta Complejidad' | 'Estudio Adicional';
 
