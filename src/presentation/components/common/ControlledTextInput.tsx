@@ -32,7 +32,13 @@ export const ControlledTextInput = <TFormValues extends FieldValues>({
             <TextInput
               style={styles.input}
               onBlur={onBlur}
-              onChangeText={onChange}
+              onChangeText={(text) => {
+                if (textInputProps.keyboardType === 'numeric' || textInputProps.keyboardType === 'decimal-pad') {
+                  onChange(text.replace(',', '.'));
+                } else {
+                  onChange(text);
+                }
+              }}
               value={value}
               placeholderTextColor={theme.colors.placeholder}
               {...textInputProps}

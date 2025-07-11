@@ -1,6 +1,10 @@
 import { useState, useCallback } from 'react';
 import { EvaluationState, Factors, SimulatableFactor } from '@/core/domain/models';
 
+export const ALL_FACTORS_SIMULATION_KEY = 'all';
+
+import { calculateProbabilityFromFactors } from '@/core/domain/services/calculationEngine';
+
 // Definición explícita del tipo para el resultado de la simulación
 export interface SimulationResult {
   factor: SimulatableFactor | 'all';
@@ -17,26 +21,6 @@ export interface SimulationResult {
 export const useFertilitySimulator = (originalEvaluation: EvaluationState | null) => {
   const [simulationResult, setSimulationResult] = useState<SimulationResult | null>(null);
 
-  /**
-   * Calcula el pronóstico numérico basado en un conjunto de factores.
-   * @param factors - Objeto con los factores de fertilidad.
-   * @returns El pronóstico numérico (probabilidad).
-   */
-  const calculatePrognosis = (factors: Factors): number => {
-    // Excluye la probabilidad base por edad y el factor OTB (que es bloqueante)
-    const { baseAgeProbability, otb, ...otherFactors } = factors;
-
-    if (otb === 0) return 0; // Si hay OTB, el pronóstico espontáneo es 0
-
-    const productOfFactors = Object.values(otherFactors).reduce((acc, factor) => acc * factor, 1);
-    return baseAgeProbability * productOfFactors;
-  };
-
-  /**
-   * Simula la mejora de un único factor de fertilidad.
-   * @param factorToImprove - El factor a optimizar (ej. 'bmi', 'tsh').
-   * @param explanation - El texto que describe la mejora (ej. "un IMC óptimo").
-   */
   const simulateFactor = useCallback(
     (factorToImprove: SimulatableFactor, explanation: string) => {
       if (!originalEvaluation) return;
@@ -47,7 +31,7 @@ export const useFertilitySimulator = (originalEvaluation: EvaluationState | null
       // Optimiza el factor seleccionado a su valor ideal (1.0)
       simulatedFactors[factorToImprove] = 1.0;
 
-      const newPrognosis = calculatePrognosis(simulatedFactors);
+      const newPrognosis = calculateProbabilityFromFactors(simulatedFactors);
 
       setSimulationResult({
         factor: factorToImprove,
@@ -70,17 +54,16 @@ export const useFertilitySimulator = (originalEvaluation: EvaluationState | null
     const simulatedFactors = { ...originalEvaluation.factors };
 
     // Itera y optimiza todos los factores que no son perfectos (valor < 1.0)
-    for (const key in simulatedFactors) {
-      const factorName = key as keyof Factors;
-      if (factorName !== 'baseAgeProbability' && factorName !== 'otb' && simulatedFactors[factorName] < 1.0) {
-        simulatedFactors[factorName] = 1.0;
+    (Object.keys(simulatedFactors) as Array<keyof Factors>).forEach(key => {
+      if (key !== 'baseAgeProbability' && key !== 'otb' && simulatedFactors[key] < 1.0) {
+        simulatedFactors[key] = 1.0;
       }
-    }
+    });
 
-    const newPrognosis = calculatePrognosis(simulatedFactors);
+    const newPrognosis = calculateProbabilityFromFactors(simulatedFactors);
 
     setSimulationResult({
-      factor: 'all',
+      factor: ALL_FACTORS_SIMULATION_KEY,
       explanation: 'todos los factores optimizables',
       originalPrognosis,
       newPrognosis,

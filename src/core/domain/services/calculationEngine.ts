@@ -69,16 +69,12 @@ function _updateEvaluationState<K extends keyof Factors, D extends keyof Diagnos
   defaultFactorValue: number = DEFAULT_FACTOR_VALUE,
   defaultDiagnosticValue: string = DEFAULT_DIAGNOSTIC_COMMENT,
 ) {
-  if (factorKey && result.factors && result.factors[factorKey] !== undefined) {
-    factors[factorKey] = result.factors[factorKey] as Factors[K];
-  } else if (factorKey) {
-    factors[factorKey] = defaultFactorValue as Factors[K];
+  if (factorKey) {
+    factors[factorKey] = result.factors?.[factorKey] ?? (defaultFactorValue as Factors[K]);
   }
 
-  if (diagnosticKey && result.diagnostics && result.diagnostics[diagnosticKey] !== undefined) {
-    diagnostics[diagnosticKey] = result.diagnostics[diagnosticKey] as Diagnostics[D];
-  } else if (diagnosticKey) {
-    diagnostics[diagnosticKey] = defaultDiagnosticValue as Diagnostics[D];
+  if (diagnosticKey) {
+    diagnostics[diagnosticKey] = result.diagnostics?.[diagnosticKey] ?? (defaultDiagnosticValue as Diagnostics[D]);
   }
 
   if (result.diagnostics?.missingData) {
@@ -87,145 +83,43 @@ function _updateEvaluationState<K extends keyof Factors, D extends keyof Diagnos
 }
 
 function _evaluateAllFactors(userInput: UserInput, factors: Factors, diagnostics: Diagnostics): void {
-  _updateEvaluationState(
-    factorEvaluators.evaluateAgeBaseline(userInput.age),
-    factors,
-    diagnostics,
-    'baseAgeProbability',
-    'agePotential',
-    DEFAULT_AGE_PROBABILITY,
-    DEFAULT_DIAGNOSTIC_COMMENT,
-  );
+  const factorEvaluations = [
+    { fn: factorEvaluators.evaluateAgeBaseline, args: [userInput.age], factorKey: 'baseAgeProbability', diagnosticKey: 'agePotential', defaultFactor: DEFAULT_AGE_PROBABILITY, defaultDiagnostic: DEFAULT_DIAGNOSTIC_COMMENT },
+    { fn: factorEvaluators.evaluateBmi, args: [userInput.bmi], factorKey: 'bmi', diagnosticKey: 'bmiComment' },
+    { fn: factorEvaluators.evaluateCycle, args: [userInput.cycleDuration], factorKey: 'cycle', diagnosticKey: 'cycleComment' },
+    { fn: factorEvaluators.evaluatePcos, args: [userInput.hasPcos, userInput.bmi, userInput.cycleDuration], factorKey: 'pcos', diagnosticKey: 'pcosSeverity', defaultDiagnostic: DEFAULT_PCOS_SEVERITY },
+    { fn: factorEvaluators.evaluateEndometriosis, args: [userInput.endometriosisGrade], factorKey: 'endometriosis' },
+    { fn: factorEvaluators.evaluateMyomas, args: [userInput.myomaType], factorKey: 'myoma' },
+    { fn: factorEvaluators.evaluateAdenomyosis, args: [userInput.adenomyosisType], factorKey: 'adenomyosis' },
+    { fn: factorEvaluators.evaluatePolyps, args: [userInput.polypType], factorKey: 'polyp', diagnosticKey: 'polypComment' },
+    { fn: factorEvaluators.evaluateHsg, args: [userInput.hsgResult], factorKey: 'hsg', diagnosticKey: 'hsgComment' },
+    { fn: factorEvaluators.evaluateOtb, args: [userInput.hasOtb, userInput.age, userInput.otbMethod, userInput.remainingTubalLength, userInput.hasOtherInfertilityFactors, userInput.desireForMultiplePregnancies], factorKey: 'otb' },
+    { fn: factorEvaluators.evaluateAmh, args: [userInput.amh], factorKey: 'amh', diagnosticKey: 'ovarianReserve', defaultDiagnostic: DEFAULT_OVARIAN_RESERVE },
+    { fn: factorEvaluators.evaluateProlactin, args: [userInput.prolactin], factorKey: 'prolactin', diagnosticKey: 'prolactinComment' },
+    { fn: factorEvaluators.evaluateTsh, args: [userInput.tsh], factorKey: 'tsh', diagnosticKey: 'tshComment' },
+    { fn: factorEvaluators.evaluateHoma, args: [userInput.homaIr], factorKey: 'homa' },
+    { fn: factorEvaluators.evaluateInfertilityDuration, args: [userInput.infertilityDuration], factorKey: 'infertilityDuration' },
+    { fn: factorEvaluators.evaluatePelvicSurgeries, args: [userInput.pelvicSurgeriesNumber], factorKey: 'pelvicSurgery' },
+    { fn: factorEvaluators.evaluateMaleFactor, args: [userInput], factorKey: 'male', diagnosticKey: 'maleFactorDetailed', defaultDiagnostic: DEFAULT_MALE_FACTOR_DETAILED },
+  ];
 
-  _updateEvaluationState(
-    factorEvaluators.evaluateBmi(userInput.bmi),
-    factors,
-    diagnostics,
-    'bmi',
-    'bmiComment',
-  );
-
-  _updateEvaluationState(
-    factorEvaluators.evaluateCycle(userInput.cycleDuration),
-    factors,
-    diagnostics,
-    'cycle',
-    'cycleComment',
-  );
-
-  _updateEvaluationState(
-    factorEvaluators.evaluatePcos(userInput.hasPcos, userInput.bmi, userInput.cycleDuration),
-    factors,
-    diagnostics,
-    'pcos',
-    'pcosSeverity',
-    DEFAULT_FACTOR_VALUE,
-    DEFAULT_PCOS_SEVERITY,
-  );
-
-  _updateEvaluationState(
-    factorEvaluators.evaluateEndometriosis(userInput.endometriosisGrade),
-    factors,
-    diagnostics,
-    'endometriosis',
-  );
-
-  _updateEvaluationState(
-    factorEvaluators.evaluateMyomas(userInput.myomaType),
-    factors,
-    diagnostics,
-    'myoma',
-  );
-
-  _updateEvaluationState(
-    factorEvaluators.evaluateAdenomyosis(userInput.adenomyosisType),
-    factors,
-    diagnostics,
-    'adenomyosis',
-  );
-
-  _updateEvaluationState(
-    factorEvaluators.evaluatePolyps(userInput.polypType),
-    factors,
-    diagnostics,
-    'polyp',
-    'polypComment',
-  );
-
-  _updateEvaluationState(
-    factorEvaluators.evaluateHsg(userInput.hsgResult),
-    factors,
-    diagnostics,
-    'hsg',
-    'hsgComment',
-  );
-
-  _updateEvaluationState(
-    factorEvaluators.evaluateOtb(userInput.hasOtb),
-    factors,
-    diagnostics,
-    'otb',
-  );
-
-  _updateEvaluationState(
-    factorEvaluators.evaluateAmh(userInput.amh),
-    factors,
-    diagnostics,
-    'amh',
-    'ovarianReserve',
-    DEFAULT_FACTOR_VALUE,
-    DEFAULT_OVARIAN_RESERVE,
-  );
-
-  _updateEvaluationState(
-    factorEvaluators.evaluateProlactin(userInput.prolactin),
-    factors,
-    diagnostics,
-    'prolactin',
-    'prolactinComment',
-  );
-
-  _updateEvaluationState(
-    factorEvaluators.evaluateTsh(userInput.tsh),
-    factors,
-    diagnostics,
-    'tsh',
-    'tshComment',
-  );
-
-  _updateEvaluationState(
-    factorEvaluators.evaluateHoma(userInput.homaIr),
-    factors,
-    diagnostics,
-    'homa',
-  );
-
-  _updateEvaluationState(
-    factorEvaluators.evaluateInfertilityDuration(userInput.infertilityDuration),
-    factors,
-    diagnostics,
-    'infertilityDuration',
-  );
-
-  _updateEvaluationState(
-    factorEvaluators.evaluatePelvicSurgeries(userInput.pelvicSurgeriesNumber),
-    factors,
-    diagnostics,
-    'pelvicSurgery',
-  );
-
-  _updateEvaluationState(
-    factorEvaluators.evaluateMaleFactor(userInput),
-    factors,
-    diagnostics,
-    'male',
-    'maleFactorDetailed',
-    DEFAULT_FACTOR_VALUE,
-    DEFAULT_MALE_FACTOR_DETAILED,
-  );
+  for (const evalConfig of factorEvaluations) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const result = evalConfig.fn(...evalConfig.args);
+    _updateEvaluationState(
+      result,
+      factors,
+      diagnostics,
+      evalConfig.factorKey as keyof Factors,
+      evalConfig.diagnosticKey as keyof Diagnostics,
+      evalConfig.defaultFactor,
+      evalConfig.defaultDiagnostic,
+    );
+  }
 }
 
-function _calculateFinalPrognosis(factors: Factors): number {
+export function calculateProbabilityFromFactors(factors: Factors): number {
   const { baseAgeProbability, ...otherFactors } = factors;
   const productOfFactors = Object.values(otherFactors).reduce((acc, factor) => acc * factor, 1);
   return baseAgeProbability * productOfFactors;
@@ -237,8 +131,13 @@ function _generateReport(numericPrognosis: number, diagnostics: Diagnostics, use
 
 export function calculateProbability(userInput: UserInput): EvaluationState {
   const { factors, diagnostics } = _initializeEvaluationState();
-  _evaluateAllFactors(userInput, factors, diagnostics);
-  const numericPrognosis = _calculateFinalPrognosis(factors);
+  try {
+    _evaluateAllFactors(userInput, factors, diagnostics);
+  } catch (error) {
+    console.error('calculateProbability: Error during factor evaluation:', error);
+    throw error;
+  }
+  const numericPrognosis = calculateProbabilityFromFactors(factors);
   const report = _generateReport(numericPrognosis, diagnostics, userInput, factors);
 
   const finalEvaluation: EvaluationState = {

@@ -18,7 +18,11 @@ export default function CalculatorScreen() {
       </Text>
 
       <Box style={styles.formContainer}>
-        <DemographicsForm control={control} calculatedBmi={calculatedBmi} errors={errors} />
+        <DemographicsForm
+          control={control}
+          calculatedBmi={calculatedBmi}
+          errors={errors}
+        />
         <GynecologyHistoryForm control={control} errors={errors} />
         <LabTestsForm control={control} calculatedHoma={calculatedHoma} errors={errors} />
         <MaleFactorForm control={control} errors={errors} />

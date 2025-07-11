@@ -1,60 +1,61 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Control, FieldValues, Path, FieldErrors } from 'react-hook-form';
+import { Control, FieldErrors } from 'react-hook-form';
 import Text from '@/presentation/components/common/Text';
 import { ControlledTextInput } from '@/presentation/components/common/ControlledTextInput';
 import { theme } from '@/config/theme';
+import { FormState } from '../useCalculatorForm';
 
-type Props<TFormValues extends FieldValues> = {
-  control: Control<TFormValues>;
+type Props = {
+  control: Control<FormState>;
   calculatedHoma: number | null;
-  errors: FieldErrors<TFormValues>;
+  errors: FieldErrors<FormState>;
 };
 
-export const LabTestsForm = <TFormValues extends FieldValues>({ control, calculatedHoma, errors }: Props<TFormValues>) => {
+export const LabTestsForm = ({ control, calculatedHoma, errors }: Props) => {
   return (
     <View style={styles.container}>
       <Text style={styles.groupLabel}>Resultados de Laboratorio</Text>
 
       <ControlledTextInput
         control={control}
-        name={'amhValue' as Path<TFormValues>}
+        name="amhValue"
         label="Hormona Antimülleriana (AMH en ng/mL)"
         keyboardType="decimal-pad"
         placeholder="Ej: 1.8"
-        error={errors.amhValue as import('react-hook-form').FieldError}
+        error={errors.amhValue}
       />
       <ControlledTextInput
         control={control}
-        name={'tshValue' as Path<TFormValues>}
+        name="tshValue"
         label="Hormona Tiroidea (TSH en µIU/mL)"
         keyboardType="decimal-pad"
         placeholder="Ej: 2.1"
-        error={errors.tshValue as import('react-hook-form').FieldError}
+        error={errors.tshValue}
       />
       <ControlledTextInput
         control={control}
-        name={'prolactinValue' as Path<TFormValues>}
+        name="prolactinValue"
         label="Prolactina (ng/mL)"
         keyboardType="decimal-pad"
         placeholder="Ej: 15"
-        error={errors.prolactinValue as import('react-hook-form').FieldError}
+        error={errors.prolactinValue}
       />
       <ControlledTextInput
         control={control}
-        name={'insulinValue' as Path<TFormValues>}
+        name="insulinValue"
         label="Insulina Basal (µU/mL)"
         keyboardType="decimal-pad"
         placeholder="Ej: 10"
-        error={errors.insulinValue as import('react-hook-form').FieldError}
+        error={errors.insulinValue}
       />
       <ControlledTextInput
         control={control}
-        name={'glucoseValue' as Path<TFormValues>}
+        name="glucoseValue"
         label="Glucosa en Ayunas (mg/dL)"
         keyboardType="decimal-pad"
         placeholder="Ej: 85"
-        error={errors.glucoseValue as import('react-hook-form').FieldError}
+        error={errors.glucoseValue}
       />
 
       {calculatedHoma && (

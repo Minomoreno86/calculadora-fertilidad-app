@@ -17,24 +17,28 @@ import { TreatmentCard } from 'src/presentation/features/results/components/Trea
 
 // --- Pantalla Principal de Resultados ---
 export default function ResultsScreen() {
-  const params = useLocalSearchParams<{ reportKey: string }>();
+  const params = useLocalSearchParams();
   const [evaluation, setEvaluation] = useState<EvaluationState | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchReport = async () => {
       if (params.reportKey) {
+        const reportKey = Array.isArray(params.reportKey) ? params.reportKey[0] : params.reportKey;
         try {
-          const storedReport = await AsyncStorage.getItem(params.reportKey);
+          const storedReport = await AsyncStorage.getItem(reportKey);
           if (storedReport) {
             setEvaluation(JSON.parse(storedReport));
-            // Optionally, remove the item after reading if it's a one-time use report
-            // await AsyncStorage.removeItem(params.reportKey);
+            await AsyncStorage.removeItem(reportKey);
           } else {
-            console.warn('No report found for key:', params.reportKey);
+            console.warn('No report found for key:', reportKey);
           }
         } catch (error) {
-          console.error('Error fetching or parsing evaluation report:', error);
+          if (error instanceof SyntaxError) {
+            console.error('Error parsing stored report (invalid JSON):', error);
+          } else {
+            console.error('Error fetching or parsing evaluation report:', error);
+          }
         } finally {
           setLoading(false);
         }

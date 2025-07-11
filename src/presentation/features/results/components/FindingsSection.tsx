@@ -25,7 +25,10 @@ export const FindingsSection: React.FC<Props> = ({ findings }) => {
       {findings.map((finding, index) => (
         <View key={finding.key} style={[styles.findingItem, index < findings.length - 1 && styles.divider]}>
           <Text style={styles.findingTitle}>{finding.title}</Text>
-          <Text style={styles.explanation}>{finding.explanation}</Text>
+          <Text style={styles.definition}>{finding.definition}</Text>
+          {finding.justification && (
+            <Text style={styles.justification}>**Justificación:** {finding.justification}</Text>
+          )}
           <Text style={styles.recTitle}>Recomendaciones:</Text>
           {finding.recommendations.map((rec, recIndex) => (
             <Text key={recIndex} style={styles.recommendation}>
@@ -69,6 +72,17 @@ const styles = StyleSheet.create({
   explanation: {
     ...theme.typography.body,
     color: theme.colors.text,
+    marginBottom: theme.spacing.s,
+  },
+  definition: {
+    ...theme.typography.body,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.s,
+  },
+  justification: {
+    ...theme.typography.bodySmall,
+    color: theme.colors.subtleText,
+    fontStyle: 'italic',
     marginBottom: theme.spacing.s,
   },
   recTitle: {

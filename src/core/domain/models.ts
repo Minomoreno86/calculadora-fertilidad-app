@@ -30,13 +30,23 @@ export enum HsgResult {
   Malformation = 'malformacion',
 }
 
+export enum OtbMethod {
+  Unknown = 'unknown',
+  Clips = 'clips',
+  Rings = 'rings',
+  Ligation = 'ligation',
+  ExtensiveCauterization = 'extensive_cauterization',
+  PartialSalpingectomy = 'partial_salpingectomy',
+}
+
 export type SimulatableFactor = keyof Omit<Factors, 'baseAgeProbability'>;
 export type TreatmentCategory = 'Optimización Médica' | 'Baja Complejidad' | 'Alta Complejidad' | 'Estudio Adicional';
 
 export interface ClinicalFinding {
   key: string;
   title: string;
-  explanation: string;
+  definition: string;
+  justification: string;
   recommendations: string[];
 }
 
@@ -63,6 +73,10 @@ export interface UserInput {
   polypType: PolypType;
   hsgResult: HsgResult;
   hasOtb: boolean;
+  otbMethod?: OtbMethod;
+  remainingTubalLength?: number;
+  hasOtherInfertilityFactors?: boolean;
+  desireForMultiplePregnancies?: boolean;
   hasPelvicSurgery?: boolean;
   pelvicSurgeriesNumber?: number;
   amh?: number;

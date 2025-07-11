@@ -4,49 +4,50 @@ import Text from '@/presentation/components/common/Text';
 import { ControlledTextInput } from '@/presentation/components/common/ControlledTextInput';
 import { theme } from '@/config/theme';
 
-import { Control, FieldValues, Path, FieldErrors } from 'react-hook-form';
+import { Control, FieldErrors, Path } from 'react-hook-form';
+import { FormState } from '../useCalculatorForm';
 
-type Props<TFormValues extends FieldValues> = {
-  control: Control<TFormValues>;
-  errors: FieldErrors<TFormValues>;
+type Props = {
+  control: Control<FormState>;
+  errors: FieldErrors<FormState>;
 };
 
-export const MaleFactorForm = <TFormValues extends FieldValues>({ control, errors }: Props<TFormValues>) => {
+export const MaleFactorForm = ({ control, errors }: Props) => {
   return (
     <View style={styles.container}>
       <Text style={styles.groupLabel}>Factor Masculino (Espermatograma)</Text>
 
       <ControlledTextInput
         control={control}
-        name={'spermConcentration' as Path<TFormValues>}
+        name="spermConcentration"
         label="Concentración (millones/mL)"
         keyboardType="decimal-pad"
         placeholder="Ej: 45"
-        error={errors.spermConcentration as import('react-hook-form').FieldError}
+        error={errors.spermConcentration}
       />
       <ControlledTextInput
         control={control}
-        name={'spermMotility' as Path<TFormValues>}
+        name="spermMotility"
         label="Motilidad Progresiva (%)"
         keyboardType="decimal-pad"
         placeholder="Ej: 50"
-        error={errors.spermMotility as import('react-hook-form').FieldError}
+        error={errors.spermMotility}
       />
       <ControlledTextInput
         control={control}
-        name={'spermMorphology' as Path<TFormValues>}
+        name="spermMorphology"
         label="Morfología Normal (%)"
         keyboardType="decimal-pad"
         placeholder="Ej: 5"
-        error={errors.spermMorphology as import('react-hook-form').FieldError}
+        error={errors.spermMorphology}
       />
       <ControlledTextInput
         control={control}
-        name={'semenVolume' as Path<TFormValues>}
+        name="semenVolume"
         label="Volumen (mL)"
         keyboardType="decimal-pad"
         placeholder="Ej: 2.5"
-        error={errors.semenVolume as import('react-hook-form').FieldError}
+        error={errors.semenVolume}
       />
     </View>
   );

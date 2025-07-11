@@ -1,52 +1,51 @@
-import { StyleSheet, View } from 'react-native';
-import { Control, FieldValues, Path, FieldErrors, FieldError, DeepRequired, FieldErrorsImpl, Merge } from 'react-hook-form';
+import { StyleSheet, View, TextStyle } from 'react-native';
+import { Control, FieldErrors } from 'react-hook-form';
 import Text from '@/presentation/components/common/Text';
 import { ControlledTextInput } from '@/presentation/components/common/ControlledTextInput';
 import { theme } from '@/config/theme';
+import { FormState } from '../useCalculatorForm';
 
-type Props<TFormValues extends FieldValues> = {
-  control: Control<TFormValues>;
+type Props = {
+  control: Control<FormState>;
   calculatedBmi: number | null;
-  errors: FieldErrors<TFormValues>;
+  errors: FieldErrors<FormState>;
 };
 
-function isFieldError<TFormValues extends FieldValues>(
-  error: FieldError | Merge<FieldError, FieldErrorsImpl<DeepRequired<TFormValues>[string]>> | undefined
-): error is FieldError {
-  return !!error && typeof error === 'object' && typeof (error as FieldError).type === 'string';
-}
+const resolveFontWeight = (fw: TextStyle['fontWeight']): TextStyle['fontWeight'] => {
+  return fw;
+};
 
-export const DemographicsForm = <TFormValues extends FieldValues>({ control, calculatedBmi, errors }: Props<TFormValues>) => {
+export const DemographicsForm = ({ control, calculatedBmi, errors }: Props) => {
   return (
     <View style={styles.container}>
       <ControlledTextInput
         control={control}
-        name={'age' as Path<TFormValues>}
+        name="age"
         label="Edad (años)"
         keyboardType="number-pad"
         placeholder="Ej: 32"
         iconName="person-outline"
-        error={isFieldError<TFormValues>(errors.age) ? errors.age : undefined}
+        error={errors.age}
       />
 
       <ControlledTextInput
         control={control}
-        name={'weight' as Path<TFormValues>}
+        name="weight"
         label="Peso (kg)"
         keyboardType="decimal-pad"
         placeholder="Ej: 65"
         iconName="fitness-outline"
-        error={isFieldError<TFormValues>(errors.weight) ? errors.weight : undefined}
+        error={errors.weight}
       />
 
       <ControlledTextInput
         control={control}
-        name={'height' as Path<TFormValues>}
+        name="height"
         label="Altura (cm)"
         keyboardType="number-pad"
         placeholder="Ej: 165"
         iconName="resize-outline"
-        error={isFieldError<TFormValues>(errors.height) ? errors.height : undefined}
+        error={errors.height}
       />
 
       {calculatedBmi !== null && (
@@ -54,42 +53,6 @@ export const DemographicsForm = <TFormValues extends FieldValues>({ control, cal
       )}
     </View>
   );
-};
-
-// Extract fontWeight logic to variables to ensure valid values for React Native
-const resolveFontWeight = (fw: any): any => {
-  if (typeof fw === 'string') {
-    if (fw === 'regular') return '400';
-    if (fw === 'bold') return '700';
-    if (
-      [
-        'normal',
-        'bold',
-        '100',
-        '200',
-        '300',
-        '400',
-        '500',
-        '600',
-        '700',
-        '800',
-        '900',
-        'ultralight',
-        'thin',
-        'light',
-        'medium',
-        'semibold',
-        'extrabold',
-        'black',
-      ].includes(fw)
-    ) {
-      return fw;
-    }
-    // If it's a numeric string, return as is
-    if (!isNaN(Number(fw))) return fw;
-    return '400';
-  }
-  return fw;
 };
 
 const styles = StyleSheet.create({
@@ -112,4 +75,3 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.m,
   },
 });
-

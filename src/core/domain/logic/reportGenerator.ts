@@ -33,7 +33,7 @@ function getPrognosisTexts(
 ): Pick<Report, 'category' | 'emoji' | 'prognosisPhrase'> {
   const prognosisStr = `${numericPrognosis.toFixed(1)}%`;
 
-  if (factors.otb === 0.0) {
+  if (factors.otb < 0.001) {
     return {
       category: 'BAJO',
       emoji: '🔴',
@@ -79,7 +79,9 @@ export function generateFinalReport(
         acc.push({
           key,
           title: config.title,
-          ...clinicalContentLibrary[key],
+          definition: clinicalContentLibrary[key].definition,
+          justification: clinicalContentLibrary[key].justification,
+          recommendations: clinicalContentLibrary[key].recommendations,
         });
       }
     }
@@ -104,7 +106,7 @@ export function generateFinalReport(
   else if (diferencia < -2) comparativa = 'notablemente inferior al promedio';
   else comparativa = 'similar al promedio';
   let benchmarkPhrase = `Tu resultado es **${comparativa}** para tu grupo de edad (${ageRange} años), cuyo pronóstico base es del ${benchmarkValue.toFixed(1)}%.`;
-  if (factors.otb === 0.0) {
+  if (factors.otb < 0.001) {
     benchmarkPhrase = 'Comparación no aplicable por ligadura de trompas (OTB).';
   }
 
