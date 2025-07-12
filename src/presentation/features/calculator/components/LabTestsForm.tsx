@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { Control, FieldErrors } from 'react-hook-form';
 import Text from '@/presentation/components/common/Text';
 import { ControlledTextInput } from '@/presentation/components/common/ControlledTextInput';
+import { CalculatedValue } from '@/presentation/components/common/CalculatedValue';
 import { theme } from '@/config/theme';
 import { FormState } from '../useCalculatorForm';
 
@@ -13,6 +14,12 @@ type Props = {
 };
 
 export const LabTestsForm = ({ control, calculatedHoma, errors }: Props) => {
+  const getHomaInterpretation = (homa: number) => {
+    if (homa <= 2.5) return { text: 'Sensibilidad normal a la insulina', type: 'normal' as const };
+    if (homa <= 3.8) return { text: 'Resistencia leve a la insulina', type: 'warning' as const };
+    return { text: 'Resistencia significativa a la insulina', type: 'danger' as const };
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.groupLabel}>Resultados de Laboratorio</Text>
@@ -59,7 +66,12 @@ export const LabTestsForm = ({ control, calculatedHoma, errors }: Props) => {
       />
 
       {calculatedHoma && (
-        <Text style={styles.calculatedValueText}>Índice HOMA-IR Calculado: {calculatedHoma.toFixed(2)}</Text>
+        <CalculatedValue
+          label="Índice HOMA-IR"
+          value={calculatedHoma}
+          interpretation={getHomaInterpretation(calculatedHoma).text}
+          type={getHomaInterpretation(calculatedHoma).type}
+        />
       )}
     </View>
   );
@@ -75,11 +87,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
     paddingBottom: theme.spacing.xs,
-  },
-  calculatedValueText: {
-    ...theme.typography.bodyBold,
-    textAlign: 'center',
     color: theme.colors.primary,
-    marginTop: theme.spacing.m,
   },
 });

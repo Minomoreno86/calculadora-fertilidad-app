@@ -2,6 +2,7 @@ import { StyleSheet, View, TextStyle } from 'react-native';
 import { Control, FieldErrors } from 'react-hook-form';
 import Text from '@/presentation/components/common/Text';
 import { ControlledTextInput } from '@/presentation/components/common/ControlledTextInput';
+import { CalculatedValue } from '@/presentation/components/common/CalculatedValue';
 import { theme } from '@/config/theme';
 import { FormState } from '../useCalculatorForm';
 
@@ -16,8 +17,17 @@ const resolveFontWeight = (fw: TextStyle['fontWeight']): TextStyle['fontWeight']
 };
 
 export const DemographicsForm = ({ control, calculatedBmi, errors }: Props) => {
+  const getBmiInterpretation = (bmi: number) => {
+    if (bmi < 18.5) return { text: 'Bajo peso', type: 'warning' as const };
+    if (bmi < 25) return { text: 'Peso normal', type: 'normal' as const };
+    if (bmi < 30) return { text: 'Sobrepeso', type: 'warning' as const };
+    return { text: 'Obesidad', type: 'danger' as const };
+  };
+
   return (
     <View style={styles.container}>
+      <Text style={styles.groupLabel}>Información Demográfica</Text>
+      
       <ControlledTextInput
         control={control}
         name="age"
@@ -49,7 +59,13 @@ export const DemographicsForm = ({ control, calculatedBmi, errors }: Props) => {
       />
 
       {calculatedBmi !== null && (
-        <Text style={styles.calculatedValueText}>IMC Calculado: {calculatedBmi.toFixed(2)}</Text>
+        <CalculatedValue
+          label="Índice de Masa Corporal (IMC)"
+          value={calculatedBmi}
+          unit="kg/m²"
+          interpretation={getBmiInterpretation(calculatedBmi).text}
+          type={getBmiInterpretation(calculatedBmi).type}
+        />
       )}
     </View>
   );
@@ -66,12 +82,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
     paddingBottom: theme.spacing.xs,
-  },
-  calculatedValueText: {
-    ...theme.typography.bodyBold,
-    fontWeight: resolveFontWeight(theme.typography.bodyBold.fontWeight),
-    textAlign: 'center',
     color: theme.colors.primary,
-    marginTop: theme.spacing.m,
   },
 });

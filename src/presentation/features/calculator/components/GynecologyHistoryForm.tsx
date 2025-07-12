@@ -157,5 +157,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
     paddingBottom: theme.spacing.xs,
+    color: theme.colors.primary,
   },
 });

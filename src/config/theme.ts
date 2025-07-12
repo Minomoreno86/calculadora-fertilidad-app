@@ -31,6 +31,7 @@ export const theme = {
     warning: PALETTE.warning,
     info: PALETTE.info,
     inputBackground: PALETTE.white,
+    white: PALETTE.white,
   },
   spacing: {
     xxs: 4,

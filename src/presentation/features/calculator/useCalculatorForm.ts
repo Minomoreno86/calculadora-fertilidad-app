@@ -52,6 +52,46 @@ export const useCalculatorForm = () => {
 
   const watchedFields = watch();
 
+  // Calculate form completion progress
+  const formProgress = useMemo(() => {
+    const requiredFields = [
+      'age', 'weight', 'height', 'cycleLength', 'infertilityDuration'
+    ];
+    const filledFields = requiredFields.filter(field => {
+      const value = watchedFields[field as keyof FormState];
+      return value !== undefined && value !== null && value !== '' && value !== 0;
+    });
+    return Math.round((filledFields.length / requiredFields.length) * 100);
+  }, [watchedFields]);
+
+  // Get current step based on filled sections
+  const getCurrentStep = useMemo(() => {
+    const demographicsFields = ['age', 'weight', 'height'];
+    const gynecologyFields = ['cycleLength', 'infertilityDuration', 'hasPcos'];
+    const labFields = ['insulinValue', 'glucoseValue'];
+    const maleFactorFields = ['semenVolume'];
+
+    const isDemographicsComplete = demographicsFields.every(field => {
+      const value = watchedFields[field as keyof FormState];
+      return value !== undefined && value !== null && value !== '' && value !== 0;
+    });
+
+    const isGynecologyComplete = gynecologyFields.some(field => {
+      const value = watchedFields[field as keyof FormState];
+      return value !== undefined && value !== null && value !== '' && value !== 0;
+    });
+
+    const isLabComplete = labFields.some(field => {
+      const value = watchedFields[field as keyof FormState];
+      return value !== undefined && value !== null && value !== '' && value !== 0;
+    });
+
+    if (!isDemographicsComplete) return 1;
+    if (!isGynecologyComplete) return 2;
+    if (!isLabComplete) return 3;
+    return 4;
+  }, [watchedFields]);
+
   const calculatedBmi = useMemo(() => {
     const weightNum = watchedFields.weight;
     const heightNum = watchedFields.height;
@@ -97,5 +137,7 @@ export const useCalculatorForm = () => {
     formState: { errors },
     watchedFields,
     isLoading,
+    formProgress,
+    currentStep: getCurrentStep,
   };
 };
