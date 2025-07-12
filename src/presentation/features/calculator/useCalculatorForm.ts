@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Resolver } from 'react-hook-form';
 import { useRouter } from 'expo-router';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -19,7 +19,8 @@ const REPORT_KEY_PREFIX = 'fertility_report_';
 export const useCalculatorForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const initialFormValues = {
+  // Ensure initialFormValues matches exactly the fields and types in formSchema
+  const initialFormValues: FormState = {
     age: 30,
     weight: 65,
     height: 165,
@@ -38,10 +39,14 @@ export const useCalculatorForm = () => {
     hasOtherInfertilityFactors: false,
     desireForMultiplePregnancies: false,
     tpoAbPositive: false,
+    insulinValue: 0,
+    glucoseValue: 0,
+    semenVolume: 0, // Change to 0 if formSchema expects number, or match the type in formSchema
+    // Add other fields as required by your formSchema, with correct types
   };
 
   const { control, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormState>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as Resolver<FormState>,
     defaultValues: initialFormValues,
   });
 

@@ -13,17 +13,14 @@ const preprocessNumberInput = (value: unknown): number | undefined => {
   return undefined;
 };
 
-export const demographicsSchema = z.object({
+export const premiumFormSchema = z.object({
   age: z.coerce.number().min(1, 'La edad es obligatoria'),
   weight: z.preprocess(preprocessNumberInput, z.coerce.number().min(1, 'El peso es obligatorio')),
   height: z.preprocess(preprocessNumberInput, z.coerce.number().min(1, 'La altura es obligatoria')),
-});
-
-export const gynecologyHistorySchema = z.object({
-  cycleLength: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
+  cycleDuration: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
   infertilityDuration: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
   hasPcos: z.boolean(),
-  endometriosisStage: z.coerce.number(),
+  endometriosisGrade: z.coerce.number(),
   myomaType: z.nativeEnum(MyomaType),
   adenomyosisType: z.nativeEnum(AdenomyosisType),
   polypType: z.nativeEnum(PolypType),
@@ -35,25 +32,14 @@ export const gynecologyHistorySchema = z.object({
   remainingTubalLength: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
   hasOtherInfertilityFactors: z.boolean().optional(),
   desireForMultiplePregnancies: z.boolean().optional(),
-});
-
-export const labTestsSchema = z.object({
-  amhValue: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
-  tshValue: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
-  prolactinValue: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
+  amh: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
+  tsh: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
+  prolactin: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
   tpoAbPositive: z.boolean(),
-  insulinValue: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
-  glucoseValue: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
-});
-
-export const maleFactorSchema = z.object({
+  insulin: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
+  glucose: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
   spermConcentration: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
-  spermMotility: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
-  spermMorphology: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
-  semenVolume: z.number().optional(),
+  spermProgressiveMotility: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
+  spermNormalMorphology: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
+  semenVolume: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
 });
-
-export const formSchema = demographicsSchema
-  .merge(gynecologyHistorySchema)
-  .merge(labTestsSchema)
-  .merge(maleFactorSchema);

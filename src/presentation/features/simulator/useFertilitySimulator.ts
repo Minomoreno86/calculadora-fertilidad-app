@@ -3,7 +3,7 @@ import { EvaluationState, Factors, SimulatableFactor } from '@/core/domain/model
 
 export const ALL_FACTORS_SIMULATION_KEY = 'all';
 
-import { calculateProbabilityFromFactors } from '@/core/domain/services/calculationEngine';
+import { calculateProbabilityPremium } from '@/core/domain/services/calculationEnginePremium';
 
 // Definición explícita del tipo para el resultado de la simulación
 export interface SimulationResult {
@@ -31,7 +31,7 @@ export const useFertilitySimulator = (originalEvaluation: EvaluationState | null
       // Optimiza el factor seleccionado a su valor ideal (1.0)
       simulatedFactors[factorToImprove] = 1.0;
 
-      const newPrognosis = calculateProbabilityFromFactors(simulatedFactors);
+    const newPrognosis = calculateProbabilityPremium({ ...originalEvaluation.input, ...simulatedFactors }).report.numericPrognosis;
 
       setSimulationResult({
         factor: factorToImprove,
@@ -60,7 +60,7 @@ export const useFertilitySimulator = (originalEvaluation: EvaluationState | null
       }
     });
 
-    const newPrognosis = calculateProbabilityFromFactors(simulatedFactors);
+    const newPrognosis = calculateProbabilityPremium({ ...originalEvaluation.input, ...simulatedFactors }).report.numericPrognosis;
 
     setSimulationResult({
       factor: ALL_FACTORS_SIMULATION_KEY,

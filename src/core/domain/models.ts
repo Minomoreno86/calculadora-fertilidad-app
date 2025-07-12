@@ -48,6 +48,8 @@ export interface ClinicalFinding {
   definition: string;
   justification: string;
   recommendations: string[];
+  explanation?: string;
+  sources?: string[];
 }
 
 export interface TreatmentSuggestion {
@@ -55,6 +57,17 @@ export interface TreatmentSuggestion {
   title: string;
   details: string;
   source: string;
+}
+
+export interface ClinicalInfo {
+  key: string;
+  title: string;
+  definition?: string;
+  description?: string;
+  justification: string;
+  recommendations: string[];
+  explanation?: string;
+  sources?: string[];
 }
 
 // ===================================================================
@@ -111,22 +124,28 @@ export interface Factors {
 }
 
 export interface Diagnostics {
-  agePotential: string;
-  bmiComment: string;
-  cycleComment: string;
-  pcosSeverity: string;
-  endometriosisComment: string;
-  myomaComment: string;
-  adenomyosisComment: string;
-  polypComment: string;
-  hsgComment: string;
-  ovarianReserve: string;
-  prolactinComment: string;
-  tshComment: string;
-  homaComment: string;
-  maleFactorDetailed: string;
-  missingData: string[];
-}
+  agePotential?: string;
+  bmiComment?: string;
+  cycleComment?: string;
+  pcosSeverity?: string;
+  endometriosisComment?: string;
+  myomaComment?: string;
+  adenomyosisComment?: string;
+  polypComment?: string;
+  hsgComment?: string;
+  ovarianReserve?: string;
+  prolactinComment?: string;
+  tshComment?: string;
+  homaComment?: string;
+  maleFactorDetailed?: string;
+  missingData?: string[];
+  tpoAbComment?: string; // Propiedad añadida previamente para TPOAb
+  infertilityDurationComment?: string; // Propiedad añadida previamente para duración de infertilidad
+  pelvicSurgeryComment?: string;
+ 
+
+};
+
 
 export interface Report {
   numericPrognosis: number;

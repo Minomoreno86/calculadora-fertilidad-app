@@ -1,21 +1,20 @@
 import { StyleSheet, Button, ScrollView, View } from 'react-native';
-import { Link } from 'expo-router';
 import Box from '@/presentation/components/common/Box';
 import Text from '@/presentation/components/common/Text';
-import { useCalculatorForm } from '@/presentation/features/calculator/useCalculatorForm';
 import { DemographicsForm } from '@/presentation/features/calculator/components/DemographicsForm';
 import { GynecologyHistoryForm } from '@/presentation/features/calculator/components/GynecologyHistoryForm';
 import { LabTestsForm } from '@/presentation/features/calculator/components/LabTestsForm';
 import { MaleFactorForm } from '@/presentation/features/calculator/components/MaleFactorForm';
 import { theme } from '@/config/theme';
+import { usePremiumCalculatorForm } from '@/presentation/features/premiumCalculator/usePremiumCalculatorForm';
 
-export default function CalculatorScreen() {
-  const { control, calculatedBmi, calculatedHoma, handleCalculate, formState: { errors } } = useCalculatorForm();
+export default function PremiumCalculatorScreen() {
+  const { control, calculatedBmi, calculatedHoma, handleCalculate, formState: { errors } } = usePremiumCalculatorForm();
 
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
       <Text variant="h1" style={styles.header}>
-        Calculadora de Fertilidad
+        Calculadora de Fertilidad Premium
       </Text>
 
       <Box style={styles.formContainer}>
@@ -30,10 +29,7 @@ export default function CalculatorScreen() {
       </Box>
 
       <View style={styles.buttonContainer}>
-        <Button title="Generar Informe de Fertilidad" onPress={handleCalculate} color={theme.colors.primary} />
-        <Link href="/premiumCalculator" asChild>
-          <Button title="Ir a Calculadora Premium" color={theme.colors.secondary} />
-        </Link>
+        <Button title="Generar Informe Premium" onPress={handleCalculate} color={theme.colors.primary} />
       </View>
     </ScrollView>
   );
