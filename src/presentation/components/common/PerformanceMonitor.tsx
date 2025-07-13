@@ -5,7 +5,7 @@
 import React, { memo, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useBenchmark } from '@/core/utils/performanceBenchmark';
-import { getEnginePerformanceMetrics } from '@/core/domain/services/calculationEngine';
+import { getEnginePerformanceMetrics, getEngineDetailedStats } from '@/core/domain/services/calculationEngine';
 import { getPremiumCacheStats } from '@/core/domain/logic/clinicalContentLibraryPremium';
 import { theme } from '@/config/theme';
 
@@ -18,6 +18,7 @@ const PerformanceMonitor = memo<PerformanceMonitorProps>(({ visible = false, onT
   const { getReport, clearMetrics } = useBenchmark();
   const [metrics, setMetrics] = useState<any>(null);
   const [engineMetrics, setEngineMetrics] = useState<any>(null);
+  const [detailedStats, setDetailedStats] = useState<any>(null);
   const [cacheStats, setCacheStats] = useState<any>(null);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -29,6 +30,7 @@ const PerformanceMonitor = memo<PerformanceMonitorProps>(({ visible = false, onT
       try {
         setMetrics(getReport());
         setEngineMetrics(getEnginePerformanceMetrics());
+        setDetailedStats(getEngineDetailedStats());
         setCacheStats(getPremiumCacheStats());
       } catch (error) {
         console.warn('Error obteniendo métricas:', error);

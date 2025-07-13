@@ -6,7 +6,15 @@ export const mapFormStateToUserInput = (
   calculatedBmi: number | null,
   calculatedHoma: number | null
 ): UserInput => {
-  return {
+  
+  // 🔧 Helper para convertir campos opcionales correctamente
+  const parseOptionalNumber = (value: number | undefined): number | undefined => {
+    if (value === undefined || value === null) return undefined;
+    if (typeof value === 'number' && value >= 0) return value;
+    return undefined;
+  };
+
+  const result: UserInput = {
     // Demografia
     age: formData.age,
     bmi: calculatedBmi,
@@ -22,19 +30,19 @@ export const mapFormStateToUserInput = (
     hsgResult: formData.hsgResult,
 
     // Laboratorio básico
-    homaIr: calculatedHoma,
+    homaIr: calculatedHoma ?? undefined,
     tpoAbPositive: formData.tpoAbPositive,
 
-    // 🆕 Laboratorio avanzado - Con valores por defecto para undefined
-    amh: formData.amhValue && formData.amhValue > 0 ? formData.amhValue : undefined,
-    tsh: formData.tshValue && formData.tshValue > 0 ? formData.tshValue : undefined,
-    prolactin: formData.prolactinValue && formData.prolactinValue > 0 ? formData.prolactinValue : undefined,
+    // 🔧 Laboratorio avanzado - Mapeo mejorado para permitir valores 0
+    amh: parseOptionalNumber(formData.amhValue),
+    tsh: parseOptionalNumber(formData.tshValue),
+    prolactin: parseOptionalNumber(formData.prolactinValue),
 
-    // 🆕 Factor masculino completo - Con valores por defecto para undefined
-    spermConcentration: formData.spermConcentration && formData.spermConcentration > 0 ? formData.spermConcentration : undefined,
-    spermProgressiveMotility: formData.spermProgressiveMotility && formData.spermProgressiveMotility > 0 ? formData.spermProgressiveMotility : undefined,
-    spermNormalMorphology: formData.spermNormalMorphology && formData.spermNormalMorphology > 0 ? formData.spermNormalMorphology : undefined,
-    semenVolume: formData.semenVolume && formData.semenVolume > 0 ? formData.semenVolume : undefined,
+    // 🔧 Factor masculino completo - Mapeo mejorado 
+    spermConcentration: parseOptionalNumber(formData.spermConcentration),
+    spermProgressiveMotility: parseOptionalNumber(formData.spermProgressiveMotility),
+    spermNormalMorphology: parseOptionalNumber(formData.spermNormalMorphology),
+    semenVolume: parseOptionalNumber(formData.semenVolume),
 
     // 🆕 Ginecología avanzada
     cycleRegularity: formData.cycleRegularity,
@@ -50,4 +58,19 @@ export const mapFormStateToUserInput = (
     // 🔧 CAMPOS FALTANTES QUE ESPERA EL MOTOR - Agregar valores por defecto
     remainingTubalLength: undefined, // El motor lo espera pero no lo tenemos en el formulario
   };
+
+  // 🔧 LOG DETALLADO DEL MAPEO PARA DEBUGGING
+  console.log('🔧 MAPEO DATATYPE:', {
+    'formData.prolactinValue': formData.prolactinValue,
+    'typeof prolactinValue': typeof formData.prolactinValue,
+    'result.prolactin': result.prolactin,
+    'formData.tshValue': formData.tshValue,
+    'result.tsh': result.tsh,
+    'formData.endometriosisStage': formData.endometriosisStage,
+    'result.endometriosisGrade': result.endometriosisGrade,
+    'formData.myomaType': formData.myomaType,
+    'result.myomaType': result.myomaType
+  });
+
+  return result;
 };

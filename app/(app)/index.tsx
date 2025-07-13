@@ -7,6 +7,7 @@ import { ProgressStepper } from '@/presentation/components/common/ProgressSteppe
 import { InfoCard } from '@/presentation/components/common/InfoCard';
 import { useCalculatorForm } from '@/presentation/features/calculator/useCalculatorForm';
 import { useStaticValidation } from '@/core/domain/validation/useStaticValidation';
+import { clearEngineCache } from '@/core/domain/services/calculationEngine';
 import { DemographicsForm } from '@/presentation/features/calculator/components/DemographicsForm';
 import { GynecologyHistoryForm } from '@/presentation/features/calculator/components/GynecologyHistoryForm';
 import { LabTestsForm } from '@/presentation/features/calculator/components/LabTestsForm';
@@ -110,6 +111,20 @@ export default function CalculatorScreen() {
               iconPosition="left"
             />
           </Link>
+          
+          {/* 🔧 DEBUG: Botón para limpiar cache durante desarrollo */}
+          {process.env.NODE_ENV === 'development' && (
+            <Button
+              title="🧹 Limpiar Cache (Debug)"
+              onPress={() => {
+                clearEngineCache();
+                console.log('✅ Cache limpiado manualmente');
+              }}
+              variant="ghost"
+              size="small"
+              style={{ marginTop: 8 }}
+            />
+          )}
         </View>
       </View>
 
