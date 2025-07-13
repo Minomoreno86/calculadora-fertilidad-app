@@ -13,6 +13,17 @@ const preprocessNumberInput = (value: unknown): number | undefined => {
   return undefined;
 };
 
+const preprocessIntegerInput = (value: unknown): number | undefined => {
+  if (typeof value === 'string') {
+    const num = parseInt(value, 10);
+    return isNaN(num) ? undefined : num;
+  }
+  if (typeof value === 'number') {
+    return Math.floor(value);
+  }
+  return undefined;
+};
+
 export const premiumFormSchema = z.object({
   age: z.coerce.number().min(1, 'La edad es obligatoria'),
   weight: z.preprocess(preprocessNumberInput, z.coerce.number().min(1, 'El peso es obligatorio')),
@@ -20,13 +31,13 @@ export const premiumFormSchema = z.object({
   cycleDuration: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
   infertilityDuration: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
   hasPcos: z.boolean(),
-  endometriosisGrade: z.coerce.number(),
+  endometriosisGrade: z.preprocess(preprocessIntegerInput, z.coerce.number().min(0).max(4)),
   myomaType: z.nativeEnum(MyomaType),
   adenomyosisType: z.nativeEnum(AdenomyosisType),
   polypType: z.nativeEnum(PolypType),
   hsgResult: z.nativeEnum(HsgResult),
   hasPelvicSurgery: z.boolean(),
-  numberOfPelvicSurgeries: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),
+  numberOfPelvicSurgeries: z.preprocess(preprocessIntegerInput, z.coerce.number().min(0).max(10).optional()),
   hasOtb: z.boolean(),
   otbMethod: z.nativeEnum(OtbMethod).optional(),
   remainingTubalLength: z.preprocess(preprocessNumberInput, z.coerce.number().optional()),

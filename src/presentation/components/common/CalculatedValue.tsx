@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   valueContainer: {
     paddingHorizontal: theme.spacing.s,
     paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.xs,
+    borderRadius: theme.borderRadius.s,
     borderWidth: 1.5,
     backgroundColor: theme.colors.white,
   },

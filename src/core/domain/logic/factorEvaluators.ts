@@ -12,15 +12,27 @@ export const evaluateAgeBaseline = (age: number): PartialEvaluation => {
     { max: 34, probability: 17.5, comment: 'Buena fertilidad' },
     { max: 39, probability: 10.0, comment: 'Fecundidad en descenso' },
     { max: 44, probability: 5.0, comment: 'Baja tasa de embarazo' },
-    { max: Infinity, probability: 1.5, comment: 'Probabilidad muy baja' },
+    { max: 49, probability: 1.5, comment: 'Probabilidad muy baja' },
+    { max: Infinity, probability: 0.5, comment: 'Edad extrema - considerar ovodonación' },
   ];
+
+  // Manejar casos especiales de edades muy jóvenes
+  if (age < 15) {
+    return { factors: { baseAgeProbability: 0.1 }, diagnostics: { agePotential: 'Edad muy joven - no recomendado para embarazo' } };
+  }
+  
+  if (age < 18) {
+    return { factors: { baseAgeProbability: 15.0 }, diagnostics: { agePotential: 'Edad adolescente - requiere evaluación especializada' } };
+  }
 
   for (const range of ageRanges) {
     if (age <= range.max) {
       return { factors: { baseAgeProbability: range.probability }, diagnostics: { agePotential: range.comment } };
     }
   }
-  return { factors: { baseAgeProbability: 0 }, diagnostics: { agePotential: 'Edad fuera de rango clínico' } };
+  
+  // Fallback para edades muy extremas
+  return { factors: { baseAgeProbability: 0.1 }, diagnostics: { agePotential: 'Edad fuera de rango reproductivo' } };
 };
 
 export const evaluateBmi = (bmi: number | null): PartialEvaluation => {
@@ -41,9 +53,20 @@ export const evaluateBmi = (bmi: number | null): PartialEvaluation => {
 
 export const evaluateCycle = (cycleDuration?: number): PartialEvaluation => {
   if (cycleDuration === undefined) return { diagnostics: { missingData: ['Duración del ciclo menstrual'] } };
+  
+  // Permitir cualquier duración pero evaluar clínicamente
   if (cycleDuration >= 21 && cycleDuration <= 35)
-    return { factors: { cycle: 1.0 }, diagnostics: { cycleComment: 'Ciclo regular' } };
-  return { factors: { cycle: 0.7 }, diagnostics: { cycleComment: 'Ciclo irregular' } };
+    return { factors: { cycle: 1.0 }, diagnostics: { cycleComment: 'Ciclo regular normal (21-35 días)' } };
+  else if (cycleDuration >= 36 && cycleDuration <= 45)
+    return { factors: { cycle: 0.75 }, diagnostics: { cycleComment: 'Ciclo largo anormal (36-45 días) - Posible anovulación' } };
+  else if (cycleDuration >= 15 && cycleDuration <= 20)
+    return { factors: { cycle: 0.80 }, diagnostics: { cycleComment: 'Ciclo corto anormal (15-20 días) - Fase lútea insuficiente' } };
+  else if (cycleDuration > 45)
+    return { factors: { cycle: 0.60 }, diagnostics: { cycleComment: 'Oligomenorrea (>45 días) - Probable anovulación' } };
+  else if (cycleDuration < 15)
+    return { factors: { cycle: 0.50 }, diagnostics: { cycleComment: 'Ciclo muy corto (<15 días) - Altamente anormal' } };
+  else
+    return { factors: { cycle: 0.7 }, diagnostics: { cycleComment: 'Ciclo irregular' } };
 };
 
 export const evaluatePcos = (hasPcos: boolean, bmi: number | null, cycleDuration?: number): PartialEvaluation => {

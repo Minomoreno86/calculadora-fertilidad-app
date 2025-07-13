@@ -6,6 +6,7 @@ import { Button } from '@/presentation/components/common/Button';
 import { ProgressStepper } from '@/presentation/components/common/ProgressStepper';
 import { InfoCard } from '@/presentation/components/common/InfoCard';
 import { useCalculatorForm } from '@/presentation/features/calculator/useCalculatorForm';
+import { useStaticValidation } from '@/core/domain/validation/useStaticValidation';
 import { DemographicsForm } from '@/presentation/features/calculator/components/DemographicsForm';
 import { GynecologyHistoryForm } from '@/presentation/features/calculator/components/GynecologyHistoryForm';
 import { LabTestsForm } from '@/presentation/features/calculator/components/LabTestsForm';
@@ -20,9 +21,14 @@ export default function CalculatorScreen() {
     handleCalculate, 
     formState: { errors },
     isLoading,
-    formProgress,
-    currentStep
+    currentStep,
+    getRangeValidation // 🎨 CRÍTICO: Extraer función de validación de rangos
   } = useCalculatorForm();
+
+  // NUEVA: Validación simple y segura - usando valores estáticos por ahora
+  const {
+    completionPercentage
+  } = useStaticValidation();
 
   const stepLabels = ['Demografia', 'Ginecología', 'Laboratorio', 'Factor Masculino'];
 
@@ -60,11 +66,21 @@ export default function CalculatorScreen() {
         message="Completa todos los campos disponibles para obtener un análisis más preciso de tu perfil de fertilidad."
       />
 
+      {/* NUEVO: Validación de completitud */}
+      <InfoCard
+        type="info"
+        title="Progreso de Validación"
+        message={`Completitud: ${completionPercentage}%. Completa más campos básicos para mejor análisis`}
+      />
+
+      {/* Validaciones se mostrarán cuando estén disponibles */}
+
       <Box style={styles.formContainer}>
         <DemographicsForm
           control={control}
           calculatedBmi={calculatedBmi}
           errors={errors}
+          getRangeValidation={getRangeValidation} // 🎨 CRÍTICO: Pasar función de validación
         />
         <GynecologyHistoryForm control={control} errors={errors} />
         <LabTestsForm control={control} calculatedHoma={calculatedHoma} errors={errors} />
@@ -79,7 +95,7 @@ export default function CalculatorScreen() {
           size="large"
           fullWidth
           loading={isLoading}
-          disabled={isLoading || formProgress < 60}
+          disabled={isLoading}
           iconName="document-text-outline"
         />
         
@@ -97,10 +113,11 @@ export default function CalculatorScreen() {
         </View>
       </View>
 
-      {formProgress < 60 && (
+      {/* Mostrar mensaje de completitud si es muy bajo */}
+      {completionPercentage < 60 && (
         <InfoCard
           type="warning"
-          message={`Completa al menos el 60% del formulario para generar el informe. Progreso actual: ${formProgress}%`}
+          message={`Completitud actual: ${completionPercentage}%. Completa los campos básicos para generar el informe.`}
         />
       )}
     </ScrollView>

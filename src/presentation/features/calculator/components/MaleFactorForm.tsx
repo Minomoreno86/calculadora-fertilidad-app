@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Text from '@/presentation/components/common/Text';
 import { ControlledTextInput } from '@/presentation/components/common/ControlledTextInput';
 import { theme } from '@/config/theme';
-
-import { Control, FieldErrors, Path } from 'react-hook-form';
+import { Control, FieldErrors } from 'react-hook-form';
 import { FormState } from '../useCalculatorForm';
 
 type Props = {
@@ -12,7 +11,7 @@ type Props = {
   errors: FieldErrors<FormState>;
 };
 
-export const MaleFactorForm = ({ control, errors }: Props) => {
+export const MaleFactorForm = memo<Props>(({ control, errors }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.groupLabel}>Factor Masculino (Espermatograma)</Text>
@@ -22,36 +21,39 @@ export const MaleFactorForm = ({ control, errors }: Props) => {
         name="spermConcentration"
         label="Concentración (millones/mL)"
         keyboardType="decimal-pad"
-        placeholder="Ej: 45"
+        placeholder="Ej: 45 (Normal: ≥15, acepta cualquier valor)"
         error={errors.spermConcentration}
       />
       <ControlledTextInput
         control={control}
-        name="spermMotility"
+        name="spermProgressiveMotility"
         label="Motilidad Progresiva (%)"
         keyboardType="decimal-pad"
-        placeholder="Ej: 50"
-        error={errors.spermMotility}
+        placeholder="Ej: 50 (Normal: ≥32%, acepta cualquier valor)"
+        error={errors.spermProgressiveMotility}
       />
       <ControlledTextInput
         control={control}
-        name="spermMorphology"
+        name="spermNormalMorphology"
         label="Morfología Normal (%)"
         keyboardType="decimal-pad"
-        placeholder="Ej: 5"
-        error={errors.spermMorphology}
+        placeholder="Ej: 5 (Normal: ≥4%, acepta cualquier valor)"
+        error={errors.spermNormalMorphology}
       />
       <ControlledTextInput
         control={control}
         name="semenVolume"
-        label="Volumen (mL)"
+        label="Volumen Seminal (mL)"
         keyboardType="decimal-pad"
-        placeholder="Ej: 2.5"
+        placeholder="Ej: 2.5 (Normal: ≥1.5, acepta cualquier valor)"
         error={errors.semenVolume}
       />
     </View>
   );
-};
+});
+
+// 🚀 FASE 2C: Asignación de displayName para React DevTools
+MaleFactorForm.displayName = 'MaleFactorForm';
 
 const styles = StyleSheet.create({
   container: {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Control, FieldErrors, useWatch } from 'react-hook-form';
 import Text from '@/presentation/components/common/Text';
@@ -9,55 +9,69 @@ import { theme } from '@/config/theme';
 import { OtbMethod } from '@/core/domain/models';
 import { FormState } from '../useCalculatorForm';
 
+// 🚀 FASE 2C: Opciones memoizadas para evitar recreación en cada render
+const ENDOMETRIOSIS_OPTIONS = [
+  { label: 'Sin endometriosis', value: '0' },
+  { label: 'Grado 1 - Mínima', value: '1' },
+  { label: 'Grado 2 - Leve', value: '2' },
+  { label: 'Grado 3 - Moderada', value: '3' },
+  { label: 'Grado 4 - Severa', value: '4' },
+];
+
+const MYOMA_OPTIONS = [
+  { label: 'Sin miomas', value: 'none' },
+  { label: 'Submucoso (> 1 cm)', value: 'submucosal' },
+  { label: 'Intramural (> 4 cm)', value: 'intramural_large' },
+  { label: 'Subseroso', value: 'subserosal' },
+];
+
+const POLYP_OPTIONS = [
+  { label: 'Sin pólipos', value: 'none' },
+  { label: 'Pólipo pequeño (< 1 cm)', value: 'small' },
+  { label: 'Pólipo grande (≥ 1 cm o múltiples)', value: 'large' },
+  { label: 'Pólipo sobre ostium tubárico', value: 'ostium' },
+];
+
+const ADENOMYOSIS_OPTIONS = [
+  { label: 'Sin adenomiosis', value: 'none' },
+  { label: 'Adenomiosis focal', value: 'focal' },
+  { label: 'Adenomiosis difusa', value: 'diffuse' },
+];
+
+const HSG_OPTIONS = [
+  { label: 'No realizado / Desconocido', value: 'unknown' },
+  { label: 'Normal', value: 'normal' },
+  { label: 'Obstrucción unilateral', value: 'unilateral' },
+  { label: 'Obstrucción bilateral', value: 'bilateral' },
+  { label: 'Malformación uterina', value: 'malformacion' },
+];
+
+const OTB_METHOD_OPTIONS = [
+  { label: 'Desconocido', value: OtbMethod.Unknown },
+  { label: 'Clips', value: OtbMethod.Clips },
+  { label: 'Anillos', value: OtbMethod.Rings },
+  { label: 'Ligadura', value: OtbMethod.Ligation },
+  { label: 'Cauterización Extensa', value: OtbMethod.ExtensiveCauterization },
+  { label: 'Salpingectomía Parcial', value: OtbMethod.PartialSalpingectomy },
+];
+
 type Props = {
   control: Control<FormState>;
   errors: FieldErrors<FormState>;
 };
 
-export const GynecologyHistoryForm = ({ control, errors }: Props) => {
+export const GynecologyHistoryForm = memo<Props>(({ control, errors }) => {
   const hasPelvicSurgery = useWatch({ control, name: 'hasPelvicSurgery' });
   const hasOtb = useWatch({ control, name: 'hasOtb' });
 
+  // 🚀 FASE 2C: Usar opciones memoizadas en lugar de recrear en cada render
   const options = {
-    endometriosis: [
-      { label: 'Sin endometriosis', value: '0' },
-      { label: 'Grado 1 - Mínima', value: '1' },
-      { label: 'Grado 2 - Leve', value: '2' },
-      { label: 'Grado 3 - Moderada', value: '3' },
-      { label: 'Grado 4 - Severa', value: '4' },
-    ],
-    myoma: [
-      { label: 'Sin miomas', value: 'none' },
-      { label: 'Submucoso (> 1 cm)', value: 'submucosal' },
-      { label: 'Intramural (> 4 cm)', value: 'intramural_large' },
-      { label: 'Subseroso', value: 'subserosal' },
-    ],
-    polyp: [
-      { label: 'Sin pólipos', value: 'none' },
-      { label: 'Pólipo pequeño (< 1 cm)', value: 'small' },
-      { label: 'Pólipo grande (≥ 1 cm o múltiples)', value: 'large' },
-      { label: 'Pólipo sobre ostium tubárico', value: 'ostium' },
-    ],
-    adenomyosis: [
-      { label: 'Sin adenomiosis', value: 'none' },
-      { label: 'Adenomiosis focal', value: 'focal' },
-      { label: 'Adenomiosis difusa', value: 'diffuse' },
-    ],
-    hsg: [
-      { label: 'No realizado / Desconocido', value: 'unknown' },
-      { label: 'Normal', value: 'normal' },
-      { label: 'Obstrucción unilateral', value: 'unilateral' },
-      { label: 'Obstrucción bilateral', value: 'bilateral' },
-      { label: 'Malformación uterina', value: 'malformacion' },
-    ],
-    otbMethod: [
-      { label: 'Desconocido', value: OtbMethod.Unknown },
-      { label: 'Clips', value: OtbMethod.Clips },
-      { label: 'Anillos', value: OtbMethod.Rings },
-      { label: 'Ligadura', value: OtbMethod.Ligation },
-      { label: 'Cauterización Extensa', value: OtbMethod.ExtensiveCauterization },
-      { label: 'Salpingectomía Parcial', value: OtbMethod.PartialSalpingectomy },
-    ],
+    endometriosis: ENDOMETRIOSIS_OPTIONS,
+    myoma: MYOMA_OPTIONS,
+    polyp: POLYP_OPTIONS,
+    adenomyosis: ADENOMYOSIS_OPTIONS,
+    hsg: HSG_OPTIONS,
+    otbMethod: OTB_METHOD_OPTIONS,
   };
 
   return (
@@ -69,7 +83,7 @@ export const GynecologyHistoryForm = ({ control, errors }: Props) => {
         name="infertilityDuration"
         label="Duración de infertilidad (años)"
         keyboardType="number-pad"
-        placeholder="Ej: 2"
+        placeholder="Ej: 2 (acepta cualquier duración)"
         error={errors.infertilityDuration}
       />
       <ControlledTextInput
@@ -77,9 +91,21 @@ export const GynecologyHistoryForm = ({ control, errors }: Props) => {
         name="cycleLength"
         label="Duración promedio del ciclo (días)"
         keyboardType="number-pad"
-        placeholder="Ej: 28"
+        placeholder="Ej: 28 (Normal: 21-35, acepta cualquier valor)"
         error={errors.cycleLength}
       />
+      
+      <ControlledOptionSelector
+        control={control}
+        name="cycleRegularity"
+        label="Regularidad del Ciclo Menstrual"
+        options={[
+          { label: 'Regular (variación ±3 días)', value: 'regular' },
+          { label: 'Irregular (variación >3 días)', value: 'irregular' }
+        ]}
+        error={errors.cycleRegularity}
+      />
+      
       <ControlledOptionSelector
         control={control}
         name="endometriosisStage"
@@ -133,19 +159,20 @@ export const GynecologyHistoryForm = ({ control, errors }: Props) => {
       )}
       <ControlledSwitch control={control} name="hasOtb" label="¿Ligadura de trompas (OTB)?" />
       {hasOtb && (
-        <>
-          <ControlledOptionSelector
-            control={control}
-            name="otbMethod"
-            label="Método de Ligadura de Trompas (OTB)"
-            options={options.otbMethod}
-            error={errors.otbMethod}
-          />
-        </>
+        <ControlledOptionSelector
+          control={control}
+          name="otbMethod"
+          label="Método de Ligadura de Trompas (OTB)"
+          options={options.otbMethod}
+          error={errors.otbMethod}
+        />
       )}
     </View>
   );
-};
+});
+
+// 🚀 FASE 2C: Asignación de displayName para React DevTools
+GynecologyHistoryForm.displayName = 'GynecologyHistoryForm';
 
 const styles = StyleSheet.create({
   container: {
@@ -160,3 +187,5 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
   },
 });
+
+export default GynecologyHistoryForm;

@@ -207,3 +207,97 @@ export const clinicalContentLibrary: Record<string, ClinicalInfo> = {
     ],
   }
 };
+
+// ===================================================================
+// 🚀 FASE 2C: SISTEMA DE OPTIMIZACIÓN DE CONTENIDO CLÍNICO
+// ===================================================================
+
+// 💾 Cache inteligente para contenido clínico
+interface ContentCache<T> {
+  data: T;
+  timestamp: number;
+  accessCount: number;
+}
+
+class ClinicalContentCache {
+  private cache = new Map<string, ContentCache<unknown>>();
+  private readonly CACHE_TTL = 10 * 60 * 1000; // 10 minutos
+  private readonly MAX_CACHE_SIZE = 50;
+
+  get<T>(key: string): T | null {
+    const entry = this.cache.get(key) as ContentCache<T> | undefined;
+    
+    if (entry && (Date.now() - entry.timestamp) < this.CACHE_TTL) {
+      entry.accessCount++;
+      return entry.data;
+    }
+    
+    return null;
+  }
+
+  set<T>(key: string, data: T): void {
+    if (this.cache.size >= this.MAX_CACHE_SIZE) {
+      this._cleanupCache();
+    }
+    
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      accessCount: 1
+    });
+  }
+
+  private _cleanupCache(): void {
+    const entries = Array.from(this.cache.entries());
+    entries.sort((a, b) => a[1].accessCount - b[1].accessCount);
+    
+    const toRemove = Math.floor(entries.length * 0.3);
+    for (let i = 0; i < toRemove; i++) {
+      this.cache.delete(entries[i][0]);
+    }
+  }
+}
+
+// 🌟 Instancia global de cache
+const contentCache = new ClinicalContentCache();
+
+// 🚀 FASE 2C: Funciones de acceso optimizadas con lazy loading
+export const getClinicalInfoOptimized = (key: keyof typeof clinicalContentLibrary): ClinicalInfo | null => {
+  const cacheKey = `clinical_info_${key}`;
+  
+  // Intentar obtener del cache primero
+  let info = contentCache.get<ClinicalInfo>(cacheKey);
+  
+  if (!info) {
+    // Si no está en cache, obtener del objeto original y cachear
+    info = clinicalContentLibrary[key] || null;
+    if (info) {
+      contentCache.set(cacheKey, info);
+    }
+  }
+  
+  return info;
+};
+
+// 🚀 FASE 2C: Batch loading para múltiples claves (optimización adicional)
+export const getClinicalInfoBatch = (keys: (keyof typeof clinicalContentLibrary)[]): Record<string, ClinicalInfo | null> => {
+  const result: Record<string, ClinicalInfo | null> = {};
+  
+  keys.forEach(key => {
+    result[key] = getClinicalInfoOptimized(key);
+  });
+  
+  return result;
+};
+
+// 🚀 FASE 2C: Preload de contenido más usado
+export const preloadCommonContent = (): void => {
+  const commonKeys: (keyof typeof clinicalContentLibrary)[] = [
+    'EDAD', 'OBESIDAD', 'SOP', 'FACTOR_MASCULINO'
+  ];
+  
+  // Precargar en background
+  setTimeout(() => {
+    getClinicalInfoBatch(commonKeys);
+  }, 100);
+};

@@ -202,6 +202,7 @@ export function evaluateEndometriosisPremium(endometriosisGrade: number): Partia
 /**
  * Evalúa la duración del ciclo menstrual y asigna un factor de ajuste.
  * Ref: "PARAMETROS FASE 1.docx - Duración del Ciclo Menstrual"
+ * ACTUALIZADO: Rangos médicos correctos (21-35 días = normal)
  */
 export const evaluateCyclePremium = (cycleDuration?: number): PartialEvaluation => {
   let cycleComment: string;
@@ -210,19 +211,22 @@ export const evaluateCyclePremium = (cycleDuration?: number): PartialEvaluation 
   if (cycleDuration === undefined || cycleDuration <= 0) {
     cycleComment = 'Duración del ciclo no evaluada';
     factor = 1.0; // Neutral default
-  } else if (cycleDuration >= 24 && cycleDuration <= 35) {
-    cycleComment = 'Ciclo regular (24-35 días)';
+  } else if (cycleDuration >= 21 && cycleDuration <= 35) {
+    cycleComment = 'Ciclo regular normal (21-35 días)';
     factor = 1.0;
-  } else if (
-    (cycleDuration >= 21 && cycleDuration < 24) ||
-    (cycleDuration > 35 && cycleDuration <= 45)
-  ) {
-    cycleComment = 'Ciclo irregular leve (variación 7-10 días)';
-    factor = 0.85;
+  } else if (cycleDuration >= 36 && cycleDuration <= 45) {
+    cycleComment = 'Ciclo largo anormal (36-45 días) - Posible anovulación';
+    factor = 0.75;
+  } else if (cycleDuration >= 15 && cycleDuration <= 20) {
+    cycleComment = 'Ciclo corto anormal (15-20 días) - Fase lútea insuficiente';
+    factor = 0.80;
+  } else if (cycleDuration > 45) {
+    cycleComment = 'Oligomenorrea (>45 días) - Probable anovulación';
+    factor = 0.60;
   } else {
-    // cycleDuration < 21 || cycleDuration > 45
-    cycleComment = 'Ciclo irregular marcado (>10 días de variación / muy corto/largo)';
-    factor = 0.6;
+    // cycleDuration < 15
+    cycleComment = 'Ciclo muy corto (<15 días) - Altamente anormal';
+    factor = 0.50;
   }
   return { factors: { cycle: factor }, diagnostics: { cycleComment } };
 };

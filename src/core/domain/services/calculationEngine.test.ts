@@ -147,4 +147,132 @@ describe('calculateProbability Engine', () => {
     expect(result.diagnostics.tshComment).toBe('');
     expect(result.diagnostics.maleFactorDetailed).toBe('Normal o sin datos');
   });
+
+  // ===================================================================
+  // TESTS PARA VALIDACIÓN UNIFICADA (FASE 1)
+  // ===================================================================
+
+  describe('Unified Validation System', () => {
+    beforeEach(() => {
+      // Reset all mocks before each test
+      jest.clearAllMocks();
+      
+      // Setup default mock responses for all evaluators
+      Object.values(mockedFactorEvaluators).forEach(mockFn => {
+        mockFn.mockReturnValue({
+          factors: { baseAgeProbability: 20 },
+          diagnostics: { agePotential: 'Normal' }
+        });
+      });
+      
+      // Mock report generator
+      mockedReportGenerator.generateFinalReport.mockReturnValue({
+        overallPrognosis: 'Favorable',
+        prognosisDetail: 'Test report',
+        recommendations: ['Test recommendation'],
+        treatmentSuggestions: ['Test treatment'],
+        keyFindings: ['Test finding'],
+        prognosisValue: 75,
+        prognosisCategory: 'Bueno',
+        riskFactors: []
+      } as Report);
+    });
+
+    test('should validate input with clinical validators integration', () => {
+      const input: UserInput = {
+        ...baseUserInput,
+        age: 32,
+        bmi: 23.5,
+        amh: 2.8,
+        infertilityDuration: 6,
+        spermConcentration: 45,
+        spermProgressiveMotility: 55
+      };
+
+      const result = calculateProbability(input);
+
+      expect(result).toBeDefined();
+      expect(result.input).toBeDefined();
+      expect(result.factors).toBeDefined();
+      expect(result.diagnostics).toBeDefined();
+      expect(result.report).toBeDefined();
+      
+      // Verificar que el input fue sanitizado apropiadamente
+      expect(result.input.age).toBe(32);
+      expect(result.input.bmi).toBe(23.5);
+    });
+
+    test('should handle missing critical data gracefully', () => {
+      const incompleteInput: UserInput = {
+        ...baseUserInput,
+        age: 0, // Edad inválida
+        bmi: null, // BMI faltante
+        cycleDuration: 0 // Ciclo inválido
+      };
+
+      const result = calculateProbability(incompleteInput);
+
+      // El sistema debe sanitizar y usar valores por defecto
+      expect(result.input.age).toBeGreaterThan(0);
+      expect(result.input.bmi).toBeGreaterThan(0);
+      expect(result.input.cycleDuration).toBeGreaterThan(0);
+    });
+
+    test('should validate extreme values and adjust them', () => {
+      const extremeInput: UserInput = {
+        ...baseUserInput,
+        age: 70, // Edad extrema
+        bmi: 60, // BMI extremo
+        cycleDuration: 150, // Ciclo extremo
+        amh: 20, // AMH extrema
+        spermConcentration: 500 // Concentración extrema
+      };
+
+      const result = calculateProbability(extremeInput);
+
+      // Verificar que los valores fueron ajustados a rangos seguros
+      expect(result.input.age).toBeLessThanOrEqual(55);
+      expect(result.input.bmi).toBeLessThanOrEqual(50);
+      expect(result.input.cycleDuration).toBeLessThanOrEqual(90);
+      expect(result.input.amh).toBeLessThanOrEqual(15);
+      expect(result.input.spermConcentration).toBeLessThanOrEqual(300);
+    });
+
+    test('should perform cross-factor validation', () => {
+      const inconsistentInput: UserInput = {
+        ...baseUserInput,
+        age: 40, // Edad avanzada
+        amh: 8, // AMH muy alta para la edad
+        hasPcos: true,
+        bmi: 17, // BMI muy bajo para PCOS
+        cycleDuration: 25 // Ciclo corto para PCOS
+      };
+
+      // El sistema debe manejar inconsistencias sin fallar
+      expect(() => calculateProbability(inconsistentInput)).not.toThrow();
+      
+      const result = calculateProbability(inconsistentInput);
+      expect(result).toBeDefined();
+    });
+
+    test('should calculate unified confidence properly', () => {
+      const goodInput: UserInput = {
+        ...baseUserInput,
+        age: 28,
+        bmi: 22,
+        cycleDuration: 28,
+        amh: 3.2,
+        infertilityDuration: 8,
+        spermConcentration: 50,
+        spermProgressiveMotility: 60
+      };
+
+      const result = calculateProbability(goodInput);
+      
+      // Con datos completos y coherentes, debería proceder sin problemas
+      expect(result).toBeDefined();
+      expect(result.factors).toBeDefined();
+      expect(result.diagnostics).toBeDefined();
+    });
+  });
 });

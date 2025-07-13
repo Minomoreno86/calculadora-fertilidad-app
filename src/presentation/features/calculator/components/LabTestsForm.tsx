@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Control, FieldErrors } from 'react-hook-form';
 import Text from '@/presentation/components/common/Text';
@@ -13,12 +13,13 @@ type Props = {
   errors: FieldErrors<FormState>;
 };
 
-export const LabTestsForm = ({ control, calculatedHoma, errors }: Props) => {
-  const getHomaInterpretation = (homa: number) => {
+export const LabTestsForm = memo<Props>(({ control, calculatedHoma, errors }) => {
+  // 🚀 FASE 2C: Memoizar función de interpretación
+  const getHomaInterpretation = useCallback((homa: number) => {
     if (homa <= 2.5) return { text: 'Sensibilidad normal a la insulina', type: 'normal' as const };
     if (homa <= 3.8) return { text: 'Resistencia leve a la insulina', type: 'warning' as const };
     return { text: 'Resistencia significativa a la insulina', type: 'danger' as const };
-  };
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -29,7 +30,7 @@ export const LabTestsForm = ({ control, calculatedHoma, errors }: Props) => {
         name="amhValue"
         label="Hormona Antimülleriana (AMH en ng/mL)"
         keyboardType="decimal-pad"
-        placeholder="Ej: 1.8"
+        placeholder="Ej: 1.8 (Normal: 1-4, acepta cualquier valor)"
         error={errors.amhValue}
       />
       <ControlledTextInput
@@ -37,7 +38,7 @@ export const LabTestsForm = ({ control, calculatedHoma, errors }: Props) => {
         name="tshValue"
         label="Hormona Tiroidea (TSH en µIU/mL)"
         keyboardType="decimal-pad"
-        placeholder="Ej: 2.1"
+        placeholder="Ej: 2.1 (Normal: 0.5-2.5, acepta cualquier valor)"
         error={errors.tshValue}
       />
       <ControlledTextInput
@@ -45,7 +46,7 @@ export const LabTestsForm = ({ control, calculatedHoma, errors }: Props) => {
         name="prolactinValue"
         label="Prolactina (ng/mL)"
         keyboardType="decimal-pad"
-        placeholder="Ej: 15"
+        placeholder="Ej: 15 (Normal: <25, acepta cualquier valor)"
         error={errors.prolactinValue}
       />
       <ControlledTextInput
@@ -53,7 +54,7 @@ export const LabTestsForm = ({ control, calculatedHoma, errors }: Props) => {
         name="insulinValue"
         label="Insulina Basal (µU/mL)"
         keyboardType="decimal-pad"
-        placeholder="Ej: 10"
+        placeholder="Ej: 10 (acepta cualquier valor)"
         error={errors.insulinValue}
       />
       <ControlledTextInput
@@ -61,7 +62,7 @@ export const LabTestsForm = ({ control, calculatedHoma, errors }: Props) => {
         name="glucoseValue"
         label="Glucosa en Ayunas (mg/dL)"
         keyboardType="decimal-pad"
-        placeholder="Ej: 85"
+        placeholder="Ej: 85 (acepta cualquier valor)"
         error={errors.glucoseValue}
       />
 
@@ -75,7 +76,10 @@ export const LabTestsForm = ({ control, calculatedHoma, errors }: Props) => {
       )}
     </View>
   );
-};
+});
+
+// 🚀 FASE 2C: Asignación de displayName para React DevTools
+LabTestsForm.displayName = 'LabTestsForm';
 
 const styles = StyleSheet.create({
   container: {
