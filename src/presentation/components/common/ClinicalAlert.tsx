@@ -1,6 +1,14 @@
 /**
- * Componente de alerta clínica para mostrar validaciones médicas
- * Se integra con tu InfoCard existente
+ * ClinicalAlert - Componente de alerta clínica profesional
+ * 
+ * Características:
+ * - Integración nativa con InfoCard existente
+ * - Validación defensiva robusta
+ * - Accesibilidad completa (a11y)
+ * - Consistencia temática absoluta
+ * 
+ * @author AEC-D (Arquitecto Experto Clínico-Digital)
+ * @version 2.0 - Armonía total con ecosistema
  */
 
 import React from 'react';
@@ -13,59 +21,95 @@ import type { FieldValidationResult } from '@/core/domain/validation/clinicalVal
 interface ClinicalAlertProps {
   validation: FieldValidationResult | null;
   title?: string;
+  showRecommendations?: boolean;
+  showPercentile?: boolean;
 }
 
 export const ClinicalAlert: React.FC<ClinicalAlertProps> = ({ 
   validation, 
-  title = "Evaluación Clínica" 
+  title = "Evaluación Clínica",
+  showRecommendations = true,
+  showPercentile = true
 }) => {
-  if (!validation) return null;
-
-  // Determinar tipo de alerta basado en validación
-  let infoCardType: 'tip' | 'warning' = 'tip'; // InfoCard solo acepta estos tipos
-  let messages: string[] = [];
-
-  if (validation.criticalAlerts && validation.criticalAlerts.length > 0) {
-    infoCardType = 'warning'; // Usar warning en lugar de error
-    messages = validation.criticalAlerts.map(alert => alert.message);
-  } else if (validation.warnings && validation.warnings.length > 0) {
-    infoCardType = 'warning';
-    messages = validation.warnings.map(warning => warning.message);
-  } else if (validation.interpretedValue) {
-    infoCardType = 'tip';
-    const category = validation.interpretedValue.category || 'Valor';
-    const value = validation.value || 'N/A';
-    const normalRange = validation.interpretedValue.normalRange;
-    
-    messages = [`${category}: ${value}${normalRange ? ` (Normal: ${normalRange})` : ''}`];
+  // Validación defensiva robusta
+  if (!validation || typeof validation !== 'object') {
+    return null;
   }
 
-  if (messages.length === 0) return null;
+  // Determinar tipo de alerta con lógica mejorada
+  const getAlertConfig = () => {
+    if (validation.criticalAlerts?.length > 0) {
+      return {
+        type: 'warning' as const, // InfoCard no tiene 'error', usamos 'warning'
+        messages: validation.criticalAlerts.map(alert => alert.message),
+        priority: 'critical'
+      };
+    }
+    
+    if (validation.warnings?.length > 0) {
+      return {
+        type: 'warning' as const,
+        messages: validation.warnings.map(warning => warning.message),
+        priority: 'warning'
+      };
+    }
+    
+    if (validation.interpretedValue) {
+      const { category = 'Valor', normalRange } = validation.interpretedValue;
+      const valueStr = String(validation.value || 'N/A');
+      const normalRangeStr = normalRange ? ` (Normal: ${normalRange})` : '';
+      const message = `${category}: ${valueStr}${normalRangeStr}`;
+      
+      return {
+        type: 'tip' as const,
+        messages: [message],
+        priority: 'info'
+      };
+    }
+    
+    return null;
+  };
+
+  const alertConfig = getAlertConfig();
+  if (!alertConfig) return null;
 
   return (
-    <View style={styles.container}>
+    <View 
+      style={styles.container}
+      accessibilityRole="alert"
+      accessibilityLabel={`${title}: ${alertConfig.messages.join('. ')}`}
+    >
       <InfoCard
-        type={infoCardType}
+        type={alertConfig.type}
         title={title}
-        message={messages.join('. ')}
+        message={alertConfig.messages.join('. ')}
       />
       
-      {validation.recommendations && validation.recommendations.length > 0 && (
+      {showRecommendations && validation.recommendations?.length > 0 && (
         <View style={styles.recommendationsContainer}>
           <Text variant="caption" style={styles.recommendationsTitle}>
             Recomendaciones:
           </Text>
           {validation.recommendations.map((rec, index) => (
-            <Text key={index} variant="caption" style={styles.recommendation}>
+            <Text 
+              key={`recommendation-${index}-${rec.slice(0, 10)}`} 
+              variant="caption" 
+              style={styles.recommendation}
+              accessibilityRole="text"
+            >
               • {rec}
             </Text>
           ))}
         </View>
       )}
       
-      {validation.interpretedValue?.percentile && (
+      {showPercentile && validation.interpretedValue?.percentile && (
         <View style={styles.percentileContainer}>
-          <Text variant="caption" style={styles.percentileText}>
+          <Text 
+            variant="caption" 
+            style={styles.percentileText}
+            accessibilityHint="Comparación estadística con población general"
+          >
             Percentil {validation.interpretedValue.percentile} para la edad
           </Text>
         </View>
@@ -81,151 +125,35 @@ const styles = StyleSheet.create({
   recommendationsContainer: {
     marginTop: 8,
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: theme.colors.background,
+    paddingVertical: 12,
+    backgroundColor: theme.colors.surface,
     borderRadius: 8,
     borderLeftWidth: 3,
     borderLeftColor: theme.colors.primary,
+    // Sombra sutil para elevación profesional
+    shadowColor: theme.colors.black || '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   recommendationsTitle: {
     fontWeight: '600',
     color: theme.colors.primary,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   recommendation: {
     color: theme.colors.text,
     marginVertical: 2,
+    lineHeight: 18,
   },
   percentileContainer: {
-    marginTop: 4,
+    marginTop: 6,
     alignItems: 'center',
   },
   percentileText: {
-    color: theme.colors.subtleText,
+    color: theme.colors.textSecondary,
     fontStyle: 'italic',
-  },
-  // Estilos para ClinicalProgress
-  progressContainer: {
-    marginVertical: 12,
-    padding: 16,
-    backgroundColor: theme.colors.card,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  progressTitle: {
-    fontWeight: '600',
-    color: theme.colors.text,
-  },
-  progressScore: {
-    fontWeight: '600',
-  },
-  progressBarContainer: {
-    height: 6,
-    backgroundColor: theme.colors.border,
-    borderRadius: 3,
-    overflow: 'hidden',
-    marginVertical: 8,
-  },
-  progressBar: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  progressFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  completionText: {
-    color: theme.colors.subtleText,
-  },
-  calculationStatus: {
-    fontWeight: '500',
+    fontSize: 12,
   },
 });
-
-/**
- * Componente para mostrar progreso de validación clínica
- */
-interface ClinicalProgressProps {
-  completionScore: number;
-  canCalculate: boolean;
-  overallScore: number;
-}
-
-export const ClinicalProgress: React.FC<ClinicalProgressProps> = ({
-  completionScore,
-  canCalculate,
-  overallScore
-}) => {
-  // Validar props para evitar errores
-  const safeCompletionScore = Math.max(0, Math.min(100, completionScore || 0));
-  const safeOverallScore = Math.max(0, Math.min(100, overallScore || 0));
-  const safeCanCalculate = Boolean(canCalculate);
-
-  const getProgressColor = (score: number): string => {
-    if (score >= 80) return theme.colors.success || '#10B981';
-    if (score >= 60) return theme.colors.warning || '#F59E0B';
-    return theme.colors.error || '#EF4444';
-  };
-
-  const getScoreInterpretation = (score: number): string => {
-    if (score >= 80) return 'Excelente';
-    if (score >= 70) return 'Bueno';
-    if (score >= 60) return 'Aceptable';
-    if (score >= 40) return 'Limitado';
-    return 'Insuficiente';
-  };
-
-  return (
-    <View style={styles.progressContainer}>
-      <View style={styles.progressHeader}>
-        <Text variant="caption" style={styles.progressTitle}>
-          Validación Clínica
-        </Text>
-        <Text 
-          variant="caption" 
-          style={[styles.progressScore, { color: getProgressColor(safeOverallScore) }]}
-        >
-          {safeOverallScore}/100 - {getScoreInterpretation(safeOverallScore)}
-        </Text>
-      </View>
-      
-      <View style={styles.progressBarContainer}>
-        <View 
-          style={[
-            styles.progressBar, 
-            { 
-              width: `${safeCompletionScore}%`,
-              backgroundColor: getProgressColor(safeCompletionScore)
-            }
-          ]} 
-        />
-      </View>
-      
-      <View style={styles.progressFooter}>
-        <Text variant="caption" style={styles.completionText}>
-          Completitud: {safeCompletionScore}%
-        </Text>
-        <Text 
-          variant="caption" 
-          style={[
-            styles.calculationStatus,
-            { color: safeCanCalculate ? (theme.colors.success || '#10B981') : (theme.colors.error || '#EF4444') }
-          ]}
-        >
-          {safeCanCalculate ? '✓ Listo para calcular' : '⚠ Datos insuficientes'}
-        </Text>
-      </View>
-    </View>
-  );
-};

@@ -11,7 +11,46 @@
  * - Métricas de performance en tiempo real
  */
 
-import type { ValidationTask, ValidationResult } from './validationWorker';
+import type { 
+  ValidationTask, 
+  ValidationResult
+} from './validationWorker';
+
+// Tipos locales para validación (para evitar dependencias circulares)
+type SeverityLevel = 'high' | 'medium' | 'low';
+
+interface ClinicalValidationResult {
+  isValid: boolean;
+  severity: SeverityLevel;
+  recommendations: string[];
+  confidence: number;
+}
+
+interface CrossFieldValidationResult {
+  conflicts: string[];
+  correlations: string[];
+  consistency: number;
+}
+
+interface BulkValidationResult {
+  totalFields: number;
+  validFields: number;
+  completeness: number;
+  qualityScore: number;
+}
+
+interface RangeValidationResult {
+  inRange: boolean;
+  percentile: number;
+  riskLevel: SeverityLevel;
+}
+
+// Definir tipos locales que coincidan con validationWorker
+type ValidationResultData = 
+  | ClinicalValidationResult 
+  | CrossFieldValidationResult 
+  | BulkValidationResult 
+  | RangeValidationResult;
 
 export interface ValidationGroup {
   id: string;
@@ -25,6 +64,7 @@ export interface ValidationGroup {
 export interface ParallelValidationConfig {
   maxConcurrency: number;
   enableCache: boolean;
+  cacheTTL: number; // TTL del cache en ms
   timeoutMs: number;
   retryAttempts: number;
 }
@@ -43,16 +83,19 @@ export interface ValidationMetrics {
  */
 export class ParallelValidationEngine {
   private workers: Worker[] = [];
-  private activeGroups = new Map<string, ValidationGroup>();
-  private completedGroups = new Set<string>();
-  private results = new Map<string, ValidationResult>();
+  private readonly activeGroups = new Map<string, ValidationGroup>();
+  private readonly completedGroups = new Set<string>();
+  private readonly results = new Map<string, ValidationResult>();
   private metrics: ValidationMetrics;
-  private config: ParallelValidationConfig;
+  private readonly config: ParallelValidationConfig;
+  private readonly cache = new Map<string, ValidationResult & { cacheTimestamp: number }>();
+  private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
   constructor(config: Partial<ParallelValidationConfig> = {}) {
     this.config = {
       maxConcurrency: 4,
       enableCache: true,
+      cacheTTL: 5 * 60 * 1000, // 5 minutos por defecto
       timeoutMs: 10000,
       retryAttempts: 2,
       ...config
@@ -165,14 +208,15 @@ export class ParallelValidationEngine {
       }
       
       // Simular validación (en implementación real, usaría Worker)
-      const result = await this.simulateValidation(task);
+      const simulationResult = await this.simulateValidation(task);
+      const validationData = this.convertToValidationResultData(simulationResult);
       
       const processingTime = performance.now() - startTime;
       
       const validationResult: ValidationResult = {
         taskId: task.id,
         success: true,
-        result,
+        result: validationData,
         processingTime
       };
       
@@ -198,7 +242,34 @@ export class ParallelValidationEngine {
   /**
    * Simular validación (placeholder para Worker real)
    */
-  private async simulateValidation(task: ValidationTask): Promise<unknown> {
+  /**
+   * Convertir resultado simulado a ValidationResultData
+   */
+  private convertToValidationResultData(simResult: {
+    type: string;
+    valid: boolean;
+    confidence: number;
+    timestamp: number;
+  }  ): ValidationResultData {
+    return {
+      isValid: simResult.valid,
+      severity: simResult.valid ? 'low' : 'medium',
+      recommendations: simResult.valid 
+        ? [`Validación ${simResult.type} exitosa`]
+        : [`Revisar datos para validación ${simResult.type}`],
+      confidence: simResult.confidence
+    };
+  }
+
+  /**
+   * Simular validación (placeholder para Worker real)
+   */
+  private async simulateValidation(task: ValidationTask): Promise<{
+    type: string;
+    valid: boolean;
+    confidence: number;
+    timestamp: number;
+  }> {
     // Simular tiempo de procesamiento basado en tipo
     const delays = {
       clinical: 100,
@@ -209,7 +280,7 @@ export class ParallelValidationEngine {
     
     await new Promise(resolve => setTimeout(resolve, delays[task.type] || 50));
     
-    // Simular resultado exitoso
+    // Simular resultado exitoso con estructura consistente
     return {
       type: task.type,
       valid: Math.random() > 0.1,
@@ -224,7 +295,6 @@ export class ParallelValidationEngine {
   private buildDependencyGraph(groups: ValidationGroup[]): ValidationGroup[][] {
     const batches: ValidationGroup[][] = [];
     const processed = new Set<string>();
-    const groupMap = new Map(groups.map(g => [g.id, g]));
     
     while (processed.size < groups.length) {
       const currentBatch: ValidationGroup[] = [];
@@ -258,19 +328,47 @@ export class ParallelValidationEngine {
    * Obtener resultado del cache
    */
   private getCachedResult(task: ValidationTask): ValidationResult | null {
-    // Implementación simple de cache en memoria
     const cacheKey = `${task.type}-${JSON.stringify(task.data)}`;
-    // En implementación real, usaríamos Map o AsyncStorage
-    return null; // Placeholder
+    const cached = this.cache.get(cacheKey);
+    
+    if (cached && Date.now() - cached.cacheTimestamp < this.config.cacheTTL) {
+      // Crear una copia sin el timestamp del cache
+      return {
+        taskId: cached.taskId,
+        success: cached.success,
+        result: cached.result,
+        error: cached.error,
+        processingTime: cached.processingTime,
+        cacheHit: true
+      };
+    }
+    
+    // Limpiar entry expirado
+    if (cached) {
+      this.cache.delete(cacheKey);
+    }
+    
+    return null;
   }
 
   /**
    * Guardar resultado en cache
    */
   private cacheResult(task: ValidationTask, result: ValidationResult): void {
-    // Implementación simple de cache
     const cacheKey = `${task.type}-${JSON.stringify(task.data)}`;
-    // En implementación real, guardaríamos en Map o AsyncStorage
+    
+    // Implementar límite de cache (LRU simple)
+    if (this.cache.size >= 100) {
+      const firstKey = this.cache.keys().next().value;
+      if (firstKey) {
+        this.cache.delete(firstKey);
+      }
+    }
+    
+    this.cache.set(cacheKey, {
+      ...result,
+      cacheTimestamp: Date.now()
+    });
   }
 
   /**

@@ -3,7 +3,7 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import Box from '@/presentation/components/common/Box';
 import Text from '@/presentation/components/common/Text';
-import { Button } from '@/presentation/components/common/Button';
+import { Button } from '@/presentation/components/common/EnhancedButton';
 import { ProgressStepper } from '@/presentation/components/common/ProgressStepper';
 import { InfoCard } from '@/presentation/components/common/InfoCard';
 import { useCalculatorWithParallelValidation } from '@/presentation/features/calculator/hooks/useCalculatorWithParallelValidation';

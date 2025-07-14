@@ -11,19 +11,127 @@
  * - Manejo de errores robusto
  */
 
+// ============= TIPOS ESPECÍFICOS =============
+
+/**
+ * Niveles de severidad para las validaciones
+ */
+type SeverityLevel = 'high' | 'medium' | 'low';
+
+/**
+ * Niveles de prioridad para las tareas
+ */
+type PriorityLevel = 'high' | 'medium' | 'low';
+
+/**
+ * Tipos de validación disponibles
+ */
+type ValidationType = 'clinical' | 'cross-field' | 'bulk' | 'range';
+
+/**
+ * Datos para validación clínica
+ */
+interface ClinicalValidationData {
+  age?: number;
+  height?: number;
+  weight?: number;
+  amh?: number;
+  glucose?: number;
+  insulin?: number;
+  spermConcentration?: number;
+  spermProgressiveMotility?: number;
+  spermNormalMorphology?: number;
+}
+
+/**
+ * Datos para validación entre campos
+ */
+interface CrossFieldValidationData {
+  fields: string[];
+  relationships?: Record<string, unknown>;
+}
+
+/**
+ * Datos para validación masiva
+ */
+interface BulkValidationData {
+  fields: Array<{
+    name: string;
+    value: unknown;
+    type: 'number' | 'string' | 'boolean';
+  }>;
+}
+
+/**
+ * Datos para validación de rangos
+ */
+interface RangeValidationData {
+  value: number;
+  min: number;
+  max: number;
+  fieldName: string;
+}
+
+/**
+ * Union type para todos los tipos de datos de validación
+ */
+type ValidationData = 
+  | ClinicalValidationData 
+  | CrossFieldValidationData 
+  | BulkValidationData 
+  | RangeValidationData;
+
+/**
+ * Resultados específicos por tipo de validación
+ */
+export interface ClinicalValidationResult {
+  isValid: boolean;
+  severity: SeverityLevel;
+  recommendations: string[];
+  confidence: number;
+}
+
+export interface CrossFieldValidationResult {
+  conflicts: string[];
+  correlations: string[];
+  consistency: number;
+}
+
+export interface BulkValidationResult {
+  totalFields: number;
+  validFields: number;
+  completeness: number;
+  qualityScore: number;
+}
+
+export interface RangeValidationResult {
+  inRange: boolean;
+  percentile: number;
+  riskLevel: SeverityLevel;
+}
+
+/**
+ * Union type para todos los tipos de resultados
+ */
+type ValidationResultData = 
+  | ClinicalValidationResult 
+  | CrossFieldValidationResult 
+  | BulkValidationResult 
+  | RangeValidationResult;
+
 // Tipos para el Web Worker
 export interface ValidationTask {
   id: string;
-  type: 'clinical' | 'cross-field' | 'bulk' | 'range';
-  data: any;
-  priority: 'high' | 'medium' | 'low';
+  type: ValidationType;
+  data: ValidationData;
+  priority: PriorityLevel;
   timestamp: number;
 }
 
 export interface ValidationResult {
   taskId: string;
   success: boolean;
-  result?: any;
+  result?: ValidationResultData;
   error?: string;
   processingTime: number;
   cacheHit?: boolean;
@@ -34,9 +142,9 @@ export interface ValidationResult {
  * Procesa validaciones de forma asíncrona y paralela
  */
 class ValidationWorkerEngine {
-  private taskQueue: ValidationTask[] = [];
+  private readonly taskQueue: ValidationTask[] = [];
   private processing = false;
-  private cache = new Map<string, { result: any; timestamp: number }>();
+  private readonly cache = new Map<string, { result: ValidationResultData; timestamp: number }>();
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
   constructor() {
@@ -112,20 +220,20 @@ class ValidationWorkerEngine {
     const startTime = performance.now();
     
     try {
-      let result: any;
+      let result: ValidationResultData;
 
       switch (task.type) {
         case 'clinical':
-          result = await this.processClinicalValidation(task.data);
+          result = await this.processClinicalValidation(task.data as ClinicalValidationData);
           break;
         case 'cross-field':
-          result = await this.processCrossFieldValidation(task.data);
+          result = await this.processCrossFieldValidation(task.data as CrossFieldValidationData);
           break;
         case 'bulk':
-          result = await this.processBulkValidation(task.data);
+          result = await this.processBulkValidation(task.data as BulkValidationData);
           break;
         case 'range':
-          result = await this.processRangeValidation(task.data);
+          result = await this.processRangeValidation(task.data as RangeValidationData);
           break;
         default:
           throw new Error(`Tipo de validación no soportado: ${task.type}`);
@@ -159,7 +267,7 @@ class ValidationWorkerEngine {
   /**
    * Validación clínica compleja
    */
-  private async processClinicalValidation(data: any): Promise<any> {
+  private async processClinicalValidation(_data: ClinicalValidationData): Promise<ClinicalValidationResult> {
     // Simular validación clínica compleja
     await this.delay(Math.random() * 100 + 50); // 50-150ms
     
@@ -174,7 +282,7 @@ class ValidationWorkerEngine {
   /**
    * Validación entre campos
    */
-  private async processCrossFieldValidation(data: any): Promise<any> {
+  private async processCrossFieldValidation(_data: CrossFieldValidationData): Promise<CrossFieldValidationResult> {
     await this.delay(Math.random() * 50 + 25); // 25-75ms
     
     return {
@@ -187,7 +295,7 @@ class ValidationWorkerEngine {
   /**
    * Validación masiva de múltiples campos
    */
-  private async processBulkValidation(data: any): Promise<any> {
+  private async processBulkValidation(data: BulkValidationData): Promise<BulkValidationResult> {
     await this.delay(Math.random() * 200 + 100); // 100-300ms
     
     const fields = data.fields || [];
@@ -202,13 +310,25 @@ class ValidationWorkerEngine {
   /**
    * Validación de rangos
    */
-  private async processRangeValidation(data: any): Promise<any> {
+  private async processRangeValidation(_data: RangeValidationData): Promise<RangeValidationResult> {
     await this.delay(Math.random() * 30 + 10); // 10-40ms
+    
+    // Corregir ternario anidado
+    const riskThreshold = Math.random();
+    let riskLevel: 'high' | 'medium' | 'low';
+    
+    if (riskThreshold > 0.8) {
+      riskLevel = 'high';
+    } else if (riskThreshold > 0.5) {
+      riskLevel = 'medium';
+    } else {
+      riskLevel = 'low';
+    }
     
     return {
       inRange: Math.random() > 0.2,
       percentile: Math.random() * 100,
-      riskLevel: Math.random() > 0.8 ? 'high' : Math.random() > 0.5 ? 'medium' : 'low'
+      riskLevel
     };
   }
 
@@ -229,7 +349,7 @@ class ValidationWorkerEngine {
   /**
    * Obtener de cache
    */
-  private getFromCache(key: string): any | null {
+  private getFromCache(key: string): ValidationResultData | null {
     const cached = this.cache.get(key);
     if (!cached) return null;
     
@@ -244,7 +364,7 @@ class ValidationWorkerEngine {
   /**
    * Guardar en cache
    */
-  private saveToCache(key: string, result: any): void {
+  private saveToCache(key: string, result: ValidationResultData): void {
     this.cache.set(key, {
       result,
       timestamp: Date.now()
@@ -284,7 +404,11 @@ class ValidationWorkerEngine {
   }
 }
 
-// Inicializar el motor del worker
-new ValidationWorkerEngine();
+// Inicializar el motor del worker en el contexto apropiado
+if (typeof self !== 'undefined' && 'postMessage' in self) {
+  // Estamos en un Web Worker - el engine se inicializa automáticamente
+  // El constructor del ValidationWorkerEngine configura los event listeners
+  new ValidationWorkerEngine();
+}
 
 export default ValidationWorkerEngine;

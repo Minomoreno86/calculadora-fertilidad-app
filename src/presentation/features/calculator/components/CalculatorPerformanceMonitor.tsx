@@ -10,6 +10,7 @@ import { View, StyleSheet } from 'react-native';
 import Text from '@/presentation/components/common/Text';
 import { theme } from '@/config/theme';
 
+// 🎯 Tipos mejorados para máxima compatibilidad
 interface CalculatorPerformanceProps {
   isValidating: boolean;
   progress: number;
@@ -42,6 +43,51 @@ interface CalculatorPerformanceProps {
   };
   showDevInfo?: boolean;
 }
+
+// 🔧 Tipos para adaptar diferentes formatos de métricas
+interface AdaptableMetrics {
+  isValidating?: boolean;
+  progress?: number;
+  isFormValid?: boolean;
+  errorCount?: number;
+  warningCount?: number;
+  validation?: Record<string, unknown>;
+  performance?: {
+    totalTime?: number;
+    averageTaskTime?: number;
+    cacheHitRate?: number;
+    tasksPerSecond?: number;
+    efficiency?: string;
+    status?: string;
+  };
+}
+
+// 🔧 Función utilitaria para adaptar métricas del sistema al formato del componente
+export const adaptMetricsForMonitor = (parallelValidationMetrics: AdaptableMetrics): CalculatorPerformanceProps['metrics'] => {
+  // Manejo de métricas del useCalculatorParallelValidation
+  if (parallelValidationMetrics?.validation && parallelValidationMetrics?.performance) {
+    return parallelValidationMetrics as CalculatorPerformanceProps['metrics'];
+  }
+  
+  // Adaptación para useParallelValidation format
+  return {
+    validation: {
+      isValidating: parallelValidationMetrics?.isValidating || false,
+      progress: parallelValidationMetrics?.progress || 0,
+      isFormValid: parallelValidationMetrics?.isFormValid || false,
+      errorCount: parallelValidationMetrics?.errorCount || 0,
+      warningCount: parallelValidationMetrics?.warningCount || 0,
+    },
+    performance: {
+      totalTime: parallelValidationMetrics?.performance?.totalTime || 0,
+      averageTaskTime: parallelValidationMetrics?.performance?.averageTaskTime || 0,
+      cacheHitRate: parallelValidationMetrics?.performance?.cacheHitRate || 0,
+      tasksPerSecond: parallelValidationMetrics?.performance?.tasksPerSecond || 0,
+      efficiency: parallelValidationMetrics?.performance?.efficiency || 'N/A',
+      status: parallelValidationMetrics?.performance?.status || 'Listo',
+    }
+  };
+};
 
 export const CalculatorPerformanceMonitor = memo<CalculatorPerformanceProps>(({
   isValidating,
@@ -76,6 +122,13 @@ export const CalculatorPerformanceMonitor = memo<CalculatorPerformanceProps>(({
     if (metrics.validation.warningCount > 0) return { text: 'Advertencias', color: theme.colors.warning };
     return { text: 'Validación exitosa', color: theme.colors.success };
   }, [isValidating, metrics.validation]);
+
+  // 🎨 Determinar color de eficiencia
+  const efficiencyColor = useMemo(() => {
+    if (formattedMetrics.efficiency === 'Excelente') return theme.colors.success;
+    if (formattedMetrics.efficiency === 'Buena') return theme.colors.warning;
+    return theme.colors.error;
+  }, [formattedMetrics.efficiency]);
 
   if (!showDevInfo && !isValidating && metrics.validation.isFormValid) {
     return null; // Ocultar en producción si todo está bien
@@ -155,11 +208,7 @@ export const CalculatorPerformanceMonitor = memo<CalculatorPerformanceProps>(({
             <Text style={styles.efficiencyLabel}>Eficiencia: </Text>
             <Text style={[
               styles.efficiencyValue,
-              { 
-                color: formattedMetrics.efficiency === 'Excelente' ? theme.colors.success :
-                       formattedMetrics.efficiency === 'Buena' ? theme.colors.warning :
-                       theme.colors.error 
-              }
+              { color: efficiencyColor }
             ]}>
               {formattedMetrics.efficiency}
             </Text>
@@ -183,9 +232,23 @@ export const CalculatorPerformanceMonitor = memo<CalculatorPerformanceProps>(({
 
 CalculatorPerformanceMonitor.displayName = 'CalculatorPerformanceMonitor';
 
+/**
+ * 📖 GUÍA DE USO DEL MONITOR DE PERFORMANCE
+ * 
+ * Este componente se integra con:
+ * - useCalculatorWithParallelValidation (uso directo)
+ * - useParallelValidation (con adaptMetricsForMonitor)
+ * 
+ * Funcionalidades:
+ * - Monitor de progreso en tiempo real
+ * - Alertas de errores y advertencias
+ * - Métricas de performance (dev mode)
+ * - Cache stats y eficiencia del sistema
+ */
+
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.card,
     borderRadius: theme.borderRadius.m,
     padding: theme.spacing.s,
     marginVertical: theme.spacing.xs,
@@ -207,7 +270,7 @@ const styles = StyleSheet.create({
   
   progressText: {
     ...theme.typography.caption,
-    color: theme.colors.textSecondary,
+    color: theme.colors.subtleText,
     fontWeight: '500',
   },
   
@@ -273,7 +336,7 @@ const styles = StyleSheet.create({
   
   metricLabel: {
     ...theme.typography.caption,
-    color: theme.colors.textSecondary,
+    color: theme.colors.subtleText,
     fontSize: 10,
   },
   
@@ -293,7 +356,7 @@ const styles = StyleSheet.create({
   
   efficiencyLabel: {
     ...theme.typography.caption,
-    color: theme.colors.textSecondary,
+    color: theme.colors.subtleText,
   },
   
   efficiencyValue: {
@@ -312,12 +375,12 @@ const styles = StyleSheet.create({
     ...theme.typography.caption,
     fontWeight: '600',
     marginBottom: theme.spacing.xs,
-    color: theme.colors.textSecondary,
+    color: theme.colors.subtleText,
   },
   
   detailsText: {
     ...theme.typography.caption,
-    color: theme.colors.textSecondary,
+    color: theme.colors.subtleText,
     fontSize: 10,
     marginBottom: 2,
   },

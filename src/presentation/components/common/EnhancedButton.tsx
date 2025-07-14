@@ -1,27 +1,32 @@
 // ===================================================================
-// 🎨 BOTÓN MEJORADO CON EFECTOS VISUALES E ICONOS MODERNOS
+// 🎨 BOTÓN UNIFICADO - Combina funcionalidad básica y efectos avanzados
 // ===================================================================
 
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, View, Animated } from 'react-native';
+import React, { memo } from 'react';
+import { TouchableOpacity, Text, StyleSheet, View, Animated, ViewStyle, ActivityIndicator } from 'react-native';
 import { theme } from '@/config/theme';
 import { getModernEmoji } from './ModernIcon';
+
+type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'text';
+type ButtonSize = 'small' | 'medium' | 'large';
 
 interface Props {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'outline' | 'text';
-  size?: 'small' | 'medium' | 'large';
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   fullWidth?: boolean;
   loading?: boolean;
   disabled?: boolean;
   iconName?: string;
   iconPosition?: 'left' | 'right';
-  style?: any;
-  completionPercentage?: number;
+  style?: ViewStyle;
+  // 🆕 Características avanzadas (opcional)
+  enhanced?: boolean; // Activa animaciones y efectos especiales
+  completionPercentage?: number; // Solo para enhanced=true
 }
 
-export const EnhancedButton: React.FC<Props> = ({
+export const EnhancedButton: React.FC<Props> = memo(({
   title,
   onPress,
   variant = 'primary',
@@ -32,13 +37,16 @@ export const EnhancedButton: React.FC<Props> = ({
   iconName,
   iconPosition = 'left',
   style,
+  enhanced = false,
   completionPercentage
 }) => {
+  // 🎭 Referencias para animaciones (solo si enhanced=true)
   const [scaleAnimation] = React.useState(new Animated.Value(1));
   const [glowAnimation] = React.useState(new Animated.Value(0));
 
+  // 🌟 Efecto de brillo solo para botones enhanced
   React.useEffect(() => {
-    if (variant === 'primary' && !disabled && !loading) {
+    if (enhanced && variant === 'primary' && !disabled && !loading) {
       const glow = Animated.loop(
         Animated.sequence([
           Animated.timing(glowAnimation, {
@@ -54,70 +62,59 @@ export const EnhancedButton: React.FC<Props> = ({
         ])
       );
       glow.start();
+      return () => glow.stop();
     }
-  }, [variant, disabled, loading]);
+  }, [enhanced, variant, disabled, loading, glowAnimation]);
 
+  // 🎯 Animaciones de presión (solo si enhanced=true)
   const handlePressIn = () => {
-    Animated.spring(scaleAnimation, {
-      toValue: 0.95,
-      useNativeDriver: true,
-    }).start();
+    if (enhanced) {
+      Animated.spring(scaleAnimation, {
+        toValue: 0.95,
+        useNativeDriver: true,
+      }).start();
+    }
   };
 
   const handlePressOut = () => {
-    Animated.spring(scaleAnimation, {
-      toValue: 1,
-      useNativeDriver: true,
-    }).start();
+    if (enhanced) {
+      Animated.spring(scaleAnimation, {
+        toValue: 1,
+        useNativeDriver: true,
+      }).start();
+    }
   };
 
+  // 🎨 Estilos dinámicos
   const getButtonStyle = () => {
-    const baseStyle = [styles.button, styles[size]];
-    
-    if (fullWidth) baseStyle.push(styles.fullWidth);
-    if (disabled) baseStyle.push(styles.disabled);
-    
-    switch (variant) {
-      case 'primary':
-        baseStyle.push(styles.primary);
-        break;
-      case 'outline':
-        baseStyle.push(styles.outline);
-        break;
-      case 'text':
-        baseStyle.push(styles.text);
-        break;
-    }
-    
+    const baseStyle = [
+      styles.button, 
+      styles[size],
+      styles[variant],
+      fullWidth && styles.fullWidth,
+      disabled && styles.disabled,
+    ];
     return baseStyle;
   };
 
   const getTextStyle = () => {
-    const baseStyle = [styles.buttonText, styles[`${size}Text`]];
-    
-    if (disabled) baseStyle.push(styles.disabledText);
-    
-    switch (variant) {
-      case 'primary':
-        baseStyle.push(styles.primaryText);
-        break;
-      case 'outline':
-        baseStyle.push(styles.outlineText);
-        break;
-      case 'text':
-        baseStyle.push(styles.textButtonText);
-        break;
-    }
-    
+    const baseStyle = [
+      styles.buttonText, 
+      styles[`${size}Text`],
+      styles[`${variant}Text`],
+      disabled && styles.disabledText,
+    ];
     return baseStyle;
   };
 
+  // 🎯 Icono dinámico
   const getIcon = () => {
-    if (loading) return getModernEmoji('loading');
+    if (loading) return enhanced ? getModernEmoji('loading') : '⏳';
     if (!iconName) return null;
     return getModernEmoji(iconName);
   };
 
+  // 🌈 Color de progreso dinámico
   const getProgressColor = () => {
     if (!completionPercentage) return theme.colors.primary;
     if (completionPercentage >= 70) return '#4caf50';
@@ -125,18 +122,39 @@ export const EnhancedButton: React.FC<Props> = ({
     return '#ff9800';
   };
 
+  // 📏 Tamaño de icono
+  const getIconSize = () => {
+    switch (size) {
+      case 'small': return 16;
+      case 'large': return 24;
+      default: return 20;
+    }
+  };
+
+  // 🎯 Color de icono
+  const getIconColor = () => {
+    if (variant === 'primary' || variant === 'secondary') return theme.colors.white;
+    return theme.colors.primary;
+  };
+
+  // 🖱️ Contenedor principal con animación condicional
+  const ButtonContainer = enhanced ? Animated.View : View;
+  const containerProps = enhanced 
+    ? { style: { transform: [{ scale: scaleAnimation }] } }
+    : {};
+
   return (
-    <Animated.View style={{ transform: [{ scale: scaleAnimation }] }}>
+    <ButtonContainer {...containerProps}>
       <TouchableOpacity
         style={[...getButtonStyle(), style]}
         onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
+        onPressIn={enhanced ? handlePressIn : undefined}
+        onPressOut={enhanced ? handlePressOut : undefined}
         disabled={disabled || loading}
         activeOpacity={0.8}
       >
-        {/* 🎯 Efecto de brillo para botón principal */}
-        {variant === 'primary' && !disabled && !loading && (
+        {/* � Efecto de brillo (solo enhanced) */}
+        {enhanced && variant === 'primary' && !disabled && !loading && (
           <Animated.View
             style={[
               styles.glowEffect,
@@ -148,8 +166,8 @@ export const EnhancedButton: React.FC<Props> = ({
           />
         )}
 
-        {/* 🎯 Barra de progreso integrada */}
-        {variant === 'primary' && completionPercentage !== undefined && (
+        {/* 📊 Barra de progreso (solo enhanced) */}
+        {enhanced && variant === 'primary' && completionPercentage !== undefined && (
           <View style={styles.progressContainer}>
             <View 
               style={[
@@ -163,88 +181,117 @@ export const EnhancedButton: React.FC<Props> = ({
           </View>
         )}
 
-        {/* 🎯 Contenido del botón */}
-        <View style={styles.content}>
-          {iconName && iconPosition === 'left' && (
-            <View style={styles.iconContainer}>
-              <Text style={[...getTextStyle(), styles.iconLeft]}>
+        {/* 📱 Contenido del botón */}
+        {loading ? (
+          <ActivityIndicator color={getIconColor()} size="small" />
+        ) : (
+          <View style={styles.content}>
+            {iconName && iconPosition === 'left' && (
+              <Text style={[
+                ...getTextStyle(), 
+                styles.iconLeft,
+                { fontSize: getIconSize() + 2 }
+              ]}>
                 {getIcon()}
               </Text>
-            </View>
-          )}
-          
-          <Text style={getTextStyle()}>
-            {loading ? 'Generando...' : title}
-          </Text>
-          
-          {iconName && iconPosition === 'right' && (
-            <View style={styles.iconContainer}>
-              <Text style={[...getTextStyle(), styles.iconRight]}>
+            )}
+            
+            <Text style={getTextStyle()}>
+              {loading ? 'Cargando...' : title}
+            </Text>
+            
+            {iconName && iconPosition === 'right' && (
+              <Text style={[
+                ...getTextStyle(), 
+                styles.iconRight,
+                { fontSize: getIconSize() + 2 }
+              ]}>
                 {getIcon()}
               </Text>
-            </View>
-          )}
-        </View>
+            )}
+          </View>
+        )}
 
-        {/* 🎯 Indicador de carga */}
-        {loading && (
+        {/* 🔄 Overlay de carga (solo enhanced) */}
+        {enhanced && loading && (
           <View style={styles.loadingOverlay}>
             <View style={styles.loadingSpinner} />
           </View>
         )}
       </TouchableOpacity>
-    </Animated.View>
+    </ButtonContainer>
   );
-};
+});
 
 const styles = StyleSheet.create({
+  // 🎯 Base del botón
   button: {
-    borderRadius: 12,
+    borderRadius: theme.borderRadius.m,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
+
+  // 📏 Tamaños
   small: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: theme.spacing.m,
+    paddingVertical: theme.spacing.s,
     minHeight: 32,
   },
   medium: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: theme.spacing.l,
+    paddingVertical: theme.spacing.m,
     minHeight: 44,
   },
   large: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingHorizontal: theme.spacing.xl,
+    paddingVertical: theme.spacing.l,
     minHeight: 52,
   },
-  fullWidth: {
-    width: '100%',
-  },
+
+  // 🎨 Variantes
   primary: {
     backgroundColor: theme.colors.primary,
     shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
+  },
+  secondary: {
+    backgroundColor: theme.colors.secondary,
   },
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 2,
     borderColor: theme.colors.primary,
-  },
-  text: {
-    backgroundColor: 'transparent',
-  },
-  disabled: {
-    backgroundColor: '#e0e0e0',
     shadowOpacity: 0,
     elevation: 0,
   },
+  text: {
+    backgroundColor: 'transparent',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+
+  // 🔧 Estados
+  disabled: {
+    backgroundColor: theme.colors.placeholder,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  fullWidth: {
+    width: '100%',
+  },
+
+  // 📝 Texto
   buttonText: {
+    fontFamily: 'Lato-Bold',
     fontWeight: 'bold',
     textAlign: 'center',
   },
@@ -258,43 +305,49 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   primaryText: {
-    color: '#ffffff',
+    color: theme.colors.white,
+  },
+  secondaryText: {
+    color: theme.colors.white,
   },
   outlineText: {
     color: theme.colors.primary,
   },
-  textButtonText: {
+  textText: {
     color: theme.colors.primary,
   },
   disabledText: {
-    color: '#9e9e9e',
+    color: theme.colors.white,
   },
+
+  // 🎯 Layout
   content: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
   },
-  iconContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    transform: [{ scale: 1.1 }], // Iconos ligeramente más grandes
-  },
+
+  // 🎨 Iconos
   iconLeft: {
-    marginRight: 8,
-    fontSize: 18, // Tamaño consistente para iconos
+    marginRight: theme.spacing.s,
+    opacity: 0.9,
+    transform: [{ scale: 1.1 }],
   },
   iconRight: {
-    marginLeft: 8,
-    fontSize: 18, // Tamaño consistente para iconos
+    marginLeft: theme.spacing.s,
+    opacity: 0.9,
+    transform: [{ scale: 1.1 }],
   },
+
+  // ✨ Efectos especiales (solo enhanced)
   glowEffect: {
     position: 'absolute',
     top: -2,
     left: -2,
     right: -2,
     bottom: -2,
-    borderRadius: 14,
+    borderRadius: theme.borderRadius.m + 2,
     opacity: 0.3,
   },
   progressContainer: {
@@ -306,8 +359,8 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: '100%',
-    borderBottomLeftRadius: 12,
-    borderBottomRightRadius: 12,
+    borderBottomLeftRadius: theme.borderRadius.m,
+    borderBottomRightRadius: theme.borderRadius.m,
   },
   loadingOverlay: {
     position: 'absolute',
@@ -318,7 +371,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 12,
+    borderRadius: theme.borderRadius.m,
   },
   loadingSpinner: {
     width: 20,
@@ -329,3 +382,9 @@ const styles = StyleSheet.create({
     borderTopColor: 'transparent',
   },
 });
+
+// 🎯 Asignar displayName para debugging
+EnhancedButton.displayName = 'EnhancedButton';
+
+// 🔄 Exportar también como Button para compatibilidad
+export const Button = EnhancedButton;

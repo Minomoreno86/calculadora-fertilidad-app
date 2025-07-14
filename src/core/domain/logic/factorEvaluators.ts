@@ -173,85 +173,101 @@ export const evaluateOtb = (
   }
 
   const diagnostics: string[] = [];
-  let otbFactor = 1.0;
+  let otbFactor = 1.0; // Inicializar en 1.0 para multiplicar factores
 
-  const evaluations = [
-    {
-      value: age,
-      thresholds: [
-        { limit: 40, factor: 0.2, message: 'Edad materna ≥ 40 años: Baja probabilidad de éxito en recanalización.' },
-        { limit: 35, factor: 0.5, message: 'Edad materna 35-39 años: Tasas de éxito moderadas en recanalización.' },
-      ],
-      defaultMessage: 'Edad materna < 35 años: Ideal para recanalización tubárica.',
-      missingMessage: 'Edad materna no especificada para evaluación de recanalización.',
-    },
-    {
-      value: otbMethod,
-      thresholds: [
-        { limit: OtbMethod.ExtensiveCauterization, factor: 0.1, message: 'Método de OTB: Cauterización extensa o salpingectomía parcial. Pronóstico muy pobre para recanalización.' },
-        { limit: OtbMethod.PartialSalpingectomy, factor: 0.1, message: 'Método de OTB: Cauterización extensa o salpingectomía parcial. Pronóstico muy pobre para recanalización.' },
-        { limit: OtbMethod.Clips, factor: 0.8, message: 'Método de OTB: Clips, anillos o ligaduras. Mejor pronóstico para recanalización.' },
-        { limit: OtbMethod.Rings, factor: 0.8, message: 'Método de OTB: Clips, anillos o ligaduras. Mejor pronóstico para recanalización.' },
-        { limit: OtbMethod.Ligation, factor: 0.8, message: 'Método de OTB: Clips, anillos o ligaduras. Mejor pronóstico para recanalización.' },
-      ],
-      defaultMessage: 'Método de OTB no especificado para evaluación de recanalización.',
-      missingMessage: 'Método de OTB no especificado para evaluación de recanalización.',
-    },
-    {
-      value: remainingTubalLength,
-      thresholds: [
-        { limit: 4, factor: 0.3, message: 'Longitud tubárica remanente < 4 cm. Reduce tasas de embarazo.' },
-      ],
-      defaultMessage: 'Longitud tubárica remanente > 4 cm. Favorable para recanalización.',
-      missingMessage: 'Longitud tubárica remanente no especificada para evaluación de recanalización.',
-    },
-    {
-      value: hasOtherInfertilityFactors,
-      thresholds: [
-        { limit: true, factor: 0.5, message: 'Presencia de otros factores de infertilidad. Considerar antes de recanalización.' },
-      ],
-      defaultMessage: 'Ausencia de otros factores de infertilidad. Favorable para recanalización.',
-      missingMessage: 'Información sobre otros factores de infertilidad no especificada.',
-    },
-    {
-      value: desireForMultiplePregnancies,
-      thresholds: [],
-      defaultMessage: 'Deseo de múltiples embarazos. Recanalización puede ser más costo-efectiva que FIV.',
-      missingMessage: 'Deseo de múltiples embarazos no especificado.',
-    },
-  ];
-
-  for (const evalConfig of evaluations) {
-    if (evalConfig.value !== undefined) {
-      let message = evalConfig.defaultMessage;
-      for (const threshold of evalConfig.thresholds) {
-        if (typeof evalConfig.value === 'number' && evalConfig.value >= threshold.limit) {
-          otbFactor *= threshold.factor;
-          message = threshold.message;
-          break;
-        } else if (evalConfig.value === threshold.limit) {
-          otbFactor *= threshold.factor;
-          message = threshold.message;
-          break;
-        }
-      }
-      diagnostics.push(message);
+  // 🎯 Evaluación de edad materna
+  if (age !== undefined) {
+    if (age >= 40) {
+      otbFactor *= 0.2;
+      diagnostics.push('Edad materna ≥ 40 años: Baja probabilidad de éxito en recanalización.');
+    } else if (age >= 35) {
+      otbFactor *= 0.5;
+      diagnostics.push('Edad materna 35-39 años: Tasas de éxito moderadas en recanalización.');
     } else {
-      diagnostics.push(evalConfig.missingMessage);
+      diagnostics.push('Edad materna < 35 años: Ideal para recanalización tubárica.');
     }
+  } else {
+    diagnostics.push('Edad materna no especificada para evaluación de recanalización.');
   }
 
-  return { factors: { otb: 0.0 }, diagnostics: { hsgComment: diagnostics.join('. ') } };
+  // 🔧 Evaluación del método de OTB
+  if (otbMethod !== undefined) {
+    switch (otbMethod) {
+      case OtbMethod.ExtensiveCauterization:
+      case OtbMethod.PartialSalpingectomy:
+        otbFactor *= 0.1;
+        diagnostics.push('Método de OTB: Cauterización extensa o salpingectomía parcial. Pronóstico muy pobre para recanalización.');
+        break;
+      case OtbMethod.Clips:
+      case OtbMethod.Rings:
+      case OtbMethod.Ligation:
+        otbFactor *= 0.8;
+        diagnostics.push('Método de OTB: Clips, anillos o ligaduras. Mejor pronóstico para recanalización.');
+        break;
+      case OtbMethod.Unknown:
+        diagnostics.push('Método de OTB no especificado para evaluación de recanalización.');
+        break;
+    }
+  } else {
+    diagnostics.push('Método de OTB no especificado para evaluación de recanalización.');
+  }
+
+  // 📏 Evaluación de longitud tubárica remanente
+  if (remainingTubalLength !== undefined) {
+    if (remainingTubalLength < 4) {
+      otbFactor *= 0.3;
+      diagnostics.push('Longitud tubárica remanente < 4 cm. Reduce tasas de embarazo.');
+    } else {
+      diagnostics.push('Longitud tubárica remanente ≥ 4 cm. Favorable para recanalización.');
+    }
+  } else {
+    diagnostics.push('Longitud tubárica remanente no especificada para evaluación de recanalización.');
+  }
+
+  // 🔍 Evaluación de otros factores de infertilidad
+  if (hasOtherInfertilityFactors !== undefined) {
+    if (hasOtherInfertilityFactors) {
+      otbFactor *= 0.5;
+      diagnostics.push('Presencia de otros factores de infertilidad. Considerar antes de recanalización.');
+    } else {
+      diagnostics.push('Ausencia de otros factores de infertilidad. Favorable para recanalización.');
+    }
+  } else {
+    diagnostics.push('Información sobre otros factores de infertilidad no especificada.');
+  }
+
+  // 👶 Evaluación del deseo de múltiples embarazos
+  if (desireForMultiplePregnancies !== undefined) {
+    diagnostics.push('Deseo de múltiples embarazos. Recanalización puede ser más costo-efectiva que FIV.');
+  } else {
+    diagnostics.push('Deseo de múltiples embarazos no especificado.');
+  }
+
+  // ✅ Retornar el factor calculado correctamente
+  return { 
+    factors: { otb: Math.max(0.0, otbFactor) }, // Asegurar que no sea negativo
+    diagnostics: { hsgComment: diagnostics.join(' ') } 
+  };
 };
 
 export const evaluateAmh = (amh?: number): PartialEvaluation => {
   if (amh === undefined) return { diagnostics: { missingData: ['Hormona Antimülleriana (AMH)'] } };
+  
+  // 🔍 Validación de valores razonables
+  if (amh < 0) {
+    return { factors: { amh: 0.1 }, diagnostics: { ovarianReserve: 'Valor de AMH inválido (negativo)' } };
+  }
+  
+  if (amh > 50) {
+    return { factors: { amh: 0.7 }, diagnostics: { ovarianReserve: 'Valor de AMH extremadamente alto - revisar técnica' } };
+  }
+
   const amhRanges = [
-    { min: 4.0, factor: 0.9, comment: 'Alta reserva ovárica' },
-    { min: 2.0, factor: 1.0, comment: 'Reserva ovárica adecuada' },
-    { min: 1.0, factor: 0.85, comment: 'Reserva ovárica ligeramente disminuida' },
-    { min: 0.5, factor: 0.6, comment: 'Baja reserva ovárica' },
-    { min: 0, factor: 0.3, comment: 'Reserva ovárica muy baja' },
+    { min: 4.0, factor: 0.9, comment: 'Alta reserva ovárica (AMH ≥ 4.0 ng/ml)' },
+    { min: 2.0, factor: 1.0, comment: 'Reserva ovárica adecuada (AMH 2.0-3.9 ng/ml)' },
+    { min: 1.0, factor: 0.85, comment: 'Reserva ovárica ligeramente disminuida (AMH 1.0-1.9 ng/ml)' },
+    { min: 0.5, factor: 0.6, comment: 'Baja reserva ovárica (AMH 0.5-0.9 ng/ml)' },
+    { min: 0, factor: 0.3, comment: 'Reserva ovárica muy baja (AMH < 0.5 ng/ml)' },
   ];
 
   for (const range of amhRanges) {
@@ -259,26 +275,65 @@ export const evaluateAmh = (amh?: number): PartialEvaluation => {
       return { factors: { amh: range.factor }, diagnostics: { ovarianReserve: range.comment } };
     }
   }
-  return {};
+  
+  // Fallback (nunca debería llegar aquí)
+  return { factors: { amh: 0.3 }, diagnostics: { ovarianReserve: 'Reserva ovárica muy baja' } };
 };
 
 export const evaluateProlactin = (prolactin?: number): PartialEvaluation => {
   if (prolactin === undefined) return { diagnostics: { missingData: ['Nivel de Prolactina'] } };
-  if (prolactin >= 25) return { factors: { prolactin: 0.7 }, diagnostics: { prolactinComment: 'Hiperprolactinemia' } };
-  return { factors: { prolactin: 1.0 } };
+  
+  // 🔍 Validación de valores razonables
+  if (prolactin < 0) {
+    return { factors: { prolactin: 1.0 }, diagnostics: { prolactinComment: 'Valor de prolactina inválido (negativo)' } };
+  }
+  
+  if (prolactin > 200) {
+    return { factors: { prolactin: 0.3 }, diagnostics: { prolactinComment: 'Hiperprolactinemia severa (>200 ng/ml) - requiere evaluación urgente' } };
+  }
+  
+  if (prolactin >= 25) {
+    return { factors: { prolactin: 0.7 }, diagnostics: { prolactinComment: 'Hiperprolactinemia moderada (≥25 ng/ml)' } };
+  }
+  
+  return { factors: { prolactin: 1.0 }, diagnostics: { prolactinComment: 'Nivel de prolactina normal (<25 ng/ml)' } };
 };
 
 export const evaluateTsh = (tsh?: number): PartialEvaluation => {
   if (tsh === undefined) return { diagnostics: { missingData: ['Nivel de TSH'] } };
-  if (tsh > 2.5) return { factors: { tsh: 0.8 }, diagnostics: { tshComment: 'TSH no óptima para fertilidad' } };
-  return { factors: { tsh: 1.0 } };
+  
+  // 🔍 Validación de valores razonables
+  if (tsh < 0) {
+    return { factors: { tsh: 0.5 }, diagnostics: { tshComment: 'Valor de TSH inválido (negativo)' } };
+  }
+  
+  if (tsh > 10) {
+    return { factors: { tsh: 0.4 }, diagnostics: { tshComment: 'TSH muy elevada (>10 mUI/L) - hipotiroidismo severo' } };
+  }
+  
+  if (tsh > 2.5) {
+    return { factors: { tsh: 0.8 }, diagnostics: { tshComment: 'TSH no óptima para fertilidad (>2.5 mUI/L)' } };
+  }
+  
+  return { factors: { tsh: 1.0 }, diagnostics: { tshComment: 'TSH óptima para fertilidad (≤2.5 mUI/L)' } };
 };
 
 export const evaluateHoma = (homaValue?: number): PartialEvaluation => {
-  if (homaValue === undefined) return { factors: { homa: 1.0 } };
+  if (homaValue === undefined) return { factors: { homa: 1.0 }, diagnostics: { homaComment: 'HOMA-IR no evaluado' } };
+  
+  // 🔍 Validación de valores razonables
+  if (homaValue < 0) {
+    return { factors: { homa: 1.0 }, diagnostics: { homaComment: 'Valor de HOMA-IR inválido (negativo)' } };
+  }
+  
+  if (homaValue > 20) {
+    return { factors: { homa: 0.7 }, diagnostics: { homaComment: 'Resistencia a la insulina severa (HOMA-IR >20)' } };
+  }
+
   const homaRanges = [
-    { min: 4.0, factor: 0.9, comment: 'Resistencia a la insulina significativa' },
-    { min: 2.5, factor: 0.95, comment: 'Resistencia a la insulina leve' },
+    { min: 4.0, factor: 0.9, comment: 'Resistencia a la insulina significativa (HOMA-IR ≥4.0)' },
+    { min: 2.5, factor: 0.95, comment: 'Resistencia a la insulina leve (HOMA-IR 2.5-3.9)' },
+    { min: 0, factor: 1.0, comment: 'Sensibilidad normal a la insulina (HOMA-IR <2.5)' },
   ];
 
   for (const range of homaRanges) {
@@ -286,7 +341,8 @@ export const evaluateHoma = (homaValue?: number): PartialEvaluation => {
       return { factors: { homa: range.factor }, diagnostics: { homaComment: range.comment } };
     }
   }
-  return { factors: { homa: 1.0 } };
+  
+  return { factors: { homa: 1.0 }, diagnostics: { homaComment: 'Sensibilidad normal a la insulina' } };
 };
 
 export const evaluateInfertilityDuration = (years?: number): PartialEvaluation => {
@@ -321,6 +377,8 @@ export const evaluatePelvicSurgeries = (surgeries?: number): PartialEvaluation =
 
 export const evaluateMaleFactor = (input: UserInput): PartialEvaluation => {
   const { spermConcentration, spermProgressiveMotility, spermNormalMorphology } = input;
+  
+  // 🔍 Verificar si hay datos disponibles
   if (
     spermConcentration === undefined &&
     spermProgressiveMotility === undefined &&
@@ -328,24 +386,62 @@ export const evaluateMaleFactor = (input: UserInput): PartialEvaluation => {
   ) {
     return { diagnostics: { missingData: ['Espermatograma completo'] } };
   }
+
   const alterations: { factor: number; diagnosis: string }[] = [];
+
+  // 🧬 Evaluación de concentración espermática
   if (spermConcentration !== undefined) {
-    if (spermConcentration < 5) alterations.push({ factor: 0.25, diagnosis: 'Oligozoospermia severa' });
-    else if (spermConcentration < 16) alterations.push({ factor: 0.7, diagnosis: 'Oligozoospermia leve-moderada' });
+    if (spermConcentration < 0) {
+      alterations.push({ factor: 0.1, diagnosis: 'Concentración espermática inválida' });
+    } else if (spermConcentration === 0) {
+      alterations.push({ factor: 0.05, diagnosis: 'Azoospermia' });
+    } else if (spermConcentration < 5) {
+      alterations.push({ factor: 0.25, diagnosis: 'Oligozoospermia severa (<5 mill/ml)' });
+    } else if (spermConcentration < 16) {
+      alterations.push({ factor: 0.7, diagnosis: 'Oligozoospermia leve-moderada (5-15 mill/ml)' });
+    }
   }
+
+  // 🏃‍♂️ Evaluación de motilidad progresiva
   if (spermProgressiveMotility !== undefined) {
-    if (spermProgressiveMotility < 20) alterations.push({ factor: 0.4, diagnosis: 'Astenozoospermia severa' });
-    else if (spermProgressiveMotility < 30) alterations.push({ factor: 0.85, diagnosis: 'Astenozoospermia leve' });
+    if (spermProgressiveMotility < 0 || spermProgressiveMotility > 100) {
+      alterations.push({ factor: 0.1, diagnosis: 'Motilidad progresiva inválida' });
+    } else if (spermProgressiveMotility === 0) {
+      alterations.push({ factor: 0.1, diagnosis: 'Astenozoospermia total (0% motilidad)' });
+    } else if (spermProgressiveMotility < 20) {
+      alterations.push({ factor: 0.4, diagnosis: 'Astenozoospermia severa (<20%)' });
+    } else if (spermProgressiveMotility < 30) {
+      alterations.push({ factor: 0.85, diagnosis: 'Astenozoospermia leve (20-29%)' });
+    }
   }
+
+  // 🎭 Evaluación de morfología normal
   if (spermNormalMorphology !== undefined) {
-    if (spermNormalMorphology < 4) alterations.push({ factor: 0.5, diagnosis: 'Teratozoospermia' });
+    if (spermNormalMorphology < 0 || spermNormalMorphology > 100) {
+      alterations.push({ factor: 0.1, diagnosis: 'Morfología espermática inválida' });
+    } else if (spermNormalMorphology < 4) {
+      alterations.push({ factor: 0.5, diagnosis: 'Teratozoospermia (<4% formas normales)' });
+    }
   }
-  if (alterations.length === 0)
-    return { factors: { male: 1.0 }, diagnostics: { maleFactorDetailed: 'Parámetros seminales normales' } };
+
+  // ✅ Si no hay alteraciones
+  if (alterations.length === 0) {
+    return { 
+      factors: { male: 1.0 }, 
+      diagnostics: { maleFactorDetailed: 'Parámetros seminales normales según OMS 2021' } 
+    };
+  }
+
+  // 🎯 Determinar el factor más restrictivo
   const worstAlteration = alterations.reduce(
     (min, current) => (current.factor < min.factor ? current : min),
     alterations[0],
   );
+
   const allDiagnoses = alterations.map((a) => a.diagnosis).join(', ');
-  return { factors: { male: worstAlteration.factor }, diagnostics: { maleFactorDetailed: allDiagnoses } };
+  
+  return { 
+    factors: { male: worstAlteration.factor }, 
+    diagnostics: { maleFactorDetailed: allDiagnoses } 
+  };
 };

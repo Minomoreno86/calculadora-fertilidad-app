@@ -5,8 +5,8 @@
 import { useMemo, useCallback } from 'react';
 
 interface UseCalculationsReturn {
-  calculateBMI: (height: number, weight: number) => number | null;
-  calculateHOMA: (glucose: number, insulin: number) => number | null;
+  calculateBMI: (height: string | number, weight: string | number) => number | null;
+  calculateHOMA: (glucose: string | number, insulin: string | number) => number | null;
   formatBMI: (bmi: number | null) => string;
   formatHOMA: (homa: number | null) => string;
   getBMICategory: (bmi: number) => { category: string; color: string };
@@ -15,16 +15,22 @@ interface UseCalculationsReturn {
 
 export const useCalculations = (): UseCalculationsReturn => {
   // 🚀 FASE 2C: Memoizar función de cálculo de BMI
-  const calculateBMI = useCallback((height: number, weight: number): number | null => {
-    if (!height || !weight || height <= 0 || weight <= 0) return null;
-    const heightInMeters = height / 100;
-    return Math.round((weight / (heightInMeters * heightInMeters)) * 10) / 10;
+  const calculateBMI = useCallback((height: string | number, weight: string | number): number | null => {
+    const h = typeof height === 'string' ? parseFloat(height) : height;
+    const w = typeof weight === 'string' ? parseFloat(weight) : weight;
+    
+    if (!h || !w || isNaN(h) || isNaN(w) || h <= 0 || w <= 0) return null;
+    const heightInMeters = h / 100;
+    return Math.round((w / (heightInMeters * heightInMeters)) * 10) / 10;
   }, []);
 
   // 🚀 FASE 2C: Memoizar función de cálculo de HOMA-IR
-  const calculateHOMA = useCallback((glucose: number, insulin: number): number | null => {
-    if (!glucose || !insulin || glucose <= 0 || insulin <= 0) return null;
-    return Math.round(((glucose * insulin) / 405) * 100) / 100;
+  const calculateHOMA = useCallback((glucose: string | number, insulin: string | number): number | null => {
+    const g = typeof glucose === 'string' ? parseFloat(glucose) : glucose;
+    const i = typeof insulin === 'string' ? parseFloat(insulin) : insulin;
+    
+    if (!g || !i || isNaN(g) || isNaN(i) || g <= 0 || i <= 0) return null;
+    return Math.round(((g * i) / 405) * 100) / 100;
   }, []);
 
   // 🚀 FASE 2C: Funciones de formateo memoizadas

@@ -1,13 +1,19 @@
 import { z } from 'zod';
 import { MyomaType, AdenomyosisType, PolypType, HsgResult, OtbMethod } from '@/core/domain/models';
 
-// Helper para transformar string a number
-const stringToNumber = z.string().transform((val) => {
+// Helper para validar string que representa número
+const stringNumber = z.string().refine((val) => {
   const num = parseFloat(val);
-  return isNaN(num) ? 0 : num;
-});
+  return !isNaN(num) && num > 0;
+}, 'Debe ser un número válido mayor que 0');
 
-// Helper para campos enteros que vienen como string desde formularios
+// Helper para string que representa número no negativo
+const stringNumberNonNegative = z.string().refine((val) => {
+  const num = parseFloat(val);
+  return !isNaN(num) && num >= 0;
+}, 'Debe ser un número válido mayor o igual a 0');
+
+// Helper para campos enteros
 const stringToInteger = (val: unknown): number => {
   if (typeof val === 'string') {
     const num = parseInt(val, 10);
@@ -19,26 +25,18 @@ const stringToInteger = (val: unknown): number => {
   return 0;
 };
 
-// Helper para campos opcionales que pueden ser string vacío
-const optionalStringToNumber = z.union([
-  z.string().transform((val) => {
-    if (val === '' || val === undefined) return undefined;
-    const num = parseFloat(val);
-    return isNaN(num) ? undefined : num;
-  }),
-  z.number(),
-  z.undefined()
-]).optional();
+// Helper para campos opcionales string
+const optionalStringNumber = z.string().optional();
 
 export const formSchema = z.object({
-  // ✅ Demografia básica - SIN RESTRICCIONES, solo que sean números válidos
-  age: stringToNumber.refine(val => val > 0, 'La edad debe ser mayor que 0'),
-  weight: stringToNumber.refine(val => val > 0, 'El peso debe ser mayor que 0'),
-  height: stringToNumber.refine(val => val > 0, 'La altura debe ser mayor que 0'),
+  // ✅ Demografia básica - STRINGS validados como números
+  age: stringNumber,
+  weight: stringNumber,
+  height: stringNumber,
   
-  // ✅ Ginecología básica - SIN RESTRICCIONES, permitir cualquier ciclo
-  cycleLength: stringToNumber.refine(val => val > 0, 'La duración del ciclo debe ser mayor que 0'),
-  infertilityDuration: stringToNumber.refine(val => val >= 0, 'La duración debe ser 0 o mayor'),
+  // ✅ Ginecología básica - STRINGS validados como números
+  cycleLength: stringNumber,
+  infertilityDuration: stringNumberNonNegative,
   hasPcos: z.boolean(),
   endometriosisStage: z.preprocess(stringToInteger, z.number().min(0).max(4)),
   myomaType: z.nativeEnum(MyomaType),
@@ -52,21 +50,21 @@ export const formSchema = z.object({
   hasOtherInfertilityFactors: z.boolean(),
   desireForMultiplePregnancies: z.boolean(),
   
-  // ✅ Laboratorio básico - SIN RESTRICCIONES, permitir cualquier valor
+  // ✅ Laboratorio básico - STRINGS validados como números
   tpoAbPositive: z.boolean(),
-  insulinValue: stringToNumber.refine(val => val >= 0, 'La insulina debe ser 0 o mayor'),
-  glucoseValue: stringToNumber.refine(val => val >= 0, 'La glucosa debe ser 0 o mayor'),
-  semenVolume: optionalStringToNumber,
+  insulinValue: stringNumberNonNegative,
+  glucoseValue: stringNumberNonNegative,
+  semenVolume: optionalStringNumber,
   
-  // 🆕 Laboratorio avanzado - SIN RESTRICCIONES, permitir cualquier valor
-  amhValue: optionalStringToNumber,
-  tshValue: optionalStringToNumber,
-  prolactinValue: optionalStringToNumber,
+  // 🆕 Laboratorio avanzado - STRINGS opcionales
+  amhValue: optionalStringNumber,
+  tshValue: optionalStringNumber,
+  prolactinValue: optionalStringNumber,
   
-  // 🆕 Factor masculino completo - SIN RESTRICCIONES, permitir cualquier valor
-  spermConcentration: optionalStringToNumber,
-  spermProgressiveMotility: optionalStringToNumber,
-  spermNormalMorphology: optionalStringToNumber,
+  // 🆕 Factor masculino completo - STRINGS opcionales
+  spermConcentration: optionalStringNumber,
+  spermProgressiveMotility: optionalStringNumber,
+  spermNormalMorphology: optionalStringNumber,
   
   // 🆕 Ginecología avanzada
   cycleRegularity: z.enum(['regular', 'irregular']).optional(),

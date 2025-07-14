@@ -1,4 +1,4 @@
-import { StyleSheet, View, TextStyle } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Control, FieldErrors } from 'react-hook-form';
 import Text from '@/presentation/components/common/Text';
 import { ControlledTextInputFinal } from '@/presentation/components/common/ControlledTextInputFinal';
@@ -11,10 +11,6 @@ type Props = {
   calculatedBmi: number | null;
   errors: FieldErrors<FormState>;
   getRangeValidation?: (fieldName: string) => import('../utils/rangeValidation').RangeValidation; // 🆕 Agregar prop para colores
-};
-
-const resolveFontWeight = (fw: TextStyle['fontWeight']): TextStyle['fontWeight'] => {
-  return fw;
 };
 
 export const DemographicsForm = ({ control, calculatedBmi, errors, getRangeValidation }: Props) => { // 🆕 Agregar getRangeValidation
@@ -87,8 +83,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.l,
   },
   groupLabel: {
-    ...theme.typography.h3,
-    fontWeight: resolveFontWeight(theme.typography.h3.fontWeight),
+    ...theme.typography.h3, // 🎨 Nueva tipografía del theme
     marginBottom: theme.spacing.m,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
@@ -96,17 +91,17 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
   },
   activeIndicator: {
-    backgroundColor: '#E8F5E8',
-    borderColor: '#4CAF50',
+    backgroundColor: theme.colors.successLight, // 🎨 Nuevo color del theme
+    borderColor: theme.colors.success,
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 16,
+    borderRadius: theme.borderRadius.m, // 🎨 Nuevo border radius
+    padding: theme.spacing.xs,
+    marginBottom: theme.spacing.m,
   },
   activeText: {
-    color: '#4CAF50',
-    fontWeight: 'bold',
+    color: theme.colors.success, // 🎨 Nuevo color del theme
+    ...theme.typography.bodySmall, // 🎨 Nueva tipografía del theme
+    fontWeight: '600',
     textAlign: 'center',
-    fontSize: 14,
   },
 });

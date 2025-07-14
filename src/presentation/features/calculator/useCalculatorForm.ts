@@ -1,11 +1,11 @@
-import { useMemo, useState, useEffect, useCallback } from 'react';
-import { useForm, Resolver, SubmitHandler } from 'react-hook-form';
+import { useMemo, useState, useEffect } from 'react';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import { useRouter } from 'expo-router';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { calculateProbability } from '@/core/domain/services/calculationEngine';
 import { formSchema } from './utils/validationSchemas';
+import type { FormData } from './utils/validationSchemas';
 import { MyomaType, AdenomyosisType, PolypType, HsgResult, OtbMethod } from '@/core/domain/models';
 import { mapFormStateToUserInput } from './utils/dataMapper';
 import { ClinicalValidators, ValidationResult, FieldValidationResult } from '@/core/domain/validation/clinicalValidators';
@@ -19,7 +19,7 @@ import { useBenchmark } from '@/core/utils/performanceBenchmark';
 
 
 
-export type FormState = z.infer<typeof formSchema>;
+export type FormState = FormData;
 
 // Tipo de retorno del hook para mejor tipificación
 export interface UseCalculatorFormReturn {
@@ -72,7 +72,13 @@ export interface UseCalculatorFormReturn {
   isFieldValid: (fieldName: keyof FormState, value: unknown) => boolean;
   
   // 🚀 FASE 2C: Métricas de rendimiento
-  getPerformanceReport: () => any;
+  getPerformanceReport: () => {
+    totalMetrics: number;
+    categories: Record<string, number>;
+    averageTimes: Record<string, number>;
+    renderMetrics: unknown[];
+    recommendations: string[];
+  };
   clearPerformanceMetrics: () => void;
   getCompletionScore: () => number;
   canCalculate: boolean;
@@ -107,14 +113,14 @@ const REPORT_KEY_PREFIX = 'fertility_report_';
  */
 export const useCalculatorForm = (): UseCalculatorFormReturn => {
   // 🚀 FASE 2C: Hooks especializados
-  const { measureTime, measureTimeAsync, getReport, clearMetrics, trackRender } = useBenchmark();
-  const { validateField, validateForm, isFieldValid } = useFormValidation();
+  const { getReport, clearMetrics } = useBenchmark();
+  const { validateField, isFieldValid } = useFormValidation();
   const { calculateBMI, calculateHOMA, formatBMI, formatHOMA, getBMICategory, getHOMACategory } = useCalculations();
   
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   
-  // 🆕 ACTUALIZAR initialFormValues - Usar STRINGS para inputs numéricos
+  // 🆕 ACTUALIZAR initialFormValues - Usar STRINGS para consistencia
   const initialFormValues: FormState = {
     // ✅ Demografia básica - STRINGS para inputs numéricos
     age: "30",
@@ -142,7 +148,7 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
     insulinValue: "0",
     glucoseValue: "0",
     
-    // 🆕 CAMPOS OPCIONALES - STRINGS vacíos para inputs opcionales
+    // 🆕 CAMPOS OPCIONALES - STRINGS vacíos para campos opcionales
     amhValue: "", // ← String vacío para campos opcionales
     tshValue: "", // ← String vacío para campos opcionales  
     prolactinValue: "", // ← String vacío para campos opcionales
@@ -158,7 +164,7 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
   };
 
   const { control, handleSubmit, watch, setValue, getValues, formState: { errors } } = useForm<FormState>({
-    resolver: zodResolver(formSchema) as Resolver<FormState>,
+    resolver: zodResolver(formSchema) as never,
     defaultValues: initialFormValues,
   });
 
@@ -166,6 +172,25 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
 
   // 🆕 Hook de validación de rangos para colores
   const { getRangeValidation, stats: rangeStats } = useRangeValidation(watchedFields);
+
+  // 🎯 Función auxiliar reutilizable para validar campos
+  const isFieldValidValue = (fieldName: string): boolean => {
+    const value = watchedFields[fieldName as keyof FormState];
+    if (value === undefined || value === null) return false;
+    
+    if (typeof value === 'number') {
+      return value > 0;
+    }
+    
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (trimmed === '') return false;
+      const num = parseFloat(trimmed);
+      return !isNaN(num) && num > 0;
+    }
+    
+    return true; // Para booleans y otros tipos
+  };
 
   // Calculate form completion progress
   const formProgress = useMemo(() => {
@@ -179,27 +204,8 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
       'amhValue', 'spermConcentration', 'insulinValue', 'glucoseValue'
     ];
     
-    // Función auxiliar para validar campos
-    const isFieldValid = (fieldName: string): boolean => {
-      const value = watchedFields[fieldName as keyof FormState];
-      if (value === undefined || value === null) return false;
-      
-      if (typeof value === 'number') {
-        return value > 0;
-      }
-      
-      if (typeof value === 'string') {
-        const trimmed = value.trim();
-        if (trimmed === '') return false;
-        const num = parseFloat(trimmed);
-        return !isNaN(num) && num > 0;
-      }
-      
-      return true; // Para booleans y otros tipos
-    };
-    
-    const completedBasic = basicFields.filter(isFieldValid);
-    const completedImportant = importantFields.filter(isFieldValid);
+    const completedBasic = basicFields.filter(isFieldValidValue);
+    const completedImportant = importantFields.filter(isFieldValidValue);
     
     // Score ponderado: 60% básicos + 40% importantes
     const basicScore = (completedBasic.length / basicFields.length) * 60;
@@ -215,29 +221,10 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
     const labFields = ['insulinValue', 'glucoseValue', 'amhValue', 'tshValue'];
     const maleFactorFields = ['spermConcentration', 'spermProgressiveMotility'];
 
-    // Función auxiliar para validar campos
-    const isFieldValid = (fieldName: string): boolean => {
-      const value = watchedFields[fieldName as keyof FormState];
-      if (value === undefined || value === null) return false;
-      
-      if (typeof value === 'number') {
-        return value > 0;
-      }
-      
-      if (typeof value === 'string') {
-        const trimmed = value.trim();
-        if (trimmed === '') return false;
-        const num = parseFloat(trimmed);
-        return !isNaN(num) && num > 0;
-      }
-      
-      return true; // Para booleans y otros tipos
-    };
-
-    const isDemographicsComplete = demographicsFields.every(isFieldValid);
-    const isGynecologyComplete = gynecologyFields.some(isFieldValid);
-    const isLabComplete = labFields.some(isFieldValid);
-    const isMaleFactorComplete = maleFactorFields.some(isFieldValid);
+    const isDemographicsComplete = demographicsFields.every(isFieldValidValue);
+    const isGynecologyComplete = gynecologyFields.some(isFieldValidValue);
+    const isLabComplete = labFields.some(isFieldValidValue);
+    const isMaleFactorComplete = maleFactorFields.some(isFieldValidValue);
 
     if (!isDemographicsComplete) return 1;
     if (!isGynecologyComplete) return 2;
@@ -286,21 +273,28 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
 
   // Función auxiliar para extraer datos para validación clínica
   const extractValidationData = (formData: FormState) => {
+    // Helper para convertir string a número de forma segura
+    const parseNumber = (value: string | undefined): number | undefined => {
+      if (!value || value === '') return undefined;
+      const num = parseFloat(value);
+      return isNaN(num) ? undefined : num;
+    };
+
     return {
-      age: formData.age,
-      height: formData.height,
-      weight: formData.weight,
+      age: parseNumber(formData.age),
+      height: parseNumber(formData.height),
+      weight: parseNumber(formData.weight),
       
-      // 🆕 Ahora SÍ disponibles (ya no undefined)
-      amh: formData.amhValue, // ✅ Ya no undefined
-      timeToConception: formData.infertilityDuration,
-      glucose: formData.glucoseValue,
-      insulin: formData.insulinValue,
-      spermConcentration: formData.spermConcentration, // ✅ Ya no undefined
-      spermProgressiveMotility: formData.spermProgressiveMotility, // ✅ Ya no undefined
-      spermNormalMorphology: formData.spermNormalMorphology, // ✅ Ya no undefined
-      cycleLength: formData.cycleLength,
-      cycleRegularity: formData.cycleRegularity, // ✅ Ya no undefined
+      // 🆕 Campos opcionales convertidos apropiadamente
+      amh: parseNumber(formData.amhValue),
+      timeToConception: parseNumber(formData.infertilityDuration),
+      glucose: parseNumber(formData.glucoseValue),
+      insulin: parseNumber(formData.insulinValue),
+      spermConcentration: parseNumber(formData.spermConcentration),
+      spermProgressiveMotility: parseNumber(formData.spermProgressiveMotility),
+      spermNormalMorphology: parseNumber(formData.spermNormalMorphology),
+      cycleLength: parseNumber(formData.cycleLength),
+      cycleRegularity: formData.cycleRegularity,
     };
   };
 
@@ -311,9 +305,9 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
         const currentValues = getValues();
         
         // Solo validar si tenemos datos básicos
-        if (!currentValues.age || currentValues.age <= 0 || 
-            !currentValues.height || currentValues.height <= 0 || 
-            !currentValues.weight || currentValues.weight <= 0) {
+        if (!currentValues.age || parseFloat(currentValues.age) <= 0 ||
+            !currentValues.height || parseFloat(currentValues.height) <= 0 ||
+            !currentValues.weight || parseFloat(currentValues.weight) <= 0) {
           setClinicalValidation(null);
           return;
         }
@@ -376,9 +370,9 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
       }
       
       // Verificar datos mínimos para el cálculo
-      const ageNum = parseFloat(data.age);
-      const heightNum = parseFloat(data.height);
-      const weightNum = parseFloat(data.weight);
+      const ageNum = typeof data.age === 'number' ? data.age : parseFloat(String(data.age));
+      const heightNum = typeof data.height === 'number' ? data.height : parseFloat(String(data.height));
+      const weightNum = typeof data.weight === 'number' ? data.weight : parseFloat(String(data.weight));
       
       if (isNaN(ageNum) || ageNum <= 0 || isNaN(heightNum) || heightNum <= 0 || isNaN(weightNum) || weightNum <= 0) {
         throw new Error('Se requieren edad, altura y peso válidos para realizar el cálculo');
@@ -453,10 +447,10 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
     getClinicalWarnings: () => clinicalValidation?.overallValidation.warnings || [],
     getCompletionScore: () => clinicalValidation?.completionScore || 0,
     // Permitir cálculo si tenemos datos básicos, independientemente de validación clínica
-    canCalculate: formProgress >= 60 && 
-      watchedFields.age && parseFloat(watchedFields.age) > 0 && 
-      watchedFields.height && parseFloat(watchedFields.height) > 0 && 
-      watchedFields.weight && parseFloat(watchedFields.weight) > 0,
+    canCalculate: Boolean(formProgress >= 60 && 
+      watchedFields.age && (typeof watchedFields.age === 'number' ? watchedFields.age > 0 : parseFloat(String(watchedFields.age)) > 0) && 
+      watchedFields.height && (typeof watchedFields.height === 'number' ? watchedFields.height > 0 : parseFloat(String(watchedFields.height)) > 0) && 
+      watchedFields.weight && (typeof watchedFields.weight === 'number' ? watchedFields.weight > 0 : parseFloat(String(watchedFields.weight)) > 0)),
     
     // 🆕 Validación de rangos
     getRangeValidation,

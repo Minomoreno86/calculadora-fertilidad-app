@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { ScrollView, View, StyleSheet } from 'react-native';
-import { Button } from '@/presentation/components/common/Button';
+import { Button } from '@/presentation/components/common/EnhancedButton';
 import { InfoCard } from '@/presentation/components/common/InfoCard';
 import { theme } from '@/config/theme';
 
