@@ -3,10 +3,11 @@ import { Link } from 'expo-router';
 import Box from '@/presentation/components/common/Box';
 import Text from '@/presentation/components/common/Text';
 import { Button } from '@/presentation/components/common/Button';
-import { ProgressStepper } from '@/presentation/components/common/ProgressStepper';
-import { InfoCard } from '@/presentation/components/common/InfoCard';
-import { useCalculatorForm } from '@/presentation/features/calculator/useCalculatorForm';
-import { useStaticValidation } from '@/core/domain/validation/useStaticValidation';
+import { EnhancedButton } from '@/presentation/components/common/EnhancedButton';
+import { EnhancedProgressStepper } from '@/presentation/components/common/EnhancedProgressStepper';
+import { EnhancedInfoCard, CompletionCard } from '@/presentation/components/common/EnhancedInfoCard';
+import { EnhancedValidationMonitor } from '@/presentation/components/common/EnhancedValidationMonitor';
+import { useCalculatorFormWithParallelValidation } from '@/presentation/features/calculator/useCalculatorFormWithParallelValidation.final';
 import { clearEngineCache } from '@/core/domain/services/calculationEngine';
 import { DemographicsForm } from '@/presentation/features/calculator/components/DemographicsForm';
 import { GynecologyHistoryForm } from '@/presentation/features/calculator/components/GynecologyHistoryForm';
@@ -15,32 +16,32 @@ import { MaleFactorForm } from '@/presentation/features/calculator/components/Ma
 import { theme } from '@/config/theme';
 
 export default function CalculatorScreen() {
-  const { 
+  // 🚀 HOOK CON VALIDACIÓN PARALELA AVANZADA - FASE 2
+  const {
+    // API principal del formulario
     control, 
     calculatedBmi, 
     calculatedHoma, 
     handleCalculate, 
     formState: { errors },
-    isLoading,
-    currentStep,
-    getRangeValidation // 🎨 CRÍTICO: Extraer función de validación de rangos
-  } = useCalculatorForm();
+    isLoading = false,
+    currentStep = 0,
+    canCalculate = false,
+    
+    // Funciones auxiliares
+    getRangeValidation,
+    getCompletionScore,
 
-  // NUEVA: Validación simple y segura - usando valores estáticos por ahora
-  const {
-    completionPercentage
-  } = useStaticValidation();
+    // ✨ NUEVAS CARACTERÍSTICAS DE VALIDACIÓN PARALELA
+    isValidating,
+    validationProgress,
+    validationMetrics
+  } = useCalculatorFormWithParallelValidation();
+
+  // 📊 Usar completitud del hook con validación paralela
+  const completionPercentage = getCompletionScore();
 
   const stepLabels = ['Demografia', 'Ginecología', 'Laboratorio', 'Factor Masculino'];
-
-  const handleCalculateWithFeedback = async () => {
-    try {
-      await handleCalculate();
-    } catch (error) {
-      console.error('Error during calculation:', error);
-      // Aquí podrías mostrar un mensaje de error al usuario
-    }
-  };
 
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
@@ -53,52 +54,65 @@ export default function CalculatorScreen() {
         </Text>
       </View>
 
-      <View style={styles.progressContainer}>
-        <ProgressStepper
-          currentStep={currentStep}
-          totalSteps={4}
-          stepLabels={stepLabels}
+      <View style={styles.infoCardContainer}>
+        <EnhancedInfoCard
+          type="tip"
+          title="✨ Calculadora Inteligente"
+          message="Esta calculadora puede generar informes útiles incluso con datos parciales. Completa más campos para obtener un análisis más preciso."
         />
       </View>
-
-      <InfoCard
-        type="tip"
-        title="Consejo"
-        message="Completa todos los campos disponibles para obtener un análisis más preciso de tu perfil de fertilidad."
-      />
-
-      {/* NUEVO: Validación de completitud */}
-      <InfoCard
-        type="info"
-        title="Progreso de Validación"
-        message={`Completitud: ${completionPercentage}%. Completa más campos básicos para mejor análisis`}
-      />
-
-      {/* Validaciones se mostrarán cuando estén disponibles */}
 
       <Box style={styles.formContainer}>
         <DemographicsForm
           control={control}
           calculatedBmi={calculatedBmi}
           errors={errors}
-          getRangeValidation={getRangeValidation} // 🎨 CRÍTICO: Pasar función de validación
+          getRangeValidation={getRangeValidation}
         />
         <GynecologyHistoryForm control={control} errors={errors} />
         <LabTestsForm control={control} calculatedHoma={calculatedHoma} errors={errors} />
         <MaleFactorForm control={control} errors={errors} />
       </Box>
 
+      {/* 📊 PROGRESO MOVIDO AQUÍ - Más natural después de completar */}
+      {completionPercentage > 0 && (
+        <View style={styles.progressContainerMoved}>
+          <EnhancedProgressStepper
+            currentStep={currentStep}
+            totalSteps={4}
+            stepLabels={stepLabels}
+            completionPercentage={completionPercentage}
+          />
+        </View>
+      )}
+
       <View style={styles.buttonContainer}>
-        <Button
-          title="Generar Informe de Fertilidad"
-          onPress={handleCalculateWithFeedback}
+        <EnhancedButton
+          title={completionPercentage >= 70 ? "Generar Informe Completo" : "Generar Informe con Datos Disponibles"}
+          onPress={handleCalculate}
           variant="primary"
           size="large"
           fullWidth
           loading={isLoading}
-          disabled={isLoading}
-          iconName="document-text-outline"
+          disabled={isLoading || !canCalculate}
+          iconName="lightning" // 🔥 Icono moderno para generación rápida
+          completionPercentage={completionPercentage}
         />
+        
+        {/* 💡 Texto explicativo bajo el botón */}
+        {!isLoading && (
+          <Text style={styles.buttonHelpText}>
+            {(() => {
+              if (completionPercentage < 40) {
+                return "💡 Funciona con datos mínimos - Puedes generar un informe básico ahora";
+              } else if (completionPercentage < 70) {
+                return "✅ Buenos datos disponibles - El informe será útil y preciso";
+              } else {
+                return "🏆 Datos completos - Obtendrás el análisis más detallado";
+              }
+            })()}
+          </Text>
+        )}
         
         <View style={styles.secondaryButtonContainer}>
           <Link href="/premiumCalculator" asChild>
@@ -107,7 +121,7 @@ export default function CalculatorScreen() {
               onPress={() => {}}
               variant="outline"
               size="medium"
-              iconName="star-outline"
+              iconName="gem" // 🔥 Icono moderno para premium
               iconPosition="left"
             />
           </Link>
@@ -120,7 +134,7 @@ export default function CalculatorScreen() {
                 clearEngineCache();
                 console.log('✅ Cache limpiado manualmente');
               }}
-              variant="ghost"
+              variant="text"
               size="small"
               style={{ marginTop: 8 }}
             />
@@ -128,13 +142,22 @@ export default function CalculatorScreen() {
         </View>
       </View>
 
-      {/* Mostrar mensaje de completitud si es muy bajo */}
-      {completionPercentage < 60 && (
-        <InfoCard
-          type="warning"
-          message={`Completitud actual: ${completionPercentage}%. Completa los campos básicos para generar el informe.`}
+      {/* 💡 Tarjeta de completitud mejorada */}
+      <CompletionCard
+        completionPercentage={completionPercentage}
+        isValidating={isValidating}
+      />
+
+      {/* 🚀 MONITOR DE VALIDACIÓN PARALELA - Solo para desarrollo, al final */}
+      {process.env.NODE_ENV === 'development' && (
+        <EnhancedValidationMonitor
+          isValidating={isValidating}
+          progress={validationProgress}
+          metrics={validationMetrics}
+          showDevInfo={true}
         />
       )}
+
     </ScrollView>
   );
 }
@@ -142,59 +165,99 @@ export default function CalculatorScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: '#f8fafc', // Fondo más suave
   },
   header: {
     paddingHorizontal: 20,
-    paddingTop: 32,
-    paddingBottom: 20,
-    backgroundColor: theme.colors.card,
-    marginBottom: 16,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    paddingTop: 40,
+    paddingBottom: 16, // Reducido de 20 a 16
+    backgroundColor: '#ffffff',
+    marginBottom: 6, // Reducido de 12 a 6
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 6,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    // Gradiente sutil
+    position: 'relative',
   },
   title: {
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 6, // Reducido de 8 a 6
     color: theme.colors.primary,
+    fontSize: 28,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
   subtitle: {
     textAlign: 'center',
     color: theme.colors.subtleText,
     lineHeight: 22,
+    fontSize: 16,
+    opacity: 0.8,
+  },
+  infoCardContainer: {
+    marginBottom: 4, // Reducido de 8 a 4 - Espacio mínimo antes del formulario
   },
   progressContainer: {
-    marginHorizontal: 20,
-    marginBottom: 16,
+    marginBottom: 8,
   },
-  formContainer: {
-    margin: 20,
-    padding: 20,
-    backgroundColor: theme.colors.card,
+  progressContainerMoved: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    marginBottom: 8,
+    padding: 16,
+    backgroundColor: '#ffffff',
     borderRadius: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+  },
+  formContainer: {
+    marginHorizontal: 20, // Solo horizontal
+    marginTop: 4, // Reducido de 8 a 4 - Muy poco espacio arriba
+    marginBottom: 16, // Espacio abajo normal
+    padding: 24,
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
   },
   buttonContainer: {
     marginHorizontal: 20,
     marginBottom: 32,
   },
   secondaryButtonContainer: {
-    marginTop: 12,
+    marginTop: 16,
     alignItems: 'center',
+  },
+  buttonHelpText: {
+    textAlign: 'center',
+    fontSize: 13,
+    color: theme.colors.subtleText,
+    marginTop: 12,
+    fontStyle: 'italic',
+    lineHeight: 18,
+    paddingHorizontal: 20,
   },
 });

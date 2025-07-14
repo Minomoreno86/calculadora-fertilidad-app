@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ViewStyle, ActivityIndicator } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/config/theme';
+import { getModernEmoji } from './ModernIcon';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'text';
 type ButtonSize = 'small' | 'medium' | 'large';
@@ -13,7 +13,7 @@ interface ButtonProps {
   size?: ButtonSize;
   disabled?: boolean;
   loading?: boolean;
-  iconName?: keyof typeof Ionicons.glyphMap;
+  iconName?: string; // 🔥 Ahora acepta nombres de nuestros iconos modernos
   iconPosition?: 'left' | 'right';
   style?: ViewStyle;
   fullWidth?: boolean;
@@ -65,11 +65,15 @@ export const Button = ({
       ) : (
         <>
           {iconName && iconPosition === 'left' && (
-            <Ionicons name={iconName} size={iconSize} color={iconColor} style={styles.iconLeft} />
+            <Text style={[textStyle, styles.iconLeft, { fontSize: iconSize + 2 }]}>
+              {getModernEmoji(iconName)}
+            </Text>
           )}
           <Text style={textStyle}>{title}</Text>
           {iconName && iconPosition === 'right' && (
-            <Ionicons name={iconName} size={iconSize} color={iconColor} style={styles.iconRight} />
+            <Text style={[textStyle, styles.iconRight, { fontSize: iconSize + 2 }]}>
+              {getModernEmoji(iconName)}
+            </Text>
           )}
         </>
       )}
@@ -168,11 +172,15 @@ const styles = StyleSheet.create({
   disabledText: {
     color: theme.colors.white,
   },
-  // Icons
+  // Icons - Modernizados
   iconLeft: {
     marginRight: theme.spacing.s,
+    opacity: 0.9,
+    transform: [{ scale: 1.1 }], // Iconos ligeramente más grandes
   },
   iconRight: {
     marginLeft: theme.spacing.s,
+    opacity: 0.9,
+    transform: [{ scale: 1.1 }], // Iconos ligeramente más grandes
   },
 });
