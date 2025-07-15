@@ -9,22 +9,27 @@ import { useReportLoader } from '@/presentation/features/results/hooks/useReport
 // Importar el nuevo componente de display de resultados
 import { ResultsDisplay } from '@/presentation/features/results/components/ResultsDisplay'; // Ajusta la ruta si es necesario
 
-// Importar los sugeridores de tratamiento (base y premium)
-import { suggestTreatments } from '@/core/domain/services/treatmentSuggester'; // Sugeridor base
+// Importar los sugeridores de tratamiento (premium)
 import { suggestTreatmentsPremium } from '@/core/domain/services/treatmentSuggesterPremium'; // Sugeridor premium
 
 import Text from '@/presentation/components/common/Text'; // Ruta a tu componente Text
-import { theme } from '@/config/theme'; // Ruta a tu tema
+import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 
 // --- Pantalla Principal de Resultados ---
 export default function ResultsScreen() {
   const params = useLocalSearchParams();
   const { evaluation, loading, error, isPremiumReport } = useReportLoader(params.reportKey); // Usar el nuevo hook
+  
+  // 🎨 TEMA DINÁMICO
+  const theme = useDynamicTheme();
 
   // Definir qué sugeridor de tratamiento usar.
   // Por ahora, asumimos que si llegamos aquí, queremos el premium.
   // En una fase posterior, esto podría basarse en la suscripción del usuario o un parámetro.
   const treatmentSuggester = suggestTreatmentsPremium; // Usar el sugeridor PREMIUM
+
+  // 🎨 Crear estilos dinámicos
+  const styles = createStyles(theme);
 
   // Estado de carga o error
   if (loading) {
@@ -71,7 +76,8 @@ export default function ResultsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+// 🎨 Función para crear estilos dinámicos
+const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
   fullScreenContainer: {
     flex: 1,
     backgroundColor: theme.colors.background,

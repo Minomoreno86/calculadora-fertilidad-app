@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, LayoutAnimation, Platform, UIManager } from 'react-native';
-import { theme } from '../../../config/theme';
+import { View, TouchableOpacity, StyleSheet, LayoutAnimation, Platform, UIManager } from 'react-native';
+import Text from './Text';
+import { useDynamicTheme } from '../../../hooks/useDynamicTheme';
 import { Ionicons } from '@expo/vector-icons';
 
 // Habilitar LayoutAnimation para Android
@@ -15,6 +16,10 @@ interface AccordionProps {
 }
 
 const Accordion: React.FC<AccordionProps> = ({ title, children, initialExpanded = false }) => {
+  // 🎨 TEMA DINÁMICO
+  const theme = useDynamicTheme();
+  const styles = createStyles(theme);
+  
   const [isExpanded, setIsExpanded] = useState(initialExpanded);
 
   const toggleExpand = () => {
@@ -33,12 +38,13 @@ const Accordion: React.FC<AccordionProps> = ({ title, children, initialExpanded 
   );
 };
 
-const styles = StyleSheet.create({
+// 🎨 Función para crear estilos dinámicos
+const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     marginBottom: 16,
-    overflow: 'hidden', // Asegura que el contenido no se salga de los bordes redondeados
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,

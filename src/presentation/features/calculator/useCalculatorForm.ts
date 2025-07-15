@@ -52,6 +52,7 @@ export interface UseCalculatorFormReturn {
   
   // Estado y navegación
   isLoading: boolean;
+  isCalculating: boolean; // Agregado para compatibilidad
   formProgress: number;
   currentStep: number;
   
@@ -433,6 +434,7 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
     
     // Estado y navegación
     isLoading,
+    isCalculating: isLoading, // Agregado para compatibilidad
     formProgress,
     currentStep: getCurrentStep,
     

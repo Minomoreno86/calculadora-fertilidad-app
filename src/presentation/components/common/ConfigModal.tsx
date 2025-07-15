@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import {
   Modal,
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   Switch,
   ScrollView,
   Alert,
 } from 'react-native';
-import { theme } from '../../../config/theme';
+import Text from './Text';
+import { useDynamicTheme } from '../../../hooks/useDynamicTheme';
 
 interface ConfigModalProps {
   visible: boolean;
@@ -17,9 +17,15 @@ interface ConfigModalProps {
 }
 
 export const ConfigModal: React.FC<ConfigModalProps> = ({ visible, onClose }) => {
-  const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [fontSize, setFontSize] = useState<'small' | 'medium' | 'large'>('medium');
+  
+  // 🎨 Obtener tema dinámico y funciones de control
+  const theme = useDynamicTheme();
+  const { isDark, toggleTheme } = theme;
+  
+  // 🎨 Crear estilos dinámicos basados en el tema actual
+  const styles = createStyles(theme);
 
   // 💡 Helper para tamaño de fuente
   const getFontSize = (size: 'small' | 'medium' | 'large') => {
@@ -93,8 +99,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ visible, onClose }) =>
                 <Text style={styles.optionSubtitle}>Cambiar a tema oscuro</Text>
               </View>
               <Switch
-                value={darkMode}
-                onValueChange={setDarkMode}
+                value={isDark}
+                onValueChange={toggleTheme}
                 trackColor={{
                   false: '#E5E7EB',
                   true: theme.colors.primary,
@@ -187,7 +193,8 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ visible, onClose }) =>
   );
 };
 
-const styles = StyleSheet.create({
+// 🎨 Función para crear estilos dinámicos
+const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
@@ -209,7 +216,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.surface,
   },
   closeText: {
     fontSize: 18,
@@ -219,7 +226,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: theme.colors.surface,
     fontFamily: 'Lato-Bold',
   },
   placeholder: {
@@ -245,12 +252,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 15,
     paddingHorizontal: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     marginBottom: 10,
-    shadowColor: '#000000',
+    shadowColor: theme.isDark ? theme.colors.black : '#000000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: theme.isDark ? 0.3 : 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
@@ -272,12 +279,12 @@ const styles = StyleSheet.create({
   actionOption: {
     paddingVertical: 15,
     paddingHorizontal: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     marginBottom: 10,
-    shadowColor: '#000000',
+    shadowColor: theme.isDark ? theme.colors.black : '#000000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: theme.isDark ? 0.3 : 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
@@ -294,7 +301,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E5E7EB',
+    backgroundColor: theme.colors.border,
   },
   fontSizeButtonActive: {
     backgroundColor: theme.colors.primary,
@@ -305,7 +312,7 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   fontSizeTextActive: {
-    color: '#FFFFFF',
+    color: theme.colors.surface,
   },
   bottomSpacer: {
     height: 40,

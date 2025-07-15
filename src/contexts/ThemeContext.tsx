@@ -1,0 +1,95 @@
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StatusBar } from 'expo-status-bar';
+
+export type ThemeMode = 'light' | 'dark';
+
+interface ThemeContextType {
+  themeMode: ThemeMode;
+  isDark: boolean;
+  toggleTheme: () => void;
+  setTheme: (mode: ThemeMode) => void;
+}
+
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+const THEME_STORAGE_KEY = '@fertility_calculator_theme';
+
+interface ThemeProviderProps {
+  children: ReactNode;
+}
+
+export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
+  const [themeMode, setThemeMode] = useState<ThemeMode>('light');
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 🔄 Cargar tema guardado al iniciar
+  useEffect(() => {
+    loadStoredTheme();
+  }, []);
+
+  // 💾 Cargar tema desde AsyncStorage
+  const loadStoredTheme = async () => {
+    try {
+      const storedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+      if (storedTheme && (storedTheme === 'light' || storedTheme === 'dark')) {
+        setThemeMode(storedTheme as ThemeMode);
+      }
+    } catch (error) {
+      console.error('🚨 Error cargando tema:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 💾 Guardar tema en AsyncStorage
+  const saveTheme = async (mode: ThemeMode) => {
+    try {
+      await AsyncStorage.setItem(THEME_STORAGE_KEY, mode);
+    } catch (error) {
+      console.error('🚨 Error guardando tema:', error);
+    }
+  };
+
+  // 🔄 Alternar entre light y dark
+  const toggleTheme = () => {
+    const newMode: ThemeMode = themeMode === 'light' ? 'dark' : 'light';
+    setThemeMode(newMode);
+    saveTheme(newMode);
+  };
+
+  // 🎨 Establecer tema específico
+  const setTheme = (mode: ThemeMode) => {
+    setThemeMode(mode);
+    saveTheme(mode);
+  };
+
+  const contextValue: ThemeContextType = {
+    themeMode,
+    isDark: themeMode === 'dark',
+    toggleTheme,
+    setTheme,
+  };
+
+  // 🔄 No renderizar hasta cargar el tema
+  if (isLoading) {
+    return null;
+  }
+
+  return (
+    <ThemeContext.Provider value={contextValue}>
+      {/* 📱 StatusBar dinámico según el tema */}
+      <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+
+// 🪝 Hook personalizado para usar el tema
+export const useTheme = (): ThemeContextType => {
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error('useTheme debe ser usado dentro de un ThemeProvider');
+  }
+  return context;
+};

@@ -18,6 +18,7 @@ export { useFormState } from './hooks/useFormState';
 export { useFormValidation } from './hooks/useFormValidation';
 export { useCalculations } from './hooks/useCalculations';
 export { useFormProgress } from './hooks/useFormProgress';
+export { useUXEnhancements } from './hooks/useUXEnhancements';
 export { useBenchmark } from './hooks/useBenchmark';
 
 // 🛠️ Servicios
@@ -38,8 +39,9 @@ export { LabTestsForm } from './components/LabTestsForm';
 export { MaleFactorForm } from './components/MaleFactorForm';
 
 // 🚀 NUEVO: Componentes mejorados con validación paralela
-export { default as EnhancedCalculatorForm } from './components/EnhancedCalculatorForm';
 export { default as CalculatorPerformanceMonitor } from './components/CalculatorPerformanceMonitor';
+export { EnhancedProgressDisplay } from './components/EnhancedProgressDisplay';
+export { ConditionalProgressDisplay } from './components/ConditionalProgressDisplay';
 
 // 🔍 Validación
 export { formSchema } from './utils/validationSchemas';

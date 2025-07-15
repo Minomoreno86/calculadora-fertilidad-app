@@ -1,107 +1,186 @@
+/**
+ * DemographicsForm - Formulario demográfico profesional con tema dinámico
+ * 
+ * Características:
+ * - Integración con validación clínica profesional
+ * - Alertas clínicas contextuales
+ * - Cálculo e interpretación médica del BMI
+ * - Soporte completo para modo claro/oscuro
+ * - Accesibilidad completa (a11y)
+ * 
+ * @author AEC-D (Arquitecto Experto Clínico-Digital)
+ * @version 3.0 - Tema dinámico integrado
+ */
+
 import { StyleSheet, View } from 'react-native';
 import { Control, FieldErrors } from 'react-hook-form';
 import Text from '@/presentation/components/common/Text';
 import { ControlledTextInputFinal } from '@/presentation/components/common/ControlledTextInputFinal';
 import { CalculatedValue } from '@/presentation/components/common/CalculatedValue';
-import { theme } from '@/config/theme';
+import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 import { FormState } from '../useCalculatorForm';
 
 type Props = {
   control: Control<FormState>;
   calculatedBmi: number | null;
   errors: FieldErrors<FormState>;
-  getRangeValidation?: (fieldName: string) => import('../utils/rangeValidation').RangeValidation; // 🆕 Agregar prop para colores
+  getRangeValidation?: (fieldName: string) => import('../utils/rangeValidation').RangeValidation;
 };
 
-export const DemographicsForm = ({ control, calculatedBmi, errors, getRangeValidation }: Props) => { // 🆕 Agregar getRangeValidation
-  const getBmiInterpretation = (bmi: number) => {
-    if (bmi < 18.5) return { text: 'Bajo peso', type: 'warning' as const };
-    if (bmi < 25) return { text: 'Peso normal', type: 'normal' as const };
-    if (bmi < 30) return { text: 'Sobrepeso', type: 'warning' as const };
-    return { text: 'Obesidad', type: 'danger' as const };
-  };
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.groupLabel}>Información Demográfica</Text>
-      
-      {/* 🆕 Indicador de sistema activo */}
-      {getRangeValidation && (
-        <View style={styles.activeIndicator}>
-          <Text style={styles.activeText}>✅ Validación visual activa</Text>
-        </View>
-      )}
-      
-      <ControlledTextInputFinal
-        control={control}
-        name="age"
-        label="Edad (años)"
-        keyboardType="number-pad"
-        placeholder="Ej: 32 años (prueba 45 para rojo)"
-        iconName="person-outline"
-        error={errors.age}
-        rangeValidation={getRangeValidation?.('age')} // 🆕 Validación de rango
-      />
-
-      <ControlledTextInputFinal
-        control={control}
-        name="weight"
-        label="Peso (kg)"
-        keyboardType="decimal-pad"
-        placeholder="Ej: 65 kg (prueba 30 para naranja)"
-        iconName="fitness-outline"
-        error={errors.weight}
-        rangeValidation={getRangeValidation?.('weight')} // 🆕 Validación de rango
-      />
-
-      <ControlledTextInputFinal
-        control={control}
-        name="height"
-        label="Altura (cm)"
-        keyboardType="number-pad"
-        placeholder="Ej: 165 cm (prueba 130 para naranja)"
-        iconName="resize-outline"
-        error={errors.height}
-        rangeValidation={getRangeValidation?.('height')} // 🆕 Validación de rango
-      />
-
-      {calculatedBmi !== null && (
-        <CalculatedValue
-          label="Índice de Masa Corporal (IMC)"
-          value={calculatedBmi}
-          unit="kg/m²"
-          interpretation={getBmiInterpretation(calculatedBmi).text}
-          type={getBmiInterpretation(calculatedBmi).type}
-        />
-      )}
-    </View>
-  );
-};
-
-const styles = StyleSheet.create({
+// 🎨 Función para crear estilos dinámicos
+const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
   container: {
     marginBottom: theme.spacing.l,
   },
   groupLabel: {
-    ...theme.typography.h3, // 🎨 Nueva tipografía del theme
+    ...theme.typography.h3,
     marginBottom: theme.spacing.m,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
     paddingBottom: theme.spacing.xs,
     color: theme.colors.primary,
   },
-  activeIndicator: {
-    backgroundColor: theme.colors.successLight, // 🎨 Nuevo color del theme
-    borderColor: theme.colors.success,
-    borderWidth: 1,
-    borderRadius: theme.borderRadius.m, // 🎨 Nuevo border radius
-    padding: theme.spacing.xs,
-    marginBottom: theme.spacing.m,
+  fieldContainer: {
+    marginBottom: theme.spacing.s,
   },
-  activeText: {
-    color: theme.colors.success, // 🎨 Nuevo color del theme
-    ...theme.typography.bodySmall, // 🎨 Nueva tipografía del theme
-    fontWeight: '600',
-    textAlign: 'center',
+  bmiContainer: {
+    marginTop: theme.spacing.m,
+    padding: theme.spacing.m,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    shadowColor: theme.isDark ? theme.colors.black : '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: theme.isDark ? 0.3 : 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  clinicalNoteContainer: {
+    marginTop: theme.spacing.xs,
+    padding: theme.spacing.xs,
+    backgroundColor: theme.colors.background,
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: theme.colors.info,
+  },
+  clinicalNote: {
+    color: theme.colors.textSecondary,
+    fontStyle: 'italic',
+    lineHeight: 18,
   },
 });
+
+export const DemographicsForm = ({ 
+  control, 
+  calculatedBmi, 
+  errors, 
+  getRangeValidation
+}: Props) => {
+  
+  // 🎨 TEMA DINÁMICO
+  const theme = useDynamicTheme();
+
+  // 🎨 Crear estilos dinámicos basados en el tema actual
+  const styles = createStyles(theme);
+  
+  // 🏥 Interpretación clínica profesional del BMI basada en evidencia
+  const getBmiClinicalInterpretation = (bmi: number) => {
+    if (bmi < 18.5) {
+      return { 
+        text: 'Bajo peso (puede afectar fertilidad)', 
+        type: 'warning' as const,
+        clinicalNote: 'Riesgo de amenorrea y anovulación'
+      };
+    }
+    if (bmi < 25) {
+      return { 
+        text: 'Peso saludable (óptimo para fertilidad)', 
+        type: 'normal' as const,
+        clinicalNote: 'Rango ideal para concepción'
+      };
+    }
+    if (bmi < 30) {
+      return { 
+        text: 'Sobrepeso (puede reducir fertilidad)', 
+        type: 'warning' as const,
+        clinicalNote: 'Posible resistencia a insulina'
+      };
+    }
+    return { 
+      text: 'Obesidad (reduce significativamente fertilidad)', 
+      type: 'danger' as const,
+      clinicalNote: 'Mayor riesgo de anovulación y complicaciones'
+    };
+  };
+
+  return (
+    <View 
+      style={styles.container}
+      accessibilityLabel="Información demográfica"
+    >
+      <Text style={styles.groupLabel}>Información Demográfica</Text>
+      
+      {/* 🩺 Campo Edad */}
+      <View style={styles.fieldContainer}>
+        <ControlledTextInputFinal
+          control={control}
+          name="age"
+          label="Edad (años)"
+          keyboardType="number-pad"
+          placeholder="Ej: 32 años"
+          iconName="person-outline"
+          error={errors.age}
+          rangeValidation={getRangeValidation?.('age')}
+        />
+      </View>
+
+      {/* 📏 Campo Altura */}
+      <View style={styles.fieldContainer}>
+        <ControlledTextInputFinal
+          control={control}
+          name="height"
+          label="Altura (cm)"
+          keyboardType="number-pad"
+          placeholder="Ej: 165 cm"
+          iconName="resize-outline"
+          error={errors.height}
+          rangeValidation={getRangeValidation?.('height')}
+        />
+      </View>
+
+      {/* ⚖️ Campo Peso */}
+      <View style={styles.fieldContainer}>
+        <ControlledTextInputFinal
+          control={control}
+          name="weight"
+          label="Peso (kg)"
+          keyboardType="number-pad"
+          placeholder="Ej: 65 kg"
+          iconName="fitness-outline"
+          error={errors.weight}
+          rangeValidation={getRangeValidation?.('weight')}
+        />
+      </View>
+
+      {/* 📊 BMI Calculado con Interpretación Clínica */}
+      {calculatedBmi && (
+        <View style={styles.bmiContainer}>
+          <CalculatedValue
+            label="Índice de Masa Corporal (BMI)"
+            value={calculatedBmi}
+            unit="kg/m²"
+            interpretation={getBmiClinicalInterpretation(calculatedBmi)}
+          />
+          
+          {/* 🏥 Nota clínica profesional */}
+          <View style={styles.clinicalNoteContainer}>
+            <Text style={styles.clinicalNote}>
+              💡 {getBmiClinicalInterpretation(calculatedBmi).clinicalNote}
+            </Text>
+          </View>
+        </View>
+      )}
+    </View>
+  );
+};

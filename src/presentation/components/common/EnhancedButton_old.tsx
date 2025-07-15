@@ -1,4 +1,12 @@
-// ===================================================================
+// ========================================  // 🎨 TEMA DINÁMICO
+  const theme = useDynamicTheme();
+  
+  // 🎨 Crear estilos dinámicos locales
+  const styles = createStyles(theme);
+  
+  // 🎭 Referencias para animaciones (solo si enhanced=true)
+  const [scaleAnimation] = React.useState(new Animated.Value(1));
+  const [glowAnimation] = React.useState(new Animated.Value(0));
 // 🎨 BOTÓN UNIFICADO - Combina funcionalidad básica y efectos avanzados
 // ===================================================================
 
@@ -41,13 +49,10 @@ export const EnhancedButton: React.FC<Props> = memo(({
   enhanced = false,
   completionPercentage
 }) => {
-  // 🎨 TEMA DINÁMICO
+  // � TEMA DINÁMICO
   const theme = useDynamicTheme();
   
-  // 🎨 Crear estilos dinámicos locales
-  const styles = createStyles(theme);
-  
-  // 🎭 Referencias para animaciones (solo si enhanced=true)
+  // �🎭 Referencias para animaciones (solo si enhanced=true)
   const [scaleAnimation] = React.useState(new Animated.Value(1));
   const [glowAnimation] = React.useState(new Animated.Value(0));
 
@@ -150,6 +155,9 @@ export const EnhancedButton: React.FC<Props> = memo(({
     ? { style: { transform: [{ scale: scaleAnimation }] } }
     : {};
 
+  // 🎨 Crear estilos dinámicos locales
+  const styles = createStyles(theme);
+
   return (
     <ButtonContainer {...containerProps}>
       <TouchableOpacity
@@ -160,7 +168,7 @@ export const EnhancedButton: React.FC<Props> = memo(({
         disabled={disabled || loading}
         activeOpacity={0.8}
       >
-        {/* ✨ Efecto de brillo (solo enhanced) */}
+        {/* � Efecto de brillo (solo enhanced) */}
         {enhanced && variant === 'primary' && !disabled && !loading && (
           <Animated.View
             style={[
@@ -202,11 +210,11 @@ export const EnhancedButton: React.FC<Props> = memo(({
                 {getIcon()}
               </Text>
             )}
-
+            
             <Text style={getTextStyle()}>
-              {title}
+              {loading ? 'Cargando...' : title}
             </Text>
-
+            
             {iconName && iconPosition === 'right' && (
               <Text style={[
                 ...getTextStyle(), 

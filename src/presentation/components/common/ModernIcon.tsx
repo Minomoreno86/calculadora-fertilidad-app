@@ -3,7 +3,8 @@
 // ===================================================================
 
 import React from 'react';
-import { Text, TextStyle } from 'react-native';
+import { TextStyle } from 'react-native';
+import Text from './Text';
 
 // 🎨 Mapa de iconos modernos usando emojis nativos
 const MODERN_EMOJI_MAP: { [key: string]: string } = {

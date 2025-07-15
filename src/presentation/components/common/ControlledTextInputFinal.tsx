@@ -3,22 +3,21 @@ import { View, TextInput, StyleSheet, TextInputProps } from 'react-native';
 import { Control, Controller, FieldError } from 'react-hook-form';
 import { Ionicons } from '@expo/vector-icons';
 import Text from './Text';
-import { theme } from '@/config/theme';
+import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 import { RangeValidation } from '@/presentation/features/calculator/utils/rangeValidation';
 
-interface Props {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  control: Control<Record<string, any>>;
-  name: string;
+interface Props<T extends Record<string, unknown> = Record<string, unknown>> {
+  control: Control<T>;
+  name: keyof T;
   label: string;
   placeholder?: string;
   keyboardType?: TextInputProps['keyboardType'];
   iconName?: keyof typeof Ionicons.glyphMap;
   error?: FieldError;
-  rangeValidation?: RangeValidation; // 🎨 Nueva prop para colores
+  rangeValidation?: RangeValidation;
 }
 
-export const ControlledTextInputFinal: React.FC<Props> = ({
+export const ControlledTextInputFinal = <T extends Record<string, unknown> = Record<string, unknown>>({
   control,
   name,
   label,
@@ -27,59 +26,63 @@ export const ControlledTextInputFinal: React.FC<Props> = ({
   iconName,
   error,
   rangeValidation,
-}) => {
+}: Props<T>) => {
+  // 🎨 TEMA DINÁMICO
+  const theme = useDynamicTheme();
+  
   // 🎨 Determinar colores basados en validación de rango
   const getValidationColors = () => {
     if (!rangeValidation) {
       return {
         borderColor: theme.colors.border,
-        backgroundColor: theme.colors.inputBackground,
-        iconColor: theme.colors.text,
+        backgroundColor: theme.colors.surface,
+        iconColor: theme.colors.textSecondary,
       };
     }
-
-    console.log(`🎨 ControlledTextInputFinal[${name}] - rangeValidation:`, rangeValidation);
 
     // Usar las propiedades correctas de RangeValidation
     if (rangeValidation.isNormal) {
       return {
-        borderColor: '#4CAF50', // Verde
-        backgroundColor: '#E8F5E8',
-        iconColor: '#4CAF50',
+        borderColor: theme.colors.success,
+        backgroundColor: theme.isDark ? '#0D4E1A' : '#E8F5E8',
+        iconColor: theme.colors.success,
       };
     } else if (rangeValidation.isWarning) {
       return {
-        borderColor: '#FF9800', // Naranja
-        backgroundColor: '#FFF3E0',
-        iconColor: '#FF9800',
+        borderColor: theme.colors.warning,
+        backgroundColor: theme.isDark ? '#4E3A0D' : '#FFF3E0',
+        iconColor: theme.colors.warning,
       };
     } else if (rangeValidation.isError) {
       return {
-        borderColor: '#F44336', // Rojo
-        backgroundColor: '#FFEBEE',
-        iconColor: '#F44336',
+        borderColor: theme.colors.error,
+        backgroundColor: theme.isDark ? '#4E0D0D' : '#FFEBEE',
+        iconColor: theme.colors.error,
       };
     } else {
       return {
         borderColor: theme.colors.border,
-        backgroundColor: theme.colors.inputBackground,
-        iconColor: theme.colors.text,
+        backgroundColor: theme.colors.surface,
+        iconColor: theme.colors.textSecondary,
       };
     }
   };
 
   const colors = getValidationColors();
+  
+  // 🎨 Crear estilos dinámicos
+  const styles = createStyles(theme);
 
   return (
     <View style={styles.container}>
-      <Text variant="label" style={styles.label}>
+      <Text variant="body" style={styles.label}>
         {label}
       </Text>
-      
       <Controller
-        control={control}
-        name={name}
-        render={({ field: { onChange, onBlur, value } }) => (
+          control={control}
+          // @ts-expect-error - Controller type compatibility issue with generic keyof T
+          name={name}
+          render={({ field: { onChange, onBlur, value } }) => (
           <View style={[
             styles.inputContainer,
             {
@@ -105,7 +108,7 @@ export const ControlledTextInputFinal: React.FC<Props> = ({
               onChangeText={onChange}
               value={value?.toString() || ''}
               placeholder={placeholder}
-              placeholderTextColor={theme.colors.subtleText}
+              placeholderTextColor={theme.colors.textSecondary}
               keyboardType={keyboardType}
             />
           </View>
@@ -132,7 +135,8 @@ export const ControlledTextInputFinal: React.FC<Props> = ({
   );
 };
 
-const styles = StyleSheet.create({
+// 🎨 Función para crear estilos dinámicos
+const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
   container: {
     marginBottom: theme.spacing.m,
   },
@@ -145,7 +149,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 2, // 🎨 Borde más grueso para mejor visibilidad
-    borderRadius: theme.borderRadius.m,
+    borderRadius: 8,
     paddingHorizontal: theme.spacing.m,
     minHeight: 50,
   },
@@ -173,6 +177,6 @@ const styles = StyleSheet.create({
   },
   errorBorder: {
     borderColor: theme.colors.error,
-    backgroundColor: '#FFEBEE',
+    backgroundColor: theme.isDark ? '#4E0D0D' : '#FFEBEE',
   },
 });

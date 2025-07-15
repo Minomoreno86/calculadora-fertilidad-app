@@ -1,5 +1,7 @@
 import React from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import { Modal, View, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import Text from './Text';
+import { useDynamicTheme } from '../../../hooks/useDynamicTheme';
 
 type OptionSelectorModalProps = {
   visible: boolean;
@@ -16,6 +18,10 @@ export const OptionSelectorModal: React.FC<OptionSelectorModalProps> = ({
   onSelect,
   onClose,
 }) => {
+  // 🎨 TEMA DINÁMICO
+  const theme = useDynamicTheme();
+  const styles = createStyles(theme);
+  
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
       <View style={styles.modalOverlay}>
@@ -27,13 +33,19 @@ export const OptionSelectorModal: React.FC<OptionSelectorModalProps> = ({
             keyExtractor={(item) => item.value}
             renderItem={({ item }) => (
               <TouchableOpacity
-                style={styles.optionItem}
+                style={[
+                  styles.optionItem, 
+                  item.value === selectedValue && { backgroundColor: theme.isDark ? '#1a4b3d' : '#e8f5e8' }
+                ]}
                 onPress={() => {
                   onSelect(item.value);
                   onClose();
                 }}
               >
-                <Text style={styles.optionText}>
+                <Text style={[
+                  styles.optionText,
+                  item.value === selectedValue && { color: theme.colors.primary, fontWeight: '600' }
+                ]}>
                   {item.label} {item.value === selectedValue ? '✔️' : ''}
                 </Text>
               </TouchableOpacity>
@@ -49,12 +61,49 @@ export const OptionSelectorModal: React.FC<OptionSelectorModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
-  modalContainer: { backgroundColor: '#fff', padding: 20, borderRadius: 10, width: '80%' },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 16 },
-  optionItem: { paddingVertical: 12 },
-  optionText: { fontSize: 16 },
-  closeButton: { marginTop: 20, alignItems: 'center' },
-  closeButtonText: { color: 'blue', fontSize: 16 },
+// 🎨 Función para crear estilos dinámicos
+const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
+  modalOverlay: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    backgroundColor: 'rgba(0,0,0,0.5)' 
+  },
+  modalContainer: { 
+    backgroundColor: theme.colors.surface, 
+    padding: 20, 
+    borderRadius: 10, 
+    width: '80%',
+    maxHeight: '70%',
+  },
+  modalTitle: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    marginBottom: 16,
+    color: theme.colors.text,
+    textAlign: 'center',
+  },
+  optionItem: { 
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.isDark ? '#404040' : '#f0f0f0',
+  },
+  optionText: { 
+    fontSize: 16,
+    color: theme.colors.text,
+  },
+  closeButton: { 
+    marginTop: 20, 
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  closeButtonText: { 
+    color: theme.colors.white, 
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });

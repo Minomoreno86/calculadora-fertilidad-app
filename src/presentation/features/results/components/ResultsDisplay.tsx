@@ -10,7 +10,7 @@ import { BenchmarkCard } from './BenchmarkCard'; // Ruta relativa
 import { SimulatorSection } from './SimulatorSection'; // Ruta relativa
 import { FindingsSection } from './FindingsSection'; // Ruta relativa
 import { TreatmentCard } from './TreatmentCard'; // Ruta relativa
-import { theme } from '@/config/theme'; // Importa el tema
+import { useDynamicTheme } from '../../../../hooks/useDynamicTheme';
 
 
 interface ResultsDisplayProps {
@@ -20,6 +20,10 @@ interface ResultsDisplayProps {
 }
 
 export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ evaluation, treatmentSuggestions, isPremiumReport }) => {
+  // 🎨 TEMA DINÁMICO
+  const theme = useDynamicTheme();
+  const styles = createStyles(theme);
+  
   const { report } = evaluation;
 
   return (
@@ -55,7 +59,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ evaluation, trea
   );
 };
 
-const styles = StyleSheet.create({
+// 🎨 Función para crear estilos dinámicos
+const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,

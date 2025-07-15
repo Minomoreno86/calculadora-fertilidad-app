@@ -3,8 +3,9 @@
 // ===================================================================
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
-import { theme } from '@/config/theme';
+import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import Text from './Text';
+import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 
 interface Props {
   type: 'tip' | 'info' | 'success' | 'warning' | 'error';
@@ -23,6 +24,9 @@ export const EnhancedInfoCard: React.FC<Props> = ({
   showIcon = true,
   animated = true
 }) => {
+  // 🎨 TEMA DINÁMICO
+  const theme = useDynamicTheme();
+  
   const [scaleAnimation] = React.useState(new Animated.Value(0.95));
   const [opacityAnimation] = React.useState(new Animated.Value(0));
 
@@ -255,7 +259,7 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 14,
-    color: theme.colors.text,
+    color: '#333333', // Color fijo por ahora
     lineHeight: 20,
   },
   actionIndicator: {

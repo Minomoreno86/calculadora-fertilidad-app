@@ -46,7 +46,7 @@ const calculator = useCalculatorWithParallelValidation();
 ### 2. Uso del Componente Completo Mejorado
 
 ```typescript
-import { EnhancedCalculatorForm } from '@/presentation/features/calculator';
+import { CalculatorPerformanceMonitor } from '@/presentation/features/calculator';
 
 export const MyCalculatorScreen = () => {
   const handleCalculationComplete = (result) => {

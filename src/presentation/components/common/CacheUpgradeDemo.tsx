@@ -3,7 +3,8 @@
 // ===================================================================
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import Text from './Text';
 import { 
   calculateProbability,
   getEnginePerformanceMetrics, 

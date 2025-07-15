@@ -46,9 +46,9 @@ export const useCalculatorWithParallelValidation = () => {
       const validationResult = await parallelValidation.validateFormParallel(formValues);
       
       // 🎯 CARACTERÍSTICA ESPECIAL: Permitir cálculo incluso con datos incompletos
-      // Solo bloquear si hay errores CRÍTICOS reales (no por falta de datos)
+      // Solo bloquear si hay errores CRÍTICOS reales (basado en contenido del mensaje)
       const hasCriticalErrors = validationResult.overallValidation.criticalErrors?.some(
-        error => error.severity === 'critical' && error.blockingCalculation === true
+        error => error.includes('crítico') || error.includes('bloquea')
       ) || false;
       
       if (hasCriticalErrors) {
@@ -174,7 +174,7 @@ export const useCalculatorWithParallelValidation = () => {
     
     // 🎯 Funciones de cálculo mejoradas
     handleCalculate: calculateWithValidation,
-    isCalculating: calculatorForm.isCalculating || false,
+    isLoading: calculatorForm.isLoading || false,
     
     // 🎯 Datos calculados
     calculatedBmi: calculatorForm.calculatedBmi,

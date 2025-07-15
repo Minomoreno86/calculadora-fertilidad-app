@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Text from '@/presentation/components/common/Text';
 import { ControlledTextInput } from '@/presentation/components/common/ControlledTextInput';
-import { theme } from '@/config/theme';
+import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 import { Control, FieldErrors } from 'react-hook-form';
 import { FormState } from '../useCalculatorForm';
 
@@ -12,6 +12,12 @@ type Props = {
 };
 
 export const MaleFactorForm = memo<Props>(({ control, errors }) => {
+  // 🎨 TEMA DINÁMICO
+  const theme = useDynamicTheme();
+  
+  // 🎨 Crear estilos dinámicos
+  const styles = createStyles(theme);
+  
   return (
     <View style={styles.container}>
       <Text style={styles.groupLabel}>Factor Masculino (Espermatograma)</Text>
@@ -55,7 +61,8 @@ export const MaleFactorForm = memo<Props>(({ control, errors }) => {
 // 🚀 FASE 2C: Asignación de displayName para React DevTools
 MaleFactorForm.displayName = 'MaleFactorForm';
 
-const styles = StyleSheet.create({
+// 🎨 Función para crear estilos dinámicos
+const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
   container: {
     marginBottom: theme.spacing.l,
   },

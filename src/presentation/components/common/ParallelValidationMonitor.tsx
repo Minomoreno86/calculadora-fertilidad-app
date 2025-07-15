@@ -12,9 +12,10 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import Text from './Text';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '@/config/theme';
+import { useDynamicTheme } from '../../../hooks/useDynamicTheme';
 import { useParallelValidation } from '@/presentation/features/calculator/hooks/useParallelValidationSimple';
 
 export interface ParallelValidationMonitorProps {
@@ -31,12 +32,18 @@ const ParallelValidationMonitor: React.FC<ParallelValidationMonitorProps> = ({
   compact = false,
   showAdvancedMetrics = false
 }) => {
+  // 🎨 TEMA DINÁMICO
+  const theme = useDynamicTheme();
+  
   const [state, controls] = useParallelValidation({
     enableMetrics: true
   });
 
   const [expanded, setExpanded] = useState(!compact);
   const [autoRefresh, setAutoRefresh] = useState(true);
+
+  // 🎨 Crear estilos dinámicos
+  const styles = createStyles(theme);
 
   /**
    * Auto-refresh cada segundo cuando está activo
@@ -315,9 +322,10 @@ const ParallelValidationMonitor: React.FC<ParallelValidationMonitorProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+// 🎨 Función para crear estilos dinámicos
+const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     margin: 16,
     shadowColor: '#000',
@@ -329,7 +337,7 @@ const styles = StyleSheet.create({
   compactContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.surface,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -351,7 +359,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderBottomColor: theme.isDark ? '#404040' : '#e0e0e0',
   },
   titleContainer: {
     flexDirection: 'row',
@@ -393,7 +401,7 @@ const styles = StyleSheet.create({
   section: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderBottomColor: theme.isDark ? '#404040' : '#e0e0e0',
   },
   sectionTitle: {
     fontSize: 14,
@@ -409,7 +417,7 @@ const styles = StyleSheet.create({
   progressBar: {
     flex: 1,
     height: 6,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: theme.isDark ? '#404040' : '#e5e7eb',
     borderRadius: 3,
     marginRight: 12,
   },
@@ -429,7 +437,7 @@ const styles = StyleSheet.create({
   },
   phaseText: {
     fontSize: 12,
-    color: theme.colors.subtleText,
+    color: theme.colors.textSecondary,
   },
   phaseValue: {
     fontWeight: '500',
@@ -450,7 +458,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 10,
-    color: theme.colors.subtleText,
+    color: theme.colors.textSecondary,
     marginTop: 2,
     textAlign: 'center',
   },
@@ -464,7 +472,7 @@ const styles = StyleSheet.create({
   },
   metricLabel: {
     fontSize: 12,
-    color: theme.colors.subtleText,
+    color: theme.colors.textSecondary,
   },
   metricValue: {
     fontSize: 12,
@@ -499,7 +507,7 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
   },
   errorContainer: {
-    backgroundColor: '#fef2f2',
+    backgroundColor: theme.isDark ? '#3C1E1E' : '#fef2f2',
     padding: 12,
     borderRadius: 8,
     borderLeftWidth: 4,

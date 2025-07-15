@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Animated } from 'react-native';
+import { useFeatureConfig } from '@/config/featureFlags';
 
 // 🎯 Tipos para mejoras UX
 interface FieldUXState {
@@ -28,16 +29,21 @@ interface FieldProgressInfo {
   nextSuggestedField?: string;
 }
 
-// 🎨 Hook principal de mejoras UX
+// 🎨 Hook principal de mejoras UX con feature flags
 export const useUXEnhancements = (
-  formData: Record<string, any>,
-  config: UXEnhancementsConfig = {
-    enableAnimations: true,
-    enableSmartHints: true,
-    enableProgressAnimations: true,
-    enableFieldFocus: true,
-  }
+  formData: Record<string, unknown>,
+  customConfig?: Partial<UXEnhancementsConfig>
 ) => {
+  const featureConfig = useFeatureConfig();
+  
+  // Combinar configuración de features con configuración personalizada
+  const config: UXEnhancementsConfig = useMemo(() => ({
+    enableAnimations: featureConfig.enableProgressAnimations,
+    enableSmartHints: featureConfig.enableSmartHints,
+    enableProgressAnimations: featureConfig.enableProgressAnimations,
+    enableFieldFocus: true, // Siempre habilitado para accesibilidad
+    ...customConfig,
+  }), [featureConfig, customConfig]);
   const [fieldStates, setFieldStates] = useState<Record<string, FieldUXState>>({});
   const [currentFocusedField, setCurrentFocusedField] = useState<string | null>(null);
   const [sectionProgress, setSectionProgress] = useState<Record<string, FieldProgressInfo>>({});

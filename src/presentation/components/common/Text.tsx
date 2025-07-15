@@ -1,21 +1,20 @@
-import { Text as RNText, TextProps, StyleSheet } from 'react-native';
-import { theme } from '../../../config/theme'; // <- Ruta relativa correcta
+import { Text as RNText, TextProps } from 'react-native';
+import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 
-type TextVariant = keyof typeof theme.typography;
+type TextVariant = 'h1' | 'h2' | 'h3' | 'body' | 'bodyLarge' | 'caption' | 'label' | 'small' | 'bodyBold';
 
 interface CustomTextProps extends TextProps {
   variant?: TextVariant;
 }
 
 const Text = ({ variant = 'body', style, ...props }: CustomTextProps) => {
+  // 🎨 TEMA DINÁMICO
+  const theme = useDynamicTheme();
+  
   const textStyle = theme.typography[variant];
-  return <RNText style={[styles.default, textStyle, style]} {...props} />;
+  const defaultColor = { color: theme.colors.text };
+  
+  return <RNText style={[defaultColor, textStyle, style]} {...props} />;
 };
-
-const styles = StyleSheet.create({
-  default: {
-    color: theme.colors.text,
-  },
-});
 
 export default Text;

@@ -1,29 +1,90 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { theme } from '@/config/theme';
+import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 import Text from './Text';
 
 interface CalculatedValueProps {
   label: string;
   value: number | null;
   unit?: string;
-  interpretation?: string;
-  type?: 'normal' | 'warning' | 'danger';
+  interpretation?: {
+    text: string;
+    type: 'normal' | 'warning' | 'danger';
+    clinicalNote?: string;
+  };
 }
+
+// 🎨 Función para crear estilos dinámicos
+const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
+  container: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    padding: theme.spacing.m,
+    marginVertical: theme.spacing.s,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    shadowColor: theme.isDark ? theme.colors.black : '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: theme.isDark ? 0.3 : 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  label: {
+    flex: 1,
+    color: theme.colors.textSecondary,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  valueContainer: {
+    paddingHorizontal: theme.spacing.s,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    backgroundColor: theme.colors.background,
+  },
+  value: {
+    fontWeight: '700',
+    textAlign: 'center',
+    color: theme.colors.text,
+    fontSize: 20,
+  },
+  unit: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+  },
+  interpretation: {
+    marginTop: theme.spacing.s,
+    fontStyle: 'italic',
+    color: theme.colors.textSecondary,
+    lineHeight: 16,
+  },
+});
 
 export const CalculatedValue = ({ 
   label, 
   value, 
   unit = '', 
   interpretation,
-  type = 'normal' 
 }: CalculatedValueProps) => {
+  // 🎨 TEMA DINÁMICO
+  const theme = useDynamicTheme();
+  
+  // 🎨 Crear estilos dinámicos basados en el tema actual
+  const styles = createStyles(theme);
+
   if (value === null || value === undefined) {
     return null;
   }
 
   const getColorByType = () => {
-    switch (type) {
+    if (!interpretation) return theme.colors.success;
+    
+    switch (interpretation.type) {
       case 'warning':
         return theme.colors.warning;
       case 'danger':
@@ -40,62 +101,21 @@ export const CalculatedValue = ({
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text variant="label" style={styles.label}>
+        <Text style={styles.label}>
           {label}
         </Text>
         <View style={[styles.valueContainer, { borderColor: getColorByType() }]}>
-          <Text variant="h3" style={[styles.value, { color: getColorByType() }]}>
+          <Text style={[styles.value, { color: getColorByType() }]}>
             {formatValue(value)}
-            {unit && <Text variant="body" style={styles.unit}> {unit}</Text>}
+            {Boolean(unit) && <Text style={styles.unit}> {unit}</Text>}
           </Text>
         </View>
       </View>
       {interpretation && (
-        <Text variant="caption" style={styles.interpretation}>
-          {interpretation}
+        <Text style={styles.interpretation}>
+          {interpretation.text}
         </Text>
       )}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: theme.borderRadius.s,
-    padding: theme.spacing.m,
-    marginVertical: theme.spacing.s,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  label: {
-    flex: 1,
-    color: theme.colors.subtleText,
-  },
-  valueContainer: {
-    paddingHorizontal: theme.spacing.s,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.s,
-    borderWidth: 1.5,
-    backgroundColor: theme.colors.white,
-  },
-  value: {
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  unit: {
-    fontSize: 12,
-    color: theme.colors.subtleText,
-  },
-  interpretation: {
-    marginTop: theme.spacing.s,
-    fontStyle: 'italic',
-    color: theme.colors.subtleText,
-    lineHeight: 16,
-  },
-});

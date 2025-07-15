@@ -44,11 +44,13 @@ export const theme = {
     secondary: PALETTE.light.secondary,
     background: PALETTE.light.background,
     surface: PALETTE.light.surface,
+    card: PALETTE.light.surface, // Agregado para compatibilidad
     
     // 📝 TEXTOS
     text: PALETTE.light.textPrimary,
     textSecondary: PALETTE.light.textSecondary,
     textTertiary: '#9E9E9E',
+    subtleText: '#9E9E9E', // Agregado para compatibilidad
     placeholder: '#BDBDBD',
     
     // 🎯 ESTADOS DE FERTILIDAD
@@ -223,6 +225,20 @@ export const theme = {
       fontWeight: '600' as TextStyle['fontWeight'],
       lineHeight: 24,
       color: PALETTE.light.primary, // Rosa coral para números
+    },
+    
+    // Agregados para compatibilidad
+    bodyBold: {
+      fontSize: 16,
+      fontWeight: '600' as TextStyle['fontWeight'],
+      lineHeight: 24,
+      color: PALETTE.light.textPrimary,
+    },
+    small: {
+      fontSize: 14,
+      fontWeight: '400' as TextStyle['fontWeight'],
+      lineHeight: 20,
+      color: PALETTE.light.textSecondary,
     },
   },
   

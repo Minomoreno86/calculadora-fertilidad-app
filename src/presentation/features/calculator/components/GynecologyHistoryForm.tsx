@@ -5,7 +5,7 @@ import Text from '@/presentation/components/common/Text';
 import { ControlledTextInput } from '@/presentation/components/common/ControlledTextInput';
 import { ControlledOptionSelector } from '@/presentation/components/common/ControlledOptionSelector';
 import { ControlledSwitch } from '@/presentation/components/common/ControlledSwitch';
-import { theme } from '@/config/theme';
+import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 import { OtbMethod } from '@/core/domain/models';
 import { FormState } from '../useCalculatorForm';
 
@@ -61,6 +61,12 @@ type Props = {
 };
 
 export const GynecologyHistoryForm = memo<Props>(({ control, errors }) => {
+  // 🎨 TEMA DINÁMICO
+  const theme = useDynamicTheme();
+  
+  // 🎨 Crear estilos dinámicos
+  const styles = createStyles(theme);
+  
   const hasPelvicSurgery = useWatch({ control, name: 'hasPelvicSurgery' });
   const hasOtb = useWatch({ control, name: 'hasOtb' });
 
@@ -174,7 +180,8 @@ export const GynecologyHistoryForm = memo<Props>(({ control, errors }) => {
 // 🚀 FASE 2C: Asignación de displayName para React DevTools
 GynecologyHistoryForm.displayName = 'GynecologyHistoryForm';
 
-const styles = StyleSheet.create({
+// 🎨 Función para crear estilos dinámicos
+const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
   container: {
     marginBottom: theme.spacing.l,
   },

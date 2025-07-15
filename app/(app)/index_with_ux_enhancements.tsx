@@ -37,7 +37,7 @@ export default function CalculatorScreen() {
     calculatedHoma, 
     handleCalculate, 
     errors,
-    isCalculating = false,
+    isLoading = false,  // Cambiado de isCalculating a isLoading
     currentStep = 0,
     progress = 0,
     
@@ -50,7 +50,7 @@ export default function CalculatorScreen() {
   } = useCalculatorWithParallelValidation();
 
   // 🎯 FALLBACK: Para compatibilidad con componentes existentes
-  const isLoading = isCalculating;
+  const isCalculating = isLoading; // Agregamos isCalculating como alias
   
   // 📊 Usar completitud real del sistema paralelo o fallback estático
   const completionPercentage = (() => {

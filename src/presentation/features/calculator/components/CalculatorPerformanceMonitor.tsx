@@ -1,90 +1,81 @@
-// ===================================================================
-// 🚀 MONITOR DE RENDIMIENTO PARA VALIDACIÓN PARALELA - CALCULADORA
-// ===================================================================
-
-// Declaración global para React Native
-declare const __DEV__: boolean;
+/**
+ * CalculatorPerformanceMonitor - Monitor de rendimiento de validación paralela
+ * 
+ * Características:
+ * - Monitoreo en tiempo real de validación paralela
+ * - Métricas de performance y cache
+ * - Indicadores visuales de estado
+ * - Información detallada para desarrollo
+ * - Integración temática perfecta
+ * 
+ * @author AEC-D (Arquitecto Experto Clínico-Digital)
+ * @version 2.0 - Armonía total con ecosistema
+ */
 
 import React, { memo, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Text from '@/presentation/components/common/Text';
 import { theme } from '@/config/theme';
 
-// 🎯 Tipos mejorados para máxima compatibilidad
+// 🎯 Interfaces principales optimizadas
+interface PerformanceMetrics {
+  totalTime: number;
+  averageTaskTime: number;
+  cacheHitRate: number;
+  tasksPerSecond: number;
+  efficiency: string;
+  status: string;
+}
+
+interface ValidationMetrics {
+  isValidating: boolean;
+  progress: number;
+  isFormValid: boolean;
+  errorCount: number;
+  warningCount: number;
+}
+
+interface DevMetrics {
+  totalTasks: number;
+  completedTasks: number;
+  cacheStats: {
+    size: number;
+    hitRate: number;
+    hits: number;
+    requests: number;
+  };
+}
+
 interface CalculatorPerformanceProps {
   isValidating: boolean;
   progress: number;
   metrics: {
-    validation: {
-      isValidating: boolean;
-      progress: number;
-      isFormValid: boolean;
-      errorCount: number;
-      warningCount: number;
-    };
-    performance: {
-      totalTime: number;
-      averageTaskTime: number;
-      cacheHitRate: number;
-      tasksPerSecond: number;
-      efficiency: string;
-      status: string;
-    };
+    validation: ValidationMetrics;
+    performance: PerformanceMetrics;
   };
-  devData?: {
-    totalTasks: number;
-    completedTasks: number;
-    cacheStats: {
-      size: number;
-      hitRate: number;
-      hits: number;
-      requests: number;
-    };
-  };
+  devData?: DevMetrics;
   showDevInfo?: boolean;
 }
 
-// 🔧 Tipos para adaptar diferentes formatos de métricas
-interface AdaptableMetrics {
-  isValidating?: boolean;
-  progress?: number;
-  isFormValid?: boolean;
-  errorCount?: number;
-  warningCount?: number;
-  validation?: Record<string, unknown>;
-  performance?: {
-    totalTime?: number;
-    averageTaskTime?: number;
-    cacheHitRate?: number;
-    tasksPerSecond?: number;
-    efficiency?: string;
-    status?: string;
-  };
-}
-
-// 🔧 Función utilitaria para adaptar métricas del sistema al formato del componente
-export const adaptMetricsForMonitor = (parallelValidationMetrics: AdaptableMetrics): CalculatorPerformanceProps['metrics'] => {
-  // Manejo de métricas del useCalculatorParallelValidation
-  if (parallelValidationMetrics?.validation && parallelValidationMetrics?.performance) {
-    return parallelValidationMetrics as CalculatorPerformanceProps['metrics'];
-  }
-  
-  // Adaptación para useParallelValidation format
+// 🔧 Función utilitaria simplificada para adaptar métricas
+export const adaptMetricsForMonitor = (
+  rawMetrics: Partial<ValidationMetrics & { performance?: Partial<PerformanceMetrics> }>
+): CalculatorPerformanceProps['metrics'] => {
   return {
     validation: {
-      isValidating: parallelValidationMetrics?.isValidating || false,
-      progress: parallelValidationMetrics?.progress || 0,
-      isFormValid: parallelValidationMetrics?.isFormValid || false,
-      errorCount: parallelValidationMetrics?.errorCount || 0,
-      warningCount: parallelValidationMetrics?.warningCount || 0,
+      isValidating: rawMetrics.isValidating ?? false,
+      progress: rawMetrics.progress ?? 0,
+      isFormValid: rawMetrics.isFormValid ?? false,
+      errorCount: rawMetrics.errorCount ?? 0,
+      warningCount: rawMetrics.warningCount ?? 0,
     },
     performance: {
-      totalTime: parallelValidationMetrics?.performance?.totalTime || 0,
-      averageTaskTime: parallelValidationMetrics?.performance?.averageTaskTime || 0,
-      cacheHitRate: parallelValidationMetrics?.performance?.cacheHitRate || 0,
-      tasksPerSecond: parallelValidationMetrics?.performance?.tasksPerSecond || 0,
-      efficiency: parallelValidationMetrics?.performance?.efficiency || 'N/A',
-      status: parallelValidationMetrics?.performance?.status || 'Listo',
+      totalTime: rawMetrics.performance?.totalTime ?? 0,
+      averageTaskTime: rawMetrics.performance?.averageTaskTime ?? 0,
+      cacheHitRate: rawMetrics.performance?.cacheHitRate ?? 0,
+      tasksPerSecond: rawMetrics.performance?.tasksPerSecond ?? 0,
+      efficiency: rawMetrics.performance?.efficiency ?? 'N/A',
+      status: rawMetrics.performance?.status ?? 'Listo',
     }
   };
 };
@@ -94,34 +85,52 @@ export const CalculatorPerformanceMonitor = memo<CalculatorPerformanceProps>(({
   progress,
   metrics,
   devData,
-  showDevInfo = typeof __DEV__ !== 'undefined' && __DEV__
+  showDevInfo = false // Simplificado: por defecto false, control externo
 }) => {
   
+  // Validación defensiva robusta
+  const safeMetrics = useMemo(() => ({
+    validation: {
+      isValidating: metrics?.validation?.isValidating ?? false,
+      progress: Math.max(0, Math.min(100, metrics?.validation?.progress ?? 0)),
+      isFormValid: metrics?.validation?.isFormValid ?? false,
+      errorCount: Math.max(0, metrics?.validation?.errorCount ?? 0),
+      warningCount: Math.max(0, metrics?.validation?.warningCount ?? 0),
+    },
+    performance: {
+      totalTime: Math.max(0, metrics?.performance?.totalTime ?? 0),
+      averageTaskTime: Math.max(0, metrics?.performance?.averageTaskTime ?? 0),
+      cacheHitRate: Math.max(0, Math.min(100, metrics?.performance?.cacheHitRate ?? 0)),
+      tasksPerSecond: Math.max(0, metrics?.performance?.tasksPerSecond ?? 0),
+      efficiency: metrics?.performance?.efficiency ?? 'N/A',
+      status: metrics?.performance?.status ?? 'Listo',
+    }
+  }), [metrics]);
   // 🎨 Determinar color del progreso basado en estado
   const progressColor = useMemo(() => {
     if (isValidating) return theme.colors.primary;
-    if (metrics.validation.errorCount > 0) return theme.colors.error;
-    if (metrics.validation.warningCount > 0) return theme.colors.warning;
+    if (safeMetrics.validation.errorCount > 0) return theme.colors.error;
+    if (safeMetrics.validation.warningCount > 0) return theme.colors.warning;
     return theme.colors.success;
-  }, [isValidating, metrics.validation.errorCount, metrics.validation.warningCount]);
+  }, [isValidating, safeMetrics.validation.errorCount, safeMetrics.validation.warningCount]);
 
   // 📊 Formatear métricas para mostrar
   const formattedMetrics = useMemo(() => ({
-    totalTime: `${metrics.performance.totalTime}ms`,
-    averageTime: `${metrics.performance.averageTaskTime}ms`,
-    cacheHit: `${metrics.performance.cacheHitRate}%`,
-    speed: `${metrics.performance.tasksPerSecond} tareas/s`,
-    efficiency: metrics.performance.efficiency,
-    status: metrics.performance.status
-  }), [metrics.performance]);
+    totalTime: `${safeMetrics.performance.totalTime}ms`,
+    averageTime: `${safeMetrics.performance.averageTaskTime}ms`,
+    cacheHit: `${safeMetrics.performance.cacheHitRate}%`,
+    speed: `${safeMetrics.performance.tasksPerSecond} tareas/s`,
+    efficiency: safeMetrics.performance.efficiency,
+    status: safeMetrics.performance.status
+  }), [safeMetrics.performance]);
 
   // 🎯 Estado de validación
   const validationStatus = useMemo(() => {
     if (isValidating) return { text: 'Validando...', color: theme.colors.primary };
-    if (metrics.validation.errorCount > 0) return { text: 'Errores detectados', color: theme.colors.error };
-    if (metrics.validation.warningCount > 0) return { text: 'Advertencias', color: theme.colors.warning };
+    if (safeMetrics.validation.errorCount > 0) return { text: 'Errores detectados', color: theme.colors.error };
+    if (safeMetrics.validation.warningCount > 0) return { text: 'Advertencias', color: theme.colors.warning };
     return { text: 'Validación exitosa', color: theme.colors.success };
-  }, [isValidating, metrics.validation]);
+  }, [isValidating, safeMetrics.validation]);
 
   // 🎨 Determinar color de eficiencia
   const efficiencyColor = useMemo(() => {
@@ -130,15 +139,25 @@ export const CalculatorPerformanceMonitor = memo<CalculatorPerformanceProps>(({
     return theme.colors.error;
   }, [formattedMetrics.efficiency]);
 
-  if (!showDevInfo && !isValidating && metrics.validation.isFormValid) {
-    return null; // Ocultar en producción si todo está bien
+  // Control de visibilidad: oculta automáticamente en producción cuando todo está correcto
+  if (!showDevInfo && !isValidating && safeMetrics.validation.isFormValid && 
+      safeMetrics.validation.errorCount === 0 && safeMetrics.validation.warningCount === 0) {
+    return null;
   }
 
   return (
-    <View style={styles.container}>
+    <View 
+      style={styles.container}
+      accessibilityRole="progressbar"
+      accessibilityLabel={`Monitor de rendimiento: ${validationStatus.text}`}
+      accessibilityValue={{ min: 0, max: 100, now: progress }}
+    >
       {/* 📊 Estado general */}
       <View style={styles.statusRow}>
-        <Text style={[styles.statusText, { color: validationStatus.color }]}>
+        <Text 
+          style={[styles.statusText, { color: validationStatus.color }]}
+          accessibilityRole="text"
+        >
           {validationStatus.text}
         </Text>
         <Text style={styles.progressText}>
@@ -156,22 +175,23 @@ export const CalculatorPerformanceMonitor = memo<CalculatorPerformanceProps>(({
                 width: `${progress}%`,
                 backgroundColor: progressColor 
               }
-            ]} 
+            ]}
+            accessibilityElementsHidden={true}
           />
         </View>
       )}
 
       {/* ⚠️ Errores y advertencias */}
-      {(metrics.validation.errorCount > 0 || metrics.validation.warningCount > 0) && (
+      {(safeMetrics.validation.errorCount > 0 || safeMetrics.validation.warningCount > 0) && (
         <View style={styles.alertsRow}>
-          {metrics.validation.errorCount > 0 && (
+          {safeMetrics.validation.errorCount > 0 && (
             <Text style={styles.errorText}>
-              {metrics.validation.errorCount} error{metrics.validation.errorCount !== 1 ? 'es' : ''}
+              {safeMetrics.validation.errorCount} error{safeMetrics.validation.errorCount !== 1 ? 'es' : ''}
             </Text>
           )}
-          {metrics.validation.warningCount > 0 && (
+          {safeMetrics.validation.warningCount > 0 && (
             <Text style={styles.warningText}>
-              {metrics.validation.warningCount} advertencia{metrics.validation.warningCount !== 1 ? 's' : ''}
+              {safeMetrics.validation.warningCount} advertencia{safeMetrics.validation.warningCount !== 1 ? 's' : ''}
             </Text>
           )}
         </View>
@@ -233,27 +253,55 @@ export const CalculatorPerformanceMonitor = memo<CalculatorPerformanceProps>(({
 CalculatorPerformanceMonitor.displayName = 'CalculatorPerformanceMonitor';
 
 /**
- * 📖 GUÍA DE USO DEL MONITOR DE PERFORMANCE
+ * 📖 GUÍA DE USO DEL MONITOR DE PERFORMANCE v2.0
  * 
- * Este componente se integra con:
- * - useCalculatorWithParallelValidation (uso directo)
- * - useParallelValidation (con adaptMetricsForMonitor)
+ * ✅ INTEGRACIÓN DIRECTA:
+ * ```tsx
+ * <CalculatorPerformanceMonitor
+ *   isValidating={isValidating}
+ *   progress={progress}
+ *   metrics={{
+ *     validation: { isValidating, progress, isFormValid, errorCount, warningCount },
+ *     performance: { totalTime, averageTaskTime, cacheHitRate, tasksPerSecond, efficiency, status }
+ *   }}
+ *   devData={devMetrics}
+ *   showDevInfo={isDevelopment}
+ * />
+ * ```
  * 
- * Funcionalidades:
- * - Monitor de progreso en tiempo real
- * - Alertas de errores y advertencias
- * - Métricas de performance (dev mode)
- * - Cache stats y eficiencia del sistema
+ * ✅ CON ADAPTADOR (legacy):
+ * ```tsx
+ * const adaptedMetrics = adaptMetricsForMonitor(rawValidationMetrics);
+ * <CalculatorPerformanceMonitor {...props} metrics={adaptedMetrics} />
+ * ```
+ * 
+ * 🔧 CARACTERÍSTICAS:
+ * - ✅ Monitor de progreso en tiempo real
+ * - ✅ Alertas visuales de errores y advertencias  
+ * - ✅ Métricas de performance para desarrollo
+ * - ✅ Auto-ocultamiento inteligente en producción
+ * - ✅ Accesibilidad completa (a11y)
+ * - ✅ Integración temática perfecta
+ * 
+ * 📊 MÉTRICAS SOPORTADAS:
+ * - Tiempo total de validación
+ * - Promedio por tarea
+ * - Ratio de cache hits
+ * - Tareas por segundo
+ * - Evaluación de eficiencia
+ * - Estado del sistema
  */
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.card,
+    backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.m,
-    padding: theme.spacing.s,
+    padding: theme.spacing.m,
     marginVertical: theme.spacing.xs,
     borderWidth: 1,
     borderColor: theme.colors.border,
+    // Sombra profesional
+    ...theme.shadows.small,
   },
   
   statusRow: {
@@ -270,7 +318,7 @@ const styles = StyleSheet.create({
   
   progressText: {
     ...theme.typography.caption,
-    color: theme.colors.subtleText,
+    color: theme.colors.textSecondary,
     fontWeight: '500',
   },
   
@@ -336,7 +384,7 @@ const styles = StyleSheet.create({
   
   metricLabel: {
     ...theme.typography.caption,
-    color: theme.colors.subtleText,
+    color: theme.colors.textSecondary,
     fontSize: 10,
   },
   
@@ -356,7 +404,7 @@ const styles = StyleSheet.create({
   
   efficiencyLabel: {
     ...theme.typography.caption,
-    color: theme.colors.subtleText,
+    color: theme.colors.textSecondary,
   },
   
   efficiencyValue: {
@@ -375,12 +423,12 @@ const styles = StyleSheet.create({
     ...theme.typography.caption,
     fontWeight: '600',
     marginBottom: theme.spacing.xs,
-    color: theme.colors.subtleText,
+    color: theme.colors.textSecondary,
   },
   
   detailsText: {
     ...theme.typography.caption,
-    color: theme.colors.subtleText,
+    color: theme.colors.textSecondary,
     fontSize: 10,
     marginBottom: 2,
   },

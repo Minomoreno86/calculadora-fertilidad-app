@@ -4,7 +4,8 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import Text from '../../components/common/Text';
 import { theme } from '@/config/theme';
 
 export const DiagnosticScreen = () => {

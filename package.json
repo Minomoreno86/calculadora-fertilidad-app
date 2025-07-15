@@ -16,9 +16,10 @@
     "preset": "jest-expo"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.56.0",
     "@expo/vector-icons": "^14.1.0",
     "@hookform/resolvers": "^5.1.1",
-    "@react-native-async-storage/async-storage": "^2.1.2",
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-navigation/native": "^7.1.6",
     "expo": "^53.0.19",
     "expo-font": "~13.3.2",

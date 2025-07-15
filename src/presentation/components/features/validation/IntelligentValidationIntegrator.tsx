@@ -103,12 +103,13 @@ const IntelligentStatusIndicator: React.FC<{
           />
         </View>
 
-        <View style={{ flex: 1 }}>        <Text
-          variant="h3"
-          style={{ color: config.color, fontWeight: '700' }}
-        >
-          Estado: {config.label}
-        </Text>
+        <View style={{ flex: 1 }}>
+          <Text
+            variant="h3"
+            style={{ color: config.color, fontWeight: '700' }}
+          >
+            Estado: {config.label}
+          </Text>
         
         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
           <Text
@@ -128,7 +129,7 @@ const IntelligentStatusIndicator: React.FC<{
                 }}
               >
                 <Text
-                  variant="caption"
+                  variant="small"
                   style={{ color: 'white', fontWeight: '600' }}
                 >
                   {totalAlerts} alerta{totalAlerts !== 1 ? 's' : ''}
@@ -348,7 +349,7 @@ export const IntelligentValidationIntegrator: React.FC<IntelligentValidationInte
               variant="bodyBold"
               style={{ color: '#6B7280', fontWeight: '600', marginBottom: 8 }}
             >
-              📋 Datos Importantes Pendientes
+              📋 Datos clínicos recomendados:
             </Text>
             {validationResult.missingCriticalData.map((field, index) => (
               <Text

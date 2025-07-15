@@ -4,7 +4,7 @@ import { Control, FieldErrors } from 'react-hook-form';
 import Text from '@/presentation/components/common/Text';
 import { ControlledTextInput } from '@/presentation/components/common/ControlledTextInput';
 import { CalculatedValue } from '@/presentation/components/common/CalculatedValue';
-import { theme } from '@/config/theme';
+import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 import { FormState } from '../useCalculatorForm';
 
 type Props = {
@@ -14,6 +14,12 @@ type Props = {
 };
 
 export const LabTestsForm = memo<Props>(({ control, calculatedHoma, errors }) => {
+  // 🎨 TEMA DINÁMICO
+  const theme = useDynamicTheme();
+  
+  // 🎨 Crear estilos dinámicos
+  const styles = createStyles(theme);
+  
   // 🚀 FASE 2C: Memoizar función de interpretación
   const getHomaInterpretation = useCallback((homa: number) => {
     if (homa <= 2.5) return { text: 'Sensibilidad normal a la insulina', type: 'normal' as const };
@@ -70,8 +76,8 @@ export const LabTestsForm = memo<Props>(({ control, calculatedHoma, errors }) =>
         <CalculatedValue
           label="Índice HOMA-IR"
           value={calculatedHoma}
-          interpretation={getHomaInterpretation(calculatedHoma).text}
-          type={getHomaInterpretation(calculatedHoma).type}
+          unit=""
+          interpretation={getHomaInterpretation(calculatedHoma)}
         />
       )}
     </View>
@@ -81,7 +87,8 @@ export const LabTestsForm = memo<Props>(({ control, calculatedHoma, errors }) =>
 // 🚀 FASE 2C: Asignación de displayName para React DevTools
 LabTestsForm.displayName = 'LabTestsForm';
 
-const styles = StyleSheet.create({
+// 🎨 Función para crear estilos dinámicos
+const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
   container: {
     marginBottom: theme.spacing.l,
   },

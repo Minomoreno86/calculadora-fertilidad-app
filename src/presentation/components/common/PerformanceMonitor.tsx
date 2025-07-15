@@ -3,11 +3,12 @@
 // ===================================================================
 
 import React, { memo, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import Text from './Text';
 import { useBenchmark } from '@/core/utils/performanceBenchmark';
-import { getEnginePerformanceMetrics, getEngineDetailedStats } from '@/core/domain/services/calculationEngine';
+import { getEnginePerformanceMetrics } from '@/core/domain/services/calculationEngine';
 import { getPremiumCacheStats } from '@/core/domain/logic/clinicalContentLibraryPremium';
-import { theme } from '@/config/theme';
+import { useDynamicTheme } from '../../../hooks/useDynamicTheme';
 
 interface PerformanceMonitorProps {
   visible?: boolean;
@@ -15,10 +16,13 @@ interface PerformanceMonitorProps {
 }
 
 const PerformanceMonitor = memo<PerformanceMonitorProps>(({ visible = false, onToggle }) => {
+  // 🎨 TEMA DINÁMICO
+  const theme = useDynamicTheme();
+  const styles = createStyles(theme);
+  
   const { getReport, clearMetrics } = useBenchmark();
   const [metrics, setMetrics] = useState<any>(null);
   const [engineMetrics, setEngineMetrics] = useState<any>(null);
-  const [detailedStats, setDetailedStats] = useState<any>(null);
   const [cacheStats, setCacheStats] = useState<any>(null);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -30,7 +34,6 @@ const PerformanceMonitor = memo<PerformanceMonitorProps>(({ visible = false, onT
       try {
         setMetrics(getReport());
         setEngineMetrics(getEnginePerformanceMetrics());
-        setDetailedStats(getEngineDetailedStats());
         setCacheStats(getPremiumCacheStats());
       } catch (error) {
         console.warn('Error obteniendo métricas:', error);
@@ -149,7 +152,7 @@ const PerformanceMonitor = memo<PerformanceMonitorProps>(({ visible = false, onT
                 <View style={styles.detailSection}>
                   <Text style={styles.detailTitle}>💡 Recomendaciones</Text>
                   {metrics.recommendations.map((rec: string, index: number) => (
-                    <Text key={index} style={styles.recommendation}>
+                    <Text key={`recommendation-${index}-${rec.slice(0, 10)}`} style={styles.recommendation}>
                       {rec}
                     </Text>
                   ))}
@@ -188,28 +191,34 @@ const PerformanceMonitor = memo<PerformanceMonitorProps>(({ visible = false, onT
 
 // Componente auxiliar para métricas individuales
 const MetricCard = memo<{ label: string; value: string | number; color: string }>(
-  ({ label, value, color }) => (
-    <View style={[styles.metricCard, { borderLeftColor: color }]}>
-      <Text style={styles.metricLabel}>{label}</Text>
-      <Text style={[styles.metricValue, { color }]}>{value}</Text>
-    </View>
-  )
+  ({ label, value, color }) => {
+    const theme = useDynamicTheme();
+    const cardStyles = createMetricCardStyles(theme);
+    
+    return (
+      <View style={[cardStyles.metricCard, { borderLeftColor: color }]}>
+        <Text style={cardStyles.metricLabel}>{label}</Text>
+        <Text style={[cardStyles.metricValue, { color }]}>{value}</Text>
+      </View>
+    );
+  }
 );
 
 PerformanceMonitor.displayName = 'PerformanceMonitor';
 MetricCard.displayName = 'MetricCard';
 
-const styles = StyleSheet.create({
+// 🎨 Función para crear estilos dinámicos del componente principal
+const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
   container: {
     position: 'absolute',
     top: 50,
     right: 10,
     width: 320,
     maxHeight: 400,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    backgroundColor: theme.isDark ? 'rgba(18, 18, 18, 0.95)' : 'rgba(255, 255, 255, 0.95)',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
     zIndex: 1000,
   },
   toggleButton: {
@@ -218,15 +227,17 @@ const styles = StyleSheet.create({
     right: 10,
     width: 50,
     height: 50,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: theme.isDark ? 'rgba(18, 18, 18, 0.9)' : 'rgba(255, 255, 255, 0.9)',
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 999,
+    borderWidth: 1,
+    borderColor: theme.isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
   },
   toggleButtonText: {
     fontSize: 20,
-    color: '#fff',
+    color: theme.colors.text,
   },
   header: {
     flexDirection: 'row',
@@ -234,12 +245,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: theme.isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
   },
   title: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#fff',
+    color: theme.colors.text,
     flex: 1,
   },
   headerButtons: {
@@ -249,7 +260,7 @@ const styles = StyleSheet.create({
   expandButton: {
     width: 30,
     height: 30,
-    backgroundColor: 'rgba(33, 150, 243, 0.3)',
+    backgroundColor: theme.isDark ? 'rgba(33, 150, 243, 0.3)' : 'rgba(33, 150, 243, 0.2)',
     borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
@@ -257,7 +268,7 @@ const styles = StyleSheet.create({
   clearButton: {
     width: 30,
     height: 30,
-    backgroundColor: 'rgba(255, 152, 0, 0.3)',
+    backgroundColor: theme.isDark ? 'rgba(255, 152, 0, 0.3)' : 'rgba(255, 152, 0, 0.2)',
     borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
@@ -265,13 +276,13 @@ const styles = StyleSheet.create({
   closeButton: {
     width: 30,
     height: 30,
-    backgroundColor: 'rgba(244, 67, 54, 0.3)',
+    backgroundColor: theme.isDark ? 'rgba(244, 67, 54, 0.3)' : 'rgba(244, 67, 54, 0.2)',
     borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
   },
   buttonText: {
-    color: '#fff',
+    color: theme.colors.text,
     fontSize: 12,
     fontWeight: 'bold',
   },
@@ -285,7 +296,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 13,
     fontWeight: 'bold',
-    color: '#fff',
+    color: theme.colors.text,
     marginBottom: 8,
   },
   metricsGrid: {
@@ -293,32 +304,16 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
   },
-  metricCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: 8,
-    padding: 8,
-    minWidth: 70,
-    borderLeftWidth: 3,
-  },
-  metricLabel: {
-    fontSize: 10,
-    color: 'rgba(255, 255, 255, 0.7)',
-    marginBottom: 2,
-  },
-  metricValue: {
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
   detailSection: {
     marginTop: 12,
     padding: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
     borderRadius: 8,
   },
   detailTitle: {
     fontSize: 11,
     fontWeight: 'bold',
-    color: '#fff',
+    color: theme.colors.text,
     marginBottom: 6,
   },
   timeRow: {
@@ -328,7 +323,7 @@ const styles = StyleSheet.create({
   },
   timeName: {
     fontSize: 10,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: theme.colors.textSecondary,
     flex: 1,
   },
   timeValue: {
@@ -344,10 +339,30 @@ const styles = StyleSheet.create({
   },
   noData: {
     fontSize: 10,
-    color: 'rgba(255, 255, 255, 0.5)',
+    color: theme.colors.textSecondary,
     fontStyle: 'italic',
     textAlign: 'center',
     padding: 8,
+  },
+});
+
+// 🎨 Función para crear estilos dinámicos de las MetricCard
+const createMetricCardStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
+  metricCard: {
+    backgroundColor: theme.isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+    borderRadius: 8,
+    padding: 8,
+    minWidth: 70,
+    borderLeftWidth: 3,
+  },
+  metricLabel: {
+    fontSize: 10,
+    color: theme.colors.textSecondary,
+    marginBottom: 2,
+  },
+  metricValue: {
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });
 

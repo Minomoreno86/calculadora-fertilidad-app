@@ -12,7 +12,6 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { 
   useCalculatorWithParallelValidation,
-  EnhancedCalculatorForm,
   CalculatorPerformanceMonitor,
   type CalculatorWithParallelValidation 
 } from '@/presentation/features/calculator';
@@ -83,11 +82,16 @@ export const EnhancedUsageExample = () => {
 
   return (
     <View style={styles.container}>
+      {/* 
+      TODO: Reemplazar con implementación usando app/(app)/index.tsx
+      EnhancedCalculatorForm fue eliminado por ser redundante
+      
       <EnhancedCalculatorForm
         onCalculationComplete={handleCalculationComplete}
         showPerformanceMonitor={true}
         enableParallelValidation={true}
       />
+      */}
       
       {calculationResult && (
         <View style={styles.resultContainer}>

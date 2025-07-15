@@ -3,7 +3,8 @@
 // ===================================================================
 
 import React from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { View, StyleSheet, Animated } from 'react-native';
+import Text from './Text';
 import { theme } from '@/config/theme';
 
 interface ValidationMetrics {

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import Text from './Text';
 import { Control, Controller, FieldValues, Path, FieldError } from 'react-hook-form';
 import { OptionSelectorModal } from './OptionSelectorModal';
-import { theme } from '@/config/theme';
+import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 
 type ControlledOptionSelectorProps<TFormValues extends FieldValues> = {
   control: Control<TFormValues>;
@@ -19,6 +20,12 @@ export const ControlledOptionSelector = <TFormValues extends FieldValues>({
   options,
   error,
 }: ControlledOptionSelectorProps<TFormValues>) => {
+  // 🎨 TEMA DINÁMICO
+  const theme = useDynamicTheme();
+  
+  // 🎨 Crear estilos dinámicos
+  const styles = createStyles(theme);
+  
   const [modalVisible, setModalVisible] = useState(false);
 
   return (
@@ -52,19 +59,22 @@ export const ControlledOptionSelector = <TFormValues extends FieldValues>({
   );
 };
 
-const styles = StyleSheet.create({
+// 🎨 Función para crear estilos dinámicos
+const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
   container: {
     marginBottom: theme.spacing.m,
   },
   label: {
-    ...theme.typography.label,
+    ...theme.typography.body,
     marginBottom: theme.spacing.xs,
+    fontWeight: '600',
+    color: theme.colors.text,
   },
   input: {
-    backgroundColor: theme.colors.inputBackground,
+    backgroundColor: theme.colors.surface,
     borderColor: theme.colors.border,
     borderWidth: 1,
-    borderRadius: theme.borderRadius.s,
+    borderRadius: 8,
     padding: theme.spacing.s,
     minHeight: 48,
     justifyContent: 'center',

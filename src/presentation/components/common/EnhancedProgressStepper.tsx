@@ -3,8 +3,9 @@
 // ===================================================================
 
 import React from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
-import { theme } from '@/config/theme';
+import { View, StyleSheet, Animated } from 'react-native';
+import Text from './Text';
+import { useDynamicTheme } from '../../../hooks/useDynamicTheme';
 
 interface Props {
   currentStep: number;
@@ -19,6 +20,9 @@ export const EnhancedProgressStepper: React.FC<Props> = ({
   stepLabels,
   completionPercentage = 0
 }) => {
+  // 🎨 TEMA DINÁMICO
+  const theme = useDynamicTheme();
+  
   const [animatedWidth] = React.useState(new Animated.Value(0));
 
   React.useEffect(() => {
@@ -39,8 +43,8 @@ export const EnhancedProgressStepper: React.FC<Props> = ({
     switch (status) {
       case 'completed': return '#4caf50';
       case 'active': return theme.colors.primary;
-      case 'pending': return '#e0e0e0';
-      default: return '#e0e0e0';
+      case 'pending': return theme.isDark ? '#505050' : '#e0e0e0';
+      default: return theme.isDark ? '#505050' : '#e0e0e0';
     }
   };
 
@@ -52,6 +56,9 @@ export const EnhancedProgressStepper: React.FC<Props> = ({
       default: return stepIndex + 1;
     }
   };
+
+  // 🎨 Crear estilos dinámicos
+  const styles = createStyles(theme);
 
   return (
     <View style={styles.container}>
@@ -147,9 +154,10 @@ export const EnhancedProgressStepper: React.FC<Props> = ({
   );
 };
 
-const styles = StyleSheet.create({
+// 🎨 Función para crear estilos dinámicos
+const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
   container: {
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.surface,
     borderRadius: 16,
     padding: 20,
     marginHorizontal: 16,
@@ -181,7 +189,7 @@ const styles = StyleSheet.create({
   },
   progressBarBackground: {
     height: 8,
-    backgroundColor: '#e9ecef',
+    backgroundColor: theme.isDark ? '#404040' : '#e9ecef',
     borderRadius: 4,
     overflow: 'hidden',
   },
@@ -228,9 +236,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 4,
     lineHeight: 16,
+    color: theme.colors.text,
   },
   completedBadge: {
-    backgroundColor: '#e8f5e8',
+    backgroundColor: theme.isDark ? '#1b4332' : '#e8f5e8',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 8,
@@ -241,7 +250,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   activeBadge: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: theme.isDark ? '#0d47a1' : '#e3f2fd',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 8,
@@ -256,7 +265,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    borderTopColor: theme.isDark ? '#404040' : '#f0f0f0',
   },
   infoItem: {
     flexDirection: 'row',
@@ -268,7 +277,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 12,
-    color: '#6c757d',
+    color: theme.colors.textSecondary,
     fontWeight: '500',
   },
 });

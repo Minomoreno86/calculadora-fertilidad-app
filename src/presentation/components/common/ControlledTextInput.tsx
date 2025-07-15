@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet, TextInputProps } from 'react-native';
+import { View, TextInput, StyleSheet, TextInputProps } from 'react-native';
+import Text from './Text';
 import { Control, Controller, FieldValues, Path, FieldError } from 'react-hook-form';
-import { theme } from '@/config/theme';
+import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 import { Ionicons } from '@expo/vector-icons';
 
 type ControlledTextInputProps<TFormValues extends FieldValues> = TextInputProps & {
@@ -20,11 +21,17 @@ export const ControlledTextInput = <TFormValues extends FieldValues>({
   error,
   ...textInputProps
 }: ControlledTextInputProps<TFormValues>) => {
+  // 🎨 TEMA DINÁMICO
+  const theme = useDynamicTheme();
+  
+  // 🎨 Crear estilos dinámicos
+  const styles = createStyles(theme);
+  
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
       <View style={[styles.inputContainer, error && styles.inputError]}>
-        {iconName && <Ionicons name={iconName} size={20} color={theme.colors.text} style={styles.icon} />}
+        {iconName && <Ionicons name={iconName} size={20} color={theme.colors.textSecondary} style={styles.icon} />}
         <Controller
           control={control}
           name={name}
@@ -51,19 +58,22 @@ export const ControlledTextInput = <TFormValues extends FieldValues>({
   );
 };
 
-const styles = StyleSheet.create({
+// 🎨 Función para crear estilos dinámicos
+const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
   container: {
     marginBottom: theme.spacing.m,
   },
   label: {
-    ...theme.typography.label,
+    ...theme.typography.body,
     marginBottom: theme.spacing.xs,
+    fontWeight: '600',
+    color: theme.colors.text,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.inputBackground,
-    borderRadius: theme.borderRadius.s,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: theme.colors.border,
   },

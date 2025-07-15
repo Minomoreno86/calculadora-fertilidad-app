@@ -13,6 +13,8 @@ import { useFormValidation } from './hooks/useFormValidation';
 import { useCalculations } from './hooks/useCalculations';
 import { useFormProgress } from './hooks/useFormProgress';
 import { useRangeValidation } from './hooks/useRangeValidation';
+import { useBenchmark } from '@/core/utils/performanceBenchmark';
+import { useFormCache } from './hooks/useFormCache';
 
 import { CalculationService } from './services/calculationService';
 import { ClinicalValidators } from '../../../core/domain/validation/clinicalValidators';
@@ -79,6 +81,9 @@ export interface UseCalculatorFormReturn {
   getPerformanceReport: () => unknown;
   clearPerformanceMetrics: () => void;
   
+  // 💾 Cache performance
+  getCacheStats: () => unknown;
+  
   // Validación de rangos
   getRangeValidation: (fieldName: string) => unknown;
   rangeStats: {
@@ -120,6 +125,8 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
   // 🎯 HOOKS ESPECIALIZADOS MODULARES
   const formState = useFormState();
   const { validateField, isFieldValid } = useFormValidation();
+  const { measureTime, measureTimeAsync, getReport, clearMetrics } = useBenchmark();
+  const cache = useFormCache();
   const { 
     calculateBMI, 
     calculateHOMA, 
@@ -143,39 +150,47 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
     return 0;
   };
   
-  // 📊 HELPERS TEMPORALES DE BENCHMARK (reemplazar con useBenchmark cuando esté disponible)
-  const measureTime = (operation: string, time: number) => {
-    console.log(`⚡ ${operation}: ${time.toFixed(1)}ms`);
-  };
-  
-  const getReport = () => ({
-    completionRate: 85,
-    qualityScore: 90,
-    executionTime: 15,
-    timestamp: new Date(),
-    cacheEfficiency: 85,
-    recommendation: 'Formulario en buen estado'
-  });
-  
-  const clearMetrics = () => {
-    console.log('🧹 Métricas limpiadas');
-  };
-  
-  // ⚡ CÁLCULOS OPTIMIZADOS CON HOOKS ESPECIALIZADOS
+  // ⚡ CÁLCULOS OPTIMIZADOS CON HOOKS ESPECIALIZADOS, BENCHMARKING Y CACHE
   const calculatedBmi = useMemo(() => 
-    calculateBMI(
-      safeParseNumber(formState.watchedFields.height),
-      safeParseNumber(formState.watchedFields.weight)
-    ), 
-    [formState.watchedFields.weight, formState.watchedFields.height, calculateBMI]
+    measureTime('calculate_bmi', () => {
+      const height = safeParseNumber(formState.watchedFields.height);
+      const weight = safeParseNumber(formState.watchedFields.weight);
+      
+      if (!height || !weight || height <= 0 || weight <= 0) return null;
+      
+      // Intentar obtener del cache
+      const cached = cache.getBmi(height, weight);
+      if (cached !== null) return cached;
+      
+      // Calcular y guardar en cache
+      const bmi = calculateBMI(height, weight);
+      if (bmi !== null) {
+        cache.setBmi(height, weight, bmi);
+      }
+      return bmi;
+    }), 
+    [formState.watchedFields.weight, formState.watchedFields.height, calculateBMI, cache]
   );
 
   const calculatedHoma = useMemo(() => 
-    calculateHOMA(
-      safeParseNumber(formState.watchedFields.insulinValue), 
-      safeParseNumber(formState.watchedFields.glucoseValue)
-    ), 
-    [formState.watchedFields.insulinValue, formState.watchedFields.glucoseValue, calculateHOMA]
+    measureTime('calculate_homa', () => {
+      const insulin = safeParseNumber(formState.watchedFields.insulinValue);
+      const glucose = safeParseNumber(formState.watchedFields.glucoseValue);
+      
+      if (!insulin || !glucose || insulin <= 0 || glucose <= 0) return null;
+      
+      // Intentar obtener del cache
+      const cached = cache.getHoma(insulin, glucose);
+      if (cached !== null) return cached;
+      
+      // Calcular y guardar en cache
+      const homa = calculateHOMA(glucose, insulin);
+      if (homa !== null) {
+        cache.setHoma(insulin, glucose, homa);
+      }
+      return homa;
+    }), 
+    [formState.watchedFields.insulinValue, formState.watchedFields.glucoseValue, calculateHOMA, cache]
   );
 
   // 🚀 PROGRESO OPTIMIZADO CON HOOK ESPECIALIZADO
@@ -218,16 +233,11 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
           setClinicalValidation(null);
           return;
         }
-        
-        // Medir tiempo de validación
-        const startTime = performance.now();
-        
-        // Ejecutar validación clínica usando helper
+            // 🔍 Ejecutar validación clínica optimizada con benchmarking
+      const validation = measureTime('clinical_validation', () => {
         const validationData = extractValidationData(currentValues);
-        const validation = ClinicalValidators.validateCompleteForm(validationData);
-        
-        const executionTime = performance.now() - startTime;
-        measureTime('Validación Clínica', executionTime);
+        return ClinicalValidators.validateCompleteForm(validationData);
+      });
         
         // Mapear a nuestro tipo local
         const mappedValidation: ClinicalValidationState = {
@@ -259,37 +269,37 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
     formState.watchedFields.glucoseValue,
     formState.watchedFields.insulinValue,
     formState.watchedFields.cycleLength,
-    formState.watchedFields.amhValue,
-    measureTime
+    formState.watchedFields.amhValue
   ]);
 
-  // 🚀 FUNCIÓN DE CÁLCULO OPTIMIZADA CON SERVICIO
+  // 🚀 FUNCIÓN DE CÁLCULO OPTIMIZADA CON SERVICIO Y BENCHMARKING
   const handleCalculate: SubmitHandler<FormState> = async (data) => {
-    try {
-      formState.setLoadingState(true);
-      
-      console.log('🚀 Iniciando cálculo optimizado con datos:', data);
-      
-      // 🔍 Usar servicio de cálculo
-      const result = await CalculationService.executeCalculation(
-        data, 
-        calculatedBmi, 
-        calculatedHoma
-      );
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Error en el cálculo');
-      }
-      
-      console.log('✅ Cálculo completado exitosamente');
-      console.log(`⏱️ Tiempo de ejecución: ${result.performance?.executionTime.toFixed(1)}ms`);
-      
-      // Guardar reporte y navegar
-      const reportId = `${REPORT_KEY_PREFIX}${Date.now()}`;
-      await AsyncStorage.setItem(reportId, JSON.stringify(result.data));
-      
-      router.push({
-        pathname: '/results' as never,
+    await measureTimeAsync('complete_calculation', async () => {
+      try {
+        formState.setLoadingState(true);
+        
+        console.log('🚀 Iniciando cálculo optimizado con datos:', data);
+        
+        // 🔍 Usar servicio de cálculo
+        const result = await CalculationService.executeCalculation(
+          data, 
+          calculatedBmi, 
+          calculatedHoma
+        );
+        
+        if (!result.success) {
+          throw new Error(result.error || 'Error en el cálculo');
+        }
+        
+        console.log('✅ Cálculo completado exitosamente');
+        console.log(`⏱️ Tiempo de ejecución: ${result.performance?.executionTime.toFixed(1)}ms`);
+        
+        // Guardar reporte y navegar
+        const reportId = `${REPORT_KEY_PREFIX}${Date.now()}`;
+        await AsyncStorage.setItem(reportId, JSON.stringify(result.data));
+        
+        router.push({
+          pathname: '/results' as never,
         params: { reportId } as never
       });
       
@@ -299,6 +309,7 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
     } finally {
       formState.setLoadingState(false);
     }
+    }, 'calculation');
   };
 
   // 📊 FUNCIONES DE INFORMACIÓN OPTIMIZADAS
@@ -374,6 +385,9 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
     // Métricas de rendimiento
     getPerformanceReport: getReport,
     clearPerformanceMetrics: clearMetrics,
+    
+    // Cache performance
+    getCacheStats: () => cache.getStats(),
     
     // Validación de rangos
     getRangeValidation,
