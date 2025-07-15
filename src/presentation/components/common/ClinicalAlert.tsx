@@ -56,7 +56,9 @@ export const ClinicalAlert: React.FC<ClinicalAlertProps> = ({
     
     if (validation.interpretedValue) {
       const { category = 'Valor', normalRange } = validation.interpretedValue;
-      const valueStr = String(validation.value || 'N/A');
+      const valueStr = validation.value !== null && validation.value !== undefined 
+        ? String(validation.value) 
+        : 'N/A';
       const normalRangeStr = normalRange ? ` (Normal: ${normalRange})` : '';
       const message = `${category}: ${valueStr}${normalRangeStr}`;
       

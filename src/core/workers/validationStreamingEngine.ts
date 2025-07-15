@@ -42,10 +42,10 @@ export interface StreamingCallbacks {
  * Motor de validación con streaming progresivo
  */
 export class ValidationStreamingEngine {
-  private engine: ParallelValidationEngine;
-  private config: StreamingConfig;
+  private readonly engine: ParallelValidationEngine;
+  private readonly config: StreamingConfig;
   private currentProgress: StreamingProgress;
-  private callbacks: StreamingCallbacks;
+  private readonly callbacks: StreamingCallbacks;
   private abortController?: AbortController;
 
   constructor(
@@ -177,11 +177,11 @@ export class ValidationStreamingEngine {
       this.updateProgress('important', (i / groups.length) * 100, group.name);
 
       try {
-        const groupResults = await this.engine.executeValidationGroups([group]);
+        const streamingResults = await this.engine.executeValidationGroups([group]);
         
         // Fusionar resultados inmediatamente
-        for (const [groupId, groupResults] of groupResults) {
-          results.set(groupId, groupResults);
+        for (const [groupId, resultArray] of streamingResults) {
+          results.set(groupId, resultArray);
         }
 
         // Delay adaptativo entre grupos

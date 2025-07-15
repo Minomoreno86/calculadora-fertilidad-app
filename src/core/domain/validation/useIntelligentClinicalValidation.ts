@@ -33,7 +33,7 @@ export interface ClinicalInsight {
   nextSteps?: string[];
 }
 
-interface SmartValidationResult {
+export interface SmartValidationResult {
   // Estado general
   isValid: boolean;
   canProceed: boolean;
@@ -59,7 +59,7 @@ interface SmartValidationResult {
   fieldValidations: Map<string, FieldValidationResult>;
 }
 
-interface IntelligentValidationOptions {
+export interface IntelligentValidationOptions {
   enableRealTimeValidation?: boolean;
   includeAdvancedInterpretation?: boolean;
   considerPatientContext?: boolean;

@@ -8,6 +8,8 @@
 
 export { ClinicalAlert } from './ClinicalAlert';
 export { ClinicalProgress } from './ClinicalProgress';
+export { EnhancedButton, Button } from './EnhancedButton';
+export { default as EnhancedInfoCard } from './EnhancedInfoCard';
 
 // Tipos compartidos para usar en otros componentes
 export type { FieldValidationResult } from '@/core/domain/validation/clinicalValidators';

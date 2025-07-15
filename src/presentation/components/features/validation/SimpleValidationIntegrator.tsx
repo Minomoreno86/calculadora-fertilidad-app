@@ -3,16 +3,16 @@
 // ===================================================================
 
 import React from 'react';
-import { View } from 'react-native';
+import { ViewStyle } from 'react-native';
 import Text from '@/presentation/components/common/Text';
 import Box from '@/presentation/components/common/Box';
 
 interface SimpleValidationProps {
-  formData: any;
+  formData: Record<string, unknown>;
   onValidationChange?: (isValid: boolean, canProceed: boolean) => void;
-  onActionRequired?: (insight: any) => void;
+  onActionRequired?: (insight: unknown) => void;
   showInlineAlerts?: boolean;
-  style?: any;
+  style?: ViewStyle;
 }
 
 const SimpleValidationIntegrator: React.FC<SimpleValidationProps> = ({ 
@@ -20,12 +20,13 @@ const SimpleValidationIntegrator: React.FC<SimpleValidationProps> = ({
   onValidationChange,
   style 
 }) => {
-  // Simple validation logic
+  // Simple validation logic - ESTABILIZADO
+  const formDataString = JSON.stringify(formData || {});
   React.useEffect(() => {
     if (onValidationChange) {
       onValidationChange(true, true);
     }
-  }, [formData, onValidationChange]);
+  }, [formDataString, onValidationChange]); // Usar string estable
 
   return (
     <Box style={[{ 

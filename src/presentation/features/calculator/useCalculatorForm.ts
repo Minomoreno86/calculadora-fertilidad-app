@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { useRouter } from 'expo-router';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -169,7 +169,20 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
     defaultValues: initialFormValues,
   });
 
-  const watchedFields = watch();
+  // 🚀 FASE 2A: Estabilizar watchedFields completamente (Anti-Loop)
+  const watchedFieldsRaw = watch();
+  
+  // Crear una referencia estable para watchedFields
+  const watchedFieldsRef = useRef<string>('{}');
+  const stableWatchedFields = useRef<Record<string, unknown>>({});
+  
+  const watchedFieldsString = JSON.stringify(watchedFieldsRaw || {});
+  if (watchedFieldsRef.current !== watchedFieldsString) {
+    watchedFieldsRef.current = watchedFieldsString;
+    stableWatchedFields.current = { ...watchedFieldsRaw };
+  }
+  
+  const watchedFields = stableWatchedFields.current;
 
   // 🆕 Hook de validación de rangos para colores
   const { getRangeValidation, stats: rangeStats } = useRangeValidation(watchedFields);
@@ -236,12 +249,12 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
 
   // 🚀 FASE 2C: Cálculos optimizados usando hooks especializados
   const calculatedBmi = useMemo(() => 
-    calculateBMI(watchedFields.height, watchedFields.weight), 
+    calculateBMI(watchedFields.height as string | number, watchedFields.weight as string | number), 
     [watchedFields.weight, watchedFields.height, calculateBMI]
   );
 
   const calculatedHoma = useMemo(() => 
-    calculateHOMA(watchedFields.insulinValue, watchedFields.glucoseValue), 
+    calculateHOMA(watchedFields.insulinValue as string | number, watchedFields.glucoseValue as string | number), 
     [watchedFields.insulinValue, watchedFields.glucoseValue, calculateHOMA]
   );
 
@@ -417,7 +430,7 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
     setValue,
     getValues,
     formState: { errors },
-    watchedFields,
+    watchedFields: watchedFields as FormState,
     
     // Cálculos automáticos
     calculatedBmi,
@@ -450,9 +463,9 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
     getCompletionScore: () => clinicalValidation?.completionScore || 0,
     // Permitir cálculo si tenemos datos básicos, independientemente de validación clínica
     canCalculate: Boolean(formProgress >= 60 && 
-      watchedFields.age && (typeof watchedFields.age === 'number' ? watchedFields.age > 0 : parseFloat(String(watchedFields.age)) > 0) && 
-      watchedFields.height && (typeof watchedFields.height === 'number' ? watchedFields.height > 0 : parseFloat(String(watchedFields.height)) > 0) && 
-      watchedFields.weight && (typeof watchedFields.weight === 'number' ? watchedFields.weight > 0 : parseFloat(String(watchedFields.weight)) > 0)),
+      watchedFields.age && (typeof watchedFields.age === 'number' ? watchedFields.age > 0 : parseFloat(watchedFields.age as string) > 0) && 
+      watchedFields.height && (typeof watchedFields.height === 'number' ? watchedFields.height > 0 : parseFloat(watchedFields.height as string) > 0) && 
+      watchedFields.weight && (typeof watchedFields.weight === 'number' ? watchedFields.weight > 0 : parseFloat(watchedFields.weight as string) > 0)),
     
     // 🆕 Validación de rangos
     getRangeValidation,

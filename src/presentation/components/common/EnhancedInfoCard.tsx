@@ -16,7 +16,7 @@ interface Props {
   animated?: boolean;
 }
 
-export const EnhancedInfoCard: React.FC<Props> = ({
+const EnhancedInfoCard: React.FC<Props> = ({
   type,
   title,
   message,
@@ -30,274 +30,177 @@ export const EnhancedInfoCard: React.FC<Props> = ({
   const [scaleAnimation] = React.useState(new Animated.Value(0.95));
   const [opacityAnimation] = React.useState(new Animated.Value(0));
 
+  // 🎯 ANIMACIONES CONTROLADAS
+  const initializeAnimations = React.useCallback(() => {
+    Animated.parallel([
+      Animated.timing(scaleAnimation, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityAnimation, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [scaleAnimation, opacityAnimation]);
+
+  const resetAnimations = React.useCallback(() => {
+    scaleAnimation.setValue(1);
+    opacityAnimation.setValue(1);
+  }, [scaleAnimation, opacityAnimation]);
+
   React.useEffect(() => {
     if (animated) {
-      Animated.parallel([
-        Animated.timing(scaleAnimation, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacityAnimation, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      initializeAnimations();
     } else {
-      scaleAnimation.setValue(1);
-      opacityAnimation.setValue(1);
+      resetAnimations();
     }
-  }, []);
+  }, [animated, initializeAnimations, resetAnimations]);
 
-  const getCardConfig = (type: string) => {
+  // 🎨 CONFIGURACIÓN DE TIPOS
+  const getCardConfig = () => {
     switch (type) {
       case 'tip':
         return {
-          backgroundColor: '#e8f5e8',
-          borderColor: '#4caf50',
-          iconColor: '#4caf50',
-          icon: '💡',
-          gradient: ['#e8f5e8', '#f1f8e9']
+          backgroundColor: theme.colors.info + '10',
+          borderColor: theme.colors.info,
+          iconColor: theme.colors.info,
         };
       case 'info':
         return {
-          backgroundColor: '#e3f2fd',
-          borderColor: '#2196f3',
-          iconColor: '#2196f3',
-          icon: 'ℹ️',
-          gradient: ['#e3f2fd', '#e8eaf6']
+          backgroundColor: theme.colors.primary + '10',
+          borderColor: theme.colors.primary,
+          iconColor: theme.colors.primary,
         };
       case 'success':
         return {
-          backgroundColor: '#e8f5e8',
-          borderColor: '#4caf50',
-          iconColor: '#4caf50',
-          icon: '✅',
-          gradient: ['#e8f5e8', '#f1f8e9']
+          backgroundColor: theme.colors.success + '10',
+          borderColor: theme.colors.success,
+          iconColor: theme.colors.success,
         };
       case 'warning':
         return {
-          backgroundColor: '#fff8e1',
-          borderColor: '#ff9800',
-          iconColor: '#ff9800',
-          icon: '⚠️',
-          gradient: ['#fff8e1', '#fffde7']
+          backgroundColor: theme.colors.warning + '10',
+          borderColor: theme.colors.warning,
+          iconColor: theme.colors.warning,
         };
       case 'error':
         return {
-          backgroundColor: '#ffebee',
-          borderColor: '#f44336',
-          iconColor: '#f44336',
-          icon: '❌',
-          gradient: ['#ffebee', '#fce4ec']
+          backgroundColor: theme.colors.error + '10',
+          borderColor: theme.colors.error,
+          iconColor: theme.colors.error,
         };
       default:
         return {
-          backgroundColor: '#f5f5f5',
-          borderColor: '#e0e0e0',
-          iconColor: '#757575',
-          icon: '📝',
-          gradient: ['#f5f5f5', '#fafafa']
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
+          iconColor: theme.colors.text,
         };
     }
   };
 
-  const config = getCardConfig(type);
+  // 🎨 ICONOS POR TIPO
+  const getTypeIcon = () => {
+    const iconMap = {
+      tip: '💡',
+      info: 'ℹ️',
+      success: '✅',
+      warning: '⚠️',
+      error: '❌'
+    };
+    return iconMap[type] || 'ℹ️';
+  };
 
-  const CardContent = () => (
-    <Animated.View
-      style={[
-        styles.container,
-        {
-          backgroundColor: config.backgroundColor,
-          borderColor: config.borderColor,
-          transform: [{ scale: scaleAnimation }],
-          opacity: opacityAnimation,
-        }
-      ]}
+  const config = getCardConfig();
+
+  const animatedStyle = animated ? {
+    transform: [{ scale: scaleAnimation }],
+    opacity: opacityAnimation,
+  } : {};
+
+  const CardComponent = onPress ? TouchableOpacity : View;
+
+  return (
+    <CardComponent
+      onPress={onPress}
+      activeOpacity={onPress ? 0.8 : 1}
+      disabled={!onPress}
     >
-      {/* 🎯 Header con icono y título */}
-      <View style={styles.header}>
+      <Animated.View
+        style={[
+          styles.card,
+          {
+            backgroundColor: config.backgroundColor,
+            borderColor: config.borderColor,
+          },
+          animatedStyle,
+        ]}
+      >
         {showIcon && (
-          <View style={[styles.iconContainer, { backgroundColor: config.iconColor }]}>
-            <Text style={styles.icon}>{config.icon}</Text>
+          <View style={styles.iconContainer}>
+            <Text 
+              style={[styles.icon, { color: config.iconColor }]}
+            >
+              {getTypeIcon()}
+            </Text>
           </View>
         )}
         
-        <View style={styles.headerText}>
+        <View style={styles.content}>
           {title && (
-            <Text style={[styles.title, { color: config.iconColor }]}>
+            <Text style={[styles.title, { color: theme.colors.text }]}>
               {title}
             </Text>
           )}
-          <Text style={styles.message}>{message}</Text>
+          <Text style={[styles.message, { color: theme.colors.textSecondary }]}>
+            {message}
+          </Text>
         </View>
-        
-        {onPress && (
-          <View style={styles.actionIndicator}>
-            <Text style={[styles.actionIcon, { color: config.iconColor }]}>›</Text>
-          </View>
-        )}
-      </View>
-
-      {/* 🎯 Decoración visual */}
-      <View style={[styles.decoration, { backgroundColor: config.iconColor }]} />
-    </Animated.View>
-  );
-
-  if (onPress) {
-    return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
-        <CardContent />
-      </TouchableOpacity>
-    );
-  }
-
-  return <CardContent />;
-};
-
-// 🎨 Componente especializado para completitud
-interface CompletionCardProps {
-  completionPercentage: number;
-  isValidating?: boolean;
-}
-
-export const CompletionCard: React.FC<CompletionCardProps> = ({
-  completionPercentage,
-  isValidating = false
-}) => {
-  const getCompletionConfig = (percentage: number) => {
-    if (percentage < 40) {
-      return {
-        type: 'info' as const,
-        title: '🚀 ¡Empezando bien!',
-        message: `Completitud actual: ${percentage}%. Puedes generar un informe básico ahora o completar más campos para mayor precisión.`,
-        icon: '📊'
-      };
-    } else if (percentage < 70) {
-      return {
-        type: 'success' as const,
-        title: '⭐ ¡Buen progreso!',
-        message: `${percentage}% completado. Tu informe será útil y preciso con estos datos.`,
-        icon: '📈'
-      };
-    } else {
-      return {
-        type: 'success' as const,
-        title: '🏆 ¡Excelente!',
-        message: `${percentage}% completado. Obtendrás el análisis más detallado y preciso.`,
-        icon: '🎯'
-      };
-    }
-  };
-
-  const config = getCompletionConfig(completionPercentage);
-
-  return (
-    <View style={styles.completionContainer}>
-      <EnhancedInfoCard
-        type={config.type}
-        title={config.title}
-        message={config.message}
-        animated={true}
-      />
-      
-      {isValidating && (
-        <View style={styles.validatingOverlay}>
-          <Text style={styles.validatingText}>🔄 Optimizando análisis...</Text>
-        </View>
-      )}
-    </View>
+      </Animated.View>
+    </CardComponent>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  card: {
     borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 16,
-    marginVertical: 8,
     borderWidth: 1,
-    borderLeftWidth: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  header: {
+    padding: 16,
+    marginVertical: 8,
     flexDirection: 'row',
     alignItems: 'flex-start',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   iconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
     marginRight: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
+    marginTop: 2,
   },
   icon: {
-    fontSize: 16,
+    fontSize: 20,
   },
-  headerText: {
+  content: {
     flex: 1,
   },
   title: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
     marginBottom: 4,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   message: {
     fontSize: 14,
-    color: '#333333', // Color fijo por ahora
     lineHeight: 20,
   },
-  actionIndicator: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 24,
-    height: 24,
-  },
-  actionIcon: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  decoration: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 40,
-    height: 40,
-    borderBottomLeftRadius: 20,
-    opacity: 0.1,
-  },
-  completionContainer: {
-    position: 'relative',
-  },
-  validatingOverlay: {
-    position: 'absolute',
-    top: 8,
-    right: 24,
-    backgroundColor: 'rgba(255, 152, 0, 0.1)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 152, 0, 0.3)',
-  },
-  validatingText: {
-    fontSize: 11,
-    color: '#ff6f00',
-    fontWeight: '500',
-  },
 });
+
+// Solo exportación por defecto
+export default EnhancedInfoCard;

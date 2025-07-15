@@ -41,30 +41,38 @@ export const EnhancedValidationMonitor: React.FC<Props> = ({
       duration: 300,
       useNativeDriver: false,
     }).start();
-  }, [progress]);
+  }, [progress, animatedProgress]);
 
   // 🎯 Animación de pulso cuando está validando
+  const startPulseAnimation = React.useCallback(() => {
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnimation, {
+          toValue: 1.05,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnimation, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulse.start();
+  }, [pulseAnimation]);
+
+  const stopPulseAnimation = React.useCallback(() => {
+    pulseAnimation.setValue(1);
+  }, [pulseAnimation]);
+
   React.useEffect(() => {
     if (isValidating) {
-      const pulse = Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnimation, {
-            toValue: 1.05,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnimation, {
-            toValue: 1,
-            duration: 800,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      pulse.start();
+      startPulseAnimation();
     } else {
-      pulseAnimation.setValue(1);
+      stopPulseAnimation();
     }
-  }, [isValidating]);
+  }, [isValidating, startPulseAnimation, stopPulseAnimation]);
 
   if (!showDevInfo && process.env.NODE_ENV !== 'development') {
     return null;

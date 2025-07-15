@@ -12,10 +12,11 @@ export * from './useIntelligentClinicalValidation';
 // Tipos principales para validación
 export type {
   ValidationResult,
-  FieldValidationResult,
-  ValidationMessage,
-  ClinicalValidationConfig
+  FieldValidationResult
 } from './clinicalValidators';
+
+// Re-exportar ValidationMessage desde su fuente correcta
+export type { ValidationMessage } from './validationMessages';
 
 // Tipos del sistema inteligente - NUEVO
 export type {

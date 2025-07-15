@@ -31,7 +31,7 @@ export const EnhancedProgressStepper: React.FC<Props> = ({
       duration: 500,
       useNativeDriver: false,
     }).start();
-  }, [completionPercentage]);
+  }, [completionPercentage, animatedWidth]);
 
   const getStepStatus = (stepIndex: number) => {
     if (stepIndex < currentStep) return 'completed';
@@ -92,7 +92,7 @@ export const EnhancedProgressStepper: React.FC<Props> = ({
           const color = getStepColor(status);
           
           return (
-            <View key={index} style={styles.stepContainer}>
+            <View key={`step-${label}-${index}`} style={styles.stepContainer}>
               {/* Línea conectora */}
               {index > 0 && (
                 <View 

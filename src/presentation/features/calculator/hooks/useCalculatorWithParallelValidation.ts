@@ -20,7 +20,11 @@ export const useCalculatorWithParallelValidation = () => {
   // 🚀 Sistema de validación paralela
   const parallelValidation = useCalculatorParallelValidation();
 
-  // 🔄 Ejecutar validación paralela cuando cambian los datos del formulario
+  // 🔄 Ejecutar validación paralela cuando cambian los datos del formulario (ESTABILIZADO)
+  const watchedFieldsStringified = useMemo(() => {
+    return JSON.stringify(calculatorForm.watchedFields);
+  }, [JSON.stringify(calculatorForm.watchedFields)]);
+  
   useEffect(() => {
     const debounceTimer = setTimeout(async () => {
       const formValues = calculatorForm.getValues();
@@ -34,7 +38,7 @@ export const useCalculatorWithParallelValidation = () => {
     }, 500); // Debounce de 500ms
 
     return () => clearTimeout(debounceTimer);
-  }, [calculatorForm.watchedFields]); // Solo depender de watchedFields
+  }, [watchedFieldsStringified, calculatorForm.getValues, parallelValidation.validateFormParallel]); // Usar string para evitar re-renders infinitos
 
   // 🎯 Función de cálculo mejorada con validación paralela FLEXIBLE
   const calculateWithValidation = useCallback(async () => {
@@ -80,10 +84,10 @@ export const useCalculatorWithParallelValidation = () => {
     }
   }, [calculatorForm.handleCalculate, parallelValidation.validateFormParallel, calculatorForm.getValues]);
 
-  // 🎯 Estado consolidado del formulario con validación
+  // 🎯 Estado consolidado del formulario con validación (ESTABILIZADO)
   const enhancedFormState = useMemo(() => ({
-    // Estado original del formulario
-    ...calculatorForm.watchedFields,
+    // Estado original del formulario (estabilizado con string)
+    ...JSON.parse(watchedFieldsStringified),
     
     // Estado de validación paralela
     isValidating: parallelValidation.isValidating,
@@ -97,7 +101,7 @@ export const useCalculatorWithParallelValidation = () => {
     warnings: parallelValidation.warnings,
     suggestions: parallelValidation.suggestions,
   }), [
-    calculatorForm.watchedFields,
+    watchedFieldsStringified,
     parallelValidation.isValidating,
     parallelValidation.isFormValid,
     parallelValidation.metrics,
@@ -124,11 +128,12 @@ export const useCalculatorWithParallelValidation = () => {
   // 🎯 Función para resetear tanto formulario como validación
   const resetFormAndValidation = useCallback(() => {
     // Resetear al formulario usando setValue para campos individuales
-    Object.keys(calculatorForm.watchedFields).forEach(key => {
+    const currentFields = JSON.parse(watchedFieldsStringified);
+    Object.keys(currentFields).forEach(key => {
       calculatorForm.setValue(key as keyof FormState, '' as never);
     });
     parallelValidation.clearCache();
-  }, [calculatorForm.setValue, calculatorForm.watchedFields, parallelValidation.clearCache]);
+  }, [calculatorForm.setValue, watchedFieldsStringified, parallelValidation.clearCache]);
 
   // 📊 Métricas combinadas de rendimiento
   const combinedMetrics = useMemo(() => {

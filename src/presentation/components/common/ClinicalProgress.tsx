@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     borderWidth: 1,
-    borderColor: theme.colors.neutralGray || '#E0E0E0',
+    borderColor: theme.colors.border || '#E0E0E0',
   },
   progressHeader: {
     flexDirection: 'row',
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   },
   progressBarContainer: {
     height: 8,
-    backgroundColor: theme.colors.neutralGray || '#E0E0E0',
+    backgroundColor: theme.colors.border || '#E0E0E0',
     borderRadius: 4,
     overflow: 'hidden',
     marginVertical: 10,

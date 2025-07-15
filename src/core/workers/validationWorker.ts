@@ -408,7 +408,9 @@ class ValidationWorkerEngine {
 if (typeof self !== 'undefined' && 'postMessage' in self) {
   // Estamos en un Web Worker - el engine se inicializa automáticamente
   // El constructor del ValidationWorkerEngine configura los event listeners
-  new ValidationWorkerEngine();
+  const workerEngine = new ValidationWorkerEngine();
+  // Mantener referencia para evitar garbage collection
+  console.log('Worker engine initialized:', workerEngine.constructor.name);
 }
 
 export default ValidationWorkerEngine;
