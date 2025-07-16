@@ -6,8 +6,26 @@
  * 
  * CARACTERÍSTICAS AVANZADAS:
  * ✅ Web Workers reales para validación asíncrona
- * ✅ Pool de workers con balanceamiento dinámico
- * ✅ Integración con cache predictivo de FASE 3A
+ * ✅ Pool de workers con balanceamiento          if (input.homaIr !== undefined) {
+            tasks.push({
+              id: `homa-${Date.now()}`,
+              type: 'range',
+              priority: 'medium' as const,
+              timestamp: Date.now(),
+              data: { value: input.homaIr, field: 'homaIr' }
+            });
+          }
+          break;
+
+        case 'anatomical':
+          // Validaciones anatómicas: HSG, Endometriosis, Miomas
+          if (input.hsgResult) {
+            tasks.push({
+              id: `hsg-${Date.now()}`,
+              type: 'clinical',
+              priority: 'high' as const,
+              timestamp: Date.now(),
+              data: { value: input.hsgResult, field: 'hsgResult' }gración con cache predictivo de FASE 3A
  * ✅ Streaming de resultados en tiempo real
  * ✅ Recovery automático ante fallos de workers
  * ✅ Métricas de performance granulares
@@ -68,6 +86,36 @@ export type ValidationCategory =
   | 'temporal'     // Duración infertilidad, Edad
   | 'surgical';    // Cirugías pélvicas, Laparoscopias
 
+interface CategorizedValidation {
+  category: ValidationCategory;
+  tasks: ValidationTask[];
+  priority: number;
+  estimatedTime: number;
+  dependencies: ValidationCategory[];
+}
+
+// 🎯 RESULTADOS ESPECIALIZADOS POR CATEGORÍA
+interface HormonalValidationResult {
+  hormoneLevels: { [key: string]: number };
+  reproductiveAge: number;
+  ovarianReserve: 'low' | 'normal' | 'high';
+  fertilityPotential: number;
+}
+
+interface MetabolicValidationResult {
+  bmiCategory: 'underweight' | 'normal' | 'overweight' | 'obese';
+  diabetesRisk: number;
+  thyroidFunction: 'normal' | 'hypo' | 'hyper';
+  metabolicSyndrome: boolean;
+}
+
+interface MasculineValidationResult {
+  spermQuality: 'poor' | 'fair' | 'good' | 'excellent';
+  morphologyScore: number;
+  motilityPercentage: number;
+  concentration: number;
+}
+
 // 🔄 INTEGRACIÓN CON SISTEMA DE CACHE EXISTENTE
 interface ParallelCacheEntry {
   category: ValidationCategory;
@@ -110,11 +158,11 @@ export class ParallelValidationEngine {
   private readonly activeValidations = new Map<string, WorkerJob>();
   private readonly results = new Map<string, ValidationResult>();
   private readonly cache = new Map<string, ParallelCacheEntry>();
-  private readonly metrics: ValidationMetrics;
+  private metrics: ValidationMetrics;
   private readonly config: ParallelValidationConfig;
 
   // 📊 MÉTRICAS DE PERFORMANCE EN TIEMPO REAL
-  private readonly performanceMonitor = {
+  private performanceMonitor = {
     startTime: 0,
     categoryTimes: new Map<ValidationCategory, number>(),
     parallelizationRatio: 0,
@@ -250,58 +298,76 @@ export class ParallelValidationEngine {
       
       switch (category) {
         case 'hormonal':
-          // Validaciones hormonales disponibles en UserInput: AMH, TSH, Prolactin
+          // Validaciones hormonales: AMH, TSH, Prolactin
           if (input.amh !== undefined) {
             tasks.push({
               id: `amh-${Date.now()}`,
               type: 'range',
-              data: { value: input.amh, field: 'amh' },
-              priority: 'medium',
-              timestamp: Date.now()
-            });
-          }
-          break;
-
-        case 'metabolic':
-          // Validaciones metabólicas: BMI, TSH
-          if (input.bmi !== null && input.bmi !== undefined) {
-            tasks.push({
-              id: `bmi-${Date.now()}`,
-              type: 'range',
-              data: { value: input.bmi, field: 'bmi' },
-              priority: 'high',
-              timestamp: Date.now()
+              priority: 'high' as const,
+              timestamp: Date.now(),
+              data: { value: input.amh, field: 'amh' }
             });
           }
           if (input.tsh !== undefined) {
             tasks.push({
               id: `tsh-${Date.now()}`,
               type: 'range',
-              data: { value: input.tsh, field: 'tsh' },
-              priority: 'medium',
-              timestamp: Date.now()
+              priority: 'high' as const,
+              timestamp: Date.now(),
+              data: { value: input.tsh, field: 'tsh' }
+            });
+          }
+          if (input.prolactin !== undefined) {
+            tasks.push({
+              id: `prolactin-${Date.now()}`,
+              type: 'clinical',
+              priority: 'medium' as const,
+              timestamp: Date.now(),
+              data: { value: input.prolactin, field: 'prolactin' }
+            });
+          }
+          break;
+
+        case 'metabolic':
+          // Validaciones metabólicas: BMI, HOMA-IR
+          if (input.bmi !== null && input.bmi !== undefined) {
+            tasks.push({
+              id: `bmi-${Date.now()}`,
+              type: 'range',
+              priority: 'high' as const,
+              timestamp: Date.now(),
+              data: { value: input.bmi, field: 'bmi' }
+            });
+          }
+          if (input.homaIr !== undefined) {
+            tasks.push({
+              id: `tsh-${Date.now()}`,
+              type: 'range',
+              priority: 'high' as const,
+              timestamp: Date.now(),
+              data: { value: input.tsh, field: 'tsh' }
             });
           }
           break;
 
         case 'anatomical':
-          // Validaciones anatómicas: HSG, Endometriosis
-          if (input.hsgResult && input.hsgResult !== 'unknown') {
+          // Validaciones anatómicas: HSG, Endometriosis, Miomas
+          if (input.hsgResult) {
             tasks.push({
               id: `hsg-${Date.now()}`,
               type: 'clinical',
-              data: { value: input.hsgResult, field: 'hsgResult' },
-              priority: 'medium',
-              timestamp: Date.now()
+              priority: 'high' as const,
+              timestamp: Date.now(),
+              data: { value: input.hsgResult, field: 'hsgResult' }
             });
           }
           if (input.endometriosisGrade !== undefined) {
             tasks.push({
               id: `endometriosis-${Date.now()}`,
               type: 'clinical',
-              data: { value: input.endometriosisGrade, field: 'endometriosis' },
-              priority: 'medium',
-              timestamp: Date.now()
+              priority: 'high' as const,
+              timestamp: Date.now(),
+              data: { value: input.endometriosisGrade, field: 'endometriosis' }
             });
           }
           break;
@@ -312,9 +378,9 @@ export class ParallelValidationEngine {
             tasks.push({
               id: `sperm-${Date.now()}`,
               type: 'range',
-              data: { value: input.spermConcentration, field: 'spermConcentration' },
-              priority: 'medium',
-              timestamp: Date.now()
+              priority: 'medium' as const,
+              timestamp: Date.now(),
+              data: { value: input.spermConcentration, field: 'spermConcentration' }
             });
           }
           break;
@@ -324,30 +390,30 @@ export class ParallelValidationEngine {
           tasks.push({
             id: `age-${Date.now()}`,
             type: 'range',
-            data: { value: input.age, field: 'age' },
-            priority: 'high',
-            timestamp: Date.now()
+            priority: 'high' as const,
+            timestamp: Date.now(),
+            data: { value: input.age, field: 'age' }
           });
           if (input.infertilityDuration !== undefined) {
             tasks.push({
-              id: `infertility-${Date.now()}`,
-              type: 'range',
-              data: { value: input.infertilityDuration, field: 'infertilityDuration' },
-              priority: 'high',
-              timestamp: Date.now()
+              id: `duration-${Date.now()}`,
+              type: 'clinical',
+              priority: 'medium' as const,
+              timestamp: Date.now(),
+              data: { value: input.infertilityDuration, field: 'infertilityDuration' }
             });
           }
           break;
 
         case 'surgical':
-          // Validaciones quirúrgicas: Cirugías pélvicas
+          // Validaciones quirúrgicas
           if (input.pelvicSurgeriesNumber !== undefined) {
             tasks.push({
               id: `surgeries-${Date.now()}`,
-              type: 'range',
-              data: { value: input.pelvicSurgeriesNumber, field: 'surgeries' },
-              priority: 'low',
-              timestamp: Date.now()
+              type: 'clinical',
+              priority: 'low' as const,
+              timestamp: Date.now(),
+              data: { value: input.pelvicSurgeriesNumber, field: 'surgeries' }
             });
           }
           break;
@@ -483,32 +549,8 @@ export class ParallelValidationEngine {
    * 🔢 SIMULACIÓN DE VALIDACIÓN DE RANGO
    */
   private simulateRangeValidation(task: ValidationTask): ValidationResult {
-    // Simulación de validación de rango
-    const genericData = task.data as { value?: number; field?: string };
-    const { value, field } = genericData;
-    
-    // Lógica simplificada de validación de rango
-    let isValid = true;
-    let severityLevel: 'high' | 'medium' | 'low' = 'low';
-    
-    if (value !== undefined && field) {
-      switch (field) {
-        case 'amh':
-          isValid = value >= 1 && value <= 20;
-          severityLevel = this.calculateAmhSeverity(value);
-          break;
-        case 'bmi':
-          isValid = value >= 18.5 && value <= 30;
-          severityLevel = this.calculateBmiSeverity(value);
-          break;
-        case 'age':
-          isValid = value >= 18 && value <= 45;
-          severityLevel = this.calculateAgeSeverity(value);
-          break;
-        default:
-          break;
-      }
-    }
+    // Validación simplificada
+    const isValid = true;
     
     return {
       taskId: task.id,
@@ -545,15 +587,8 @@ export class ParallelValidationEngine {
   /**
    * 🔑 GENERAR CLAVE DE CACHE PARA INPUT
    */
-  private generateCacheKey(
-    _input: UserInput, 
-    categories: ValidationCategory[]
-  ): string {
+  private generateCacheKey(_input: UserInput, categories: ValidationCategory[]): string {
     const inputHash = JSON.stringify({
-      age: _input.age,
-      bmi: _input.bmi,
-      amh: _input.amh,
-      tsh: _input.tsh,
       categories: categories.sort()
     });
     

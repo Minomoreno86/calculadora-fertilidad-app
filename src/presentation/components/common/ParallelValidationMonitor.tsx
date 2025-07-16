@@ -16,7 +16,7 @@ import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import Text from './Text';
 import { Ionicons } from '@expo/vector-icons';
 import { useDynamicTheme } from '../../../hooks/useDynamicTheme';
-import { useParallelValidation } from '@/presentation/features/calculator/hooks/useParallelValidationSimple';
+import { useParallelValidation } from '@/presentation/features/calculator/hooks/useParallelValidation';
 
 export interface ParallelValidationMonitorProps {
   onClose?: () => void;

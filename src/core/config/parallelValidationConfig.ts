@@ -18,7 +18,6 @@ export interface ParallelValidationConfig {
   // Control por pantalla
   screens: {
     calculator: boolean;
-    premiumCalculator: boolean;
     results: boolean;
     simulator: boolean;
   };
@@ -58,7 +57,6 @@ export const DEFAULT_PARALLEL_CONFIG: ParallelValidationConfig = {
   // 🎯 Activación gradual por pantalla
   screens: {
     calculator: true,        // Ya probada - métricas excelentes
-    premiumCalculator: false,  // Próxima en activar
     results: false,           // Pendiente
     simulator: false          // Pendiente
   },
@@ -96,7 +94,6 @@ export const DEV_PARALLEL_CONFIG: ParallelValidationConfig = {
   
   screens: {
     calculator: true,
-    premiumCalculator: true,   // Activada en dev
     results: true,            // Activada en dev
     simulator: true           // Activada en dev
   },
@@ -122,7 +119,6 @@ export const PROD_PARALLEL_CONFIG: ParallelValidationConfig = {
   
   screens: {
     calculator: true,         // Solo la probada
-    premiumCalculator: false,
     results: false,
     simulator: false
   },

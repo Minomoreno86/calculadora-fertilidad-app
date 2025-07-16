@@ -80,8 +80,9 @@ export function generateFinalReport(
         acc.push({
           key,
           title: config.title,
-          definition: clinicalContentLibrary[key].definition,
-          justification: clinicalContentLibrary[key].justification,
+          // Retrocompatibilidad: usar explanation como definition si no existe definition
+          definition: clinicalContentLibrary[key].definition || clinicalContentLibrary[key].explanation,
+          justification: clinicalContentLibrary[key].justification || 'Basado en evidencia clínica',
           recommendations: clinicalContentLibrary[key].recommendations,
         });
       }

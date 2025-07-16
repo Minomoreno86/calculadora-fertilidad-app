@@ -11,8 +11,18 @@
  * - Control de flujo adaptativo
  */
 
-import { ParallelValidationEngine, ValidationGroup, ValidationMetrics } from './parallelValidationEngine';
-import type { ValidationResult } from './validationWorker';
+import { ParallelValidationEngine, ValidationMetrics, ValidationCategory } from './parallelValidationEngine';
+import type { ValidationResult, ValidationTask } from './validationWorker';
+import type { UserInput } from '../domain/models';
+
+// Definir ValidationGroup localmente ya que no está exportado
+export interface ValidationGroup {
+  id: string;
+  name: string;
+  priority: 'critical' | 'important' | 'optional';
+  category: ValidationCategory;
+  tasks: ValidationTask[];
+}
 
 export interface StreamingConfig {
   criticalThreshold: number; // ms - tiempo máximo para validaciones críticas
@@ -79,7 +89,10 @@ export class ValidationStreamingEngine {
   /**
    * Iniciar validación con streaming progresivo
    */
-  async startStreamingValidation(groups: ValidationGroup[]): Promise<Map<string, ValidationResult[]>> {
+  async startStreamingValidation(
+    groups: ValidationGroup[], 
+    userInput: UserInput
+  ): Promise<Map<string, ValidationResult[]>> {
     this.abortController = new AbortController();
     this.resetProgress();
 
@@ -90,13 +103,13 @@ export class ValidationStreamingEngine {
       const allResults = new Map<string, ValidationResult[]>();
 
       // FASE 1: Validaciones críticas (bloquean UI mínimamente)
-      await this.executeCriticalPhase(critical, allResults);
+      await this.executeCriticalPhase(critical, allResults, userInput);
 
       // FASE 2: Validaciones importantes (streaming progresivo)
-      await this.executeImportantPhase(important, allResults);
+      await this.executeImportantPhase(important, allResults, userInput);
 
       // FASE 3: Validaciones opcionales (background completo)
-      await this.executeOptionalPhase(optional, allResults);
+      await this.executeOptionalPhase(optional, allResults, userInput);
 
       this.completeValidation(allResults);
       return allResults;
@@ -112,7 +125,8 @@ export class ValidationStreamingEngine {
    */
   private async executeCriticalPhase(
     groups: ValidationGroup[], 
-    results: Map<string, ValidationResult[]>
+    results: Map<string, ValidationResult[]>,
+    userInput: UserInput
   ): Promise<void> {
     this.updateProgress('critical', 0, groups.length > 0 ? 'Validaciones críticas...' : undefined);
 
@@ -126,7 +140,7 @@ export class ValidationStreamingEngine {
     
     try {
       const criticalResults = await Promise.race([
-        this.engine.executeValidationGroups(groups),
+        this.executeValidationGroups(groups, userInput),
         this.createTimeoutPromise(this.config.criticalThreshold)
       ]);
 
@@ -159,7 +173,8 @@ export class ValidationStreamingEngine {
    */
   private async executeImportantPhase(
     groups: ValidationGroup[], 
-    results: Map<string, ValidationResult[]>
+    results: Map<string, ValidationResult[]>,
+    _userInput: UserInput
   ): Promise<void> {
     this.updateProgress('important', 0, groups.length > 0 ? 'Validaciones importantes...' : undefined);
 
@@ -177,7 +192,7 @@ export class ValidationStreamingEngine {
       this.updateProgress('important', (i / groups.length) * 100, group.name);
 
       try {
-        const streamingResults = await this.engine.executeValidationGroups([group]);
+        const streamingResults = await this.executeValidationGroups([group], _userInput);
         
         // Fusionar resultados inmediatamente
         for (const [groupId, resultArray] of streamingResults) {
@@ -208,7 +223,8 @@ export class ValidationStreamingEngine {
    */
   private async executeOptionalPhase(
     groups: ValidationGroup[], 
-    results: Map<string, ValidationResult[]>
+    results: Map<string, ValidationResult[]>,
+    _userInput: UserInput
   ): Promise<void> {
     this.updateProgress('optional', 0, groups.length > 0 ? 'Validaciones opcionales...' : undefined);
 
@@ -219,7 +235,7 @@ export class ValidationStreamingEngine {
 
     // Procesar en background con prioridad mínima
     try {
-      const optionalResults = await this.engine.executeValidationGroups(groups);
+      const optionalResults = await this.executeValidationGroups(groups, _userInput);
       
       // Fusionar resultados
       for (const [groupId, groupResults] of optionalResults) {
@@ -233,6 +249,42 @@ export class ValidationStreamingEngine {
       // No crítico - completar de todas formas
       this.updateProgress('optional', 100);
     }
+  }
+
+  /**
+   * Método auxiliar para ejecutar grupos usando el API de ParallelValidationEngine
+   */
+  private async executeValidationGroups(
+    groups: ValidationGroup[], 
+    userInput: UserInput
+  ): Promise<Map<string, ValidationResult[]>> {
+    if (groups.length === 0) {
+      return new Map();
+    }
+
+    // Combinar todas las categorías de los grupos
+    const categories = [...new Set(groups.map(g => g.category))];
+
+    // Ejecutar usando el método disponible
+    const categoryResults = await this.engine.executeParallelValidations(
+      userInput,
+      categories
+    );
+
+    // Transformar resultados por categoría a resultados por grupo
+    const groupResults = new Map<string, ValidationResult[]>();
+    
+    for (const group of groups) {
+      const categoryResult = categoryResults.get(group.category);
+      if (categoryResult) {
+        groupResults.set(group.id, categoryResult);
+      } else {
+        // Grupo vacío si no hay resultados
+        groupResults.set(group.id, []);
+      }
+    }
+
+    return groupResults;
   }
 
   /**

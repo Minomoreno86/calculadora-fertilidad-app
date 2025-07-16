@@ -7,8 +7,8 @@ export { useCalculatorForm } from './useCalculatorFormModular';
 export type { UseCalculatorFormReturn } from './useCalculatorFormModular';
 
 // 🚀 NUEVO: Hook mejorado con validación paralela
-export { useCalculatorWithParallelValidation } from './hooks/useCalculatorWithParallelValidation';
-export type { CalculatorWithParallelValidation } from './hooks/useCalculatorWithParallelValidation';
+// Hook principal de calculadora con funcionalidades completas
+export { useCalculatorForm } from './useCalculatorForm';
 
 // 🚀 NUEVO: Hook de validación paralela independiente
 export { useCalculatorParallelValidation } from './hooks/useCalculatorParallelValidation';

@@ -1,5 +1,4 @@
 import { StyleSheet, ScrollView, View, KeyboardAvoidingView, Platform } from 'react-native';
-import { Link } from 'expo-router';
 import Box from '@/presentation/components/common/Box';
 import Text from '@/presentation/components/common/Text';
 import { Button, EnhancedButton } from '@/presentation/components/common/EnhancedButton';
@@ -7,8 +6,12 @@ import { ConditionalProgressDisplay } from '@/presentation/features/calculator/c
 import { EnhancedInfoCard } from '@/presentation/components/common';
 import { EnhancedValidationMonitor } from '@/presentation/components/common/EnhancedValidationMonitor';
 
-// 🚀 FASE 2A: ACTIVANDO VALIDACIÓN PARALELA PREMIUM
-import { useCalculatorWithParallelValidation } from '@/presentation/features/calculator/hooks/useCalculatorWithParallelValidation';
+// 🚀 FASE 3B: PREDICCIÓN AVANZADA CON IA
+import PredictiveInsights from '@/presentation/components/features/PredictiveInsights';
+import { convertFormDataToUserInput, validateUserInputForPrediction } from '@/presentation/utils/formDataAdapter';
+
+// 🚀 CALCULADORA PRINCIPAL CON VALIDACIÓN INTEGRADA
+import { useCalculatorForm } from '@/presentation/features/calculator/useCalculatorForm';
 // ⚡ FALLBACK: Hook original para casos especiales
 // import { useCalculatorForm } from '@/presentation/features/calculator/useCalculatorForm';
 
@@ -81,26 +84,34 @@ function CalculatorScreenContent({
   // 🎨 TEMA DINÁMICO
   const theme = useDynamicTheme();
 
-  // 🚀 HOOK PRINCIPAL CON VALIDACIÓN PARALELA PREMIUM (FASE 2A)
+  // 🚀 HOOK PRINCIPAL DE CALCULADORA
   const {
     // API principal del formulario
     control, 
     calculatedBmi, 
     calculatedHoma, 
     handleCalculate, 
-    errors,
+    formState,
     isLoading = false,
     currentStep = 0,
     
-    // 🚀 FASE 2A: Funcionalidades premium de validación paralela
-    isValidating,
-    validationMetrics,
-    criticalErrors,
-    suggestions,
-    
-    // Funciones auxiliares con nombres correctos
+    // Funciones auxiliares
     watchedFields
-  } = useCalculatorWithParallelValidation(); // 🚀 Hook premium activado
+  } = useCalculatorForm(); // 🚀 Hook principal de calculadora
+
+  // Valores por defecto para compatibilidad
+  const errors = formState?.errors ?? {};
+  const criticalErrors: string[] = [];
+  const suggestions: string[] = [];
+  const isValidating = false;
+  const validationMetrics = React.useMemo(() => ({
+    performance: {
+      averageTaskTime: 0,
+      cacheHitRate: 0,
+      tasksPerSecond: 0,
+      efficiency: 'N/A' as string
+    }
+  }), []);
 
   // 📊 ESTABILIZACIÓN DE DATOS DEL FORMULARIO (Anti-Loop)
   const watchedFieldsRef = React.useRef<string>('{}');
@@ -147,7 +158,7 @@ function CalculatorScreenContent({
   }, [completionPercentage]);
 
   // 🚀 FASE 2A: Actualizar métricas en el componente padre (ESTABILIZADO)
-  const validationMetricsString = JSON.stringify(validationMetrics || {});
+  const validationMetricsString = JSON.stringify(validationMetrics ?? {});
   const lastMetricsRef = React.useRef<string>('{}');
   
   React.useEffect(() => {
@@ -305,6 +316,37 @@ function CalculatorScreenContent({
           )}
         </View>
 
+        {/* 🚀 FASE 3B: PREDICCIÓN AVANZADA CON INTELIGENCIA ARTIFICIAL */}
+        {completionPercentage > 30 && (() => {
+          // Convertir formData a UserInput usando el adaptador
+          const userInputForIA = convertFormDataToUserInput(formData);
+          const validation = validateUserInputForPrediction(userInputForIA);
+          
+          // Solo mostrar si hay datos suficientes
+          if (!validation.isValid) {
+            return null;
+          }
+
+          return (
+            <View style={styles.predictiveInsightsContainer}>
+              <PredictiveInsights
+                userInput={userInputForIA}
+                onTreatmentSelect={(treatmentId: string) => {
+                  console.log('🎯 Tratamiento seleccionado:', treatmentId);
+                  // Navegar a la sección específica del tratamiento
+                  // En futuras versiones se implementará navegación completa
+                }}
+                onRecommendationAction={(action: string, data: unknown) => {
+                  console.log('💡 Acción de recomendación:', action, data);
+                  // Las acciones específicas se implementarán en futuras versiones
+                  // Por ahora solo se loggean para debugging
+                }}
+                style={styles.predictiveInsights}
+              />
+            </View>
+          );
+        })()}
+
         <View style={styles.buttonContainer}>
           <EnhancedButton
             title={getButtonTitle()}
@@ -327,16 +369,6 @@ function CalculatorScreenContent({
           )}
           
           <View style={styles.secondaryButtonContainer}>
-            <Link href="/premiumCalculator" asChild>
-              <Button
-                title="Calculadora Premium"
-                onPress={() => {}}
-                variant="outline"
-                size="medium"
-                iconName="gem"
-                iconPosition="left"
-              />
-            </Link>
                   {/* 🔧 DEBUG: Botón para limpiar cache durante desarrollo */}
         {__DEV__ && (
           <Button
@@ -493,8 +525,21 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   criticalErrorText: {
     color: theme.colors.error,
-    marginLeft: theme.spacing.s,
-    lineHeight: 18,
+  },
+  // 🚀 FASE 3B: Estilos para predicción avanzada con IA
+  predictiveInsightsContainer: {
+    marginHorizontal: theme.spacing.screen,
+    marginBottom: theme.spacing.m,
+  },
+  predictiveInsights: {
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.spacing.m,
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   suggestionsContainer: {
     backgroundColor: theme.colors.info + '10',

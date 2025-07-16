@@ -10,7 +10,7 @@ import { useReportLoader } from '@/presentation/features/results/hooks/useReport
 import { ResultsDisplay } from '@/presentation/features/results/components/ResultsDisplay'; // Ajusta la ruta si es necesario
 
 // Importar los sugeridores de tratamiento (premium)
-import { suggestTreatmentsPremium } from '@/core/domain/services/treatmentSuggesterPremium'; // Sugeridor premium
+import { suggestTreatments } from '@/core/domain/services/treatmentSuggester'; // Sistema unificado de tratamientos
 
 import Text from '@/presentation/components/common/Text'; // Ruta a tu componente Text
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
@@ -26,7 +26,7 @@ export default function ResultsScreen() {
   // Definir qué sugeridor de tratamiento usar.
   // Por ahora, asumimos que si llegamos aquí, queremos el premium.
   // En una fase posterior, esto podría basarse en la suscripción del usuario o un parámetro.
-  const treatmentSuggester = suggestTreatmentsPremium; // Usar el sugeridor PREMIUM
+  const treatmentSuggester = suggestTreatments; // Sistema unificado de tratamientos
 
   // 🎨 Crear estilos dinámicos
   const styles = createStyles(theme);

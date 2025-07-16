@@ -52,6 +52,15 @@ interface CrossFieldValidationData {
 }
 
 /**
+ * Datos genéricos para validación FASE 2
+ */
+interface GenericValidationData {
+  value: number | string | boolean | null | undefined;
+  field: string;
+  context?: Record<string, unknown>;
+}
+
+/**
  * Datos para validación masiva
  */
 interface BulkValidationData {
@@ -79,7 +88,8 @@ type ValidationData =
   | ClinicalValidationData 
   | CrossFieldValidationData 
   | BulkValidationData 
-  | RangeValidationData;
+  | RangeValidationData
+  | GenericValidationData;
 
 /**
  * Resultados específicos por tipo de validación
@@ -131,6 +141,7 @@ export interface ValidationTask {
 export interface ValidationResult {
   taskId: string;
   success: boolean;
+  isValid: boolean; // 🔧 FASE 2: Campo requerido para compatibilidad
   result?: ValidationResultData;
   error?: string;
   processingTime: number;

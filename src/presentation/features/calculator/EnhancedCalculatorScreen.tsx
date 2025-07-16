@@ -13,7 +13,7 @@ import { useCalculatorForm } from './useCalculatorForm';
 import { theme } from '@/config/theme';
 
 // Componentes de formulario en perfecta sinergia
-import { DemographicsFormFixed as DemographicsForm } from './components/DemographicsFormFixed';
+import { DemographicsForm } from './components/DemographicsForm';
 import { GynecologyHistoryForm } from './components/GynecologyHistoryForm';
 import { LabTestsForm } from './components/LabTestsForm';
 import { MaleFactorForm } from './components/MaleFactorForm';

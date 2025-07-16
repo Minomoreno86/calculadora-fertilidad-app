@@ -1,173 +1,295 @@
-import { EvaluationState, TreatmentSuggestion, OtbMethod } from '../models';
+// src/core/domain/services/treatmentSuggester.ts
+import { EvaluationState, TreatmentSuggestion, UserInput, Factors, HsgResult, PolypType, AdenomyosisType } from '../models';
+import { clinicalContentLibrary } from '../logic/clinicalContentLibrary'; // Biblioteca clínica unificada
 
-function getMedicalOptimizationSuggestions(factors: Factors): TreatmentSuggestion[] {
-  const suggestions: TreatmentSuggestion[] = [];
-  if (factors.tsh < 1.0) {
-    suggestions.push({
-      category: 'Optimización Médica',
-      title: 'Optimizar Función Tiroidea',
-      details: 'Se recomienda ajustar el nivel de TSH por debajo de 2.5 µIU/mL antes de cualquier tratamiento.',
-      source: 'Guía ASRM',
-    });
+/**
+ * Helper para obtener una sugerencia de tratamiento de la biblioteca clínica.
+ * @param key La clave del tratamiento en la biblioteca.
+ * @returns El objeto TreatmentSuggestion completo.
+ */
+const getTreatmentSuggestion = (key: string): TreatmentSuggestion => {
+  const content = clinicalContentLibrary[key];
+  if (!content) {
+    console.warn(`Content for treatment key "${key}" not found in clinical library.`);
+    return {
+      category: 'Estudio Adicional',
+      title: `Tratamiento no definido (${key})`,
+      details: 'Detalles no disponibles.',
+      source: 'N/A',
+    };
   }
-  if (factors.prolactin < 1.0) {
-    suggestions.push({
-      category: 'Optimización Médica',
-      title: 'Corregir Hiperprolactinemia',
-      details: 'Normalizar los niveles de prolactina con tratamiento médico es un paso previo fundamental.',
-      source: 'Guía ASRM',
-    });
+
+  // Asumimos que la categoría es parte del título de la clave o se infiere de la lógica que llama.
+  // Para mayor robustez, podríamos extender ClinicalInfo para incluir una 'category' explícita.
+  // Por ahora, inferimos de las claves o usamos un mapeo.
+  let category: TreatmentSuggestion['category'];
+  if (key.startsWith('TRAT_BAJA_')) {
+    category = 'Baja Complejidad';
+  } else if (key.startsWith('TRAT_IAC_')) {
+    category = 'Baja Complejidad'; // IAC es considerada baja complejidad por el DFCA
+  } else if (key.startsWith('TRAT_FIV_') || key.startsWith('TRAT_ICSI_') || key.startsWith('TRAT_OVODONACION')) {
+    category = 'Alta Complejidad';
+  } else if (key.startsWith('DECISION_FIV_') || key.startsWith('INT_')) {
+      category = 'Alta Complejidad'; // Interacciones que suelen llevar a alta complejidad
+  } else {
+    category = 'Optimización Médica'; // Por defecto para otros hallazgos clínicos individuales
   }
-  if (factors.homa < 1.0) {
-    suggestions.push({
-      category: 'Optimización Médica',
-      title: 'Manejar Resistencia a la Insulina',
-      details: 'Mejorar la sensibilidad a la insulina con dieta, ejercicio y/o metformina puede aumentar el éxito.',
-      source: 'Guía ASRM',
-    });
+
+
+  return {
+    category: category,
+    title: content.explanation.split('.')[0] || 'Sugerencia de Tratamiento', // Toma la primera frase como título
+    details: content.explanation + (content.recommendations.length > 0 ? '\n\nRecomendaciones: ' + content.recommendations.join('; ') : ''),
+    source: content.sources && content.sources.length > 0 ? content.sources.join(', ') : 'Recomendación Clínica',
+  };
+};
+
+/**
+ * Sugiere tratamientos basado en el EvaluationState completo.
+ * Implementa las reglas de decisión estratégica y clasificación terapéutica del DFCA.
+ */
+function getStrategicDecisionSuggestions(input: UserInput, factors: Factors): TreatmentSuggestion[] {
+  if (input.age >= 40 && (input.amh !== undefined && input.amh < 1.0)) {
+    return [getTreatmentSuggestion('DECISION_FIV_EDAD_AMH_CRITICO')];
   }
-  return suggestions;
+  if (input.endometriosisGrade >= 3 && (factors.male !== undefined && factors.male < 1.0)) {
+    return [getTreatmentSuggestion('DECISION_FIV_ENDO_AVANZADA_SEMINAL')];
+  }
+  if (
+    input.hasPcos &&
+    (input.homaIr !== undefined && input.homaIr >= 4.0) &&
+    (input.cycleDuration !== undefined && input.cycleDuration > 60) &&
+    (input.prolactin !== undefined && input.prolactin > 50)
+  ) {
+    return [getTreatmentSuggestion('DECISION_FIV_SOP_METABOLICO_CRITICO')];
+  }
+  if (factors.otb === 0.0 || factors.hsg === 0.0) {
+    return [getTreatmentSuggestion('DECISION_FIV_OTB_BILATERAL')];
+  }
+  return [];
 }
 
-function getOtbRecanalizationSuggestions(input: UserInput, factors: Factors, diagnostics: Diagnostics): TreatmentSuggestion[] {
-  const suggestions: TreatmentSuggestion[] = [];
+function shouldSuggestFIV(input: UserInput, factors: Factors): boolean {
+  return (
+    factors.otb === 0.0 ||
+    factors.hsg === 0.0 ||
+    factors.male === 0.0 ||
+    ((input.amh !== undefined && input.amh < 1.0) && input.age > 35) ||
+    (input.endometriosisGrade >= 3 && input.age > 35) ||
+    (input.adenomyosisType === AdenomyosisType.Diffuse) ||
+    (input.age >= 43 && (input.amh !== undefined && input.amh < 0.5))
+  );
+}
 
-  if (input.hasOtb) {
-    console.log('OTB Input:', input);
-    // Criterios de éxito para recanalización
-    const isGoodCandidate = (
-      input.age < 37 &&
-      (input.otbMethod === OtbMethod.Clips || input.otbMethod === OtbMethod.Rings || input.otbMethod === OtbMethod.Ligation) &&
-      (input.remainingTubalLength === undefined || input.remainingTubalLength > 4) &&
-      !input.hasOtherInfertilityFactors
-    );
-    console.log('isGoodCandidate:', isGoodCandidate);
+function shouldSuggestICSI(input: UserInput): boolean {
+  return (
+    (input.spermNormalMorphology !== undefined && input.spermNormalMorphology < 2) ||
+    (input.spermProgressiveMotility !== undefined && input.spermProgressiveMotility < 20)
+  );
+}
 
-    // Criterios de baja probabilidad de éxito/contraindicación
-    const isPoorCandidate = (
-      input.age >= 40 ||
-      input.otbMethod === OtbMethod.ExtensiveCauterization ||
-      input.otbMethod === OtbMethod.PartialSalpingectomy ||
-      (input.remainingTubalLength !== undefined && input.remainingTubalLength < 3) ||
-      (input.endometriosisGrade && input.endometriosisGrade >= 2) || // Moderate to severe endometriosis
-      (factors.male < 1.0) // Significant male factor
-    );
-    console.log('isPoorCandidate:', isPoorCandidate);
+function shouldSuggestOvodonacion(input: UserInput): boolean {
+  return input.age >= 43 && (input.amh !== undefined && input.amh < 0.5);
+}
 
-    if (isGoodCandidate) {
-      suggestions.push({
-        category: 'Baja Complejidad',
-        title: 'Considerar Recanalización Tubárica',
-        details: 'Eres una candidata ideal para la recanalización tubárica si cumples con: edad < 37 años, método de OTB (clips, anillos, ligaduras), longitud tubárica remanente > 4 cm (si aplica), y ausencia de otros factores de infertilidad. Discute esta opción con tu especialista.',
-        source: 'ASRM Practice Committee',
-      });
-    } else if (isPoorCandidate) {
-      suggestions.push({
-        category: 'Alta Complejidad',
-        title: 'Fecundación In Vitro (FIV)',
-        details: 'Debido a factores desfavorables para la recanalización tubárica, la FIV es el tratamiento más adecuado.',
-        source: 'ASRM Practice Committee',
-      });
-    } else if (input.hasOtb) {
-      // If OTB is present but not clearly good or poor candidate, suggest further study
-      suggestions.push({
-        category: 'Estudio Adicional',
-        title: 'Evaluación Detallada para Recanalización Tubárica',
-        details: 'Se requiere una evaluación más profunda (HSG, historia quirúrgica) para determinar la viabilidad de la recanalización tubárica.',
-        source: 'Recomendación General',
-      });
+function getAbsoluteFIVSuggestions(input: UserInput, factors: Factors): TreatmentSuggestion[] {
+  let suggestions: TreatmentSuggestion[] = [];
+
+  if (shouldSuggestFIV(input, factors)) {
+    suggestions.push(getTreatmentSuggestion('TRAT_FIV_INDICACIONES_ABSOLUTAS'));
+    if (shouldSuggestICSI(input)) {
+      suggestions.push(getTreatmentSuggestion('TRAT_ICSI_RECOMENDADO'));
+    }
+    if (shouldSuggestOvodonacion(input)) {
+      suggestions.push(getTreatmentSuggestion('TRAT_OVODONACION'));
     }
   }
   return suggestions;
 }
 
-function getHighComplexitySuggestions(input: UserInput, factors: Factors, diagnostics: Diagnostics): TreatmentSuggestion[] {
-  const suggestions: TreatmentSuggestion[] = [];
-  if (diagnostics.hsgComment.includes('bilateral')) {
-    suggestions.push({
-      category: 'Alta Complejidad',
-      title: 'Fecundación In Vitro (FIV)',
-      details: 'Debido a la obstrucción tubárica bilateral, la FIV es el tratamiento indicado para lograr el embarazo.',
-      source: 'Guía ASRM',
-    });
-  }
-  if (input.age >= 38 || factors.amh < 0.8) {
-    suggestions.push({
-      category: 'Alta Complejidad',
-      title: 'Considerar Fecundación In Vitro (FIV)',
-      details: 'Por la edad o la reserva ovárica, la FIV puede ofrecer las mejores probabilidades por intento.',
-      source: 'Guía ASRM/ESHRE',
-    });
-  }
-  const { semenVolume, spermConcentration, spermProgressiveMotility } = input;
-  if (semenVolume && spermConcentration && spermProgressiveMotility) {
-    const tmsc = semenVolume * spermConcentration * (spermProgressiveMotility / 100);
-    if (tmsc < 5) {
-      suggestions.push({
-        category: 'Alta Complejidad',
-        title: 'FIV con ICSI',
-        details: `El recuento de espermatozoides móviles (~${tmsc.toFixed(1)}M) es bajo, indicando que la ICSI es la técnica más efectiva.`,
-        source: 'Guía ASRM 2024',
-      });
-    }
+function shouldSuggestIACHelper(evaluation: EvaluationState, input: UserInput, factors: Factors, shouldSuggestFIV: boolean): boolean {
+  const isSpermLimit =
+    (input.spermProgressiveMotility !== undefined && input.spermProgressiveMotility >= 30 && input.spermProgressiveMotility < 40) ||
+    (input.spermConcentration !== undefined && input.spermConcentration >= 10 && input.spermConcentration < 16);
+
+  if (isSpermLimit && (factors.cycle !== undefined && factors.cycle >= 0.85)) return true;
+  if (input.hsgResult === HsgResult.Unilateral) return true;
+  if ((input.endometriosisGrade === 1 || input.endometriosisGrade === 2) && input.age < 35 && (input.amh !== undefined && input.amh >= 1.5)) return true;
+  if (
+    evaluation.diagnostics.missingData !== undefined &&
+    evaluation.diagnostics.missingData.length === 0 &&
+    evaluation.report.numericPrognosis >= 10 &&
+    evaluation.report.numericPrognosis < 20
+  ) return true;
+  if ((input.infertilityDuration !== undefined && input.infertilityDuration >= 2 && input.infertilityDuration < 5) && !shouldSuggestFIV) return true;
+  return false;
+}
+
+function isIACContraindicatedHelper(input: UserInput, factors: Factors): boolean {
+  return (
+    factors.hsg === 0.0 ||
+    (input.spermProgressiveMotility !== undefined && input.spermProgressiveMotility < 30) ||
+    (input.spermNormalMorphology !== undefined && input.spermNormalMorphology < 2) ||
+    (input.amh !== undefined && input.amh < 1.0) ||
+    input.age > 38 ||
+    input.adenomyosisType === AdenomyosisType.Diffuse
+  );
+}
+
+function getIACSuggestions(evaluation: EvaluationState, input: UserInput, factors: Factors, shouldSuggestFIV: boolean): TreatmentSuggestion[] {
+  let suggestions: TreatmentSuggestion[] = [];
+  const shouldSuggestIAC = shouldSuggestIACHelper(evaluation, input, factors, shouldSuggestFIV);
+  const isIACContraindicated = isIACContraindicatedHelper(input, factors);
+
+  if (shouldSuggestIAC && !isIACContraindicated) {
+    suggestions.push(getTreatmentSuggestion('TRAT_IAC_INDICACIONES'));
   }
   return suggestions;
 }
 
-function getLowComplexitySuggestions(input: UserInput, factors: Factors, diagnostics: Diagnostics): TreatmentSuggestion[] {
-  const suggestions: TreatmentSuggestion[] = [];
-  if (input.age < 38 && diagnostics.hsgComment.includes('unilateral')) {
-    suggestions.push({
-      category: 'Baja Complejidad',
-      title: 'Inseminación Intrauterina (IIU)',
-      details:
-        'Con una trompa permeable y edad favorable, la IIU con estimulación ovárica es una buena primera opción.',
-      source: 'Guía ESHRE',
-    });
-  } else if (input.age < 35 && (input.infertilityDuration ?? 0) < 2 && factors.cycle > 0.9 && factors.male > 0.9) {
-    suggestions.push({
-      category: 'Baja Complejidad',
-      title: 'Coito Programado',
-      details: 'Dado el buen pronóstico general, se puede iniciar con coito programado y monitoreo ovulatorio.',
-      source: 'Guía ASRM',
-    });
+function getLowComplexitySuggestions(input: UserInput, factors: Factors): TreatmentSuggestion[] {
+  let suggestions: TreatmentSuggestion[] = [];
+  let shouldSuggestLowComplexity = false;
+
+  if (
+    input.age < 35 &&
+    (input.amh !== undefined && input.amh >= 1.0) &&
+    (factors.cycle !== undefined && factors.cycle >= 0.85) &&
+    (factors.male !== undefined && factors.male === 1.0) &&
+    (input.hsgResult === HsgResult.Normal || input.hsgResult === HsgResult.Unilateral) &&
+    (input.infertilityDuration !== undefined && input.infertilityDuration < 2) &&
+    (factors.tsh !== undefined && factors.tsh >= 0.85) &&
+    (factors.prolactin !== undefined && factors.prolactin >= 0.85)
+  ) {
+    shouldSuggestLowComplexity = true;
   }
+  if (
+    input.age < 32 &&
+    (input.amh !== undefined && input.amh > 4.5) &&
+    input.hasPcos &&
+    (input.spermNormalMorphology !== undefined && input.spermNormalMorphology >= 4) &&
+    (input.spermConcentration !== undefined && input.spermConcentration >= 16) &&
+    (input.homaIr !== undefined && input.homaIr < 2.0) &&
+    (input.tsh !== undefined && input.tsh >= 0.5 && input.tsh <= 2.5)
+  ) {
+    suggestions.push(getTreatmentSuggestion('INT_PERFIL_HIERESPONDEDOR_JOVEN_SOP_ESTABLE'));
+    shouldSuggestLowComplexity = true;
+  }
+  if (
+    (input.endometriosisGrade === 1 || input.endometriosisGrade === 2) &&
+    (input.amh !== undefined && input.amh >= 1.5) &&
+    input.age < 35
+  ) {
+    suggestions.push(getTreatmentSuggestion('INT_ENDO_LEVE_AMH_NORMAL_JOVEN'));
+    shouldSuggestLowComplexity = true;
+  }
+  if (
+    input.hsgResult === HsgResult.Unilateral &&
+    input.age < 35 &&
+    (input.spermConcentration !== undefined && input.spermConcentration >= 16) &&
+    (input.spermProgressiveMotility !== undefined && input.spermProgressiveMotility >= 30)
+  ) {
+    suggestions.push(getTreatmentSuggestion('INT_HSG_UNILATERAL_JOVEN_SEMEN_NORMAL'));
+    shouldSuggestLowComplexity = true;
+  }
+  if (
+    input.age < 34 &&
+    input.polypType === PolypType.Small &&
+    (input.cycleDuration !== undefined && input.cycleDuration >= 24 && input.cycleDuration <= 35) &&
+    (input.spermNormalMorphology !== undefined && input.spermNormalMorphology >= 4)
+  ) {
+    suggestions.push(getTreatmentSuggestion('INT_POLIPO_PEQUENO_JOVEN_FAVORABLE'));
+    shouldSuggestLowComplexity = true;
+  }
+  if (
+    input.age < 30 &&
+    (input.amh !== undefined && input.amh > 5) &&
+    input.hasPcos &&
+    (input.homaIr !== undefined && input.homaIr < 2) &&
+    (input.tsh !== undefined && input.tsh >= 0.5 && input.tsh <= 2.5)
+  ) {
+    suggestions.push(getTreatmentSuggestion('INT_EDAD_AMH_SOP_HOMA_TSH_OPTIMO'));
+    shouldSuggestLowComplexity = true;
+  }
+  if (shouldSuggestLowComplexity) {
+    suggestions.push(getTreatmentSuggestion('TRAT_BAJA_COMPLEJIDAD_CRITERIOS'));
+  }
+  return suggestions;
+}
+
+/**
+ * Helper function to get BMI-related suggestions
+ */
+function getBmiSuggestions(bmi: number): TreatmentSuggestion[] {
+  if (bmi >= 1.0) return [];
+  
+  if (bmi === 0.85) return [getTreatmentSuggestion('IMC_SOBREPESO')];
+  if (bmi === 0.75) return [getTreatmentSuggestion('IMC_OBESIDAD_I')];
+  if (bmi === 0.6) return [getTreatmentSuggestion('IMC_OBESIDAD_II')];
+  if (bmi === 0.4) return [getTreatmentSuggestion('IMC_OBESIDAD_III')];
+  if (bmi === 0.7) return [getTreatmentSuggestion('IMC_BAJO')];
+  
+  return [];
+}
+
+function getOptimizationSuggestions(input: UserInput, factors: Factors, currentSuggestions: TreatmentSuggestion[]): TreatmentSuggestion[] {
+  // Skip optimization for high complexity treatments
+  if (currentSuggestions.length > 0 && currentSuggestions[0].category === 'Alta Complejidad') {
+    return [];
+  }
+  
+  let suggestions: TreatmentSuggestion[] = [];
+  
+  // Add BMI-related suggestions
+  suggestions = suggestions.concat(getBmiSuggestions(factors.bmi));
+  
+  // Add other factor suggestions
+  if (factors.homa < 1.0) suggestions.push(getTreatmentSuggestion('HOMA_LEVE'));
+  if (factors.prolactin < 1.0) suggestions.push(getTreatmentSuggestion('PRL_LEVE'));
+  if (factors.tsh < 1.0) suggestions.push(getTreatmentSuggestion('TSH_LIMITE_SUPERIOR'));
+  if (input.tpoAbPositive) suggestions.push(getTreatmentSuggestion('TPOAB_POSITIVO'));
+  
   return suggestions;
 }
 
 export function suggestTreatments(evaluation: EvaluationState): TreatmentSuggestion[] {
-  const { input, factors, diagnostics } = evaluation;
+  const { input, factors } = evaluation;
   let suggestions: TreatmentSuggestion[] = [];
 
-  // Evaluar sugerencias de recanalización tubárica primero
-  const otbSuggestions = getOtbRecanalizationSuggestions(input, factors, diagnostics);
-  suggestions = suggestions.concat(otbSuggestions);
-
-  // Si se sugiere recanalización, no sugerir FIV por obstrucción tubárica bilateral
-  const isOtbRecanalizationSuggested = otbSuggestions.some(s => s.title === 'Considerar Recanalización Tubárica');
-
-  const highComplexity = getHighComplexitySuggestions(input, factors, diagnostics);
-  // Filtrar FIV por obstrucción tubárica bilateral si se sugiere recanalización
-  const filteredHighComplexity = isOtbRecanalizationSuggested
-    ? highComplexity.filter(s => !(s.title === 'Fecundación In Vitro (FIV)' && s.details.includes('obstrucción tubárica bilateral')))
-    : highComplexity;
-  suggestions = suggestions.concat(filteredHighComplexity);
-
-  // --- REGLAS DE BAJA COMPLEJIDAD (se añaden si no hay indicación clara de FIV o recanalización) ---
-  if (filteredHighComplexity.length === 0 && !isOtbRecanalizationSuggested) {
-    suggestions = suggestions.concat(getLowComplexitySuggestions(input, factors, diagnostics));
+  // 1. Strategic Decision
+  const strategicSuggestions = getStrategicDecisionSuggestions(input, factors);
+  if (strategicSuggestions.length > 0) {
+    return strategicSuggestions;
   }
 
-  // --- REGLA POR DEFECTO ---
+  // 2. Absolute FIV
+  const absoluteFIVSuggestions = getAbsoluteFIVSuggestions(input, factors);
+  if (absoluteFIVSuggestions.length > 0) {
+    return absoluteFIVSuggestions;
+  }
+
+  // 3. IAC
+  const shouldSuggestFIV = absoluteFIVSuggestions.length > 0;
+  const iacSuggestions = getIACSuggestions(evaluation, input, factors, shouldSuggestFIV);
+  if (iacSuggestions.length > 0) {
+    return iacSuggestions;
+  }
+
+  // 4. Low Complexity
+  const lowComplexitySuggestions = getLowComplexitySuggestions(input, factors);
+  suggestions = suggestions.concat(lowComplexitySuggestions);
+
+  // 5. Optimization
+  suggestions = suggestions.concat(getOptimizationSuggestions(input, factors, suggestions));
+
+  // 6. Default
   if (suggestions.length === 0) {
-    suggestions.push({
-      category: 'Estudio Adicional',
-      title: 'Consulta con Especialista',
-      details:
-        'Tu caso tiene múltiples factores o no presenta una causa clara. Se recomienda una consulta especializada para definir el mejor plan.',
-      source: 'Recomendación General',
-    });
+    suggestions.push(getTreatmentSuggestion('TRAT_ESTUDIO_ADICIONAL'));
   }
 
-  return suggestions;
+  // Remove duplicates
+  const uniqueSuggestions = Array.from(new Set(suggestions.map(s => JSON.stringify(s))))
+    .map(s => JSON.parse(s));
+
+  return uniqueSuggestions;
 }

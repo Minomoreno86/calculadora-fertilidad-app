@@ -37,18 +37,10 @@ export const evaluateAgeBaseline = (age: number): PartialEvaluation => {
 
 export const evaluateBmi = (bmi: number | null): PartialEvaluation => {
   if (bmi === null) return { diagnostics: { missingData: ['Índice de Masa Corporal (IMC)'] } };
-  
-  // Validación mejorada para valores inválidos
-  if (bmi <= 0) return { factors: { bmi: 1.0 }, diagnostics: { bmiComment: 'Datos de IMC no válidos' } };
-  
-  // Categorías OMS mejoradas (migradas de Premium)
   const bmiRanges = [
-    { max: 18.5, factor: 0.85, comment: 'Bajo peso' },
+    { max: 18.5, factor: 0.8, comment: 'Bajo peso' },
     { max: 24.9, factor: 1.0, comment: 'Peso normal' },
-    { max: 29.9, factor: 0.9, comment: 'Sobrepeso' },
-    { max: 34.9, factor: 0.75, comment: 'Obesidad Clase I' },
-    { max: 39.9, factor: 0.6, comment: 'Obesidad Clase II' },
-    { max: Infinity, factor: 0.4, comment: 'Obesidad Clase III' },
+    { max: Infinity, factor: 0.85, comment: 'Sobrepeso/Obesidad' },
   ];
 
   for (const range of bmiRanges) {
@@ -77,32 +69,21 @@ export const evaluateCycle = (cycleDuration?: number): PartialEvaluation => {
     return { factors: { cycle: 0.7 }, diagnostics: { cycleComment: 'Ciclo irregular' } };
 };
 
-export const evaluatePcos = (
-  hasPcos: boolean, 
-  bmi: number | null, 
-  cycleDuration?: number,
-  amh?: number,        // ✅ Agregar parámetro AMH de Premium
-  homaIr?: number | null // ✅ Agregar parámetro HOMA-IR de Premium
-): PartialEvaluation => {
-  if (!hasPcos) return { factors: { pcos: 1.0 }, diagnostics: { pcosSeverity: 'No aplica' } };
-
-  // Evaluación mejorada basada en sistema Premium
-  let factor = 0.9; // Leve (ovulación preservada, AMH <6)
-  let severity = 'SOP Leve (ovulación preservada, AMH <6 ng/mL)';
-
-  // Criterios avanzados para severidad
-  const isAnovulatory = (bmi !== undefined && bmi !== null && bmi >= 30) || 
-                       (homaIr !== null && homaIr !== undefined && homaIr >= 3.5);
-  const isHighAmh = amh && amh > 6;
-
-  if (isAnovulatory && isHighAmh) {
-    factor = 0.6; // Severo
-    severity = 'SOP Severo (anovulación, IMC >30 o HOMA >3.5)';
-  } else if (isAnovulatory || isHighAmh) {
-    factor = 0.75; // Moderado
-    severity = 'SOP Moderado (con anovulación o AMH >6 ng/mL)';
+export const evaluatePcos = (hasPcos: boolean, bmi: number | null, cycleDuration?: number): PartialEvaluation => {
+  if (!hasPcos) return { factors: { pcos: 1.0 } };
+  let factor = 1.0,
+    severity = 'Leve';
+  if (bmi && bmi >= 25) {
+    factor *= 0.9;
+    severity = 'Moderado';
   }
-
+  if (cycleDuration && cycleDuration > 35) {
+    factor *= 0.85;
+    severity = 'Moderado';
+  }
+  if ((bmi && bmi >= 30) || (cycleDuration && cycleDuration > 45)) {
+    severity = 'Severo';
+  }
   return { factors: { pcos: factor }, diagnostics: { pcosSeverity: severity } };
 };
 

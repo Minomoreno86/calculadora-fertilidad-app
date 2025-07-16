@@ -12,7 +12,7 @@
  */
 
 import { useCalculatorForm } from './useCalculatorForm';
-import { useParallelValidation } from './hooks/useParallelValidationSimple';
+import { useParallelValidation } from './hooks/useParallelValidation';
 import { useMemo, useEffect, useState } from 'react';
 
 /**

@@ -1,7 +1,7 @@
 // src/core/domain/services/calculationEnginePremium.ts
 import { UserInput, EvaluationState, Factors, Diagnostics, Report, MyomaType, AdenomyosisType, HsgResult } from '../models';
-import * as premiumFactorEvaluators from '../logic/factorEvaluatorsPremium'; // Importar los evaluadores Premium
-import * as reportGeneratorPremium from '../logic/reportGeneratorPremium';
+import * as factorEvaluators from '../logic/factorEvaluators'; // Usar sistema básico mejorado
+import * as reportGenerator from '../logic/reportGenerator'; // Usar reportGenerator básico
 
 // Constantes para valores por defecto y cadenas comunes
 const DEFAULT_FACTOR_VALUE = 1.0;
@@ -99,9 +99,9 @@ function _updateEvaluationState<K extends keyof Factors, D extends keyof Diagnos
  * Evalúa todos los factores individuales usando los evaluadores Premium.
  */
 function _evaluateAllIndividualFactorsPremium(userInput: UserInput, factors: Factors, diagnostics: Diagnostics): void {
-  // Evaluadores de factores individuales (tomados de factorEvaluatorsPremium.ts)
+  // Evaluadores de factores individuales (usando sistema básico mejorado)
   _updateEvaluationState(
-    premiumFactorEvaluators.evaluateAgePremium(userInput.age),
+    factorEvaluators.evaluateAgeBaseline(userInput.age), // Mapeo: evaluateAgePremium -> evaluateAgeBaseline
     factors,
     diagnostics,
     'baseAgeProbability',
@@ -111,7 +111,7 @@ function _evaluateAllIndividualFactorsPremium(userInput: UserInput, factors: Fac
   );
 
   _updateEvaluationState(
-    premiumFactorEvaluators.evaluateBmiPremium(userInput.bmi),
+    factorEvaluators.evaluateBmi(userInput.bmi), // Mapeo: evaluateBmiPremium -> evaluateBmi
     factors,
     diagnostics,
     'bmi',
@@ -119,7 +119,7 @@ function _evaluateAllIndividualFactorsPremium(userInput: UserInput, factors: Fac
   );
 
   _updateEvaluationState(
-    premiumFactorEvaluators.evaluateCyclePremium(userInput.cycleDuration),
+    factorEvaluators.evaluateCycle(userInput.cycleDuration),
     factors,
     diagnostics,
     'cycle',
@@ -127,7 +127,7 @@ function _evaluateAllIndividualFactorsPremium(userInput: UserInput, factors: Fac
   );
 
   _updateEvaluationState(
-    premiumFactorEvaluators.evaluatePcosPremium(userInput.hasPcos, userInput.amh, userInput.bmi, userInput.homaIr),
+    factorEvaluators.evaluatePcos(userInput.hasPcos, userInput.bmi, undefined, userInput.amh, userInput.homaIr),
     factors,
     diagnostics,
     'pcos',
@@ -137,7 +137,7 @@ function _evaluateAllIndividualFactorsPremium(userInput: UserInput, factors: Fac
   );
 
   _updateEvaluationState(
-    premiumFactorEvaluators.evaluateEndometriosisPremium(userInput.endometriosisGrade),
+    factorEvaluators.evaluateEndometriosis(userInput.endometriosisGrade),
     factors,
     diagnostics,
     'endometriosis',
@@ -145,7 +145,7 @@ function _evaluateAllIndividualFactorsPremium(userInput: UserInput, factors: Fac
   );
 
   _updateEvaluationState(
-    premiumFactorEvaluators.evaluateMyomasPremium(userInput.myomaType),
+    factorEvaluators.evaluateMyomas(userInput.myomaType),
     factors,
     diagnostics,
     'myoma',
@@ -153,7 +153,7 @@ function _evaluateAllIndividualFactorsPremium(userInput: UserInput, factors: Fac
   );
 
   _updateEvaluationState(
-    premiumFactorEvaluators.evaluateAdenomyosisPremium(userInput.adenomyosisType),
+    factorEvaluators.evaluateAdenomyosis(userInput.adenomyosisType),
     factors,
     diagnostics,
     'adenomyosis',
@@ -161,7 +161,7 @@ function _evaluateAllIndividualFactorsPremium(userInput: UserInput, factors: Fac
   );
 
   _updateEvaluationState(
-    premiumFactorEvaluators.evaluatePolypsPremium(userInput.polypType),
+    factorEvaluators.evaluatePolyps(userInput.polypType),
     factors,
     diagnostics,
     'polyp',
@@ -169,7 +169,7 @@ function _evaluateAllIndividualFactorsPremium(userInput: UserInput, factors: Fac
   );
 
   _updateEvaluationState(
-    premiumFactorEvaluators.evaluateHsgPremium(userInput.hsgResult),
+    factorEvaluators.evaluateHsg(userInput.hsgResult),
     factors,
     diagnostics,
     'hsg',
@@ -177,14 +177,14 @@ function _evaluateAllIndividualFactorsPremium(userInput: UserInput, factors: Fac
   );
 
   _updateEvaluationState(
-    premiumFactorEvaluators.evaluateOtbPremium(userInput.hasOtb),
+    factorEvaluators.evaluateOtb(userInput.hasOtb),
     factors,
     diagnostics,
     'otb',
   );
 
   _updateEvaluationState(
-    premiumFactorEvaluators.evaluateAmhPremium(userInput.amh),
+    factorEvaluators.evaluateAmh(userInput.amh),
     factors,
     diagnostics,
     'amh',
@@ -194,7 +194,7 @@ function _evaluateAllIndividualFactorsPremium(userInput: UserInput, factors: Fac
   );
 
   _updateEvaluationState(
-    premiumFactorEvaluators.evaluateProlactinPremium(userInput.prolactin),
+    factorEvaluators.evaluateProlactin(userInput.prolactin),
     factors,
     diagnostics,
     'prolactin',
@@ -202,23 +202,24 @@ function _evaluateAllIndividualFactorsPremium(userInput: UserInput, factors: Fac
   );
 
   _updateEvaluationState(
-    premiumFactorEvaluators.evaluateTshPremium(userInput.tsh),
+    factorEvaluators.evaluateTsh(userInput.tsh),
     factors,
     diagnostics,
     'tsh',
     'tshComment',
   );
 
-  _updateEvaluationState(
-    premiumFactorEvaluators.evaluateTpoAbPremium(userInput.tpoAbPositive),
-    factors,
-    diagnostics,
-    undefined, // No es un factor directo
-    'tpoAbComment',
-  );
+  // TPO Ab evaluation removed as requested by user
+  // _updateEvaluationState(
+  //   evaluateTpoAb(userInput.tpoAbPositive),
+  //   factors,
+  //   diagnostics,
+  //   undefined, // No es un factor directo
+  //   'tpoAbComment',
+  // );
 
   _updateEvaluationState(
-    premiumFactorEvaluators.evaluateHomaPremium(userInput.homaIr),
+    factorEvaluators.evaluateHoma(userInput.homaIr),
     factors,
     diagnostics,
     'homa',
@@ -226,7 +227,7 @@ function _evaluateAllIndividualFactorsPremium(userInput: UserInput, factors: Fac
   );
 
   _updateEvaluationState(
-    premiumFactorEvaluators.evaluateInfertilityDurationPremium(userInput.infertilityDuration),
+    factorEvaluators.evaluateInfertilityDuration(userInput.infertilityDuration),
     factors,
     diagnostics,
     'infertilityDuration',
@@ -234,7 +235,7 @@ function _evaluateAllIndividualFactorsPremium(userInput: UserInput, factors: Fac
   );
 
   _updateEvaluationState(
-    premiumFactorEvaluators.evaluatePelvicSurgeriesPremium(userInput.pelvicSurgeriesNumber),
+    factorEvaluators.evaluatePelvicSurgeries(userInput.pelvicSurgeriesNumber),
     factors,
     diagnostics,
     'pelvicSurgery',
@@ -242,7 +243,7 @@ function _evaluateAllIndividualFactorsPremium(userInput: UserInput, factors: Fac
   );
 
   _updateEvaluationState(
-    premiumFactorEvaluators.evaluateMaleFactorPremium(userInput),
+    factorEvaluators.evaluateMaleFactor(userInput),
     factors,
     diagnostics,
     'male',
@@ -502,7 +503,7 @@ function _applyNonLinearInteractionsPremium(userInput: UserInput, factors: Facto
  * En futuras fases, reportGenerator necesitará una versión Premium.
  */
 function _generateReportPremium(numericPrognosis: number, diagnostics: Diagnostics, userInput: UserInput, factors: Factors): Report {
-  return reportGeneratorPremium.generateFinalReportPremium(numericPrognosis, diagnostics, userInput, factors);
+  return reportGenerator.generateFinalReport(numericPrognosis, diagnostics, userInput, factors); // Usar función básica
 }
 
 /**

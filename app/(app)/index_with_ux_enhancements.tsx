@@ -1,12 +1,11 @@
+import React, { useState } from 'react';
 import { StyleSheet, ScrollView, View } from 'react-native';
-import { Link } from 'expo-router';
-import { useState } from 'react';
 import Box from '@/presentation/components/common/Box';
 import Text from '@/presentation/components/common/Text';
 import { Button } from '@/presentation/components/common/EnhancedButton';
 import { ProgressStepper } from '@/presentation/components/common/ProgressStepper';
 import { InfoCard } from '@/presentation/components/common/InfoCard';
-import { useCalculatorWithParallelValidation } from '@/presentation/features/calculator/hooks/useCalculatorWithParallelValidation';
+import { useCalculatorForm } from '@/presentation/features/calculator/useCalculatorForm';
 import { clearEngineCache } from '@/core/domain/services/calculationEngine';
 import { DemographicsForm } from '@/presentation/features/calculator/components/DemographicsForm';
 import { GynecologyHistoryForm } from '@/presentation/features/calculator/components/GynecologyHistoryForm';
@@ -15,7 +14,7 @@ import { MaleFactorForm } from '@/presentation/features/calculator/components/Ma
 import { theme } from '@/config/theme';
 
 // 🚀 FASE 1.2: Importaciones de validación paralela (ACTIVADAS)
-import { CalculatorPerformanceMonitor } from '@/presentation/features/calculator/components/CalculatorPerformanceMonitor';
+import { PerformanceMonitor } from '@/presentation/components/common/PerformanceMonitorAdvanced';
 
 // 🎨 UX ENHANCEMENTS: Nuevas importaciones para mejoras UX
 import { useUXEnhancements } from '@/presentation/features/calculator/hooks/useUXEnhancements';
@@ -28,29 +27,34 @@ export default function CalculatorScreen() {
   // 🎨 UX ENHANCEMENTS: Estado para mejoras UX
   const [enableUXEnhancements, setEnableUXEnhancements] = useState(true);
 
-  // 🎯 IMPLEMENTACIÓN: Usar hook mejorado por defecto
-  // Nota: useCalculatorWithParallelValidation es 100% compatible con useCalculatorForm
+  // 🎯 IMPLEMENTACIÓN: Hook principal de calculadora
   const {
-    // API principal del formulario (100% compatible)
+    // API principal del formulario
     control, 
     calculatedBmi, 
     calculatedHoma, 
     handleCalculate, 
-    errors,
-    isLoading = false,  // Cambiado de isCalculating a isLoading
+    formState,
+    isLoading = false,
     currentStep = 0,
     progress = 0,
     
-    // Nuevas propiedades del sistema paralelo
-    isValidating = false,
-    validationMetrics = null,
-    
     // 🎨 UX: Acceso a campos observados
     watchedFields
-  } = useCalculatorWithParallelValidation();
+  } = useCalculatorForm();
 
-  // 🎯 FALLBACK: Para compatibilidad con componentes existentes
-  const isCalculating = isLoading; // Agregamos isCalculating como alias
+  // Valores por defecto para compatibilidad
+  const errors = formState?.errors ?? {};
+  const isValidating = false;
+  const validationMetrics = React.useMemo(() => ({
+    validation: {
+      progress: 0
+    },
+    performance: {
+      efficiency: 'N/A' as string,
+      tasksPerSecond: 0
+    }
+  }), []);
   
   // 📊 Usar completitud real del sistema paralelo o fallback estático
   const completionPercentage = (() => {
@@ -174,16 +178,6 @@ export default function CalculatorScreen() {
         />
         
         <View style={styles.secondaryButtonContainer}>
-          <Link href="/premiumCalculator" asChild>
-            <Button
-              title="Calculadora Premium"
-              onPress={() => {}}
-              variant="outline"
-              size="medium"
-              iconName="star-outline"
-              iconPosition="left"
-            />
-          </Link>
           
           {/* 🔧 DEBUG: Botón para limpiar cache durante desarrollo */}
           {process.env.NODE_ENV === 'development' && (
@@ -261,11 +255,10 @@ export default function CalculatorScreen() {
         {showParallelMonitor && validationMetrics && (
           <View style={styles.monitorContainer}>
             <Text style={styles.monitorTitle}>📊 Métricas del Sistema</Text>
-            <CalculatorPerformanceMonitor
-              isValidating={isValidating}
-              progress={progress}
-              metrics={validationMetrics}
-              showDevInfo={true}
+            <PerformanceMonitor
+              isVisible={true}
+              compact={true}
+              validationMetrics={validationMetrics}
             />
           </View>
         )}
