@@ -70,8 +70,7 @@ export type ValidationCategory =
 
 // 🔄 INTEGRACIÓN CON SISTEMA DE CACHE EXISTENTE
 interface ParallelCacheEntry {
-  category: ValidationCategory;
-  results: ValidationResult[];
+  results: Map<ValidationCategory, ValidationResult[]>;
   inputHash: string;
   timestamp: number;
   parallelProcessingTime: number;
@@ -165,8 +164,10 @@ export class ParallelValidationEngine {
     // 🔧 En React Native/Expo: Simulación de workers con Promises
     // En Web real: new Worker('./validationWorker.ts')
     for (let i = 0; i < this.config.maxConcurrency; i++) {
-      // Placeholder - en producción serían workers reales
-      pool.workers.push({} as Worker);
+      // Placeholder funcional - en producción serían workers reales
+      pool.workers.push({
+        terminate: () => {} // evitar crash en dispose
+      } as unknown as Worker);
       pool.metrics.workerUtilization.push(0);
     }
 
@@ -244,6 +245,7 @@ export class ParallelValidationEngine {
   ): Map<ValidationCategory, ValidationTask[]> {
     
     const categorizedTasks = new Map<ValidationCategory, ValidationTask[]>();
+    const baseTimestamp = Date.now(); // Una sola llamada a Date.now()
     
     categories.forEach(category => {
       const tasks: ValidationTask[] = [];
@@ -253,11 +255,11 @@ export class ParallelValidationEngine {
           // Validaciones hormonales disponibles en UserInput: AMH, TSH, Prolactin
           if (input.amh !== undefined) {
             tasks.push({
-              id: `amh-${Date.now()}`,
+              id: `amh-${baseTimestamp}`,
               type: 'range',
               data: { value: input.amh, field: 'amh' },
               priority: 'medium',
-              timestamp: Date.now()
+              timestamp: baseTimestamp
             });
           }
           break;
@@ -266,20 +268,20 @@ export class ParallelValidationEngine {
           // Validaciones metabólicas: BMI, TSH
           if (input.bmi !== null && input.bmi !== undefined) {
             tasks.push({
-              id: `bmi-${Date.now()}`,
+              id: `bmi-${baseTimestamp}`,
               type: 'range',
               data: { value: input.bmi, field: 'bmi' },
               priority: 'high',
-              timestamp: Date.now()
+              timestamp: baseTimestamp
             });
           }
           if (input.tsh !== undefined) {
             tasks.push({
-              id: `tsh-${Date.now()}`,
+              id: `tsh-${baseTimestamp}`,
               type: 'range',
               data: { value: input.tsh, field: 'tsh' },
               priority: 'medium',
-              timestamp: Date.now()
+              timestamp: baseTimestamp
             });
           }
           break;
@@ -288,20 +290,20 @@ export class ParallelValidationEngine {
           // Validaciones anatómicas: HSG, Endometriosis
           if (input.hsgResult && input.hsgResult !== 'unknown') {
             tasks.push({
-              id: `hsg-${Date.now()}`,
+              id: `hsg-${baseTimestamp}`,
               type: 'clinical',
               data: { value: input.hsgResult, field: 'hsgResult' },
               priority: 'medium',
-              timestamp: Date.now()
+              timestamp: baseTimestamp
             });
           }
           if (input.endometriosisGrade !== undefined) {
             tasks.push({
-              id: `endometriosis-${Date.now()}`,
+              id: `endometriosis-${baseTimestamp}`,
               type: 'clinical',
               data: { value: input.endometriosisGrade, field: 'endometriosis' },
               priority: 'medium',
-              timestamp: Date.now()
+              timestamp: baseTimestamp
             });
           }
           break;
@@ -310,11 +312,11 @@ export class ParallelValidationEngine {
           // Validaciones masculinas: Espermatograma
           if (input.spermConcentration !== undefined) {
             tasks.push({
-              id: `sperm-${Date.now()}`,
+              id: `sperm-${baseTimestamp}`,
               type: 'range',
               data: { value: input.spermConcentration, field: 'spermConcentration' },
               priority: 'medium',
-              timestamp: Date.now()
+              timestamp: baseTimestamp
             });
           }
           break;
@@ -322,19 +324,19 @@ export class ParallelValidationEngine {
         case 'temporal':
           // Validaciones temporales: Edad, Duración infertilidad
           tasks.push({
-            id: `age-${Date.now()}`,
+            id: `age-${baseTimestamp}`,
             type: 'range',
             data: { value: input.age, field: 'age' },
             priority: 'high',
-            timestamp: Date.now()
+            timestamp: baseTimestamp
           });
           if (input.infertilityDuration !== undefined) {
             tasks.push({
-              id: `infertility-${Date.now()}`,
+              id: `infertility-${baseTimestamp}`,
               type: 'range',
               data: { value: input.infertilityDuration, field: 'infertilityDuration' },
               priority: 'high',
-              timestamp: Date.now()
+              timestamp: baseTimestamp
             });
           }
           break;
@@ -343,11 +345,11 @@ export class ParallelValidationEngine {
           // Validaciones quirúrgicas: Cirugías pélvicas
           if (input.pelvicSurgeriesNumber !== undefined) {
             tasks.push({
-              id: `surgeries-${Date.now()}`,
+              id: `surgeries-${baseTimestamp}`,
               type: 'range',
               data: { value: input.pelvicSurgeriesNumber, field: 'surgeries' },
               priority: 'low',
-              timestamp: Date.now()
+              timestamp: baseTimestamp
             });
           }
           break;
@@ -489,21 +491,17 @@ export class ParallelValidationEngine {
     
     // Lógica simplificada de validación de rango
     let isValid = true;
-    let severityLevel: 'high' | 'medium' | 'low' = 'low';
     
     if (value !== undefined && field) {
       switch (field) {
         case 'amh':
           isValid = value >= 1 && value <= 20;
-          severityLevel = this.calculateAmhSeverity(value);
           break;
         case 'bmi':
           isValid = value >= 18.5 && value <= 30;
-          severityLevel = this.calculateBmiSeverity(value);
           break;
         case 'age':
           isValid = value >= 18 && value <= 45;
-          severityLevel = this.calculateAgeSeverity(value);
           break;
         default:
           break;
@@ -549,12 +547,13 @@ export class ParallelValidationEngine {
     _input: UserInput, 
     categories: ValidationCategory[]
   ): string {
+    const sortedCategories = [...categories].sort((a, b) => a.localeCompare(b));
     const inputHash = JSON.stringify({
       age: _input.age,
       bmi: _input.bmi,
       amh: _input.amh,
       tsh: _input.tsh,
-      categories: categories.sort()
+      categories: sortedCategories
     });
     
     return `parallel_${btoa(inputHash).substring(0, 16)}`;
@@ -574,11 +573,8 @@ export class ParallelValidationEngine {
       return null;
     }
     
-    // Reconstruir mapa de resultados
-    const results = new Map<ValidationCategory, ValidationResult[]>();
-    results.set(cached.category, cached.results);
-    
-    return results;
+    // Retornar mapa completo de resultados
+    return cached.results;
   }
 
   /**
@@ -589,19 +585,13 @@ export class ParallelValidationEngine {
     results: Map<ValidationCategory, ValidationResult[]>,
     _input: UserInput
   ): void {
-    // Por simplicidad, guardar primera categoría encontrada
-    const firstEntry = results.entries().next().value;
-    if (firstEntry) {
-      const [category, categoryResults] = firstEntry;
-      
-      this.cache.set(cacheKey, {
-        category,
-        results: categoryResults,
-        inputHash: cacheKey,
-        timestamp: Date.now(),
-        parallelProcessingTime: performance.now() - this.performanceMonitor.startTime
-      });
-    }
+    // Guardar todo el mapa de resultados
+    this.cache.set(cacheKey, {
+      results,
+      inputHash: cacheKey,
+      timestamp: Date.now(),
+      parallelProcessingTime: performance.now() - this.performanceMonitor.startTime
+    });
   }
 
   /**

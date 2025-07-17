@@ -29,19 +29,26 @@ export function useBenchmark(formData: FormState) {
     const benchmarkTime = performance.now() - startTime;
     
     const performanceReport: PerformanceReport = {
-      completionRate,
-      qualityScore,
-      executionTime: benchmarkTime,
-      timestamp: new Date(),
-      cacheEfficiency: 85, // Placeholder - se puede conectar con cache real
-      recommendation: _generateRecommendation(completionRate, qualityScore)
+      renderCount: 1,
+      totalMeasurements: 1,
+      averageTime: benchmarkTime,
+      lastMeasurement: benchmarkTime,
+      operations: [{
+        name: 'benchmark_calculation',
+        duration: benchmarkTime,
+        timestamp: Date.now()
+      }]
     };
     
     return {
       performanceReport,
       isOptimal: completionRate >= 80 && qualityScore >= 90,
       needsImprovement: qualityScore < 70,
-      getBenchmarkData: () => performanceReport
+      getBenchmarkData: () => performanceReport,
+      // Métricas adicionales del formulario
+      completionRate,
+      qualityScore,
+      recommendation: _generateRecommendation(completionRate, qualityScore)
     };
   }, [formData]);
 }
