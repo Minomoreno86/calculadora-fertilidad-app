@@ -4,6 +4,8 @@ import * as reportGenerator from '../logic/reportGenerator';
 // 🔧 FASE 1: ValidationResult redefinido internamente para evitar conflictos
 // import { ValidationResult, FieldValidationResult } from '../validation/clinicalValidators';
 import { ValidationMessage } from '../validation/validationMessages';
+// 🚀 SISTEMA DE LOGGING INTELIGENTE Y OPTIMIZADO
+import { smartLogger, cacheHit, cacheSave, cacheCleanup, calculationEnd } from '../../utils/smartLogger';
 
 // ===================================================================
 // 🚀 FASE 3A: SISTEMA DE CACHE INTELIGENTE UPGRADE - 95% EFICIENCIA
@@ -123,7 +125,8 @@ class CalculationEngineCache {
     }
     
     const hashStr = Math.abs(hash).toString(36);
-    console.log(`🔑 Hash mejorado generado: ${hashStr} para input:`, {
+    // 🚀 SMART LOGGING: Hash generation con información contextual
+    smartLogger.verbose('cache', `🔑 Hash generado: ${hashStr}`, {
       age: input.age,
       bmi: input.bmi,
       endometriosisGrade: input.endometriosisGrade,
@@ -156,7 +159,8 @@ class CalculationEngineCache {
       const compressionRatio = Math.max(0.3, Math.random() * 0.4 + 0.3); // 30-70% compresión
       const compressedSize = Math.floor(originalSize * compressionRatio);
       
-      console.log(`🗜️ Datos comprimidos: ${originalSize}B → ${compressedSize}B (${Math.round((1-compressionRatio)*100)}% ahorro)`);
+      // 🚀 SMART LOGGING: Compresión con métricas optimizadas
+      smartLogger.debug('cache', `🗜️ Compresión: ${originalSize}B → ${compressedSize}B (${Math.round((1-compressionRatio)*100)}% ahorro)`);
       
       this.metrics.compressionSavings += (originalSize - compressedSize);
       
@@ -270,9 +274,11 @@ class CalculationEngineCache {
       if (this.preloadQueue.has(hash)) {
         this.metrics.predictiveHits++;
         this.preloadQueue.delete(hash);
-        console.log(`🎯🔮 PREDICTIVE CACHE HIT - Validación: ${hash}`);
+        // � SMART LOGGING: Cache hit predictivo
+        cacheHit(hash, entry.compressionRatio, true);
       } else {
-        console.log(`🎯 CACHE HIT - Validación: ${hash}`);
+        // 🚀 SMART LOGGING: Cache hit normal
+        cacheHit(hash, entry.compressionRatio, false);
       }
       
       // 🆕 Triggear preload predictivo
@@ -318,7 +324,8 @@ class CalculationEngineCache {
       lastAccessTime: Date.now() // 🆕
     });
     
-    console.log(`💾 CACHE SAVE MEJORADO - Validación: ${hash} (compresión: ${Math.round((1-compressionRatio)*100)}%, predictive: ${predictiveScore.toFixed(2)})`);
+    // � SMART LOGGING: Cache save con métricas
+    cacheSave(hash, compressionRatio, predictiveScore);
   }
 
   // 🆕 LIMPIEZA INTELIGENTE DE CACHE - LRU + Predictive + Time-based
@@ -363,8 +370,8 @@ class CalculationEngineCache {
       this.metrics.cacheEvictions++;
     }
     
-    console.log(`🧹 CACHE CLEANUP AVANZADO - Eliminadas ${toRemove} entradas:`, removedHashes);
-    console.log(`📊 Conservadas ${entries.length - toRemove} entradas más valiosas`);
+    // 🚀 SMART LOGGING: Cache cleanup con métricas optimizadas
+    cacheCleanup(toRemove, entries.length - toRemove, removedHashes);
   }
 
   // 📊 OBTENER MÉTRICAS DE RENDIMIENTO AVANZADAS
@@ -462,7 +469,21 @@ class CalculationEngineCache {
     console.log(`   - Cache actual: ${this.validationCache.size}/${this.MAX_CACHE_SIZE}`);
   }
 
-  // 🔄 Reset métricas
+  // � MÉTODOS SEGUROS PARA ACTUALIZAR MÉTRICAS
+  incrementCalculations(): void {
+    this.metrics.totalCalculations++;
+  }
+
+  updateAverageExecutionTime(newTime: number): void {
+    const currentAvg = this.metrics.averageExecutionTime;
+    this.metrics.averageExecutionTime = (currentAvg + newTime) / 2;
+  }
+
+  updateParallelizationGains(gains: number): void {
+    this.metrics.parallelizationGains = gains;
+  }
+
+  // �🔄 Reset métricas
   resetMetrics(): void {
     this.metrics = {
       cacheHits: 0,
@@ -1050,21 +1071,7 @@ function _generateReport(numericPrognosis: number, diagnostics: Diagnostics, use
 
 // 🚀 FUNCIÓN PRINCIPAL OPTIMIZADA CON CACHE Y PARALELIZACIÓN
 export function calculateProbability(userInput: UserInput): EvaluationState {
-  console.log('🚀 INICIANDO calculateProbability OPTIMIZADO con input:', userInput);
-  
-  // 🔧 LOG DETALLADO DE CAMPOS PROBLEMÁTICOS
-  console.log('🔧 CAMPOS CRÍTICOS PARA DEBUGGING:', {
-    endometriosisGrade: userInput.endometriosisGrade,
-    myomaType: userInput.myomaType,
-    adenomyosisType: userInput.adenomyosisType,
-    polypType: userInput.polypType,
-    hsgResult: userInput.hsgResult,
-    pelvicSurgeriesNumber: userInput.pelvicSurgeriesNumber,
-    prolactin: userInput.prolactin,
-    tsh: userInput.tsh,
-    homaIr: userInput.homaIr
-  });
-  
+  // 🚀 LOGGING OPTIMIZADO: Solo logging esencial
   const overallStartTime = performance.now();
   let validationMetrics: Partial<AdvancedPerformanceMetrics> = {};
   let factorMetrics: Partial<AdvancedPerformanceMetrics> = {};
@@ -1184,13 +1191,14 @@ export function calculateProbability(userInput: UserInput): EvaluationState {
     report: report,
   };
 
-  // Actualizar métricas globales
-  engineCache.getMetrics().totalCalculations++;
-  const currentAvg = engineCache.getMetrics().averageExecutionTime;
-  const newAvg = (currentAvg + finalMetrics.totalTime) / 2;
-  engineCache.getMetrics().averageExecutionTime = newAvg;
+  // Actualizar métricas globales usando métodos seguros
+  engineCache.incrementCalculations();
+  engineCache.updateAverageExecutionTime(finalMetrics.totalTime);
 
-  console.log('🎯 Evaluación final optimizada completa:', finalEvaluation);
+  // 🚀 LOGGING INTELIGENTE: Log final
+  const totalDuration = performance.now() - overallStartTime;
+  calculationEnd(finalEvaluation, totalDuration);
+  
   return finalEvaluation;
 }
 

@@ -1,6 +1,6 @@
 // src/presentation/features/results/components/ResultsDisplay.tsx
 import React from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { EvaluationState, TreatmentSuggestion } from '@/core/domain/models'; // Importa EvaluationState y TreatmentSuggestion
 
 // Importación de componentes de UI reutilizables
@@ -27,7 +27,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ evaluation, trea
   const { report } = evaluation;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <View style={styles.container}>
       {/* --- Card de Resultado Principal --- */}
       <PrognosisCard report={report} />
 
@@ -55,18 +55,14 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ evaluation, trea
           <TreatmentCard suggestions={treatmentSuggestions} />
         </Accordion>
       )}
-    </ScrollView>
+    </View>
   );
 };
 
 // 🎨 Función para crear estilos dinámicos
 const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: theme.colors.background,
-  },
-  contentContainer: {
-    padding: 16,
-    paddingBottom: 32,
+    gap: 16, // Espaciado entre componentes
   },
 });

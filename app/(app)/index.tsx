@@ -4,11 +4,8 @@ import Text from '@/presentation/components/common/Text';
 import { Button, EnhancedButton } from '@/presentation/components/common/EnhancedButton';
 import { ConditionalProgressDisplay } from '@/presentation/features/calculator/components/ConditionalProgressDisplay';
 import { EnhancedInfoCard } from '@/presentation/components/common';
-import { EnhancedValidationMonitor } from '@/presentation/components/common/EnhancedValidationMonitor';
-
-// 🚀 FASE 3B: PREDICCIÓN AVANZADA CON IA
-import PredictiveInsights from '@/presentation/components/features/PredictiveInsights';
-import { convertFormDataToUserInput, validateUserInputForPrediction } from '@/presentation/utils/formDataAdapter';
+// 🚀 VALIDACIÓN PARALELA AVANZADA: Monitor especializado
+import ParallelValidationMonitor from '@/presentation/components/common/ParallelValidationMonitor';
 
 // 🚀 CALCULADORA PRINCIPAL CON VALIDACIÓN INTEGRADA
 import { useCalculatorForm } from '@/presentation/features/calculator/useCalculatorForm';
@@ -75,7 +72,7 @@ interface CalculatorScreenContentProps {
 function CalculatorScreenContent({ 
   configModalVisible, 
   setConfigModalVisible,
-  onValidationMetricsUpdate
+  onValidationMetricsUpdate: _onValidationMetricsUpdate
 }: CalculatorScreenContentProps) {
 
   // 🚨 FASE 2A: Detector de re-renders excesivos
@@ -101,17 +98,6 @@ function CalculatorScreenContent({
 
   // Valores por defecto para compatibilidad
   const errors = formState?.errors ?? {};
-  const criticalErrors: string[] = [];
-  const suggestions: string[] = [];
-  const isValidating = false;
-  const validationMetrics = React.useMemo(() => ({
-    performance: {
-      averageTaskTime: 0,
-      cacheHitRate: 0,
-      tasksPerSecond: 0,
-      efficiency: 'N/A' as string
-    }
-  }), []);
 
   // 📊 ESTABILIZACIÓN DE DATOS DEL FORMULARIO (Anti-Loop)
   const watchedFieldsRef = React.useRef<string>('{}');
@@ -157,36 +143,25 @@ function CalculatorScreenContent({
     return completionPercentage > 20; // Puede calcular con 20% de completitud
   }, [completionPercentage]);
 
-  // 🚀 FASE 2A: Actualizar métricas en el componente padre (ESTABILIZADO)
-  const validationMetricsString = JSON.stringify(validationMetrics ?? {});
-  const lastMetricsRef = React.useRef<string>('{}');
-  
-  React.useEffect(() => {
-    if (onValidationMetricsUpdate && validationMetricsString !== lastMetricsRef.current) {
-      lastMetricsRef.current = validationMetricsString;
-      onValidationMetricsUpdate(validationMetrics);
-    }
-  }, [validationMetricsString, onValidationMetricsUpdate, validationMetrics]);
-
   // 🎨 Crear estilos dinámicos basados en el tema actual
   const styles = createStyles(theme);
 
   const stepLabels = ['Demografia', 'Ginecología', 'Laboratorio', 'Factor Masculino'];
 
-  // 💡 Helper para mensaje de completitud
+  // 💡 Helper para mensaje de completitud (SIMPLIFICADO)
   const getCompletionMessage = () => {
     if (completionPercentage < 40) {
-      return "💡 Funciona con datos mínimos - Puedes generar un informe básico ahora";
+      return "Puedes generar un informe básico con los datos actuales";
     }
     if (completionPercentage < 70) {
-      return "✅ Buenos datos disponibles - El informe será útil y preciso";
+      return "Buenos datos disponibles para un informe útil";
     }
-    return "🏆 Datos completos - Obtendrás el análisis más detallado";
+    return "Datos completos para el análisis más detallado";
   };
 
-  // 💡 Helper para título del botón
+  // 💡 Helper para título del botón (SIMPLIFICADO)
   const getButtonTitle = () => {
-    return completionPercentage >= 70 ? "Generar Informe Completo" : "Generar Informe con Datos Disponibles";
+    return "Generar Informe de Fertilidad";
   };
 
   return (
@@ -262,90 +237,22 @@ function CalculatorScreenContent({
           </View>
         )}
 
-        {/* 🧠 SISTEMA INTELIGENTE DE VALIDACIÓN CLÍNICA - ACTIVADO */}
+        {/* 🚀 VALIDACIÓN PARALELA AVANZADA - Sistema Inteligente Completo */}
         <View style={styles.intelligentValidationContainer}>
           <SimpleValidationIntegrator
             formData={formData}
             onValidationChange={React.useCallback((isValid: boolean, canProceed: boolean) => {
-              // El sistema inteligente proporciona feedback de patrones complejos
-              console.log('🧠 Validación inteligente:', { isValid, canProceed });
+              console.log('🚀 Validación paralela avanzada:', { isValid, canProceed });
             }, [])}
             onActionRequired={React.useCallback((insight: unknown) => {
-              // Manejar insights clínicos avanzados (ej: contactar especialista)
-              console.log('🚨 Acción clínica requerida:', insight);
+              console.log('🚨 Acción paralela requerida:', insight);
             }, [])}
             showInlineAlerts={true}
+            showMedicalAnalysis={false}
+            basicValidationOnly={false}
             style={{ marginTop: 16 }}
           />
-
-          {/* 🚀 FASE 2A: Indicadores de validación paralela */}
-          {isValidating && (
-            <View style={styles.validationStatusContainer}>
-              <Text variant="caption" style={styles.validationStatusText}>
-                🔄 Validación paralela en progreso...
-              </Text>
-            </View>
-          )}
-
-          {/* 🚨 Errores críticos de validación paralela */}
-          {criticalErrors && criticalErrors.length > 0 && (
-            <View style={styles.criticalErrorsContainer}>
-              <Text variant="bodyBold" style={styles.criticalErrorsTitle}>
-                ⚠️ Atención Requerida
-              </Text>
-              {criticalErrors.slice(0, 2).map((error, index) => (
-                <Text key={`error-${error.slice(0, 20)}-${index}`} variant="caption" style={styles.criticalErrorText}>
-                  • {error}
-                </Text>
-              ))}
-            </View>
-          )}
-
-          {/* 💡 Sugerencias de la validación paralela */}
-          {suggestions && suggestions.length > 0 && !criticalErrors?.length && (
-            <View style={styles.suggestionsContainer}>
-              <Text variant="bodyBold" style={styles.suggestionsTitle}>
-                💡 Sugerencias
-              </Text>
-              {suggestions.slice(0, 2).map((suggestion, suggestionIndex) => (
-                <Text key={`suggestion-${suggestion.slice(0, 20)}-${suggestionIndex}`} variant="caption" style={styles.suggestionText}>
-                  • {suggestion}
-                </Text>
-              ))}
-            </View>
-          )}
         </View>
-
-        {/* 🚀 FASE 3B: PREDICCIÓN AVANZADA CON INTELIGENCIA ARTIFICIAL */}
-        {completionPercentage > 30 && (() => {
-          // Convertir formData a UserInput usando el adaptador
-          const userInputForIA = convertFormDataToUserInput(formData);
-          const validation = validateUserInputForPrediction(userInputForIA);
-          
-          // Solo mostrar si hay datos suficientes
-          if (!validation.isValid) {
-            return null;
-          }
-
-          return (
-            <View style={styles.predictiveInsightsContainer}>
-              <PredictiveInsights
-                userInput={userInputForIA}
-                onTreatmentSelect={(treatmentId: string) => {
-                  console.log('🎯 Tratamiento seleccionado:', treatmentId);
-                  // Navegar a la sección específica del tratamiento
-                  // En futuras versiones se implementará navegación completa
-                }}
-                onRecommendationAction={(action: string, data: unknown) => {
-                  console.log('💡 Acción de recomendación:', action, data);
-                  // Las acciones específicas se implementarán en futuras versiones
-                  // Por ahora solo se loggean para debugging
-                }}
-                style={styles.predictiveInsights}
-              />
-            </View>
-          );
-        })()}
 
         <View style={styles.buttonContainer}>
           <EnhancedButton
@@ -385,31 +292,20 @@ function CalculatorScreenContent({
           </View>
         </View>
 
-        {/* 💡 Tarjeta de completitud mejorada */}
+        {/* 💡 Información básica de progreso */}
         <EnhancedInfoCard
-          type="success"
-          title="Progreso del Cálculo"
-          message={`Completitud: ${completionPercentage}% - Datos suficientes para análisis clínico`}
+          type="info"
+          title="Progreso del Formulario"
+          message={`${completionPercentage}% completado - Listo para calcular`}
           showIcon={true}
-          animated={true}
+          animated={false}
         />
 
-        {/* 🚀 MONITOR DE VALIDACIÓN PARALELA - Solo en desarrollo */}
+        {/* 🚀 MONITOR DE VALIDACIÓN PARALELA AVANZADA - Solo en desarrollo */}
         {__DEV__ && (
-          <EnhancedValidationMonitor
-            isValidating={isValidating || false}
-            progress={0}
-            metrics={{
-              isValidating: isValidating || false,
-              progress: 0,
-              totalTasks: 0,
-              completedTasks: 0,
-              averageTaskTime: validationMetrics?.performance?.averageTaskTime || 0,
-              cacheHitRate: validationMetrics?.performance?.cacheHitRate || 0,
-              tasksPerSecond: validationMetrics?.performance?.tasksPerSecond || 0,
-              efficiency: validationMetrics?.performance?.efficiency || 'N/A',
-            }}
-            showDevInfo={true}
+          <ParallelValidationMonitor
+            compact={true}
+            showAdvancedMetrics={true}
           />
         )}
 
@@ -498,64 +394,5 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     color: theme.colors.textSecondary,
     marginTop: theme.spacing.s,
     paddingHorizontal: theme.spacing.l,
-  },
-  // 🚀 FASE 2A: Estilos para validación paralela premium
-  validationStatusContainer: {
-    backgroundColor: theme.colors.primary + '10',
-    padding: theme.spacing.s,
-    borderRadius: theme.spacing.xs,
-    marginTop: theme.spacing.s,
-    alignItems: 'center',
-  },
-  validationStatusText: {
-    color: theme.colors.primary,
-    fontWeight: 'bold',
-  },
-  criticalErrorsContainer: {
-    backgroundColor: theme.colors.error + '10',
-    padding: theme.spacing.s,
-    borderRadius: theme.spacing.xs,
-    marginTop: theme.spacing.s,
-    borderLeftWidth: 3,
-    borderLeftColor: theme.colors.error,
-  },
-  criticalErrorsTitle: {
-    color: theme.colors.error,
-    marginBottom: theme.spacing.xs,
-  },
-  criticalErrorText: {
-    color: theme.colors.error,
-  },
-  // 🚀 FASE 3B: Estilos para predicción avanzada con IA
-  predictiveInsightsContainer: {
-    marginHorizontal: theme.spacing.screen,
-    marginBottom: theme.spacing.m,
-  },
-  predictiveInsights: {
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.spacing.m,
-    overflow: 'hidden',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  suggestionsContainer: {
-    backgroundColor: theme.colors.info + '10',
-    padding: theme.spacing.s,
-    borderRadius: theme.spacing.xs,
-    marginTop: theme.spacing.s,
-    borderLeftWidth: 3,
-    borderLeftColor: theme.colors.info,
-  },
-  suggestionsTitle: {
-    color: theme.colors.info,
-    marginBottom: theme.spacing.xs,
-  },
-  suggestionText: {
-    color: theme.colors.info,
-    marginLeft: theme.spacing.s,
-    lineHeight: 18,
   },
 });

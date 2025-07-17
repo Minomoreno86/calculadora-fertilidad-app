@@ -370,6 +370,12 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
   ]);
 
   const handleCalculate: SubmitHandler<FormState> = async (data) => {
+    // 🛡️ PROTECCIÓN CONTRA EJECUCIÓN MÚLTIPLE
+    if (isLoading) {
+      console.log('⚠️ CÁLCULO YA EN PROGRESO - Ignorando clic adicional');
+      return;
+    }
+
     try {
       setIsLoading(true);
       

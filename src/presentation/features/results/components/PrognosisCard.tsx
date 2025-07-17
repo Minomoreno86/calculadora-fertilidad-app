@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Text from '../../../components/common/Text';
 import Box from '../../../components/common/Box';
 import { Report } from '../../../../core/domain/models';
@@ -14,10 +14,19 @@ export const PrognosisCard: React.FC<Props> = ({ report }) => {
     return theme.colors.error;
   };
 
+  const prognosisColor = getPrognosisColor();
+
   return (
     <Box style={styles.mainResultCard}>
       <Text style={styles.emoji}>{report.emoji}</Text>
-      <Text style={[styles.prognosisValue, { color: getPrognosisColor() }]}>{report.numericPrognosis.toFixed(1)}%</Text>
+      
+      {/* 🎯 CÍRCULO VERDE CON LA PROBABILIDAD */}
+      <View style={[styles.circleContainer, { borderColor: prognosisColor }]}>
+        <Text style={[styles.prognosisValue, { color: prognosisColor }]}>
+          {report.numericPrognosis.toFixed(1)}%
+        </Text>
+      </View>
+      
       <Text style={styles.prognosisLabel}>Probabilidad por Ciclo</Text>
       <Text style={styles.prognosisPhrase}>{report.prognosisPhrase}</Text>
       <Text style={styles.benchmarkPhrase}>{report.benchmarkPhrase}</Text>
@@ -36,10 +45,22 @@ const styles = StyleSheet.create({
     fontSize: 60,
     marginBottom: theme.spacing.m,
   },
+  // 🎯 CÍRCULO VERDE PARA LA PROBABILIDAD
+  circleContainer: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    borderWidth: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: theme.spacing.m,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
   prognosisValue: {
     ...theme.typography.h1,
-    fontSize: 72, // Override for extra large display
-    lineHeight: 80,
+    fontSize: 32,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   prognosisLabel: {
     ...theme.typography.body,

@@ -17,7 +17,13 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { UserInput } from '../../core/domain/models';
-import { predictFertilityOutcomeAdvanced, getPredictionEngineMetrics, type PredictionResult, type PredictionInput } from '../../core/domain/services/predictiveEngine';
+import { 
+  predictFertilityOutcomeAdvanced, 
+  getPredictionEngineMetrics, 
+  type PredictionResult, 
+  type PredictionInput,
+  type UserPreferences 
+} from '../../core/domain/services/predictiveEngine';
 
 // ===================================================================
 // 🎯 TIPOS PARA EL HOOK
@@ -35,7 +41,7 @@ interface UsePredictionOptions {
   enableCaching?: boolean;
   
   // Personalización
-  userPreferences?: PredictionInput['sessionContext']['userPreferences'];
+  userPreferences?: UserPreferences;
   priority?: 'speed' | 'accuracy' | 'balanced';
 }
 
@@ -67,7 +73,7 @@ interface PredictionActions {
   
   // Utilidades
   retry: () => Promise<void>;
-  updatePreferences: (preferences: Partial<PredictionInput['sessionContext']['userPreferences']>) => void;
+  updatePreferences: (preferences: Partial<UserPreferences>) => void;
   
   // Métricas
   getMetrics: () => ReturnType<typeof getPredictionEngineMetrics>;
@@ -82,14 +88,19 @@ type UsePredictionReturn = [PredictionState, PredictionActions];
 export function usePrediction(options: UsePredictionOptions = {}): UsePredictionReturn {
   const {
     engineVersion = 'premium',
-    autoPredict = true,
+    autoPredict = true, // TODO: Implementar auto-predicción
     debounceMs = 1000,
-    enableRealTimeUpdates = true,
+    enableRealTimeUpdates = true, // TODO: Implementar actualizaciones en tiempo real
     enablePerformanceMonitoring = true,
     enableCaching = true,
     userPreferences,
-    priority = 'balanced'
+    priority = 'balanced' // TODO: Implementar prioridades
   } = options;
+
+  // Suprimir advertencias de variables destinadas para implementación futura
+  void autoPredict;
+  void enableRealTimeUpdates;
+  void priority;
 
   // ===================================================================
   // 🏗️ ESTADO LOCAL
@@ -111,11 +122,34 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
   });
 
   // Referencias para optimización
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastInputRef = useRef<UserInput | null>(null);
   const cacheRef = useRef<Map<string, { result: PredictionResult; timestamp: number }>>(new Map());
   const metricsRef = useRef({ hits: 0, misses: 0 });
   const preferencesRef = useRef(userPreferences);
+
+  // Función auxiliar para calcular cache hit rate
+  const calculateCacheHitRate = useCallback((): number => {
+    const { hits, misses } = metricsRef.current;
+    const total = hits + misses;
+    
+    return total === 0 ? 0 : Math.round((hits / total) * 100);
+  }, []);
+
+  // Función auxiliar para limpiar cache
+  const cleanupCache = useCallback((): void => {
+    const now = Date.now();
+    const fiveMinutesAgo = now - (5 * 60 * 1000);
+    
+    // ✅ Compatibilidad React Native: usar Array.from para iteradores
+    for (const [key, value] of Array.from(cacheRef.current.entries())) {
+      if (value.timestamp < fiveMinutesAgo) {
+        cacheRef.current.delete(key);
+      }
+    }
+    
+    console.log('🧹 Cache limpiado automáticamente');
+  }, []);
 
   // ===================================================================
   // 🎯 FUNCIÓN PRINCIPAL DE PREDICCIÓN
@@ -173,10 +207,7 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
       };
 
       // Ejecutar predicción
-      const predictionResult = predictFertilityOutcomeAdvanced(userInput, {
-        engineVersion,
-        includeTimeline: true,
-        includeTreatmentOptimization: true,
+      const predictionResult = await predictFertilityOutcomeAdvanced(userInput, {
         sessionContext
       });
 
@@ -247,6 +278,9 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
     }, debounceMs);
   }, [predict, debounceMs]);
 
+  // Suprimir advertencia: será usado en implementación futura
+  void debouncedPredict;
+
   // ===================================================================
   // 🔧 ACCIONES AUXILIARES
   // ===================================================================
@@ -284,11 +318,22 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
     }
   }, [predict]);
 
-  const updatePreferences = useCallback((newPreferences: Partial<PredictionInput['sessionContext']['userPreferences']>) => {
-    preferencesRef.current = {
-      ...preferencesRef.current,
-      ...newPreferences
-    };
+  const updatePreferences = useCallback((newPreferences: Partial<UserPreferences>) => {
+    if (preferencesRef.current) {
+      preferencesRef.current = {
+        ...preferencesRef.current,
+        ...newPreferences
+      };
+    } else {
+      // Si no hay preferencias previas, crear objeto base
+      preferencesRef.current = {
+        preferredTreatmentCategory: 'moderate',
+        riskTolerance: 'medium',
+        timelinePreference: 'planned',
+        budgetConsiderations: 'basic',
+        ...newPreferences
+      } as UserPreferences;
+    }
     
     console.log('🎯 Preferencias de usuario actualizadas');
   }, []);
@@ -358,26 +403,6 @@ function generateCacheKey(userInput: UserInput, engineVersion: string): string {
   };
   
   return btoa(JSON.stringify(keyData)).substring(0, 16);
-}
-
-function calculateCacheHitRate(): number {
-  const { hits, misses } = metricsRef.current;
-  const total = hits + misses;
-  
-  return total === 0 ? 0 : Math.round((hits / total) * 100);
-}
-
-function cleanupCache(): void {
-  const now = Date.now();
-  const maxAge = 30 * 60 * 1000; // 30 minutos
-  
-  for (const [key, value] of cacheRef.current.entries()) {
-    if (now - value.timestamp > maxAge) {
-      cacheRef.current.delete(key);
-    }
-  }
-  
-  console.log(`🧹 Cache limpiado. Entradas restantes: ${cacheRef.current.size}`);
 }
 
 function logPerformanceMetrics(result: PredictionResult, processingTime: number): void {

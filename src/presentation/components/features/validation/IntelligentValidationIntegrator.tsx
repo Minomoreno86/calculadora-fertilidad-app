@@ -24,6 +24,8 @@ interface IntelligentValidationIntegratorProps {
   onValidationChange?: (isValid: boolean, canProceed: boolean) => void;
   onActionRequired?: (insight: ClinicalInsight) => void;
   showInlineAlerts?: boolean;
+  showMedicalAnalysis?: boolean;
+  basicValidationOnly?: boolean;
   style?: ViewStyle;
 }
 
@@ -264,6 +266,8 @@ export const IntelligentValidationIntegrator: React.FC<IntelligentValidationInte
   onValidationChange,
   onActionRequired,
   showInlineAlerts = true,
+  showMedicalAnalysis: _showMedicalAnalysis = true,
+  basicValidationOnly = false,
   style
 }) => {
   const [showFullAlertsModal, setShowFullAlertsModal] = useState(false);
@@ -278,9 +282,9 @@ export const IntelligentValidationIntegrator: React.FC<IntelligentValidationInte
     getUrgencyLevel
   } = useIntelligentClinicalValidation(formData, {
     enableRealTimeValidation: true,
-    includeAdvancedInterpretation: true,
-    considerPatientContext: true,
-    prioritizeUrgentFindings: true
+    includeAdvancedInterpretation: !basicValidationOnly,
+    considerPatientContext: !basicValidationOnly,
+    prioritizeUrgentFindings: !basicValidationOnly
   });
 
   // Notificar cambios de validación
@@ -324,17 +328,36 @@ export const IntelligentValidationIntegrator: React.FC<IntelligentValidationInte
   return (
     <>
       <View style={style}>
-        {/* Indicador de estado principal */}
-        <IntelligentStatusIndicator
-          urgencyLevel={urgencyLevel}
-          criticalCount={criticalAlerts.length}
-          warningCount={warnings.length}
-          completionScore={validationResult.completionScore}
-          onPress={() => setShowFullAlertsModal(true)}
-        />
+        {/* Indicador de estado principal - Solo modo básico si basicValidationOnly es true */}
+        {basicValidationOnly ? (
+          // Versión simplificada para captura de datos
+          <Box style={{ 
+            backgroundColor: '#F9FAFB', 
+            borderRadius: 12, 
+            padding: 12,
+            borderWidth: 1,
+            borderColor: '#E5E7EB'
+          }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <ModernIcon name="check" size={16} color="#10B981" style={{ marginRight: 8 }} />
+              <Text variant="small" style={{ color: '#6B7280' }}>
+                Formulario {validationResult.completionScore > 50 ? 'listo' : 'en progreso'} - {Math.round(validationResult.completionScore)}% completado
+              </Text>
+            </View>
+          </Box>
+        ) : (
+          // Versión completa para análisis médico
+          <IntelligentStatusIndicator
+            urgencyLevel={urgencyLevel}
+            criticalCount={criticalAlerts.length}
+            warningCount={warnings.length}
+            completionScore={validationResult.completionScore}
+            onPress={() => setShowFullAlertsModal(true)}
+          />
+        )}
 
-        {/* Alertas inline compactas */}
-        {showInlineAlerts && (
+        {/* Alertas inline compactas - Solo en modo completo */}
+        {!basicValidationOnly && showInlineAlerts && (
           <InlineAlertsCompact
             criticalAlerts={criticalAlerts}
             warnings={warnings}
@@ -342,8 +365,8 @@ export const IntelligentValidationIntegrator: React.FC<IntelligentValidationInte
           />
         )}
 
-        {/* Información de progreso */}
-        {validationResult.missingCriticalData.length > 0 && (
+        {/* Información de progreso - Solo datos faltantes críticos en modo básico */}
+        {validationResult.missingCriticalData.length > 0 && !basicValidationOnly && (
           <Box style={{ marginTop: 16 }}>
             <Text
               variant="bodyBold"
@@ -363,8 +386,8 @@ export const IntelligentValidationIntegrator: React.FC<IntelligentValidationInte
           </Box>
         )}
 
-        {/* Sugerencias de tests */}
-        {validationResult.suggestedNextTests.length > 0 && (
+        {/* Sugerencias de tests - Solo en modo completo (MOVER A RESULTS) */}
+        {!basicValidationOnly && validationResult.suggestedNextTests.length > 0 && (
           <Box style={{ marginTop: 16 }}>
             <Text
               variant="bodyBold"
