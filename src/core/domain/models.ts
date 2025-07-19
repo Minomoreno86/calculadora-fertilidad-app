@@ -133,6 +133,7 @@ export interface Diagnostics {
   adenomyosisComment?: string;
   polypComment?: string;
   hsgComment?: string;
+  otbComment?: string;
   ovarianReserve?: string;
   prolactinComment?: string;
   tshComment?: string;
@@ -154,6 +155,7 @@ export interface Report {
   prognosisPhrase: string;
   benchmarkPhrase: string;
   clinicalInsights: ClinicalFinding[];
+  recommendations?: string[]; // 🚀 Campo agregado para compatibilidad
 }
 
 export interface EvaluationState {

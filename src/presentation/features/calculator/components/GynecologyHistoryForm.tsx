@@ -7,7 +7,7 @@ import { ControlledOptionSelector } from '@/presentation/components/common/Contr
 import { ControlledSwitch } from '@/presentation/components/common/ControlledSwitch';
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 import { OtbMethod } from '@/core/domain/models';
-import { FormState } from '../useCalculatorForm';
+import { FormState } from '../useCalculatorFormOptimized';
 
 // 🚀 FASE 2C: Opciones memoizadas para evitar recreación en cada render
 const ENDOMETRIOSIS_OPTIONS = [

@@ -10,7 +10,7 @@ import { InfoCard } from '@/presentation/components/common/InfoCard';
 import { theme } from '@/config/theme';
 
 // Importar hook original sin modificar
-import { useCalculatorForm } from './useCalculatorForm';
+import { useCalculatorFormOptimized as useCalculatorForm } from './useCalculatorFormOptimized';
 
 // Componentes originales
 import { DemographicsForm } from './components/DemographicsForm';

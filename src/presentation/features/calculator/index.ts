@@ -1,14 +1,14 @@
 // ===================================================================
-// 🎯 ÍNDICE DE EXPORTACIONES - CALCULADORA DE FERTILIDAD
+// 🎯 ÍNDICE DE EXPORTACIONES - CALCULADORA DE FERTILIDAD CONSOLIDADO
 // ===================================================================
 
-// 🚀 Hook principal original
-export { useCalculatorForm } from './useCalculatorFormModular';
-export type { UseCalculatorFormReturn } from './useCalculatorFormModular';
-
-// 🚀 NUEVO: Hook mejorado con validación paralela
-// Hook principal de calculadora con funcionalidades completas
+// 🚀 Hook principal unificado (versión corregida y consolidada)
 export { useCalculatorForm } from './useCalculatorForm';
+export type { UseCalculatorFormReturn } from './useCalculatorForm';
+
+// 🚀 Hook modular avanzado (funcionalidades premium)
+export { useCalculatorForm as useCalculatorFormModular } from './useCalculatorFormModular';
+export type { UseCalculatorFormReturn as UseCalculatorFormModularReturn } from './useCalculatorFormModular';
 
 // 🚀 NUEVO: Hook de validación paralela independiente
 export { useCalculatorParallelValidation } from './hooks/useCalculatorParallelValidation';

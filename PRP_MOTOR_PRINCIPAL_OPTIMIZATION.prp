@@ -1,0 +1,180 @@
+# 🚀 PRP: MOTOR PRINCIPAL - REVISIÓN Y OPTIMIZACIÓN INTEGRAL
+
+## 📋 **PROYECTO**: Optimización del Motor Principal de Fertilidad
+
+### 🎯 **OBJETIVOS PRINCIPALES**
+1. **Auditoria completa** del motor principal de cálculo
+2. **Identificar y corregir errores** en la arquitectura
+3. **Optimizar performance** y precisión clínica
+4. **Consolidar la arquitectura dual** (básico + premium)
+5. **Mejorar integración** con sistema paralelo FASE 2
+
+---
+
+## 📊 **ANÁLISIS DE ARQUITECTURA ACTUAL**
+
+### **🏗️ COMPONENTES IDENTIFICADOS**
+
+#### **A. Motor Principal (`calculationEngine.ts`)**
+- ✅ **Estado**: Funcional, sin errores de compilación
+- 🔍 **Función**: Cálculo base con cache y paralelización
+- ⚡ **Performance**: Optimizado con métricas avanzadas
+- 🧩 **Integración**: Conectado a validación paralela
+
+#### **B. Motor Premium (`calculationEnginePremium.ts`)**  
+- ✅ **Estado**: Funcional, en uso activo
+- 🔍 **Función**: 20+ reglas de interacciones no lineales
+- 🎯 **Casos de Uso**: IA predictiva, simulador UX
+- 🧬 **Especialización**: Casos clínicos complejos
+
+#### **C. Orquestador (`calculationEngineIntegration.ts`)**
+- ✅ **Estado**: FASE 2 implementada
+- 🔍 **Función**: Coordinación inteligente motor principal + paralelo
+- ⚡ **Decisión**: Análisis automático de complejidad
+- 📈 **Métricas**: Performance tracking avanzado
+
+#### **D. Validación Paralela (`parallelValidationEngine_FASE2.ts`)**
+- ✅ **Estado**: Activo (93% mejora confirmada)
+- 🔍 **Función**: Validación paralela por categorías
+- 💾 **Cache**: TTL + LRU operativo
+- 🚀 **Integración**: Contexto React global
+
+---
+
+## 🔍 **PROBLEMAS IDENTIFICADOS**
+
+### **1. REDUNDANCIA ARQUITECTÓNICA**
+```
+❌ PROBLEMA: Dual engine con solapamiento funcional
+calculationEngine.ts + calculationEnginePremium.ts = Lógica duplicada
+```
+
+### **2. COMPLEJIDAD DE DECISIÓN**
+```
+❌ PROBLEMA: Múltiples puntos de decisión motor básico vs premium
+- useFertilitySimulator.ts (línea 444)
+- predictiveEngine.ts (línea 236) 
+- calculationEngineIntegration.ts (análisis complejidad)
+```
+
+### **3. INCONSISTENCIA DE API**
+```
+❌ PROBLEMA: Diferentes firmas de función
+calculateProbability(userInput) ≠ calculateProbabilityPremium(userInput)
+```
+
+### **4. MAINTAINABILITY**
+```
+❌ PROBLEMA: Dos codebases para mantener
+Cambios médicos → Actualizar en 2 motores diferentes
+```
+
+---
+
+## 🎯 **PLAN DE OPTIMIZACIÓN**
+
+### **FASE 1: CONSOLIDACIÓN INTELIGENTE**
+1. **Analizar dependencias** de calculationEnginePremium
+2. **Migrar lógica crítica** al motor principal
+3. **Crear sistema de "modos"** en motor unificado
+4. **Preservar casos de uso** existentes
+
+### **FASE 2: OPTIMIZACIÓN DE PERFORMANCE**
+1. **Unificar cache** entre motores
+2. **Optimizar métricas** de performance
+3. **Mejorar paralelización** de cálculos complejos
+4. **Streamline logging** y debugging
+
+### **FASE 3: CONSOLIDACIÓN DE API**
+1. **API unificada** con parámetros de configuración
+2. **Backward compatibility** para código existente  
+3. **Documentación actualizada**
+4. **Tests de integración**
+
+### **FASE 4: VALIDACIÓN CLÍNICA**
+1. **Verificar precisión** de cálculos migrados
+2. **Validar casos edge** con interacciones complejas
+3. **Performance benchmarks**
+4. **Regression testing**
+
+---
+
+## 🔧 **IMPLEMENTATION PLAN**
+
+### **STEP 1: DEPENDENCY ANALYSIS**
+- [ ] Identificar todas las importaciones de `calculationEnginePremium`
+- [ ] Mapear casos de uso específicos
+- [ ] Analizar interacciones no lineales críticas
+
+### **STEP 2: UNIFIED ENGINE DESIGN**
+- [ ] Diseñar parámetro de configuración `engineMode: 'standard' | 'premium' | 'auto'`
+- [ ] Crear función unificada `calculateProbabilityUnified(userInput, options)`
+- [ ] Migrar lógica de interacciones no lineales
+
+### **STEP 3: MIGRATION**
+- [ ] Actualizar `predictiveEngine.ts` 
+- [ ] Actualizar `useFertilitySimulator.ts`
+- [ ] Actualizar `calculationEngineIntegration.ts`
+- [ ] Crear adaptadores de compatibilidad
+
+### **STEP 4: TESTING & VALIDATION**
+- [ ] Tests unitarios para modo unificado
+- [ ] Tests de regresión vs motores originales
+- [ ] Benchmarks de performance
+- [ ] Validación clínica de precisión
+
+---
+
+## 🎯 **CRITERIOS DE ÉXITO**
+
+### **Performance**
+- ✅ Mantener o mejorar tiempos de cálculo
+- ✅ Reducir memory footprint en 20%+
+- ✅ Simplificar arquitectura de decisión
+
+### **Funcionalidad**
+- ✅ 100% backward compatibility
+- ✅ Preservar precisión clínica
+- ✅ Mantener casos de uso existentes
+
+### **Maintainability**
+- ✅ Reducir complejidad de código en 30%+
+- ✅ API unificada y consistente
+- ✅ Documentación consolidada
+
+---
+
+## 📋 **VALIDATION COMMANDS**
+
+```bash
+# Compilación sin errores
+npm run type-check
+
+# Tests unitarios
+npm test calculationEngine
+
+# Tests de integración  
+npm test integration
+
+# Performance benchmarks
+node benchmark_unified_engine.js
+
+# Validación clínica
+node validate_clinical_precision.js
+```
+
+---
+
+## 🎯 **DELIVERABLES**
+
+1. **Motor Unificado** (`calculationEngineUnified.ts`)
+2. **API de Migración** (adaptadores de compatibilidad)
+3. **Tests Actualizados** (cobertura 95%+)
+4. **Documentación** (arquitectura consolidada)
+5. **Performance Report** (benchmarks comparativos)
+
+---
+
+*PRP Creado: 17/01/2025*  
+*Versión: Motor Principal V2.0*  
+*Estado: Ready for Execution*

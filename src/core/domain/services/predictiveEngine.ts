@@ -16,7 +16,7 @@
  */
 
 import type { UserInput, EvaluationState, Factors, TreatmentSuggestion } from '../models';
-import { calculateProbability } from './calculationEngine';
+import { calculateProbabilityUnified, UnifiedEngineMetrics } from './calculationEngineUnified';
 import { suggestTreatments } from './treatmentSuggester';
 
 // ===================================================================
@@ -167,6 +167,22 @@ class PredictiveMLEngine {
     confidenceSum: 0
   };
 
+  // 🆕 MÉTRICAS DEL MOTOR UNIFICADO
+  private engineMetrics: {
+    totalPredictions: number;
+    averageComplexityScore: number;
+    standardEngineUsage: number;
+    premiumEngineUsage: number;
+    averageExecutionTime: number;
+    lastEngineUsed?: 'standard' | 'premium';
+  } = {
+    totalPredictions: 0,
+    averageComplexityScore: 0,
+    standardEngineUsage: 0,
+    premiumEngineUsage: 0,
+    averageExecutionTime: 0
+  };
+
   private readonly PATTERN_MIN_SAMPLES = 5;
   private readonly CONFIDENCE_THRESHOLD = 0.7;
   private readonly RETRAIN_INTERVAL = 7 * 24 * 60 * 60 * 1000; // 7 días
@@ -234,15 +250,53 @@ class PredictiveMLEngine {
   }
 
   /**
-   * 🎯 EJECUTAR CÁLCULO BASE CON CALCULADORA UNIFICADA
+   * 🎯 EJECUTAR CÁLCULO BASE CON MOTOR UNIFICADO V2.0
    */
   private executeBaseCalculation(input: PredictionInput): EvaluationState {
     const { userInput } = input;
     
-    console.log('🎯 Ejecutando cálculo con calculadora unificada...');
+    console.log('🎯 Ejecutando cálculo con motor unificado V2.0...');
     
-    // Usar la calculadora principal que ya integra toda la lógica premium
-    return calculateProbability(userInput);
+    // 🚀 USAR MOTOR UNIFICADO PARA MÁXIMA PRECISIÓN EN IA
+    const { result, metrics } = calculateProbabilityUnified(userInput, {
+      mode: 'auto', // Permitir selección inteligente
+      debugMode: false,
+      performanceTracking: true
+    });
+    
+    // 📊 ACTUALIZAR MÉTRICAS DEL MOTOR UNIFICADO
+    this.updateEngineMetrics(metrics);
+    
+    console.log(`   🤖 Motor usado: ${metrics.engineUsed}`);
+    console.log(`   📊 Complejidad: ${metrics.complexityScore.toFixed(2)}`);
+    console.log(`   ⏱️ Tiempo: ${metrics.executionTime.toFixed(1)}ms`);
+    
+    return result;
+  }
+
+  /**
+   * 📊 ACTUALIZAR MÉTRICAS DEL MOTOR UNIFICADO
+   */
+  private updateEngineMetrics(metrics: UnifiedEngineMetrics): void {
+    this.engineMetrics.totalPredictions++;
+    this.engineMetrics.lastEngineUsed = metrics.engineUsed;
+    
+    // Actualizar promedio de complejidad
+    this.engineMetrics.averageComplexityScore = 
+      (this.engineMetrics.averageComplexityScore * (this.engineMetrics.totalPredictions - 1) + 
+       metrics.complexityScore) / this.engineMetrics.totalPredictions;
+    
+    // Actualizar promedio de tiempo de ejecución
+    this.engineMetrics.averageExecutionTime = 
+      (this.engineMetrics.averageExecutionTime * (this.engineMetrics.totalPredictions - 1) + 
+       metrics.executionTime) / this.engineMetrics.totalPredictions;
+    
+    // Contar uso por tipo de motor
+    if (metrics.engineUsed === 'standard') {
+      this.engineMetrics.standardEngineUsage++;
+    } else {
+      this.engineMetrics.premiumEngineUsage++;
+    }
   }
 
   /**
@@ -690,6 +744,35 @@ export function getPredictionEngineMetrics() {
     lastTraining: new Date(predictionEngine['modelMetrics'].lastTraining),
     cacheSize: predictionEngine['patternCache'].size,
     historicalPatterns: predictionEngine['historicalData'].size
+  };
+}
+
+/**
+ * 🚀 OBTENER MÉTRICAS DEL MOTOR UNIFICADO EN IA
+ */
+export function getUnifiedEngineMetricsForAI() {
+  const metrics = predictionEngine['engineMetrics'];
+  
+  return {
+    totalPredictions: metrics.totalPredictions,
+    averageComplexityScore: Number(metrics.averageComplexityScore.toFixed(3)),
+    engineUsageDistribution: {
+      standard: metrics.standardEngineUsage,
+      premium: metrics.premiumEngineUsage,
+      standardPercentage: metrics.totalPredictions > 0 ? 
+        Math.round((metrics.standardEngineUsage / metrics.totalPredictions) * 100) : 0,
+      premiumPercentage: metrics.totalPredictions > 0 ? 
+        Math.round((metrics.premiumEngineUsage / metrics.totalPredictions) * 100) : 0
+    },
+    performance: {
+      averageExecutionTime: Number(metrics.averageExecutionTime.toFixed(2)),
+      lastEngineUsed: metrics.lastEngineUsed
+    },
+    optimization: {
+      smartSelectionEfficiency: metrics.totalPredictions > 0 ? 
+        Math.round(((metrics.standardEngineUsage / metrics.totalPredictions) * 100)) : 0,
+      complexityAnalysisAccuracy: metrics.averageComplexityScore
+    }
   };
 }
 

@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 import { ClinicalValidators, ValidationResult } from '@/core/domain/validation/clinicalValidators';
-import { FormState } from '../useCalculatorForm';
+import { FormState } from '../useCalculatorFormOptimized';
 
 interface UseFormValidationReturn {
   validateField: (fieldName: keyof FormState, value: unknown) => ValidationResult;

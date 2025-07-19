@@ -16,9 +16,10 @@ import { StyleSheet, View } from 'react-native';
 import { Control, FieldErrors } from 'react-hook-form';
 import Text from '@/presentation/components/common/Text';
 import { ControlledTextInputFinal } from '@/presentation/components/common/ControlledTextInputFinal';
+import { OptimizedNumericInput } from '@/presentation/components/common/OptimizedNumericInput';
 import { CalculatedValue } from '@/presentation/components/common/CalculatedValue';
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
-import { FormState } from '../useCalculatorForm';
+import { FormState } from '../useCalculatorFormOptimized';
 
 type Props = {
   control: Control<FormState>;
@@ -123,43 +124,49 @@ export const DemographicsForm = ({
       
       {/* 🩺 Campo Edad */}
       <View style={styles.fieldContainer}>
-        <ControlledTextInputFinal
+        <OptimizedNumericInput
           control={control}
           name="age"
           label="Edad (años)"
-          keyboardType="number-pad"
           placeholder="Ej: 32 años"
           iconName="person-outline"
           error={errors.age}
           rangeValidation={getRangeValidation?.('age')}
+          debounceTime={500}
+          autoDismissKeyboard={true}
+          enableRealTimeValidation={true}
         />
       </View>
 
       {/* 📏 Campo Altura */}
       <View style={styles.fieldContainer}>
-        <ControlledTextInputFinal
+        <OptimizedNumericInput
           control={control}
           name="height"
           label="Altura (cm)"
-          keyboardType="number-pad"
           placeholder="Ej: 165 cm"
           iconName="resize-outline"
           error={errors.height}
           rangeValidation={getRangeValidation?.('height')}
+          debounceTime={300}
+          autoDismissKeyboard={true}
+          enableRealTimeValidation={true}
         />
       </View>
 
       {/* ⚖️ Campo Peso */}
       <View style={styles.fieldContainer}>
-        <ControlledTextInputFinal
+        <OptimizedNumericInput
           control={control}
           name="weight"
           label="Peso (kg)"
-          keyboardType="number-pad"
           placeholder="Ej: 65 kg"
           iconName="fitness-outline"
           error={errors.weight}
           rangeValidation={getRangeValidation?.('weight')}
+          debounceTime={300}
+          autoDismissKeyboard={true}
+          enableRealTimeValidation={true}
         />
       </View>
 

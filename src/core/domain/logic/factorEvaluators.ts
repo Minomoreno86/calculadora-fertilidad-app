@@ -188,7 +188,7 @@ export const evaluateOtb = (
   desireForMultiplePregnancies?: boolean,
 ): PartialEvaluation => {
   if (!hasOtb) {
-    return { factors: { otb: 1.0 }, diagnostics: { hsgComment: 'No se ha realizado ligadura de trompas.' } };
+    return { factors: { otb: 1.0 }, diagnostics: { otbComment: 'No se ha realizado ligadura de trompas.' } };
   }
 
   const diagnostics: string[] = [];
@@ -265,7 +265,7 @@ export const evaluateOtb = (
   // ✅ Retornar el factor calculado correctamente
   return { 
     factors: { otb: Math.max(0.0, otbFactor) }, // Asegurar que no sea negativo
-    diagnostics: { hsgComment: diagnostics.join(' ') } 
+    diagnostics: { otbComment: diagnostics.join(' ') } 
   };
 };
 

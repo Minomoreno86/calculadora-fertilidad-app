@@ -1,0 +1,666 @@
+/**
+ * 🧮 CALCULATION CORE - Lógica Pura de Cálculo
+ * 
+ * Módulo que contiene únicamente funciones puras de cálculo,
+ * extraídas del monolito calculationEngine.ts para crear arquitectura modular.
+ * 
+ * FUNCIONES PURAS: Sin efectos secundarios, sin dependencias externas
+ * RESPONSABILIDAD ÚNICA: Solo lógica de cálculo matemático
+ * TESTEABLE: 100% determinista y predecible
+ */
+
+import { 
+  UserInput, 
+  EvaluationState, 
+  Factors, 
+  Diagnostics, 
+  Report,
+  MyomaType,
+  AdenomyosisType,
+  PolypType,
+  HsgResult
+} from '../../models';
+import * as factorEvaluators from '../../logic/factorEvaluators';
+import * as reportGenerator from '../../logic/reportGenerator';
+
+// ===================================================================
+// 🎯 INTERFACES PARA CALCULATION CORE
+// ===================================================================
+
+/**
+ * Resultado de evaluación parcial de factorEvaluators
+ */
+export interface PartialEvaluation {
+  factors?: Partial<Factors>;
+  diagnostics?: Partial<Diagnostics>;
+}
+
+/**
+ * Resultado de validación unificado
+ */
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  fieldErrors: Record<string, string>;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  validatedInput?: UserInput;
+}
+
+/**
+ * Resultado de evaluación de factor individual
+ */
+export interface FactorEvaluationResult {
+  success: boolean;
+  factors: Partial<Factors>;
+  diagnostics: Partial<Diagnostics>;
+  executionTime: number;
+  error?: string;
+  metadata?: {
+    evaluatorName: string;
+    inputValues: unknown[];
+    confidence: number;
+  };
+}
+
+/**
+ * Configuración de factor con prioridades
+ */
+export interface PriorityFactorConfig {
+  evaluator: (...args: any[]) => PartialEvaluation;
+  args: unknown[];
+  factorKey: keyof Factors;
+  diagnosticKey?: keyof Diagnostics;
+  required: boolean;
+  priority: number; // 1=CRÍTICO, 2=IMPORTANTE, 3=OPCIONAL
+  group: 'CRITICOS' | 'IMPORTANTES' | 'OPCIONALES';
+  defaultFactor?: number;
+  defaultDiagnostic?: string;
+}
+
+/**
+ * Métricas de cálculo
+ */
+export interface CalculationMetrics {
+  totalExecutionTime: number;
+  factorsEvaluated: number;
+  successfulFactors: number;
+  failedFactors: number;
+  criticalErrors: string[];
+  performanceScore: number;
+}
+
+// ===================================================================
+// 🧮 CALCULATION CORE CLASS
+// ===================================================================
+
+export class CalculationCore {
+  private readonly DEFAULT_FACTOR_VALUE = 0.5;
+  
+  // ===================================================================
+  // 🔍 FUNCIONES DE VALIDACIÓN PURA
+  // ===================================================================
+  
+  /**
+   * Valida entrada de usuario con lógica pura
+   */
+  validateInput(input: UserInput): ValidationResult {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    const fieldErrors: Record<string, string> = {};
+    
+    // Validaciones críticas
+    if (!input.age || input.age < 18 || input.age > 50) {
+      errors.push('Edad debe estar entre 18 y 50 años');
+      fieldErrors.age = 'Rango inválido';
+    }
+    
+    if (input.bmi && (input.bmi < 16 || input.bmi > 45)) {
+      warnings.push('BMI fuera del rango típico (16-45)');
+      fieldErrors.bmi = 'Valor atípico';
+    }
+    
+    if (input.cycleDuration && (input.cycleDuration < 21 || input.cycleDuration > 35)) {
+      warnings.push('Duración de ciclo atípica');
+      fieldErrors.cycleDuration = 'Fuera de rango normal';
+    }
+    
+    // Validaciones de consistencia
+    if (input.hasOtb && !input.cycleDuration) {
+      warnings.push('OTB marcado pero sin duración de ciclo');
+    }
+    
+    if (input.hasPcos && input.cycleDuration && input.cycleDuration < 35) {
+      warnings.push('PCOS usualmente causa ciclos >35 días');
+    }
+    
+    const severity = errors.length > 0 ? 'CRITICAL' : 
+                     warnings.length > 2 ? 'HIGH' :
+                     warnings.length > 0 ? 'MEDIUM' : 'LOW';
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      fieldErrors,
+      severity,
+      validatedInput: this.sanitizeInput(input)
+    };
+  }
+  
+  /**
+   * Sanitiza entrada de usuario
+   */
+  sanitizeInput(input: UserInput): UserInput {
+    return {
+      ...input,
+      // Normalizar valores numéricos
+      age: Math.round((input.age || 0) * 10) / 10,
+      bmi: input.bmi ? Math.round(input.bmi * 100) / 100 : null,
+      cycleDuration: input.cycleDuration || 28,
+      infertilityDuration: input.infertilityDuration || 0,
+      
+      // Normalizar grados y tipos
+      endometriosisGrade: Math.max(0, Math.min(4, input.endometriosisGrade || 0)),
+      pelvicSurgeriesNumber: Math.max(0, input.pelvicSurgeriesNumber || 0),
+      
+      // Usar enums correctos
+      myomaType: input.myomaType || MyomaType.None,
+      adenomyosisType: input.adenomyosisType || AdenomyosisType.None,
+      polypType: input.polypType || PolypType.None,
+      hsgResult: input.hsgResult || HsgResult.Unknown
+    };
+  }
+  
+  // ===================================================================
+  // 🧮 FUNCIONES DE CÁLCULO PURO
+  // ===================================================================
+  
+  /**
+   * Calcula todos los factores de fertilidad
+   */
+  calculateFactors(input: UserInput): { factors: Factors; metrics: CalculationMetrics } {
+    const startTime = performance.now();
+    const factors: Factors = {
+      baseAgeProbability: 0,
+      bmi: 0,
+      cycle: 0,
+      pcos: 0,
+      endometriosis: 0,
+      myoma: 0,
+      adenomyosis: 0,
+      polyp: 0,
+      hsg: 0,
+      otb: 0,
+      amh: 0,
+      prolactin: 0,
+      tsh: 0,
+      homa: 0,
+      male: 0,
+      infertilityDuration: 0,
+      pelvicSurgery: 0
+    };
+    const metrics: CalculationMetrics = {
+      totalExecutionTime: 0,
+      factorsEvaluated: 0,
+      successfulFactors: 0,
+      failedFactors: 0,
+      criticalErrors: [],
+      performanceScore: 0
+    };
+    
+    // Obtener configuraciones por prioridad
+    const factorConfigs = this.getFactorConfigurations(input);
+    
+    // Procesar por grupos de prioridad
+    const groups = ['CRITICOS', 'IMPORTANTES', 'OPCIONALES'] as const;
+    
+    for (const group of groups) {
+      const groupConfigs = factorConfigs.filter(config => config.group === group);
+      const groupResult = this.processFactorGroup(groupConfigs, factors);
+      
+      metrics.factorsEvaluated += groupConfigs.length;
+      metrics.successfulFactors += groupResult.successCount;
+      metrics.failedFactors += groupResult.errorCount;
+      metrics.criticalErrors.push(...groupResult.criticalErrors);
+      
+      // Si hay errores críticos, detener procesamiento
+      if (group === 'CRITICOS' && groupResult.criticalErrors.length > 0) {
+        break;
+      }
+    }
+    
+    metrics.totalExecutionTime = performance.now() - startTime;
+    metrics.performanceScore = this.calculatePerformanceScore(metrics);
+    
+    return { factors, metrics };
+  }
+  
+  /**
+   * Genera diagnósticos basados en factores
+   */
+  generateDiagnostics(factors: Factors, input: UserInput): Diagnostics {
+    const diagnostics: Diagnostics = {};
+    
+    // Obtener configuraciones de diagnóstico
+    const diagnosticConfigs = this.getDiagnosticConfigurations(input);
+    
+    for (const config of diagnosticConfigs) {
+      try {
+        const result = this.safeEvaluateFactor(
+          config.evaluator,
+          config.args,
+          config.factorKey
+        );
+        
+        if (result.success && result.diagnostics) {
+          Object.assign(diagnostics, result.diagnostics);
+        }
+      } catch (error) {
+        console.warn(`Warning en diagnóstico ${config.factorKey}:`, error);
+      }
+    }
+    
+    return diagnostics;
+  }
+  
+  /**
+   * Crea reporte final
+   */
+  createReport(factors: Factors, diagnostics: Diagnostics, input: UserInput): Report {
+    try {
+      // Calcular pronóstico numérico basado en factores
+      const numericPrognosis = Math.max(0, Math.min(100, 
+        factors.baseAgeProbability * 
+        factors.bmi * 
+        factors.cycle * 
+        factors.pcos * 
+        factors.endometriosis * 
+        factors.myoma * 
+        factors.adenomyosis * 
+        factors.polyp * 
+        factors.hsg * 
+        factors.otb * 
+        factors.amh * 
+        factors.prolactin * 
+        factors.tsh * 
+        factors.homa * 
+        factors.male * 
+        factors.infertilityDuration * 
+        factors.pelvicSurgery
+      ));
+      
+      return reportGenerator.generateFinalReport(numericPrognosis, diagnostics, input, factors);
+    } catch (error) {
+      console.error('Error generando reporte:', error);
+      
+      // Reporte básico como fallback
+      return {
+        numericPrognosis: 5.0,
+        category: 'BAJO',
+        emoji: '🔴',
+        prognosisPhrase: 'Error en el cálculo. Consulte con especialista.',
+        benchmarkPhrase: 'No se pudo calcular la comparación.',
+        clinicalInsights: []
+      };
+    }
+  }
+  
+  // ===================================================================
+  // 🛠️ FUNCIONES AUXILIARES PRIVADAS
+  // ===================================================================
+  
+  /**
+   * Obtiene configuraciones de factores por prioridad
+   */
+  private getFactorConfigurations(userInput: UserInput): PriorityFactorConfig[] {
+    return [
+      // FACTORES CRÍTICOS
+      {
+        evaluator: factorEvaluators.evaluateAgeBaseline,
+        args: [userInput.age],
+        factorKey: 'baseAgeProbability',
+        required: true,
+        priority: 1,
+        group: 'CRITICOS',
+        defaultFactor: 0.5
+      },
+      {
+        evaluator: factorEvaluators.evaluateInfertilityDuration,
+        args: [userInput.infertilityDuration],
+        factorKey: 'infertilityDuration',
+        required: true,
+        priority: 1,
+        group: 'CRITICOS',
+        defaultFactor: 0.5
+      },
+      
+      // FACTORES IMPORTANTES
+      {
+        evaluator: factorEvaluators.evaluateBmi,
+        args: [userInput.bmi],
+        factorKey: 'bmi',
+        required: false,
+        priority: 2,
+        group: 'IMPORTANTES',
+        defaultFactor: 0.6
+      },
+      {
+        evaluator: factorEvaluators.evaluateCycle,
+        args: [userInput.cycleDuration],
+        factorKey: 'cycle',
+        required: false,
+        priority: 2,
+        group: 'IMPORTANTES',
+        defaultFactor: 0.7
+      },
+      {
+        evaluator: factorEvaluators.evaluateEndometriosis,
+        args: [userInput.endometriosisGrade],
+        factorKey: 'endometriosis',
+        required: false,
+        priority: 2,
+        group: 'IMPORTANTES',
+        defaultFactor: 0.7
+      },
+      {
+        evaluator: factorEvaluators.evaluatePcos,
+        args: [userInput.hasPcos, userInput.bmi, userInput.cycleDuration, userInput.amh, userInput.homaIr],
+        factorKey: 'pcos',
+        required: false,
+        priority: 2,
+        group: 'IMPORTANTES',
+        defaultFactor: 0.6
+      },
+      {
+        evaluator: factorEvaluators.evaluateMyomas,
+        args: [userInput.myomaType],
+        factorKey: 'myoma',
+        required: false,
+        priority: 2,
+        group: 'IMPORTANTES',
+        defaultFactor: 0.8
+      },
+      {
+        evaluator: factorEvaluators.evaluateAdenomyosis,
+        args: [userInput.adenomyosisType],
+        factorKey: 'adenomyosis',
+        required: false,
+        priority: 2,
+        group: 'IMPORTANTES',
+        defaultFactor: 0.8
+      },
+      {
+        evaluator: factorEvaluators.evaluatePolyps,
+        args: [userInput.polypType],
+        factorKey: 'polyp',
+        required: false,
+        priority: 2,
+        group: 'IMPORTANTES',
+        defaultFactor: 0.8
+      },
+      {
+        evaluator: factorEvaluators.evaluateHsg,
+        args: [userInput.hsgResult],
+        factorKey: 'hsg',
+        required: false,
+        priority: 2,
+        group: 'IMPORTANTES',
+        defaultFactor: 0.7
+      },
+      {
+        evaluator: factorEvaluators.evaluateOtb,
+        args: [userInput.hasOtb, userInput.age, userInput.otbMethod, userInput.remainingTubalLength, userInput.hasOtherInfertilityFactors, userInput.desireForMultiplePregnancies],
+        factorKey: 'otb',
+        required: false,
+        priority: 2,
+        group: 'IMPORTANTES',
+        defaultFactor: 0.5
+      },
+      {
+        evaluator: factorEvaluators.evaluatePelvicSurgeries,
+        args: [userInput.pelvicSurgeriesNumber],
+        factorKey: 'pelvicSurgery',
+        required: false,
+        priority: 2,
+        group: 'IMPORTANTES',
+        defaultFactor: 0.9
+      },
+      
+      // FACTORES OPCIONALES - Laboratorio y Male Factor
+      {
+        evaluator: factorEvaluators.evaluateAmh,
+        args: [userInput.amh],
+        factorKey: 'amh',
+        required: false,
+        priority: 3,
+        group: 'OPCIONALES'
+      },
+      {
+        evaluator: factorEvaluators.evaluateProlactin,
+        args: [userInput.prolactin],
+        factorKey: 'prolactin',
+        required: false,
+        priority: 3,
+        group: 'OPCIONALES'
+      },
+      {
+        evaluator: factorEvaluators.evaluateTsh,
+        args: [userInput.tsh],
+        factorKey: 'tsh',
+        required: false,
+        priority: 3,
+        group: 'OPCIONALES'
+      },
+      {
+        evaluator: factorEvaluators.evaluateHoma,
+        args: [userInput.homaIr],
+        factorKey: 'homa',
+        required: false,
+        priority: 3,
+        group: 'OPCIONALES'
+      },
+      {
+        evaluator: factorEvaluators.evaluateMaleFactor,
+        args: [userInput],
+        factorKey: 'male',
+        required: false,
+        priority: 3,
+        group: 'OPCIONALES'
+      }
+    ];
+  }
+  
+  /**
+   * Obtiene configuraciones de diagnósticos
+   */
+  private getDiagnosticConfigurations(userInput: UserInput): PriorityFactorConfig[] {
+    return this.getFactorConfigurations(userInput).map(config => ({
+      ...config,
+      diagnosticKey: this.getCorrespondingDiagnosticKey(config.factorKey)
+    })).filter(config => config.diagnosticKey);
+  }
+  
+  /**
+   * Mapea factor key a diagnostic key
+   */
+  private getCorrespondingDiagnosticKey(factorKey: keyof Factors): keyof Diagnostics | undefined {
+    const mapping: Partial<Record<keyof Factors, keyof Diagnostics>> = {
+      baseAgeProbability: 'agePotential',
+      bmi: 'bmiComment',
+      cycle: 'cycleComment',
+      endometriosis: 'endometriosisComment',
+      pcos: 'pcosSeverity',
+      amh: 'ovarianReserve',
+      tsh: 'tshComment',
+      prolactin: 'prolactinComment',
+      homa: 'homaComment',
+      myoma: 'myomaComment',
+      adenomyosis: 'adenomyosisComment',
+      polyp: 'polypComment',
+      hsg: 'hsgComment',
+      otb: 'otbComment',
+      male: 'maleFactorDetailed'
+    };
+    
+    return mapping[factorKey];
+  }
+  
+  /**
+   * Procesa grupo de factores de manera segura
+   */
+  private processFactorGroup(
+    configs: PriorityFactorConfig[],
+    factors: Factors
+  ): { successCount: number; errorCount: number; criticalErrors: string[] } {
+    let successCount = 0;
+    let errorCount = 0;
+    const criticalErrors: string[] = [];
+    
+    for (const config of configs) {
+      const evaluation = this.safeEvaluateFactor(
+        config.evaluator,
+        config.args,
+        config.factorKey
+      );
+      
+      if (evaluation.success && evaluation.factors) {
+        successCount++;
+        Object.assign(factors, evaluation.factors);
+      } else {
+        errorCount++;
+        
+        if (config.required) {
+          criticalErrors.push(`Factor crítico ${config.factorKey}: ${evaluation.error}`);
+        }
+        
+        // Aplicar valor por defecto
+        if (config.defaultFactor !== undefined) {
+          factors[config.factorKey] = config.defaultFactor;
+        }
+      }
+    }
+    
+    return { successCount, errorCount, criticalErrors };
+  }
+  
+  /**
+   * Evalúa factor de manera segura
+   */
+  private safeEvaluateFactor(
+    evaluator: (...args: any[]) => PartialEvaluation,
+    args: unknown[],
+    factorKey: keyof Factors
+  ): FactorEvaluationResult {
+    const startTime = performance.now();
+    
+    try {
+      const result = evaluator(...args);
+      const executionTime = performance.now() - startTime;
+      
+      if (result && typeof result === 'object') {
+        return {
+          success: true,
+          factors: result.factors || {},
+          diagnostics: result.diagnostics || {},
+          executionTime,
+          metadata: {
+            evaluatorName: evaluator.name || 'unknown',
+            inputValues: args,
+            confidence: 1.0
+          }
+        };
+      } else {
+        // Resultado primitivo - crear estructura compatible
+        return {
+          success: true,
+          factors: { [factorKey]: result },
+          diagnostics: {},
+          executionTime,
+          metadata: {
+            evaluatorName: evaluator.name || 'unknown',
+            inputValues: args,
+            confidence: 1.0
+          }
+        };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        factors: {},
+        diagnostics: {},
+        executionTime: performance.now() - startTime,
+        error: String(error),
+        metadata: {
+          evaluatorName: evaluator.name || 'unknown',
+          inputValues: args,
+          confidence: 0.0
+        }
+      };
+    }
+  }
+  
+  /**
+   * Calcula score de performance
+   */
+  private calculatePerformanceScore(metrics: CalculationMetrics): number {
+    const successRate = metrics.factorsEvaluated > 0 ? 
+      metrics.successfulFactors / metrics.factorsEvaluated : 0;
+    
+    const speedScore = metrics.totalExecutionTime < 100 ? 1.0 : 
+                      Math.max(0, 1 - (metrics.totalExecutionTime - 100) / 500);
+    
+    const errorPenalty = metrics.criticalErrors.length * 0.2;
+    
+    return Math.max(0, Math.min(1, (successRate + speedScore) / 2 - errorPenalty));
+  }
+}
+
+// ===================================================================
+// 🎯 FUNCIONES PÚBLICAS DE CÁLCULO
+// ===================================================================
+
+/**
+ * Función principal de cálculo sin dependencias externas
+ */
+export function calculatePureFertilityFactors(input: UserInput): EvaluationState {
+  const core = new CalculationCore();
+  
+  // 1. Validar entrada
+  const validation = core.validateInput(input);
+  if (!validation.isValid) {
+    throw new Error(`Validación falló: ${validation.errors.join(', ')}`);
+  }
+  
+  // 2. Calcular factores
+  const { factors, metrics } = core.calculateFactors(validation.validatedInput!);
+  
+  // 3. Generar diagnósticos
+  const diagnostics = core.generateDiagnostics(factors, validation.validatedInput!);
+  
+  // 4. Crear reporte
+  const report = core.createReport(factors, diagnostics, validation.validatedInput!);
+  
+  return {
+    input: validation.validatedInput!,
+    factors,
+    diagnostics,
+    report
+  };
+}
+
+/**
+ * Función de validación independiente
+ */
+export function validateUserInputPure(input: UserInput): ValidationResult {
+  const core = new CalculationCore();
+  return core.validateInput(input);
+}
+
+/**
+ * Función de sanitización independiente
+ */
+export function sanitizeUserInputPure(input: UserInput): UserInput {
+  const core = new CalculationCore();
+  return core.sanitizeInput(input);
+}

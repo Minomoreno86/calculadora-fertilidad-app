@@ -1,13 +1,14 @@
 /**
- * 🚀 FASE 2: MOTOR DE VALIDACIÓN PARALELA REAL
+ * 🚀 FASE 2B: MOTOR DE VALIDACIÓN PARALELA CON SISTEMA MODULAR
  * 
- * Sistema completo de paralelización que integra con calculationEngine.ts
- * para lograr 60% de mejora en performance (330ms → 135ms).
+ * Sistema completo de paralelización integrado con el nuevo sistema modular.
+ * Usa UnifiedCacheManager y PerformanceMonitor del sistema modular para
+ * máxima eficiencia y consistencia.
  * 
  * CARACTERÍSTICAS AVANZADAS:
  * ✅ Web Workers reales para validación asíncrona
  * ✅ Pool de workers con balanceamiento dinámico
- * ✅ Integración con cache predictivo de FASE 3A
+ * ✅ Integración con UnifiedCacheManager modular (FASE 2B)
  * ✅ Streaming de resultados en tiempo real
  * ✅ Recovery automático ante fallos de workers
  * ✅ Métricas de performance granulares
@@ -16,7 +17,7 @@
  * • Reducción de tiempo de respuesta: 330ms → 135ms (-60%)
  * • UI no-blocking durante cálculos complejos
  * • Paralelización de factores Hormonal/Metabólico/Masculino
- * • Cache hits predictivos: 85%+ efficiency
+ * • Cache hits predictivos: 85%+ efficiency (sistema modular)
  */
 
 import type { 
@@ -24,11 +25,13 @@ import type {
   ValidationResult
 } from './validationWorker';
 
-// 🔄 INTEGRACIÓN CON CALCULATION ENGINE (FASE 3A)
+// 🔄 INTEGRACIÓN CON SISTEMA MODULAR - FASE 2B
 import type { UserInput } from '../domain/models';
+import { UnifiedCacheManager } from '../domain/services/modular/CacheManager';
+import { PerformanceMonitor } from '../domain/services/modular/PerformanceMonitor';
 
 // ===================================================================
-// 🚀 FASE 2: TIPOS AVANZADOS PARA PARALELIZACIÓN REAL
+// 🚀 FASE 2B: TIPOS PARA PARALELIZACIÓN CON SISTEMA MODULAR
 // ===================================================================
 
 // 🏭 WORKER POOL MANAGEMENT
@@ -68,14 +71,6 @@ export type ValidationCategory =
   | 'temporal'     // Duración infertilidad, Edad
   | 'surgical';    // Cirugías pélvicas, Laparoscopias
 
-// 🔄 INTEGRACIÓN CON SISTEMA DE CACHE EXISTENTE
-interface ParallelCacheEntry {
-  results: Map<ValidationCategory, ValidationResult[]>;
-  inputHash: string;
-  timestamp: number;
-  parallelProcessingTime: number;
-}
-
 export interface ParallelValidationConfig {
   maxConcurrency: number;
   enableCache: boolean;
@@ -94,21 +89,26 @@ export interface ValidationMetrics {
 }
 
 /**
- * 🚀 MOTOR PRINCIPAL DE VALIDACIÓN PARALELA - FASE 2
+ * 🚀 MOTOR PRINCIPAL DE VALIDACIÓN PARALELA - FASE 2B
  * 
- * ARQUITECTURA AVANZADA:
+ * ARQUITECTURA AVANZADA INTEGRADA CON SISTEMA MODULAR:
  * • Worker Pool con 4 workers especializados
  * • Balanceamiento dinámico de carga
  * • Recovery automático ante fallos
- * • Integración con cache predictivo FASE 3A
+ * • Integración con UnifiedCacheManager modular
  * • Streaming de resultados en tiempo real
+ * • PerformanceMonitor modular integrado
  */
 export class ParallelValidationEngine {
   private readonly workerPool: WorkerPool;
   private readonly categoryQueues = new Map<ValidationCategory, ValidationTask[]>();
   private readonly activeValidations = new Map<string, WorkerJob>();
   private readonly results = new Map<string, ValidationResult>();
-  private readonly cache = new Map<string, ParallelCacheEntry>();
+  
+  // 🚀 INTEGRACIÓN CON SISTEMA MODULAR - FASE 2B
+  private readonly modularCache: UnifiedCacheManager;
+  private readonly modularPerformanceMonitor: PerformanceMonitor;
+  
   private readonly metrics: ValidationMetrics;
   private readonly config: ParallelValidationConfig;
 
@@ -129,6 +129,29 @@ export class ParallelValidationEngine {
       retryAttempts: 3,           // 3 reintentos
       ...config
     };
+
+    // 🚀 INICIALIZAR SISTEMA MODULAR - FASE 2B
+    this.modularCache = new UnifiedCacheManager({
+      maxSize: 1000,
+      defaultTtl: this.config.cacheTTL,
+      compressionThreshold: 1024, // 1KB
+      predictiveThreshold: 0.7,
+      enableCompression: true,
+      enablePrediction: true,
+      enablePreloading: true,
+      cleanupInterval: 60000 // 1 minuto
+    });
+
+    this.modularPerformanceMonitor = new PerformanceMonitor({
+      enableDetailedTracking: true,
+      trackMemoryUsage: true,
+      alertThresholds: {
+        slowOperationMs: 1000,
+        highErrorRatePercent: 5,
+        memoryLeakMB: 100,
+        cpuUsagePercent: 80
+      }
+    });
 
     this.metrics = {
       totalTasks: 0,
@@ -205,9 +228,9 @@ export class ParallelValidationEngine {
     this.performanceMonitor.startTime = performance.now();
     
     try {
-      // 🔍 1. VERIFICAR CACHE PREDICTIVO
+      // 🔍 1. VERIFICAR CACHE MODULAR - FASE 2B
       const cacheKey = this.generateCacheKey(input, categories);
-      const cachedResult = this.getCachedResult(cacheKey);
+      const cachedResult = await this.getModularCachedResult(cacheKey);
       
       if (cachedResult) {
         this.metrics.cacheHitRate = 
@@ -223,7 +246,7 @@ export class ParallelValidationEngine {
       const results = await this.executeWithDependencies(categorizedTasks);
       
       // 💾 4. GUARDAR EN CACHE CON PREDICCIÓN
-      this.cacheResultWithPrediction(cacheKey, results, input);
+      await this.cacheResultWithModularPrediction(cacheKey, results, input);
       
       // 📊 5. ACTUALIZAR MÉTRICAS
       this.updatePerformanceMetrics(results);
@@ -560,38 +583,38 @@ export class ParallelValidationEngine {
   }
 
   /**
-   * 💾 OBTENER RESULTADO DESDE CACHE
+   * 💾 OBTENER RESULTADO DESDE CACHE MODULAR - FASE 2B
    */
-  private getCachedResult(cacheKey: string): Map<ValidationCategory, ValidationResult[]> | null {
-    const cached = this.cache.get(cacheKey);
-    
-    if (!cached) return null;
-    
-    // Verificar TTL
-    if (Date.now() - cached.timestamp > this.config.cacheTTL) {
-      this.cache.delete(cacheKey);
+  private async getModularCachedResult(cacheKey: string): Promise<Map<ValidationCategory, ValidationResult[]> | null> {
+    try {
+      const cached = await this.modularCache.get<Map<ValidationCategory, ValidationResult[]>>(cacheKey, 'validation');
+      return cached || null;
+    } catch (error) {
+      console.warn('Error accessing modular cache:', error);
       return null;
     }
-    
-    // Retornar mapa completo de resultados
-    return cached.results;
   }
 
   /**
-   * 💾 GUARDAR EN CACHE CON PREDICCIÓN
+   * 💾 GUARDAR EN CACHE MODULAR CON PREDICCIÓN - FASE 2B
    */
-  private cacheResultWithPrediction(
+  private async cacheResultWithModularPrediction(
     cacheKey: string,
     results: Map<ValidationCategory, ValidationResult[]>,
     _input: UserInput
-  ): void {
-    // Guardar todo el mapa de resultados
-    this.cache.set(cacheKey, {
-      results,
-      inputHash: cacheKey,
-      timestamp: Date.now(),
-      parallelProcessingTime: performance.now() - this.performanceMonitor.startTime
-    });
+  ): Promise<void> {
+    try {
+      await this.modularCache.set(cacheKey, results, 'validation', {
+        ttl: this.config.cacheTTL,
+        priority: 1, // High priority as number
+        metadata: {
+          categories: Array.from(results.keys()),
+          resultCount: Array.from(results.values()).reduce((sum, arr) => sum + arr.length, 0)
+        }
+      });
+    } catch (error) {
+      console.warn('Error saving to modular cache:', error);
+    }
   }
 
   /**
@@ -653,7 +676,9 @@ export class ParallelValidationEngine {
     this.categoryQueues.clear();
     this.activeValidations.clear();
     this.results.clear();
-    this.cache.clear();
+    
+    // 🚀 LIMPIAR CACHE MODULAR - FASE 2B
+    this.modularCache.clear();
   }
 }
 

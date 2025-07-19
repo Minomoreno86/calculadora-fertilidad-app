@@ -6,7 +6,7 @@
 declare const __DEV__: boolean;
 
 import { useState, useCallback, useRef, useMemo } from 'react';
-import type { FormState } from '../useCalculatorForm';
+import type { FormState } from '../useCalculatorFormOptimized';
 import { useFormValidation } from './useFormValidation';
 
 // 📊 Tipos específicos para la calculadora

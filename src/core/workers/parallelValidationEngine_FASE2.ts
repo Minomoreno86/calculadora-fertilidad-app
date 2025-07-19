@@ -86,35 +86,7 @@ export type ValidationCategory =
   | 'temporal'     // Duración infertilidad, Edad
   | 'surgical';    // Cirugías pélvicas, Laparoscopias
 
-interface CategorizedValidation {
-  category: ValidationCategory;
-  tasks: ValidationTask[];
-  priority: number;
-  estimatedTime: number;
-  dependencies: ValidationCategory[];
-}
-
-// 🎯 RESULTADOS ESPECIALIZADOS POR CATEGORÍA
-interface HormonalValidationResult {
-  hormoneLevels: { [key: string]: number };
-  reproductiveAge: number;
-  ovarianReserve: 'low' | 'normal' | 'high';
-  fertilityPotential: number;
-}
-
-interface MetabolicValidationResult {
-  bmiCategory: 'underweight' | 'normal' | 'overweight' | 'obese';
-  diabetesRisk: number;
-  thyroidFunction: 'normal' | 'hypo' | 'hyper';
-  metabolicSyndrome: boolean;
-}
-
-interface MasculineValidationResult {
-  spermQuality: 'poor' | 'fair' | 'good' | 'excellent';
-  morphologyScore: number;
-  motilityPercentage: number;
-  concentration: number;
-}
+// 🔄 INTEGRACIÓN CON SISTEMA DE CACHE EXISTENTE - interfaces especializadas removidas por optimización
 
 // 🔄 INTEGRACIÓN CON SISTEMA DE CACHE EXISTENTE
 interface ParallelCacheEntry {
@@ -341,11 +313,11 @@ export class ParallelValidationEngine {
           }
           if (input.homaIr !== undefined) {
             tasks.push({
-              id: `tsh-${Date.now()}`,
+              id: `homa-${Date.now()}`,
               type: 'range',
-              priority: 'high' as const,
+              priority: 'medium' as const,
               timestamp: Date.now(),
-              data: { value: input.tsh, field: 'tsh' }
+              data: { value: input.homaIr, field: 'homaIr' }
             });
           }
           break;

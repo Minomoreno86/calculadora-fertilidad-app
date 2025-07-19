@@ -5,7 +5,7 @@
 import { calculateProbability } from '../../../../core/domain/services/calculationEngine';
 import { mapFormStateToUserInput } from '../utils/dataMapper';
 import { FormState, CalculationResult } from '../types/calculator.types';
-import { FormState as OriginalFormState } from '../useCalculatorForm';
+import { FormState as OriginalFormState } from '../useCalculatorFormOptimized';
 
 /**
  * Servicio para realizar cálculos de probabilidad de fertilidad

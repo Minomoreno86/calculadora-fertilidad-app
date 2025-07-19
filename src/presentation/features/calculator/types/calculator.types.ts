@@ -10,8 +10,8 @@ import {
   OtbMethod 
 } from '../../../../core/domain/models';
 
-// 🔹 Estado del formulario
-export interface FormState {
+// 🔹 Estado del formulario con compatibilidad Record<string, unknown>
+export interface FormState extends Record<string, unknown> {
   // Demografía básica
   age: string;
   weight: string;
@@ -38,19 +38,34 @@ export interface FormState {
   insulinValue: string;
   glucoseValue: string;
   
-  // Campos opcionales
-  amhValue: string;
-  tshValue: string;
-  prolactinValue: string;
+  // Campos opcionales con soporte para undefined
+  amhValue?: string;
+  tshValue?: string;
+  prolactinValue?: string;
   
-  // Factor masculino completo
+  // Factor masculino completo con soporte para undefined
   spermConcentration: string;
   spermProgressiveMotility: string;
   spermNormalMorphology: string;
-  semenVolume: string;
+  semenVolume?: string;
   
   // Ginecología avanzada
   cycleRegularity: 'regular' | 'irregular';
+}
+
+// 🔹 Interface para compatibilidad con react-hook-form
+export interface FormFields {
+  [key: string]: string | number | boolean | undefined;
+}
+
+// 🔹 Resultado de validación de rango
+export interface RangeValidation {
+  isValid: boolean;
+  isNormal: boolean;
+  isWarning?: boolean;
+  isError?: boolean;
+  message?: string;
+  severity?: 'info' | 'warning' | 'error';
 }
 
 // 🔹 Progreso del formulario

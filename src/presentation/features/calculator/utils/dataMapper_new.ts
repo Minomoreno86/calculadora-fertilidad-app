@@ -1,4 +1,4 @@
-import { FormState } from '../useCalculatorForm';
+import { FormState } from '../useCalculatorFormOptimized';
 import { UserInput } from '@/core/domain/models';
 
 export const mapFormStateToUserInput = (

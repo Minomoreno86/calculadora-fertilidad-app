@@ -4,10 +4,39 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { EvaluationState, Factors, SimulatableFactor } from '@/core/domain/models';
-import { calculateProbabilityPremium } from '@/core/domain/services/calculationEnginePremium';
-import { calculateProbability } from '@/core/domain/services/calculationEngine';
+import { calculateProbabilityUnified, UnifiedEngineMetrics } from '@/core/domain/services/calculationEngineUnified';
 
 export const ALL_FACTORS_SIMULATION_KEY = 'all';
+
+// 🎯 Nuevos tipos para el simulador mejorado
+export type SimulationMode = 'single' | 'batch' | 'treatment' | 'timeline' | 'comparison';
+
+export interface TreatmentSimulation {
+  treatment: 'lifestyle' | 'medication' | 'iui' | 'ivf' | 'surgery' | 'combined';
+  duration: number;
+  cost: number;
+  successRate: number;
+  requirements: string[];
+  contraindications: string[];
+  timeline: Array<{
+    phase: string;
+    duration: number;
+    description: string;
+  }>;
+}
+
+export interface TimelineSimulation {
+  scenarios: Array<{
+    timeframe: '3months' | '6months' | '12months';
+    interventions: SimulationResult[];
+    cumulativeImprovement: number;
+    costAccumulated: number;
+    probabilityProgression: number[];
+  }>;
+  optimalPath: SimulationResult[];
+  quickWins: SimulationResult[];
+  longTermInvestments: SimulationResult[];
+}
 
 // 📊 Interfaces avanzadas para simulación
 export interface SimulationResult {
@@ -22,6 +51,13 @@ export interface SimulationResult {
   cost: 'low' | 'medium' | 'high';
   evidence: string;
   recommendations: string[];
+  // 🆕 MÉTRICAS DEL MOTOR UNIFICADO
+  engineMetrics?: {
+    engineUsed: 'standard' | 'premium';
+    executionTime: number;
+    complexityScore: number;
+    decisionReason: string;
+  };
 }
 
 export interface BatchSimulationResult {
@@ -346,7 +382,8 @@ const generateEnrichedResult = (
   explanation: string,
   originalPrognosis: number,
   newPrognosis: number,
-  engineUsed: 'basic' | 'premium'
+  engineUsed: 'basic' | 'premium',
+  engineMetrics?: UnifiedEngineMetrics
 ): SimulationResult => {
   const improvement = newPrognosis - originalPrognosis;
   const metadata = factor !== 'all' ? FACTOR_METADATA[factor] : null;
@@ -397,7 +434,14 @@ const generateEnrichedResult = (
     difficulty: metadata?.difficulty || 'moderate',
     cost: metadata?.cost || 'medium',
     evidence: metadata?.evidence || 'Clinical assessment',
-    recommendations: generateRecommendations()
+    recommendations: generateRecommendations(),
+    // 🆕 INCLUIR MÉTRICAS DEL MOTOR UNIFICADO
+    engineMetrics: engineMetrics ? {
+      engineUsed: engineMetrics.engineUsed,
+      executionTime: engineMetrics.executionTime,
+      complexityScore: engineMetrics.complexityScore,
+      decisionReason: engineMetrics.decisionReason
+    } : undefined
   };
 };
 
@@ -441,17 +485,26 @@ export const useFertilitySimulator = (originalEvaluation: EvaluationState | null
       // Optimiza el factor seleccionado a su valor ideal (1.0)
       simulatedFactors[factorToImprove] = 1.0;
 
-      // 🎯 SELECCIÓN INTELIGENTE DE MOTOR
+      // 🎯 SELECCIÓN INTELIGENTE DE MOTOR CON UNIFIED ENGINE
       let newPrognosis: number;
+      let engineMetrics: UnifiedEngineMetrics;
       
       if (engine.engine === 'basic') {
-        // Motor básico para casos simples
-        const basicResult = calculateProbability({ ...originalEvaluation.input, ...simulatedFactors });
-        newPrognosis = basicResult.report.numericPrognosis;
+        // Motor básico para casos simples - usar unified en modo standard
+        const { result, metrics } = calculateProbabilityUnified(
+          { ...originalEvaluation.input, ...simulatedFactors },
+          { mode: 'standard', debugMode: false }
+        );
+        newPrognosis = result.report.numericPrognosis;
+        engineMetrics = metrics;
       } else {
-        // Motor Premium para casos complejos
-        const premiumResult = calculateProbabilityPremium({ ...originalEvaluation.input, ...simulatedFactors });
-        newPrognosis = premiumResult.report.numericPrognosis;
+        // Motor Premium para casos complejos - usar unified en modo premium
+        const { result, metrics } = calculateProbabilityUnified(
+          { ...originalEvaluation.input, ...simulatedFactors },
+          { mode: 'premium', debugMode: false }
+        );
+        newPrognosis = result.report.numericPrognosis;
+        engineMetrics = metrics;
       }
 
       // 📊 Resultado enriquecido
@@ -460,7 +513,8 @@ export const useFertilitySimulator = (originalEvaluation: EvaluationState | null
         explanation,
         originalPrognosis,
         newPrognosis,
-        engine.engine
+        engine.engine,
+        engineMetrics
       );
 
       setSimulationResult(enrichedResult);
@@ -502,17 +556,26 @@ export const useFertilitySimulator = (originalEvaluation: EvaluationState | null
       }
     });
 
-    // 🎯 SELECCIÓN INTELIGENTE DE MOTOR
+    // 🎯 SELECCIÓN INTELIGENTE DE MOTOR CON UNIFIED ENGINE
     let newPrognosis: number;
+    let globalEngineMetrics: UnifiedEngineMetrics;
     
     if (engine.engine === 'basic') {
-      // Motor básico para escenarios simples
-      const basicResult = calculateProbability({ ...originalEvaluation.input, ...simulatedFactors });
-      newPrognosis = basicResult.report.numericPrognosis;
+      // Motor básico para escenarios simples - usar unified en modo standard
+      const { result, metrics } = calculateProbabilityUnified(
+        { ...originalEvaluation.input, ...simulatedFactors },
+        { mode: 'standard', debugMode: false }
+      );
+      newPrognosis = result.report.numericPrognosis;
+      globalEngineMetrics = metrics;
     } else {
-      // Motor Premium para escenarios complejos
-      const premiumResult = calculateProbabilityPremium({ ...originalEvaluation.input, ...simulatedFactors });
-      newPrognosis = premiumResult.report.numericPrognosis;
+      // Motor Premium para escenarios complejos - usar unified en modo premium
+      const { result, metrics } = calculateProbabilityUnified(
+        { ...originalEvaluation.input, ...simulatedFactors },
+        { mode: 'premium', debugMode: false }
+      );
+      newPrognosis = result.report.numericPrognosis;
+      globalEngineMetrics = metrics;
     }
 
     // 📊 Resultado enriquecido global
@@ -521,7 +584,8 @@ export const useFertilitySimulator = (originalEvaluation: EvaluationState | null
       'todos los factores optimizables',
       originalPrognosis,
       newPrognosis,
-      engine.engine
+      engine.engine,
+      globalEngineMetrics
     );
 
     setSimulationResult(enrichedResult);

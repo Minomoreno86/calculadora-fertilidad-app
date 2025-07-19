@@ -2,13 +2,42 @@
 // 🎯 INTEGRADOR DEL SISTEMA DE VALIDACIÓN CLÍNICA INTELIGENTE
 // ===================================================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, TouchableOpacity, Modal, ViewStyle } from 'react-native';
 import Text from '@/presentation/components/common/Text';
 import Box from '@/presentation/components/common/Box';
 import ModernIcon from '@/presentation/components/common/ModernIcon';
 import { useIntelligentClinicalValidation, ClinicalInsight } from '@/core/domain/validation/useIntelligentClinicalValidation';
 import { ClinicalAlertsSystem } from '@/presentation/components/features/validation/ClinicalAlertsSystem';
+
+// 🚀 INTEGRACIÓN MOTOR PARALELO FASE 2
+import { ParallelValidationEngine, PARALLEL_VALIDATION_PRESETS } from '@/core/workers/parallelValidationEngine_FASE2';
+import type { UserInput } from '@/core/domain/models';
+import { HsgResult, MyomaType, AdenomyosisType, PolypType } from '@/core/domain/models';
+import { useParallelValidationContext } from '@/core/context/ParallelValidationContext';
+
+// 🚀 DECLARACIÓN __DEV__ PARA REACT NATIVE
+declare const __DEV__: boolean;
+
+// 🚀 INTERFAZ PARA MÉTRICAS DEL MOTOR PARALELO
+interface ExtendedParallelMetrics {
+  totalTasks: number;
+  completedTasks: number;
+  failedTasks: number;
+  averageTime: number;
+  cacheHitRate: number;
+  concurrencyLevel: number;
+  isActive: boolean;
+  lastUpdate: number;
+  performanceReport?: {
+    parallelizationGain: number;
+    categoryBreakdown: Map<string, number>;
+    cacheEfficiency: number;
+    totalProcessingTime: number;
+  };
+  categoriesProcessed: string[];
+  resultsCount: number;
+}
 
 // Tipos del formulario (simplified)
 interface FormData {
@@ -271,6 +300,15 @@ export const IntelligentValidationIntegrator: React.FC<IntelligentValidationInte
   style
 }) => {
   const [showFullAlertsModal, setShowFullAlertsModal] = useState(false);
+  const [parallelValidationMetrics, setParallelValidationMetrics] = useState<ExtendedParallelMetrics | null>(null);
+
+  // 🚀 CONTEXTO DEL MOTOR PARALELO
+  const { updateMetrics: updateContextMetrics } = useParallelValidationContext();
+
+  // 🚀 INICIALIZAR MOTOR PARALELO FASE 2
+  const parallelEngine = useMemo(() => {
+    return new ParallelValidationEngine(PARALLEL_VALIDATION_PRESETS.development);
+  }, []);
 
   // Hook del sistema inteligente
   const {
@@ -279,13 +317,94 @@ export const IntelligentValidationIntegrator: React.FC<IntelligentValidationInte
     getCriticalAlerts,
     getWarnings,
     canProceedWithTreatment,
-    getUrgencyLevel
+    getUrgencyLevel,
+    sanitizedData
   } = useIntelligentClinicalValidation(formData, {
     enableRealTimeValidation: true,
     includeAdvancedInterpretation: !basicValidationOnly,
     considerPatientContext: !basicValidationOnly,
     prioritizeUrgentFindings: !basicValidationOnly
   });
+
+  // 🚀 EJECUTAR VALIDACIÓN PARALELA EN BACKGROUND
+  useEffect(() => {
+    if (!parallelEngine || basicValidationOnly || !sanitizedData) return;
+
+    const executeParallelValidation = async () => {
+      try {
+        // Convertir FormData a UserInput para el motor paralelo
+        const userInput: UserInput = {
+          age: typeof sanitizedData.age === 'string' ? parseInt(sanitizedData.age) : (sanitizedData.age ?? 30),
+          bmi: null,
+          cycleDuration: undefined,
+          infertilityDuration: sanitizedData.timeToConception ?? undefined,
+          hasPcos: false,
+          endometriosisGrade: 0,
+          myomaType: MyomaType.None,
+          adenomyosisType: AdenomyosisType.None,
+          polypType: PolypType.None,
+          hsgResult: HsgResult.Normal,
+          hasOtb: false,
+          otbMethod: undefined,
+          remainingTubalLength: undefined,
+          hasOtherInfertilityFactors: false,
+          desireForMultiplePregnancies: false,
+          hasPelvicSurgery: false,
+          pelvicSurgeriesNumber: 0,
+          amh: sanitizedData.amh ?? undefined,
+          prolactin: (sanitizedData as Record<string, unknown>).prolactin as number ?? undefined,
+          tsh: (sanitizedData as Record<string, unknown>).tsh as number ?? undefined,
+          tpoAbPositive: false,
+          homaIr: undefined,
+          spermConcentration: undefined,
+          spermProgressiveMotility: undefined,
+          spermNormalMorphology: undefined,
+          semenVolume: undefined
+        };
+
+        // Ejecutar validaciones paralelas en categorías principales
+        const results = await parallelEngine.executeParallelValidations(
+          userInput, 
+          ['hormonal', 'metabolic', 'temporal']
+        );
+
+        // Obtener métricas de performance
+        const metrics = parallelEngine.getMetrics();
+        const performanceReport = parallelEngine.getPerformanceReport();
+
+        const extendedMetrics: ExtendedParallelMetrics = {
+          ...metrics,
+          isActive: true,
+          lastUpdate: Date.now(),
+          performanceReport,
+          resultsCount: results.size,
+          categoriesProcessed: Array.from(results.keys())
+        };
+
+        setParallelValidationMetrics(extendedMetrics);
+
+        console.log('🚀 [ParallelValidation] Validación paralela completada:', {
+          categories: Array.from(results.keys()),
+          performance: performanceReport,
+          metrics
+        });
+
+      } catch (error) {
+        console.error('🚨 [ParallelValidation] Error en validación paralela:', error);
+      }
+    };
+
+    // Ejecutar validación paralela con debounce
+    const timeoutId = setTimeout(executeParallelValidation, 300);
+    return () => clearTimeout(timeoutId);
+  }, [parallelEngine, basicValidationOnly, sanitizedData]);
+
+  // 🚀 ACTUALIZAR CONTEXTO GLOBAL CON MÉTRICAS
+  useEffect(() => {
+    if (parallelValidationMetrics && updateContextMetrics) {
+      updateContextMetrics(parallelValidationMetrics);
+    }
+  }, [parallelValidationMetrics, updateContextMetrics]);
 
   // Notificar cambios de validación
   React.useEffect(() => {
@@ -354,6 +473,36 @@ export const IntelligentValidationIntegrator: React.FC<IntelligentValidationInte
             completionScore={validationResult.completionScore}
             onPress={() => setShowFullAlertsModal(true)}
           />
+        )}
+
+        {/* 🚀 MÉTRICAS DEL MOTOR PARALELO - Solo en desarrollo y modo completo */}
+        {__DEV__ && !basicValidationOnly && parallelValidationMetrics && (
+          <Box style={{ 
+            marginTop: 16,
+            backgroundColor: '#EFF6FF', 
+            borderRadius: 12, 
+            padding: 12,
+            borderWidth: 1,
+            borderColor: '#3B82F6'
+          }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <ModernIcon name="settings" size={16} color="#3B82F6" style={{ marginRight: 8 }} />
+              <Text variant="small" style={{ color: '#3B82F6', fontWeight: '600' }}>
+                Motor Paralelo FASE 2 - Activo
+              </Text>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text variant="small" style={{ color: '#1E40AF' }}>
+                Ganancia: {parallelValidationMetrics.performanceReport?.parallelizationGain || 0}%
+              </Text>
+              <Text variant="small" style={{ color: '#1E40AF' }}>
+                Cache: {Math.round((parallelValidationMetrics.cacheHitRate || 0) * 100)}%
+              </Text>
+              <Text variant="small" style={{ color: '#1E40AF' }}>
+                Categorías: {parallelValidationMetrics.categoriesProcessed?.length || 0}
+              </Text>
+            </View>
+          </Box>
         )}
 
         {/* Alertas inline compactas - Solo en modo completo */}

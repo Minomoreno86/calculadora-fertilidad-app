@@ -1,4 +1,4 @@
-import { FormState } from '../useCalculatorForm';
+import { FormState } from '../useCalculatorFormOptimized';
 import { UserInput } from '@/core/domain/models';
 
 export const mapFormStateToUserInput = (
@@ -89,7 +89,12 @@ export const mapFormStateToUserInput = (
     'formData.endometriosisStage': formData.endometriosisStage,
     'result.endometriosisGrade': result.endometriosisGrade,
     'formData.myomaType': formData.myomaType,
-    'result.myomaType': result.myomaType
+    'result.myomaType': result.myomaType,
+    // 🔧 DEBUG OTB - Para verificar el problema
+    'formData.hasOtb': formData.hasOtb,
+    'result.hasOtb': result.hasOtb,
+    'formData.otbMethod': formData.otbMethod,
+    'result.otbMethod': result.otbMethod
   });
 
   return result;

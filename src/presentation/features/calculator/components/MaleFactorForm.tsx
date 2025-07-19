@@ -4,7 +4,7 @@ import Text from '@/presentation/components/common/Text';
 import { ControlledTextInput } from '@/presentation/components/common/ControlledTextInput';
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 import { Control, FieldErrors } from 'react-hook-form';
-import { FormState } from '../useCalculatorForm';
+import { FormState } from '../useCalculatorFormOptimized';
 
 type Props = {
   control: Control<FormState>;

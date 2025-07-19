@@ -8,7 +8,7 @@ import { EvaluationState } from '@/core/domain/models'; // Importa EvaluationSta
  * @param reportKey La clave bajo la cual el informe está almacenado en AsyncStorage.
  * @returns Un objeto con el estado de la evaluación, el estado de carga y un posible error.
  */
-export const useReportLoader = (reportKey?: string | string[]): {
+export const useReportLoader = (reportKey?: string | string[] | null): {
   evaluation: EvaluationState | null;
   loading: boolean;
   error: string | null;
@@ -22,16 +22,30 @@ export const useReportLoader = (reportKey?: string | string[]): {
 
   useEffect(() => {
     const fetchReport = async () => {
-      if (!reportKey) {
+      // 🚀 ARMONIZACIÓN: Validación robusta de reportKey
+      if (!reportKey || 
+          (typeof reportKey === 'string' && reportKey.trim() === '') ||
+          (Array.isArray(reportKey) && (reportKey.length === 0 || !reportKey[0]))) {
         setLoading(false);
-        setError('No se proporcionó la clave del informe.');
+        setError('No se proporcionó la clave del informe válida.');
         setIsPremium(false);
-        console.warn('useReportLoader: No reportKey found.');
+        console.warn('useReportLoader: No valid reportKey found:', { reportKey, type: typeof reportKey });
         return;
       }
 
-      // Determinar la clave a usar (si es array, tomar la primera)
-      const key = Array.isArray(reportKey) ? reportKey[0] : reportKey;
+      // 🚀 ARMONIZACIÓN: Determinar clave con validación robusta
+      const key = Array.isArray(reportKey) 
+        ? reportKey[0]?.toString().trim() 
+        : reportKey.toString().trim();
+      
+      if (!key) {
+        setLoading(false);
+        setError('La clave del informe está vacía o es inválida.');
+        setIsPremium(false);
+        console.warn('useReportLoader: Invalid key after processing:', { reportKey, key });
+        return;
+      }
+
       const premium = key.startsWith('premium_report_');
       setIsPremium(premium);
 
@@ -39,9 +53,17 @@ export const useReportLoader = (reportKey?: string | string[]): {
         setLoading(true);
         setError(null); // Limpiar errores previos
 
+        console.log('🔍 useReportLoader: Fetching report with key:', key);
         const storedReport = await AsyncStorage.getItem(key);
+        
         if (storedReport) {
-          setEvaluation(JSON.parse(storedReport));
+          const parsedReport = JSON.parse(storedReport);
+          console.log('✅ useReportLoader: Report loaded successfully:', { 
+            key, 
+            hasReport: !!parsedReport,
+            reportType: parsedReport?.report?.category || 'unknown' 
+          });
+          setEvaluation(parsedReport);
         } else {
           setError('No se encontró el informe para la clave proporcionada.');
           console.warn('useReportLoader: No report found for key:', key);
