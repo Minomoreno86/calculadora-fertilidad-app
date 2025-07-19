@@ -1,8 +1,8 @@
 /**
  * 🚀 RESULTS DISPLAY MEJORADO - VERSIÓN PROFESIONAL
  * 
- * Sistema completo de análisis de fertilidad con IA médica integrada
- * y capacidades avanzadas de simulación y recomendaciones clínicas.
+ * Transformación completa del display de resultados para aprovechar
+ * todo el potencial del sistema de fertilidad avanzado.
  */
 
 import React, { useState, useMemo } from 'react';
@@ -22,7 +22,11 @@ import { AIConsultation } from '../../ai-medical-agent/AIConsultation';
 
 interface ResultsDisplayProps {
   evaluation: EvaluationState;
-  treatmentSuggestions?: any; // Deprecated - usando AI Medical Agent
+  treatmentSuggestions?: Array<{
+    type: string;
+    description: string;
+    priority: number;
+  }>;
   isPremiumReport?: boolean;
 }
 
@@ -49,6 +53,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   const [selectedFactor, setSelectedFactor] = useState<string | null>(null);
   
   const { simulationResult } = useFertilitySimulator(evaluation);
+  // const { simulationResult, metrics } = useFertilitySimulator(evaluation);
   const { report, factors } = evaluation;
 
   // 🎯 ANÁLISIS AVANZADO DE FACTORES CON RECOMENDACIONES MÉDICAS ESPECÍFICAS
@@ -306,23 +311,16 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         <View style={styles.actionContent}>
           <Text style={styles.actionTitle}>Próximos Pasos Recomendados</Text>
           <Text style={styles.actionDescription}>
-            {getActionMessage()}
+            {keyMetrics.criticalFactors > 0 
+              ? "Consulta con especialista en fertilidad recomendada urgentemente"
+              : keyMetrics.attentionFactors > 0
+              ? "Optimización de factores específicos puede mejorar significativamente tus posibilidades"
+              : "Mantén tu buen estado reproductivo con seguimiento regular"}
           </Text>
         </View>
       </View>
     </View>
   );
-
-  // 🎯 FUNCIÓN HELPER PARA MENSAJE DE ACCIÓN
-  const getActionMessage = (): string => {
-    if (keyMetrics.criticalFactors > 0) {
-      return "Consulta con especialista en fertilidad recomendada urgentemente";
-    }
-    if (keyMetrics.attentionFactors > 0) {
-      return "Optimización de factores específicos puede mejorar significativamente tus posibilidades";
-    }
-    return "Mantén tu buen estado reproductivo con seguimiento regular";
-  };
 
   // 🎯 FUNCIÓN PARA OBTENER INFORMACIÓN CLÍNICA ESPECÍFICA
   const getClinicalInfo = (factorKey: string, _value: number) => {
@@ -361,79 +359,57 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
 
   // 🏥 INFORMACIÓN MÉDICA POR DEFECTO PARA FACTORES SIN CATEGORÍA ESPECÍFICA
   const getDefaultClinicalInfo = (factorKey: string, factorValue: number): { explanation: string; recommendations: string[]; sources?: string[] } | null => {
-    const infoGenerators: Record<string, (value: number) => { explanation: string; recommendations: string[]; sources?: string[] }> = {
-      'male': getMaleFactorInfo,
-      'cycle': getCycleInfo,
-      'bmi': getBMIInfo
+    const defaultInfoMap: Record<string, { explanation: string; recommendations: string[]; sources?: string[] }> = {
+      'male': {
+        explanation: factorValue >= 0.9 
+          ? 'Los parámetros seminales están dentro de rangos normales según WHO 2010.'
+          : factorValue >= 0.7 
+          ? 'Se detectan alteraciones leves en parámetros seminales que pueden afectar la fertilidad.'
+          : factorValue >= 0.5
+          ? 'Se detectan alteraciones moderadas en parámetros seminales que impactan significativamente la fertilidad.'
+          : 'Se detectan alteraciones severas en parámetros seminales que requieren evaluación andrológica urgente.',
+        recommendations: factorValue >= 0.9
+          ? ['Mantener estilo de vida saludable', 'Evitar factores de riesgo (tabaco, calor excesivo)']
+          : factorValue >= 0.7
+          ? ['Antioxidantes: CoQ10 200mg/día, Vitamina E 400UI', 'Evaluación andrológica si persiste']
+          : factorValue >= 0.5
+          ? ['Evaluación andrológica especializada urgente', 'Considerar técnicas de reproducción asistida']
+          : ['Evaluación andrológica urgente', 'ICSI como técnica de elección en FIV'],
+        sources: ['WHO Laboratory Manual (5th edition)', 'Cooper TG et al. Hum Reprod Update 2010']
+      },
+      'cycle': {
+        explanation: factorValue >= 0.9
+          ? 'Tienes ciclos menstruales regulares, lo que indica ovulación predecible mensual.'
+          : factorValue >= 0.7
+          ? 'Presentas irregularidades menstruales leves que pueden indicar disfunción ovulatoria esporádica.'
+          : 'Tienes ciclos menstruales muy irregulares que sugieren anovulación crónica.',
+        recommendations: factorValue >= 0.9
+          ? ['Continuar monitoreando ciclo natural', 'Identificar ventana fértil con test ovulación']
+          : factorValue >= 0.7
+          ? ['Estudio hormonal: TSH, prolactina, AMH, andrógenos', 'Considerar inducción ovulatoria']
+          : ['Estudio hormonal completo urgente', 'Inducción ovulatoria con letrozol o gonadotropinas'],
+        sources: ['ASRM Practice Guidelines 2019', 'ESHRE/ASRM Consensus 2018']
+      },
+      'bmi': {
+        explanation: factorValue >= 0.9
+          ? 'Tu IMC se encuentra en rango normal (18.5-24.9 kg/m²), lo cual es óptimo para fertilidad.'
+          : factorValue >= 0.7
+          ? 'Tu IMC indica sobrepeso (25-29.9 kg/m²), lo cual puede afectar la ovulación y respuesta a tratamientos.'
+          : factorValue >= 0.5
+          ? 'Tu IMC indica obesidad clase I-II (30-39.9 kg/m²), impactando significativamente la fertilidad.'
+          : 'Tu IMC indica obesidad severa (≥40 kg/m²) o bajo peso (<18.5), requiriendo intervención urgente.',
+        recommendations: factorValue >= 0.9
+          ? ['Mantener peso actual con dieta equilibrada', 'Ejercicio regular 150 min/semana']
+          : factorValue >= 0.7
+          ? ['Pérdida de peso objetivo: 5-10% del peso actual', 'Dieta hipocalórica + ejercicio estructurado']
+          : factorValue >= 0.5
+          ? ['Pérdida de peso ≥10% antes de tratamientos', 'Seguimiento nutricional especializado']
+          : ['Intervención médica urgente: endocrinología/nutrición', 'Considerar cirugía bariátrica si IMC >40'],
+        sources: ['ASRM Practice Guidelines 2015', 'Cochrane Review 2017']
+      }
     };
 
-    const generator = infoGenerators[factorKey];
-    return generator ? generator(factorValue) : null;
-  };
-
-  // 🏥 FUNCIONES ESPECÍFICAS PARA CADA FACTOR
-  const getMaleFactorInfo = (factorValue: number): { explanation: string; recommendations: string[]; sources?: string[] } => {
-    const getExplanation = (value: number): string => {
-      if (value >= 0.9) return 'Los parámetros seminales están dentro de rangos normales según WHO 2010.';
-      if (value >= 0.7) return 'Se detectan alteraciones leves en parámetros seminales que pueden afectar la fertilidad.';
-      if (value >= 0.5) return 'Se detectan alteraciones moderadas en parámetros seminales que impactan significativamente la fertilidad.';
-      return 'Se detectan alteraciones severas en parámetros seminales que requieren evaluación andrológica urgente.';
-    };
-
-    const getRecommendations = (value: number): string[] => {
-      if (value >= 0.9) return ['Mantener estilo de vida saludable', 'Evitar factores de riesgo (tabaco, calor excesivo)'];
-      if (value >= 0.7) return ['Antioxidantes: CoQ10 200mg/día, Vitamina E 400UI', 'Evaluación andrológica si persiste'];
-      if (value >= 0.5) return ['Evaluación andrológica especializada urgente', 'Considerar técnicas de reproducción asistida'];
-      return ['Evaluación andrológica urgente', 'ICSI como técnica de elección en FIV'];
-    };
-
-    return {
-      explanation: getExplanation(factorValue),
-      recommendations: getRecommendations(factorValue),
-      sources: ['WHO Laboratory Manual (5th edition)', 'Cooper TG et al. Hum Reprod Update 2010']
-    };
-  };
-
-  const getCycleInfo = (factorValue: number): { explanation: string; recommendations: string[]; sources?: string[] } => {
-    const getExplanation = (value: number): string => {
-      if (value >= 0.9) return 'Tienes ciclos menstruales regulares, lo que indica ovulación predecible mensual.';
-      if (value >= 0.7) return 'Presentas irregularidades menstruales leves que pueden indicar disfunción ovulatoria esporádica.';
-      return 'Tienes ciclos menstruales muy irregulares que sugieren anovulación crónica.';
-    };
-
-    const getRecommendations = (value: number): string[] => {
-      if (value >= 0.9) return ['Continuar monitoreando ciclo natural', 'Identificar ventana fértil con test ovulación'];
-      if (value >= 0.7) return ['Estudio hormonal: TSH, prolactina, AMH, andrógenos', 'Considerar inducción ovulatoria'];
-      return ['Estudio hormonal completo urgente', 'Inducción ovulatoria con letrozol o gonadotropinas'];
-    };
-
-    return {
-      explanation: getExplanation(factorValue),
-      recommendations: getRecommendations(factorValue),
-      sources: ['ASRM Practice Guidelines 2019', 'ESHRE/ASRM Consensus 2018']
-    };
-  };
-
-  const getBMIInfo = (factorValue: number): { explanation: string; recommendations: string[]; sources?: string[] } => {
-    const getExplanation = (value: number): string => {
-      if (value >= 0.9) return 'Tu IMC se encuentra en rango normal (18.5-24.9 kg/m²), lo cual es óptimo para fertilidad.';
-      if (value >= 0.7) return 'Tu IMC indica sobrepeso (25-29.9 kg/m²), lo cual puede afectar la ovulación y respuesta a tratamientos.';
-      if (value >= 0.5) return 'Tu IMC indica obesidad clase I-II (30-39.9 kg/m²), impactando significativamente la fertilidad.';
-      return 'Tu IMC indica obesidad severa (≥40 kg/m²) o bajo peso (<18.5), requiriendo intervención urgente.';
-    };
-
-    const getRecommendations = (value: number): string[] => {
-      if (value >= 0.9) return ['Mantener peso actual con dieta equilibrada', 'Ejercicio regular 150 min/semana'];
-      if (value >= 0.7) return ['Pérdida de peso objetivo: 5-10% del peso actual', 'Dieta hipocalórica + ejercicio estructurado'];
-      if (value >= 0.5) return ['Pérdida de peso ≥10% antes de tratamientos', 'Seguimiento nutricional especializado'];
-      return ['Intervención médica urgente: endocrinología/nutrición', 'Considerar cirugía bariátrica si IMC >40'];
-    };
-
-    return {
-      explanation: getExplanation(factorValue),
-      recommendations: getRecommendations(factorValue),
-      sources: ['ASRM Practice Guidelines 2015', 'Cochrane Review 2017']
-    };
+    return defaultInfoMap[factorKey] || null;
   };
 
   // 🏥 FUNCIONES PARA DETERMINAR CATEGORÍAS CLÍNICAS
@@ -577,20 +553,73 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     return 'CRÍTICO';
   };
 
+  // 💊 RENDERIZAR SUGERENCIAS DE TRATAMIENTO INTELIGENTES
+  const renderTreatmentSuggestions = () => {
+    const prognosis = keyMetrics.overallScore;
+    
+    // Tratamientos basados en el pronóstico y evidencia médica
+    const treatmentOptions = [];
+    
+    if (prognosis >= 60) {
+      // Alto pronóstico: enfoque conservador primero
+      treatmentOptions.push(
+        { title: "🌿 Optimización Natural", description: "3-6 meses de mejora de factores modificables", priority: "Alta" },
+        { title: "📊 Monitoreo de Ovulación", description: "Timing intercourse con tests de ovulación", priority: "Alta" },
+        { title: "💊 Suplementación Dirigida", description: "Ácido fólico, CoQ10, Vitamina D según perfil", priority: "Media" },
+        { title: "🔬 IUI (Inseminación)", description: "Si no hay concepción en 6 meses", priority: "Baja" }
+      );
+    } else if (prognosis >= 40) {
+      // Pronóstico moderado: combinación de enfoques
+      treatmentOptions.push(
+        { title: "🎯 IUI con Estimulación", description: "Letrozol + IUI como primera línea", priority: "Alta" },
+        { title: "⚡ Optimización Paralela", description: "Corrección de factores mientras se trata", priority: "Alta" },
+        { title: "🔬 FIV si Fallan 3 IUI", description: "Protocolo estándar con alta probabilidad", priority: "Media" },
+        { title: "🧬 Evaluación Genética", description: "Considerar PGT-A si >35 años", priority: "Media" }
+      );
+    } else {
+      // Bajo pronóstico: tratamientos avanzados
+      treatmentOptions.push(
+        { title: "🚀 FIV Directa", description: "Protocolo personalizado según reserva ovárica", priority: "Alta" },
+        { title: "🧬 PGT-A Recomendado", description: "Análisis genético preimplantacional", priority: "Alta" },
+        { title: "🎯 Optimización Intensiva", description: "Mejora paralela de todos los factores modificables", priority: "Media" },
+        { title: "🏥 Centro de Excelencia", description: "Derivación a especialista en casos complejos", priority: "Media" }
+      );
+    }
 
+    return (
+      <View style={styles.treatmentList}>
+        {treatmentOptions.map((treatment, index) => (
+          <View key={index} style={styles.treatmentItem}>
+            <View style={styles.treatmentHeader}>
+              <Text style={styles.treatmentItemTitle}>{treatment.title}</Text>
+              <View style={[
+                styles.priorityBadge,
+                { backgroundColor: treatment.priority === 'Alta' ? theme.colors.error : 
+                                 treatment.priority === 'Media' ? theme.colors.warning : 
+                                 theme.colors.success }
+              ]}>
+                <Text style={styles.priorityText}>{treatment.priority}</Text>
+              </View>
+            </View>
+            <Text style={styles.treatmentDescription}>{treatment.description}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  };
 
   // 🎯 RENDERIZAR ANÁLISIS DETALLADO CON INFORMACIÓN CLÍNICA
   const renderDetailedAnalysis = () => (
     <View style={styles.analysisContainer}>
       <Text style={styles.sectionTitle}>🔍 Análisis Detallado con Evidencia Médica</Text>
-      {factorAnalysis.map((factor) => {
+      {factorAnalysis.map((factor, index) => {
         const clinicalInfo = getClinicalInfo(factor.name, factor.value);
         const statusColor = getFactorStatusColor(factor.value);
         const statusLabel = getFactorStatusLabel(factor.value);
         
         return (
           <TouchableOpacity
-            key={factor.name}
+            key={index}
             style={styles.factorCard}
             onPress={() => setSelectedFactor(selectedFactor === factor.name ? null : factor.name)}
           >
@@ -629,16 +658,16 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                     
                     <View style={styles.clinicalRecommendations}>
                       <Text style={styles.clinicalTitle}>💡 Recomendaciones Clínicas</Text>
-                      {clinicalInfo.recommendations.map((rec) => (
-                        <Text key={rec} style={styles.recommendationItem}>• {rec}</Text>
+                      {clinicalInfo.recommendations.map((rec, idx) => (
+                        <Text key={idx} style={styles.recommendationItem}>• {rec}</Text>
                       ))}
                     </View>
                     
                     {clinicalInfo.sources && (
                       <View style={styles.clinicalSources}>
                         <Text style={styles.clinicalTitle}>📚 Referencias Científicas</Text>
-                        {clinicalInfo.sources.map((source) => (
-                          <Text key={source} style={styles.sourceItem}>{source}</Text>
+                        {clinicalInfo.sources.map((source, idx) => (
+                          <Text key={idx} style={styles.sourceItem}>{source}</Text>
                         ))}
                       </View>
                     )}
@@ -702,14 +731,14 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         return (
           <>
             {renderKeyMetrics()}
-            {!!report?.prognosisPhrase && (
+            {report?.prognosisPhrase && (
               <EnhancedInfoCard
                 type="info"
                 title="Pronóstico Personalizado"
                 message={report.prognosisPhrase}
               />
             )}
-            {!!report?.benchmarkPhrase && (
+            {report?.benchmarkPhrase && (
               <EnhancedInfoCard
                 type="success"
                 title="Comparación Clínica"
@@ -732,12 +761,43 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       
       case 'ai-consultation':
         return (
-          <AIConsultation 
-            evaluation={evaluation}
-            onRecommendationSelect={(recommendation) => {
-              console.log('🤖 AI Recommendation selected:', recommendation);
-            }}
-          />
+          <View style={styles.treatmentsContainer}>
+            <Text style={styles.sectionTitle}>� Sugerencias de Tratamiento</Text>
+            
+            {/* Tratamientos Basados en el Perfil */}
+            <View style={styles.treatmentCard}>
+              <Text style={styles.treatmentTitle}>🎯 Tratamientos Recomendados</Text>
+              <Text style={styles.treatmentContent}>
+                Basado en tu perfil de fertilidad (pronóstico: {keyMetrics.overallScore.toFixed(1)}%), 
+                te recomendamos considerar las siguientes opciones terapéuticas:
+              </Text>
+              
+              {/* Lista de tratamientos basados en el pronóstico */}
+              {renderTreatmentSuggestions()}
+            </View>
+            
+            {/* Cronograma de Tratamiento */}
+            <View style={styles.treatmentCard}>
+              <Text style={styles.treatmentTitle}>📅 Cronograma Sugerido</Text>
+              <Text style={styles.treatmentContent}>
+                {keyMetrics.overallScore >= 60 
+                  ? "Tu pronóstico permite un enfoque gradual: 3-6 meses de optimización antes de tratamientos avanzados."
+                  : keyMetrics.overallScore >= 40
+                  ? "Recomendamos combinar optimización con tratamientos de baja complejidad en 3-4 meses."
+                  : "Considera tratamientos de alta complejidad sin retrasos, mientras optimizas factores modificables."
+                }
+              </Text>
+            </View>
+
+            {/* Evidencia Científica */}
+            <View style={styles.treatmentCard}>
+              <Text style={styles.treatmentTitle}>📚 Evidencia Científica</Text>
+              <Text style={styles.treatmentContent}>
+                Las recomendaciones se basan en guías ASRM/ESHRE 2023 y estudios con evidencia nivel I. 
+                La personalización considera edad, reserva ovárica, y factores masculinos según tu perfil específico.
+              </Text>
+            </View>
+          </View>
         );
       
       default:
