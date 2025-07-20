@@ -15,14 +15,14 @@ import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 import { useFertilitySimulator } from '../../simulator/useFertilitySimulator';
 import { SimulatorDashboard } from '../../simulator/components/SimulatorDashboard';
 import { clinicalContentLibrary } from '@/core/domain/logic/clinicalContentLibrary';
-import { AIConsultation } from '../../ai-medical-agent/AIConsultation';
+import AIConsultation from '../../ai-medical-agent/AIConsultation';
 
 // Remover línea no usada del width
 // const { width } = Dimensions.get('window');
 
 interface ResultsDisplayProps {
   evaluation: EvaluationState;
-  treatmentSuggestions?: any; // Deprecated - usando AI Medical Agent
+  treatmentSuggestions?: unknown; // Deprecated - usando AI Medical Agent
   isPremiumReport?: boolean;
 }
 
@@ -734,7 +734,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         return (
           <AIConsultation 
             evaluation={evaluation}
-            onRecommendationSelect={(recommendation) => {
+            onRecommendationSelect={(recommendation: unknown) => {
               console.log('🤖 AI Recommendation selected:', recommendation);
             }}
           />

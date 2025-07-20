@@ -572,6 +572,141 @@ export const TREATMENTS_DATABASE: Record<string, TreatmentProtocol> = {
         'Considerar gestación subrogada si factor uterino'
       ]
     }
+  },
+
+  // 🎯 PROTOCOLO ESPECÍFICO: MANEJO POR EDAD MATERNA AVANZADA
+  ageBasedManagement: {
+    id: 'ageBasedManagement',
+    name: 'Age-Based Fertility Management',
+    nameES: 'Manejo de Fertilidad Basado en Edad Materna',
+    category: 'level1', // Variable según edad
+    complexity: 'medium', // Variable según protocolo
+    successRate: {
+      perCycle: 'Variable según edad: <35 años(40-45%), 35-37(30-35%), 38-40(20-25%), ≥41(<15%)',
+      cumulative: 'Optimizado según protocolo específico por grupo etario',
+      timeToSuccess: 'Escalonado: 3-6 meses nivel 1, 6-12 meses nivel 2-3'
+    },
+    indications: [
+      'Toda mujer con deseo reproductivo según grupo etario',
+      'Infertilidad con edad como factor determinante',
+      'Planificación reproductiva personalizada',
+      'Optimización tiempo-efectividad según edad'
+    ],
+    contraindications: [
+      'Contraindicaciones médicas absolutas para embarazo',
+      'Rechazo tratamiento médico',
+      'Expectativas no realistas tras consejería'
+    ],
+    prerequisites: [
+      'Evaluación integral: AMH, CFA, FSH',
+      'Estudio básico infertilidad completado',
+      'Consejería reproductiva según edad',
+      'Evaluación riesgos obstétricos por edad'
+    ],
+    procedure: {
+      preparation: [
+        'GRUPO <35 AÑOS:',
+        '• Evaluación reserva ovárica (AMH, CFA)',
+        '• Hasta 3-4 ciclos IUI si condiciones favorables',
+        '• FIV/ICSI en indicaciones específicas',
+        '',
+        'GRUPO 35-37 AÑOS:',
+        '• Evaluación reserva ovárica prioritaria', 
+        '• Hasta 2-3 ciclos IUI con estimulación moderada',
+        '• FIV/ICSI +/- PGT-A según contexto clínico',
+        '',
+        'GRUPO 38-40 AÑOS:',
+        '• Máximo 1-2 intentos IUI en condiciones ideales',
+        '• FIV/ICSI + PGT-A como tratamiento preferente',
+        '• Consejería sobre donación ovocitaria si AMH <0.8',
+        '',
+        'GRUPO 41-42 AÑOS:',
+        '• No IUI recomendado salvo excepciones',
+        '• FIV-ICSI + PGT-A obligatorio',
+        '• Donación ovocitaria si AMH <0.5 o fallos previos',
+        '',
+        'GRUPO ≥43 AÑOS:',
+        '• Ovodonación como primera recomendación',
+        '• FIV con ovocitos propios solo tras consejería exhaustiva'
+      ],
+      execution: [
+        'NIVEL 1 (Baja complejidad):',
+        '• <35 años: IUI + estimulación leve (hasta 4 ciclos)',
+        '• 35-37 años: IUI + estimulación moderada (hasta 3 ciclos)', 
+        '• 38-40 años: IUI solo condiciones ideales (máximo 2 ciclos)',
+        '',
+        'NIVEL 2-3 (Alta complejidad):',
+        '• <35 años: FIV convencional, ICSI según indicación',
+        '• 35-37 años: FIV/ICSI, considerar PGT-A tras fallos',
+        '• 38-40 años: FIV-ICSI + PGT-A recomendado',
+        '• 41-42 años: FIV-ICSI + PGT-A o donación ovocitaria',
+        '• ≥43 años: Ovodonación preferente'
+      ],
+      followUp: [
+        'Monitoreo según protocolo específico aplicado',
+        'Reevaluación tras cada fallo de ciclo',
+        'Ajuste estrategia según respuesta y edad progresiva',
+        'Consejería continua sobre opciones disponibles'
+      ]
+    },
+    costs: {
+      estimate: 'Variable: IUI $800-1500, FIV/ICSI $8000-15000, Ovodonación $15000-25000',
+      factors: [
+        'Complejidad tratamiento según edad',
+        'Necesidad PGT-A (adicional $3000-5000)',
+        'Medicamentos estimulación ovárica',
+        'Monitoreo adicional en edades avanzadas',
+        'Costos donación ovocitaria si aplicable'
+      ]
+    },
+    risks: {
+      maternal: [
+        '<35 años: Riesgos mínimos, embarazo múltiple principal',
+        '35-40 años: Diabetes gestacional, preeclampsia aumentadas',
+        '>40 años: Complicaciones obstétricas significativas',
+        'Síndrome hiperestimulación variable según protocolo',
+        'Riesgos quirúrgicos FIV aumentan con edad'
+      ],
+      fetal: [
+        '<35 años: Riesgo aneuploidía basal (<1:1000)',
+        '35-37 años: Riesgo aneuploidía moderado (1:400-1:200)',
+        '38-40 años: Riesgo aneuploidía alto (1:200-1:100)',
+        '>40 años: Riesgo aneuploidía muy alto (>1:100)',
+        'Mayor tasa aborto espontáneo con edad avanzada'
+      ],
+      procedural: [
+        'Respuesta ovárica disminuida con edad',
+        'Calidad embrionaria reducida',
+        'Tasas implantación menores',
+        'Mayor complejidad técnica en edades avanzadas'
+      ]
+    },
+    monitoring: [
+      'Seguimiento estricto reserva ovárica',
+      'Evaluación respuesta según edad',
+      'Monitoreo complicaciones obstétricas aumentadas',
+      'Vigilancia aneuploidía fetal según grupo etario',
+      'Ajustes protocolares según evolución edad'
+    ],
+    evidenceLevel: 'A',
+    guidelines: [
+      'ESHRE Guidelines 2023: Female Fertility Assessment',
+      'ASRM Committee Opinion Age-related Fertility Decline 2024',
+      'NICE Fertility Guidelines Update 2024',
+      'CDC ART Success Rates National Summary 2023',
+      'ESHRE Recommendations Advanced Female Age 2024'
+    ],
+    nextSteps: {
+      ifSuccess: 'Seguimiento obstétrico de alto riesgo según edad materna',
+      ifFailure: [
+        '<35 años: Escalamiento a FIV/ICSI tras fallos IUI',
+        '35-37 años: FIV-ICSI +/- PGT-A según fallos',
+        '38-40 años: Considerar donación ovocitaria tras 2-3 fallos FIV',
+        '≥41 años: Ovodonación como siguiente paso preferente',
+        'Consejería integral opciones reproductivas restantes',
+        'Evaluación adopción u otras alternativas familiares'
+      ]
+    }
   }
 };
 

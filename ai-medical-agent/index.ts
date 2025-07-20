@@ -1,397 +1,278 @@
 /**
- * 🤖 AGENTE IA MÉDICO PRINCIPAL - DR. IA FERTILITAS
- * Punto de entrada principal para el sistema de IA médica
+ * 🤖 AI MEDICAL AGENT - ENTRADA PRINCIPAL UNIFICADA v3.0
+ * Sistema de inteligencia artificial médica de nueva generación
+ * Arquitectura limpia, escalable y profesional
  */
 
-import { ClinicalReasoningEngine, UserInput } from './core/reasoning-engine/clinicalReasoningEngine';
-import { ConversationEngine, ConversationContext } from './core/conversation-engine/conversationEngine';
-import { PATHOLOGIES_DATABASE } from './core/knowledge-base/pathologies';
-import { TREATMENTS_DATABASE } from './core/knowledge-base/treatments';
+// ====================================================================
+// 📦 IMPORTS DEL SISTEMA UNIFICADO
+// ====================================================================
 
-// Re-exportar componentes principales
-export { ChatInterface } from './presentation/components/ChatInterface';
-export { ClinicalReasoningEngine } from './core/reasoning-engine/clinicalReasoningEngine';
-export { ConversationEngine } from './core/conversation-engine/conversationEngine';
+// Sistema principal unificado
+import UnifiedMedicalAI, { 
+  createMedicalAI,
+  quickAnalysis,
+  quickConsultation,
+  type UnifiedMedicalAIConfig
+} from './UnifiedMedicalAI';
 
-// Re-exportar tipos principales
-export type { 
-  UserInput,
-  DiagnosticAnalysis,
-  TreatmentPlan,
-  SuccessPrediction 
-} from './core/reasoning-engine/clinicalReasoningEngine';
+// Tipos centralizados y unificados
+import type {
+  UnifiedUserInput,
+  UnifiedClinicalAnalysis,
+  UnifiedSuccessRate,
+  UnifiedMedicalResponse,
+  UnifiedConversationContext,
+  UnifiedSystemHealth,
+  UnifiedAgentConfig,
+  UnifiedOperationResult,
+  ComprehensiveAnalysisResult,
+  UnifiedAlert,
+  UnifiedQualityMetrics
+} from './core/types/UnifiedTypes';
 
+// Re-exportar tipos con nombres simplificados
+export type UserInput = UnifiedUserInput;
+export type ClinicalAnalysis = UnifiedClinicalAnalysis;
+export type SuccessRate = UnifiedSuccessRate;
+export type MedicalResponse = UnifiedMedicalResponse;
+export type ConversationContext = UnifiedConversationContext;
+export type SystemHealth = UnifiedSystemHealth;
+export type AgentConfig = UnifiedAgentConfig;
+export type OperationResult<T = unknown> = UnifiedOperationResult<T>;
+
+// Re-exportar los tipos unificados también
 export type {
-  ConversationContext,
-  ConversationMessage,
-  AIPersonality
-} from './core/conversation-engine/conversationEngine';
+  UnifiedUserInput,
+  UnifiedClinicalAnalysis,
+  UnifiedSuccessRate,
+  UnifiedMedicalResponse,
+  UnifiedConversationContext,
+  UnifiedSystemHealth,
+  UnifiedAgentConfig,
+  UnifiedOperationResult,
+  ComprehensiveAnalysisResult
+};
+
+// Orquestador central
+export { default as MedicalOrchestrator } from './core/orchestrator/MedicalOrchestrator';
+
+// Componentes del sistema unificado
+export { default as IntelligentCache } from './core/orchestrator/IntelligentCache';
+export { default as RobustValidator } from './core/orchestrator/RobustValidator';
+export { default as PerformanceMonitor } from './core/orchestrator/PerformanceMonitor';
+
+// Nota: Los motores especializados serán exportados cuando se actualicen para el nuevo sistema
+
+// ====================================================================
+// 🎯 API PRINCIPAL UNIFICADA
+// ====================================================================
 
 /**
- * 🧠 CLASE PRINCIPAL DEL AGENTE IA MÉDICO
+ * 🚀 Función principal para crear agente médico unificado
+ * Nueva interfaz que reemplaza createMedicalAgent
  */
-export class MedicalAIAgent {
-  private reasoningEngine: typeof ClinicalReasoningEngine;
-  private conversationEngine: ConversationEngine | null = null;
-
-  constructor() {
-    this.reasoningEngine = ClinicalReasoningEngine;
-  }
-
-  /**
-   * Analiza un caso clínico completo
-   */
-  analyzeCase(userInput: UserInput) {
-    console.log('🤖 Dr. IA Fertilitas iniciando análisis clínico...');
-    return this.reasoningEngine.analyzeCase(userInput);
-  }
-
-  /**
-   * Inicia una conversación médica
-   */
-  startConversation(userInput: UserInput, personality: string = 'familyDoctor'): ConversationEngine {
-    console.log(`🤖 Dr. IA Fertilitas iniciando conversación con personalidad: ${personality}`);
-    
-    const context: ConversationContext = {
-      userInput,
-      conversationHistory: [],
-      currentPersonality: personality,
-      sessionId: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date().toISOString()
-    };
-
-    this.conversationEngine = new ConversationEngine(context);
-    console.log(`📝 Sesión iniciada: ${context.sessionId}`);
-    
-    return this.conversationEngine;
-  }
-
-  /**
-   * Procesa una consulta médica
-   */
-  processQuery(query: string, messageType: 'analysis' | 'recommendation' | 'education' | 'followup' = 'analysis') {
-    if (!this.conversationEngine) {
-      throw new Error('Conversación no iniciada. Llama startConversation() primero.');
-    }
-
-    console.log(`🔍 Procesando consulta: "${query.substring(0, 50)}..." (Tipo: ${messageType})`);
-    return this.conversationEngine.generateResponse(query, messageType);
-  }
-
-  /**
-   * Obtiene información de una patología específica
-   */
-  getPathologyInfo(pathologyId: string) {
-    const pathology = PATHOLOGIES_DATABASE[pathologyId];
-    if (!pathology) {
-      console.warn(`⚠️ Patología no encontrada: ${pathologyId}`);
-      return null;
-    }
-    console.log(`📖 Información de patología obtenida: ${pathology.nameES}`);
-    return pathology;
-  }
-
-  /**
-   * Obtiene información de un tratamiento específico
-   */
-  getTreatmentInfo(treatmentId: string) {
-    const treatment = TREATMENTS_DATABASE[treatmentId];
-    if (!treatment) {
-      console.warn(`⚠️ Tratamiento no encontrado: ${treatmentId}`);
-      return null;
-    }
-    console.log(`💊 Información de tratamiento obtenida: ${treatment.nameES}`);
-    return treatment;
-  }
-
-  /**
-   * Obtiene estadísticas del agente
-   */
-  getAgentStats() {
-    const stats = {
-      pathologies: Object.keys(PATHOLOGIES_DATABASE).length,
-      treatments: Object.keys(TREATMENTS_DATABASE).length,
-      personalities: 3,
-      version: '1.0.0',
-      lastUpdate: new Date().toISOString(),
-      capabilities: [
-        'Análisis clínico completo',
-        'Predicción de éxito reproductivo',
-        'Recomendaciones de tratamiento escalonado',
-        'Conversación médica especializada',
-        'Base de conocimiento validada científicamente'
-      ]
-    };
-    
-    console.log('📊 Estadísticas del agente:', stats);
-    return stats;
-  }
-
-  /**
-   * Realiza un diagnóstico automático rápido
-   */
-  quickDiagnosis(userInput: UserInput): { 
-    primaryConcerns: string[]; 
-    suggestedTests: string[]; 
-    urgencyLevel: 'low' | 'medium' | 'high';
-    nextSteps: string[] 
-  } {
-    const concerns: string[] = [];
-    const tests: string[] = [];
-    const nextSteps: string[] = [];
-    let urgencyLevel: 'low' | 'medium' | 'high' = 'low';
-
-    // Análisis por edad
-    if (userInput.age >= 35) {
-      concerns.push('Edad materna avanzada (≥35 años)');
-      tests.push('AMH - Evaluación de reserva ovárica');
-      urgencyLevel = 'medium';
-      if (userInput.age >= 40) {
-        urgencyLevel = 'high';
-        nextSteps.push('Considerar evaluación inmediata');
-      }
-    }
-
-    // Análisis por duración de infertilidad
-    if (userInput.infertilityDuration >= 12) {
-      if (userInput.age < 35) {
-        concerns.push('Infertilidad primaria/secundaria (≥12 meses)');
-      } else {
-        concerns.push('Infertilidad con urgencia por edad (≥6 meses recomendado)');
-        urgencyLevel = 'high';
-      }
-    }
-
-    // Análisis de BMI
-    if (userInput.bmi) {
-      if (userInput.bmi < 18.5) {
-        concerns.push('Bajo peso (BMI < 18.5)');
-        nextSteps.push('Evaluación nutricional');
-      } else if (userInput.bmi >= 30) {
-        concerns.push('Obesidad (BMI ≥ 30)');
-        tests.push('Perfil metabólico completo');
-        nextSteps.push('Programa de reducción de peso');
-      }
-    }
-
-    // Análisis de laboratorios
-    if (!userInput.labs || Object.values(userInput.labs).every(v => v === undefined)) {
-      tests.push('Panel hormonal básico (FSH, LH, E2, TSH)');
-    } else {
-      if (userInput.labs.amh !== undefined && userInput.labs.amh < 1.0) {
-        concerns.push('Reserva ovárica disminuida (AMH < 1.0)');
-        urgencyLevel = 'high';
-      }
-    }
-
-    // Factor masculino
-    if (!userInput.maleFactors) {
-      tests.push('Espermatobioscopia completa');
-      nextSteps.push('Evaluación andrológica');
-    }
-
-    // Recomendaciones generales
-    if (concerns.length === 0) {
-      nextSteps.push('Estudio de fertilidad básico');
-    }
-
-    return {
-      primaryConcerns: concerns.length > 0 ? concerns : ['Evaluación de fertilidad de rutina'],
-      suggestedTests: tests,
-      urgencyLevel,
-      nextSteps
-    };
-  }
+export function createMedicalAgent(config?: UnifiedMedicalAIConfig): UnifiedMedicalAI {
+  console.log('🆕 Usando UnifiedMedicalAI v3.0 - Sistema de nueva generación');
+  return createMedicalAI(config);
 }
 
 /**
- * 🚀 UTILIDADES DE INTEGRACIÓN
+ * 💡 Función de conveniencia para análisis médico completo
+ * Versión mejorada con análisis integral
  */
-
-// Interfaz para datos del formulario
-interface FormData {
-  age?: number;
-  partnerAge?: number;
-  bmi?: number;
-  infertilityDuration?: number;
-  menstrualCycleLength?: number;
-  previousPregnancies?: number;
-  previousLosses?: number;
-  symptoms?: string[];
-  fsh?: number;
-  lh?: number;
-  estradiol?: number;
-  progesterone?: number;
-  prolactin?: number;
-  tsh?: number;
-  amh?: number;
-  testosterone?: number;
-  maleFactors?: {
-    concentration?: number;
-    motility?: number;
-    morphology?: number;
-    volume?: number;
-  };
-  priorTreatments?: string[];
-  preferences?: {
-    maxComplexity?: 'low' | 'medium' | 'high';
-    budgetRange?: 'low' | 'medium' | 'high';
-    timeframe?: 'urgent' | 'normal' | 'flexible';
+export async function quickMedicalAnalysis(
+  userInput: UserInput,
+  config?: UnifiedMedicalAIConfig
+): Promise<{
+  analysis: ClinicalAnalysis;
+  successRates: SuccessRate[];
+  recommendations: string[];
+  confidence: number;
+  alerts: UnifiedAlert[];
+  qualityMetrics: UnifiedQualityMetrics;
+}> {
+  
+  console.log('🔬 Ejecutando análisis médico rápido con sistema unificado...');
+  
+  const result = await quickAnalysis(userInput, config);
+  
+  if (!result.success) {
+    throw new Error(`Error en análisis: ${result.error?.message}`);
+  }
+  
+  const data = result.data!;
+  
+  return {
+    analysis: data.clinicalAnalysis,
+    successRates: data.successRates,
+    recommendations: data.primaryRecommendations,
+    confidence: data.qualityMetrics.overallConfidence,
+    alerts: [...data.alerts.critical, ...data.alerts.warnings],
+    qualityMetrics: data.qualityMetrics
   };
 }
 
-export class MedicalAIIntegration {
-  /**
-   * Convierte datos del formulario a UserInput para el agente IA
-   */
-  static convertFormDataToUserInput(formData: FormData): UserInput {
+/**
+ * 💬 Función de conveniencia para consulta médica
+ * Sistema de chat médico inteligente
+ */
+export async function quickMedicalConsultation(
+  query: string,
+  userInput?: UserInput,
+  config?: UnifiedMedicalAIConfig
+): Promise<{
+  response: string;
+  suggestions: string[];
+  followUpQuestions: string[];
+  confidence: number;
+}> {
+  
+  console.log('💬 Ejecutando consulta médica rápida...');
+  
+  const result = await quickConsultation(query, userInput, config);
+  
+  if (!result.success) {
+    throw new Error(`Error en consulta: ${result.error?.message}`);
+  }
+  
+  const data = result.data!;
+  
+  return {
+    response: data.primaryInfo,
+    suggestions: data.recommendations.immediate,
+    followUpQuestions: data.followUpQuestions,
+    confidence: data.confidenceLevel
+  };
+}
+
+// ====================================================================
+// 🎯 EXPORTS PRINCIPALES
+// ====================================================================
+
+/**
+ * 🌟 Export principal del sistema unificado
+ */
+export default UnifiedMedicalAI;
+
+/**
+ * 🔗 Exports de funciones de conveniencia
+ */
+export {
+  createMedicalAI,
+  quickAnalysis,
+  quickConsultation,
+  type UnifiedMedicalAIConfig
+};
+
+// ====================================================================
+// 🔧 INFORMACIÓN DEL SISTEMA Y CONSTANTES
+// ====================================================================
+
+export const AI_MEDICAL_VERSION = '3.0.0-UNIFIED';
+export const SYSTEM_NAME = 'UnifiedMedicalAI';
+export const SUPPORTED_LANGUAGES = ['es', 'en'];
+export const SUPPORTED_SPECIALTIES = ['fertility', 'general', 'reproductive'];
+
+export const DEFAULT_CONFIG: UnifiedMedicalAIConfig = {
+  version: AI_MEDICAL_VERSION,
+  languagePreference: 'es',
+  medicalSpecialty: 'fertility',
+  evidenceLevel: 'standard',
+  empathyLevel: 'balanced',
+  enableAdvancedAnalytics: true,
+  enableRealTimeMonitoring: true,
+  enableAutoOptimization: true
+};
+
+/**
+ * 📊 Información del sistema
+ */
+export const SYSTEM_INFO = {
+  version: AI_MEDICAL_VERSION,
+  name: SYSTEM_NAME,
+  description: 'Sistema AI Médico Unificado de Nueva Generación',
+  capabilities: [
+    'Análisis Clínico Completo',
+    'Predicción de Éxito Personalizada',
+    'Conversación Médica Inteligente',
+    'Validación Robusta de Datos',
+    'Cache Inteligente con Context-Awareness',
+    'Monitoreo de Performance en Tiempo Real',
+    'Alertas Médicas Automáticas',
+    'Arquitectura Escalable y Modular',
+    'Soporte Multi-idioma',
+    'Base de Evidencia Actualizada'
+  ],
+  architecture: {
+    pattern: 'Unified Orchestrator with Specialized Engines',
+    caching: 'Intelligent Medical Context-Aware',
+    validation: 'Multi-layer Robust Validation',
+    monitoring: 'Real-time Performance & Health',
+    scalability: 'Modular and Extensible'
+  }
+};
+
+// ====================================================================
+// 🎉 SISTEMA COMPLETAMENTE ACTUALIZADO
+// ====================================================================
+
+console.log(`🚀 ${SYSTEM_NAME} v${AI_MEDICAL_VERSION} - Sistema cargado y optimizado`);
+console.log('✨ Arquitectura unificada implementada exitosamente');
+
+// ====================================================================
+// 💾 COMPATIBILIDAD CON VERSIONES ANTERIORES
+// ====================================================================
+
+/**
+ * 🔄 Función legacy para compatibilidad
+ * Mantiene compatibilidad con código existente mientras migra al sistema unificado
+ */
+export function createOptimizedMedicalAgent(config?: Partial<UnifiedAgentConfig>) {
+  console.warn('⚠️  createOptimizedMedicalAgent está deprecated. Use createMedicalAgent');
+  return createMedicalAgent(config);
+}
+
+/**
+ * 🔄 Clase legacy para compatibilidad
+ */
+export class OptimizedMedicalAIAgent {
+  private readonly unifiedAI: UnifiedMedicalAI;
+  
+  constructor(config?: Partial<UnifiedAgentConfig>) {
+    console.warn('⚠️  OptimizedMedicalAIAgent está deprecated. Use UnifiedMedicalAI');
+    this.unifiedAI = createMedicalAI(config);
+  }
+  
+  async performClinicalAnalysis(userInput: UserInput) {
+    return this.unifiedAI.analyze(userInput);
+  }
+  
+  async calculateSuccessRates(userInput: UserInput) {
+    const result = await this.unifiedAI.predict(userInput);
     return {
-      age: formData.age || 30,
-      partnerAge: formData.partnerAge,
-      bmi: formData.bmi || 25,
-      infertilityDuration: formData.infertilityDuration || 12,
-      menstrualCycleLength: formData.menstrualCycleLength,
-      previousPregnancies: formData.previousPregnancies || 0,
-      previousLosses: formData.previousLosses || 0,
-      symptoms: formData.symptoms || [],
-      labs: {
-        fsh: formData.fsh,
-        lh: formData.lh,
-        estradiol: formData.estradiol,
-        progesterone: formData.progesterone,
-        prolactin: formData.prolactin,
-        tsh: formData.tsh,
-        amh: formData.amh,
-        testosterone: formData.testosterone
-      },
-      maleFactors: formData.maleFactors ? {
-        concentration: formData.maleFactors.concentration,
-        motility: formData.maleFactors.motility,
-        morphology: formData.maleFactors.morphology,
-        volume: formData.maleFactors.volume
-      } : undefined,
-      priorTreatments: formData.priorTreatments || [],
-      preferences: {
-        maxComplexity: formData.preferences?.maxComplexity || 'medium',
-        budgetRange: formData.preferences?.budgetRange || 'medium',
-        timeframe: formData.preferences?.timeframe || 'normal'
-      }
+      success: result.success,
+      data: result.data,
+      error: result.error
     };
   }
-
-  /**
-   * Valida si los datos son suficientes para análisis IA
-   */
-  static validateForAIAnalysis(userInput: UserInput): { isValid: boolean; missingFields: string[]; completeness: number } {
-    const missingFields: string[] = [];
-    let fieldsPresent = 0;
-    let totalFields = 0;
-
-    // Validaciones críticas
-    totalFields += 2;
-    if (!userInput.age || userInput.age < 18 || userInput.age > 50) {
-      missingFields.push('age');
-    } else {
-      fieldsPresent++;
-    }
-
-    if (!userInput.infertilityDuration || userInput.infertilityDuration < 1) {
-      missingFields.push('infertilityDuration');
-    } else {
-      fieldsPresent++;
-    }
-
-    // Validaciones clínicas opcionales
-    totalFields += 4;
-    const hasLabData = userInput.labs && Object.values(userInput.labs).some(v => v !== undefined && v !== null);
-    const hasMaleData = userInput.maleFactors && Object.values(userInput.maleFactors).some(v => v !== undefined && v !== null);
-    const hasSymptoms = userInput.symptoms && userInput.symptoms.length > 0;
-    const hasBMI = userInput.bmi && userInput.bmi > 0;
-
-    if (hasLabData) fieldsPresent++;
-    if (hasMaleData) fieldsPresent++;
-    if (hasSymptoms) fieldsPresent++;
-    if (hasBMI) fieldsPresent++;
-
-    // Requerir al menos algunos datos clínicos
-    if (!hasLabData && !hasMaleData && !hasSymptoms) {
-      missingFields.push('clinicalData');
-    }
-
-    const completeness = Math.round((fieldsPresent / totalFields) * 100);
-
-    return {
-      isValid: missingFields.length === 0 && completeness >= 50,
-      missingFields,
-      completeness
-    };
+  
+  async startMedicalConversation(query: string, userInput?: UserInput) {
+    return this.unifiedAI.chat(query, { userInput });
   }
-
-  /**
-   * Genera resumen para mostrar en UI
-   */
-  static generateCaseSummary(userInput: UserInput): string {
-    const age = userInput.age;
-    const duration = userInput.infertilityDuration;
-    const hasLabs = userInput.labs && Object.values(userInput.labs).some(v => v !== undefined && v !== null);
-    const hasMale = userInput.maleFactors && Object.values(userInput.maleFactors).some(v => v !== undefined && v !== null);
-    const bmi = userInput.bmi;
-
-    let summary = `👥 Mujer de ${age} años con ${duration} meses de infertilidad`;
-    
-    if (bmi) {
-      const bmiCategory = bmi < 18.5 ? 'bajo peso' : 
-                         bmi <= 24.9 ? 'peso normal' : 
-                         bmi <= 29.9 ? 'sobrepeso' : 'obesidad';
-      summary += `, BMI ${bmi.toFixed(1)} (${bmiCategory})`;
-    }
-    
-    summary += '.';
-    
-    if (hasLabs) summary += ' 🧪 Estudios hormonales disponibles.';
-    if (hasMale) summary += ' 👨 Evaluación factor masculino incluida.';
-    if (userInput.symptoms && userInput.symptoms.length > 0) {
-      summary += ` 📋 ${userInput.symptoms.length} síntoma(s) reportado(s).`;
-    }
-    if (userInput.priorTreatments && userInput.priorTreatments.length > 0) {
-      summary += ` 💊 ${userInput.priorTreatments.length} tratamiento(s) previo(s).`;
-    }
-
-    return summary;
-  }
-
-  /**
-   * Obtiene lista de patologías disponibles por categoría
-   */
-  static getAvailablePathologies(category?: 'female' | 'male' | 'couple' | 'unexplained') {
-    const pathologies = Object.values(PATHOLOGIES_DATABASE);
-    
-    if (category) {
-      return pathologies
-        .filter(p => p.category === category)
-        .map(p => ({ id: p.id, name: p.nameES, category: p.category }));
-    }
-    
-    return pathologies.map(p => ({ id: p.id, name: p.nameES, category: p.category }));
-  }
-
-  /**
-   * Obtiene lista de tratamientos disponibles por nivel
-   */
-  static getAvailableTreatments(level?: 'level1' | 'level2' | 'level3') {
-    const treatments = Object.values(TREATMENTS_DATABASE);
-    
-    if (level) {
-      return treatments
-        .filter(t => t.category === level)
-        .map(t => ({ id: t.id, name: t.nameES, category: t.category, complexity: t.complexity }));
-    }
-    
-    return treatments.map(t => ({ id: t.id, name: t.nameES, category: t.category, complexity: t.complexity }));
+  
+  getSystemHealth() {
+    return this.unifiedAI.getSystemHealth();
   }
 }
 
-// Instancia singleton del agente principal
-export const medicalAIAgent = new MedicalAIAgent();
+// Export legacy para compatibilidad
+export { OptimizedMedicalAIAgent as MasterMedicalAIAgent };
 
-export default MedicalAIAgent;
+/**
+ * 🎯 Función legacy para obtener agente optimizado
+ */
+export function getOptimizedMedicalAgent(config?: Partial<UnifiedAgentConfig>): OptimizedMedicalAIAgent {
+  console.warn('⚠️  getOptimizedMedicalAgent está deprecated. Use createMedicalAgent');
+  return new OptimizedMedicalAIAgent(config);
+}
