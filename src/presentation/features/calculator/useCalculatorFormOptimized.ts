@@ -1,21 +1,24 @@
-import { useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { useRouter } from 'expo-router';
+import { AdenomyosisType, HsgResult, MyomaType, OtbMethod, PolypType } from '@/core/domain/models';
+import { calculateProbability } from '@/core/domain/services/calculationEngine';
 import { zodResolver } from '@hookform/resolvers/zod';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { calculateProbability } from '@/core/domain/services/calculationEngine';
-import { formSchema } from './utils/validationSchemas';
-import type { FormData } from './utils/validationSchemas';
-import { MyomaType, AdenomyosisType, PolypType, HsgResult, OtbMethod } from '@/core/domain/models';
-import { mapFormStateToUserInput } from './utils/dataMapper';
+import { useRouter } from 'expo-router';
+import { useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useRangeValidation } from './hooks/useRangeValidation';
+import { mapFormStateToUserInput } from './utils/dataMapper';
+import type { FormData } from './utils/validationSchemas';
+import { formSchema } from './utils/validationSchemas';
+
 // 🚀 HOOKS OPTIMIZADOS PARA PERFORMANCE
-import { useFormValidation } from './hooks/useFormValidation';
+import { useBenchmark } from '@/core/utils/performanceBenchmark';
 import { useCalculations } from './hooks/useCalculations';
 import { useFormProgress } from './hooks/useFormProgress';
-import { useBenchmark } from '@/core/utils/performanceBenchmark';
 import { useStableFormValidation } from './hooks/useStableFormValidation';
 import { useStableWatchedFields } from './hooks/useStableWatchedFields';
+
+// 🧠⚡ AI MEDICAL AGENT V11.0 INTEGRATION
+import { generateEnhancedMedicalReport } from '@/services/AIService';
 
 export type FormState = FormData;
 
@@ -51,15 +54,15 @@ export interface UseCalculatorFormOptimizedReturn {
   currentStep: number;
   
   // Validación optimizada
-  clinicalValidation: any;
-  getRangeValidation: (fieldName: string) => any;
+  clinicalValidation: unknown;
+  getRangeValidation: (fieldName: string) => unknown;
   
   // Funciones principales
   handleCalculate: () => Promise<string | undefined>;
   isLoading: boolean;
   
   // Métricas de rendimiento
-  getPerformanceReport: () => any;
+  getPerformanceReport: () => unknown;
   clearPerformanceMetrics: () => void;
 }
 
@@ -78,7 +81,6 @@ export const useCalculatorFormOptimized = (): UseCalculatorFormOptimizedReturn =
   
   // 🚀 Hooks especializados
   const { getReport, clearMetrics } = useBenchmark();
-  const { validateField } = useFormValidation();
   const { calculateBMI, calculateHOMA, formatBMI, formatHOMA, getBMICategory, getHOMACategory } = useCalculations();
   
   // 🚀 Estado de carga
@@ -127,7 +129,7 @@ export const useCalculatorFormOptimized = (): UseCalculatorFormOptimizedReturn =
   };
 
   // 🚀 Formulario con React Hook Form
-  const { control, handleSubmit, watch, setValue, getValues, formState: { errors } } = useForm<FormState>({
+  const { control, watch, setValue, getValues, formState: { errors } } = useForm<FormState>({
     resolver: zodResolver(formSchema) as never,
     defaultValues: initialFormValues,
   });
@@ -242,12 +244,17 @@ export const useCalculatorFormOptimized = (): UseCalculatorFormOptimizedReturn =
       const finalReport = calculateProbability(userInput);
       console.log('✅ REPORTE GENERADO (OPTIMIZADO):', finalReport);
       
-      // Guardar y navegar
+      // 🧠⚡ AI MEDICAL AGENT V11.0 - ENHANCED MEDICAL ANALYSIS
+      console.log('🧠 INTEGRANDO AI MEDICAL AGENT V11.0...');
+      const enhancedReport = await generateEnhancedMedicalReport(userInput, finalReport);
+      console.log('✅ REPORTE MEJORADO CON AI:', enhancedReport);
+      
+      // Guardar y navegar con reporte mejorado
       const reportKey = `${REPORT_KEY_PREFIX}${Date.now()}`;
       console.log('🔑 GENERANDO REPORT KEY:', { reportKey, prefix: REPORT_KEY_PREFIX, timestamp: Date.now() });
       
-      await AsyncStorage.setItem(reportKey, JSON.stringify(finalReport));
-      console.log('💾 REPORTE GUARDADO CON KEY:', reportKey);
+      await AsyncStorage.setItem(reportKey, JSON.stringify(enhancedReport));
+      console.log('💾 REPORTE AI GUARDADO CON KEY:', reportKey);
       
       // 🚀 ARMONIZACIÓN: Navegación corregida con objeto de parámetros
       console.log('🧭 NAVEGANDO A RESULTS CON REPORTKEY:', reportKey);

@@ -1,13 +1,54 @@
-// src/core/domain/services/treatmentSuggester.ts
+/**
+ * 🧠 TREATMENT SUGGESTER V2.0 - ENHANCED CLINICAL ENGINE
+ * Sugeridor de tratamientos con lógica clínica avanzada y sistema de confianza
+ */
 import { EvaluationState, TreatmentSuggestion, UserInput, Factors, HsgResult, PolypType, AdenomyosisType } from '../models';
 import { clinicalContentLibrary } from '../logic/clinicalContentLibrary'; // Biblioteca clínica unificada
 
+// 🎯 INTERFACES MEJORADAS PARA V2.0
+interface TreatmentContext {
+  input: UserInput;
+  factors: Factors;
+  clinicalScore: number;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+}
+
+interface EnhancedTreatmentSuggestion extends TreatmentSuggestion {
+  confidence: number; // 0-100%
+  urgency: 'low' | 'moderate' | 'high' | 'critical';
+  evidenceLevel: 'A' | 'B' | 'C' | 'D'; // Nivel de evidencia médica
+  contraindications?: string[];
+  prerequisites?: string[];
+}
+
 /**
- * Helper para obtener una sugerencia de tratamiento de la biblioteca clínica.
- * @param key La clave del tratamiento en la biblioteca.
- * @returns El objeto TreatmentSuggestion completo.
+ * 🎯 Helper para mapear configuración de tratamiento por clave
  */
-const getTreatmentSuggestion = (key: string): TreatmentSuggestion => {
+const getTreatmentConfig = (key: string): { 
+  category: TreatmentSuggestion['category'], 
+  confidence: number, 
+  urgency: EnhancedTreatmentSuggestion['urgency'], 
+  evidenceLevel: EnhancedTreatmentSuggestion['evidenceLevel'] 
+} => {
+  if (key.startsWith('TRAT_BAJA_')) {
+    return { category: 'Baja Complejidad', confidence: 90, urgency: 'moderate', evidenceLevel: 'A' };
+  }
+  if (key.startsWith('TRAT_IAC_')) {
+    return { category: 'Baja Complejidad', confidence: 88, urgency: 'moderate', evidenceLevel: 'A' };
+  }
+  if (key.startsWith('TRAT_FIV_') || key.startsWith('TRAT_ICSI_') || key.startsWith('TRAT_OVODONACION')) {
+    return { category: 'Alta Complejidad', confidence: 95, urgency: 'high', evidenceLevel: 'A' };
+  }
+  if (key.startsWith('DECISION_FIV_') || key.startsWith('INT_')) {
+    return { category: 'Alta Complejidad', confidence: 92, urgency: 'high', evidenceLevel: 'A' };
+  }
+  return { category: 'Optimización Médica', confidence: 75, urgency: 'low', evidenceLevel: 'B' };
+};
+
+/**
+ * 🔬 Helper mejorado para obtener sugerencia de tratamiento con contexto clínico
+ */
+const getTreatmentSuggestion = (key: string, context?: TreatmentContext): EnhancedTreatmentSuggestion => {
   const content = clinicalContentLibrary[key];
   if (!content) {
     console.warn(`Content for treatment key "${key}" not found in clinical library.`);
@@ -16,31 +57,44 @@ const getTreatmentSuggestion = (key: string): TreatmentSuggestion => {
       title: `Tratamiento no definido (${key})`,
       details: 'Detalles no disponibles.',
       source: 'N/A',
+      confidence: 30,
+      urgency: 'low',
+      evidenceLevel: 'D',
+      contraindications: ['Información incompleta'],
+      prerequisites: ['Validación de datos clínicos']
     };
   }
 
-  // Asumimos que la categoría es parte del título de la clave o se infiere de la lógica que llama.
-  // Para mayor robustez, podríamos extender ClinicalInfo para incluir una 'category' explícita.
-  // Por ahora, inferimos de las claves o usamos un mapeo.
-  let category: TreatmentSuggestion['category'];
-  if (key.startsWith('TRAT_BAJA_')) {
-    category = 'Baja Complejidad';
-  } else if (key.startsWith('TRAT_IAC_')) {
-    category = 'Baja Complejidad'; // IAC es considerada baja complejidad por el DFCA
-  } else if (key.startsWith('TRAT_FIV_') || key.startsWith('TRAT_ICSI_') || key.startsWith('TRAT_OVODONACION')) {
-    category = 'Alta Complejidad';
-  } else if (key.startsWith('DECISION_FIV_') || key.startsWith('INT_')) {
-      category = 'Alta Complejidad'; // Interacciones que suelen llevar a alta complejidad
-  } else {
-    category = 'Optimización Médica'; // Por defecto para otros hallazgos clínicos individuales
+  // 🎯 OBTENER CONFIGURACIÓN BASE DEL TRATAMIENTO
+  const config = getTreatmentConfig(key);
+  let { confidence, urgency } = config;
+
+  // 🔬 AJUSTE DE CONFIANZA BASADO EN CONTEXTO CLÍNICO
+  if (context) {
+    if (context.riskLevel === 'HIGH' || context.riskLevel === 'CRITICAL') {
+      // Escalamiento progresivo de urgencia basado en riesgo
+      if (urgency === 'low') urgency = 'moderate';
+      else if (urgency === 'moderate') urgency = 'high';
+      else urgency = 'critical';
+    }
+    
+    if (context.clinicalScore < 70) {
+      confidence = Math.max(50, confidence - 15);
+    } else if (context.clinicalScore > 90) {
+      confidence = Math.min(100, confidence + 10);
+    }
   }
 
-
   return {
-    category: category,
-    title: content.explanation.split('.')[0] || 'Sugerencia de Tratamiento', // Toma la primera frase como título
+    category: config.category,
+    title: content.explanation.split('.')[0] || 'Sugerencia de Tratamiento',
     details: content.explanation + (content.recommendations.length > 0 ? '\n\nRecomendaciones: ' + content.recommendations.join('; ') : ''),
     source: content.sources && content.sources.length > 0 ? content.sources.join(', ') : 'Recomendación Clínica',
+    confidence,
+    urgency,
+    evidenceLevel: config.evidenceLevel,
+    contraindications: [], // Se podría expandir desde clinicalContentLibrary
+    prerequisites: [] // Se podría expandir desde clinicalContentLibrary
   };
 };
 
@@ -48,12 +102,12 @@ const getTreatmentSuggestion = (key: string): TreatmentSuggestion => {
  * Sugiere tratamientos basado en el EvaluationState completo.
  * Implementa las reglas de decisión estratégica y clasificación terapéutica del DFCA.
  */
-function getStrategicDecisionSuggestions(input: UserInput, factors: Factors): TreatmentSuggestion[] {
+function getStrategicDecisionSuggestions(input: UserInput, factors: Factors, context?: TreatmentContext): EnhancedTreatmentSuggestion[] {
   if (input.age >= 40 && (input.amh !== undefined && input.amh < 1.0)) {
-    return [getTreatmentSuggestion('DECISION_FIV_EDAD_AMH_CRITICO')];
+    return [getTreatmentSuggestion('DECISION_FIV_EDAD_AMH_CRITICO', context)];
   }
   if (input.endometriosisGrade >= 3 && (factors.male !== undefined && factors.male < 1.0)) {
-    return [getTreatmentSuggestion('DECISION_FIV_ENDO_AVANZADA_SEMINAL')];
+    return [getTreatmentSuggestion('DECISION_FIV_ENDO_AVANZADA_SEMINAL', context)];
   }
   if (
     input.hasPcos &&
@@ -61,10 +115,10 @@ function getStrategicDecisionSuggestions(input: UserInput, factors: Factors): Tr
     (input.cycleDuration !== undefined && input.cycleDuration > 60) &&
     (input.prolactin !== undefined && input.prolactin > 50)
   ) {
-    return [getTreatmentSuggestion('DECISION_FIV_SOP_METABOLICO_CRITICO')];
+    return [getTreatmentSuggestion('DECISION_FIV_SOP_METABOLICO_CRITICO', context)];
   }
   if (factors.otb === 0.0 || factors.hsg === 0.0) {
-    return [getTreatmentSuggestion('DECISION_FIV_OTB_BILATERAL')];
+    return [getTreatmentSuggestion('DECISION_FIV_OTB_BILATERAL', context)];
   }
   return [];
 }
@@ -92,16 +146,16 @@ function shouldSuggestOvodonacion(input: UserInput): boolean {
   return input.age >= 43 && (input.amh !== undefined && input.amh < 0.5);
 }
 
-function getAbsoluteFIVSuggestions(input: UserInput, factors: Factors): TreatmentSuggestion[] {
-  let suggestions: TreatmentSuggestion[] = [];
+function getAbsoluteFIVSuggestions(input: UserInput, factors: Factors, context?: TreatmentContext): EnhancedTreatmentSuggestion[] {
+  let suggestions: EnhancedTreatmentSuggestion[] = [];
 
   if (shouldSuggestFIV(input, factors)) {
-    suggestions.push(getTreatmentSuggestion('TRAT_FIV_INDICACIONES_ABSOLUTAS'));
+    suggestions.push(getTreatmentSuggestion('TRAT_FIV_INDICACIONES_ABSOLUTAS', context));
     if (shouldSuggestICSI(input)) {
-      suggestions.push(getTreatmentSuggestion('TRAT_ICSI_RECOMENDADO'));
+      suggestions.push(getTreatmentSuggestion('TRAT_ICSI_RECOMENDADO', context));
     }
     if (shouldSuggestOvodonacion(input)) {
-      suggestions.push(getTreatmentSuggestion('TRAT_OVODONACION'));
+      suggestions.push(getTreatmentSuggestion('TRAT_OVODONACION', context));
     }
   }
   return suggestions;
@@ -136,19 +190,19 @@ function isIACContraindicatedHelper(input: UserInput, factors: Factors): boolean
   );
 }
 
-function getIACSuggestions(evaluation: EvaluationState, input: UserInput, factors: Factors, shouldSuggestFIV: boolean): TreatmentSuggestion[] {
-  let suggestions: TreatmentSuggestion[] = [];
+function getIACSuggestions(evaluation: EvaluationState, input: UserInput, factors: Factors, shouldSuggestFIV: boolean, context?: TreatmentContext): EnhancedTreatmentSuggestion[] {
+  let suggestions: EnhancedTreatmentSuggestion[] = [];
   const shouldSuggestIAC = shouldSuggestIACHelper(evaluation, input, factors, shouldSuggestFIV);
   const isIACContraindicated = isIACContraindicatedHelper(input, factors);
 
   if (shouldSuggestIAC && !isIACContraindicated) {
-    suggestions.push(getTreatmentSuggestion('TRAT_IAC_INDICACIONES'));
+    suggestions.push(getTreatmentSuggestion('TRAT_IAC_INDICACIONES', context));
   }
   return suggestions;
 }
 
-function getLowComplexitySuggestions(input: UserInput, factors: Factors): TreatmentSuggestion[] {
-  let suggestions: TreatmentSuggestion[] = [];
+function getLowComplexitySuggestions(input: UserInput, factors: Factors, context?: TreatmentContext): EnhancedTreatmentSuggestion[] {
+  let suggestions: EnhancedTreatmentSuggestion[] = [];
   let shouldSuggestLowComplexity = false;
 
   if (
@@ -172,7 +226,7 @@ function getLowComplexitySuggestions(input: UserInput, factors: Factors): Treatm
     (input.homaIr !== undefined && input.homaIr < 2.0) &&
     (input.tsh !== undefined && input.tsh >= 0.5 && input.tsh <= 2.5)
   ) {
-    suggestions.push(getTreatmentSuggestion('INT_PERFIL_HIERESPONDEDOR_JOVEN_SOP_ESTABLE'));
+    suggestions.push(getTreatmentSuggestion('INT_PERFIL_HIERESPONDEDOR_JOVEN_SOP_ESTABLE', context));
     shouldSuggestLowComplexity = true;
   }
   if (
@@ -180,7 +234,7 @@ function getLowComplexitySuggestions(input: UserInput, factors: Factors): Treatm
     (input.amh !== undefined && input.amh >= 1.5) &&
     input.age < 35
   ) {
-    suggestions.push(getTreatmentSuggestion('INT_ENDO_LEVE_AMH_NORMAL_JOVEN'));
+    suggestions.push(getTreatmentSuggestion('INT_ENDO_LEVE_AMH_NORMAL_JOVEN', context));
     shouldSuggestLowComplexity = true;
   }
   if (
@@ -189,7 +243,7 @@ function getLowComplexitySuggestions(input: UserInput, factors: Factors): Treatm
     (input.spermConcentration !== undefined && input.spermConcentration >= 16) &&
     (input.spermProgressiveMotility !== undefined && input.spermProgressiveMotility >= 30)
   ) {
-    suggestions.push(getTreatmentSuggestion('INT_HSG_UNILATERAL_JOVEN_SEMEN_NORMAL'));
+    suggestions.push(getTreatmentSuggestion('INT_HSG_UNILATERAL_JOVEN_SEMEN_NORMAL', context));
     shouldSuggestLowComplexity = true;
   }
   if (
@@ -198,7 +252,7 @@ function getLowComplexitySuggestions(input: UserInput, factors: Factors): Treatm
     (input.cycleDuration !== undefined && input.cycleDuration >= 24 && input.cycleDuration <= 35) &&
     (input.spermNormalMorphology !== undefined && input.spermNormalMorphology >= 4)
   ) {
-    suggestions.push(getTreatmentSuggestion('INT_POLIPO_PEQUENO_JOVEN_FAVORABLE'));
+    suggestions.push(getTreatmentSuggestion('INT_POLIPO_PEQUENO_JOVEN_FAVORABLE', context));
     shouldSuggestLowComplexity = true;
   }
   if (
@@ -208,11 +262,11 @@ function getLowComplexitySuggestions(input: UserInput, factors: Factors): Treatm
     (input.homaIr !== undefined && input.homaIr < 2) &&
     (input.tsh !== undefined && input.tsh >= 0.5 && input.tsh <= 2.5)
   ) {
-    suggestions.push(getTreatmentSuggestion('INT_EDAD_AMH_SOP_HOMA_TSH_OPTIMO'));
+    suggestions.push(getTreatmentSuggestion('INT_EDAD_AMH_SOP_HOMA_TSH_OPTIMO', context));
     shouldSuggestLowComplexity = true;
   }
   if (shouldSuggestLowComplexity) {
-    suggestions.push(getTreatmentSuggestion('TRAT_BAJA_COMPLEJIDAD_CRITERIOS'));
+    suggestions.push(getTreatmentSuggestion('TRAT_BAJA_COMPLEJIDAD_CRITERIOS', context));
   }
   return suggestions;
 }
@@ -220,76 +274,163 @@ function getLowComplexitySuggestions(input: UserInput, factors: Factors): Treatm
 /**
  * Helper function to get BMI-related suggestions
  */
-function getBmiSuggestions(bmi: number): TreatmentSuggestion[] {
+function getBmiSuggestions(bmi: number, context?: TreatmentContext): EnhancedTreatmentSuggestion[] {
   if (bmi >= 1.0) return [];
   
-  if (bmi === 0.85) return [getTreatmentSuggestion('IMC_SOBREPESO')];
-  if (bmi === 0.75) return [getTreatmentSuggestion('IMC_OBESIDAD_I')];
-  if (bmi === 0.6) return [getTreatmentSuggestion('IMC_OBESIDAD_II')];
-  if (bmi === 0.4) return [getTreatmentSuggestion('IMC_OBESIDAD_III')];
-  if (bmi === 0.7) return [getTreatmentSuggestion('IMC_BAJO')];
+  if (bmi === 0.85) return [getTreatmentSuggestion('IMC_SOBREPESO', context)];
+  if (bmi === 0.75) return [getTreatmentSuggestion('IMC_OBESIDAD_I', context)];
+  if (bmi === 0.6) return [getTreatmentSuggestion('IMC_OBESIDAD_II', context)];
+  if (bmi === 0.4) return [getTreatmentSuggestion('IMC_OBESIDAD_III', context)];
+  if (bmi === 0.7) return [getTreatmentSuggestion('IMC_BAJO', context)];
   
   return [];
 }
 
-function getOptimizationSuggestions(input: UserInput, factors: Factors, currentSuggestions: TreatmentSuggestion[]): TreatmentSuggestion[] {
+function getOptimizationSuggestions(input: UserInput, factors: Factors, currentSuggestions: EnhancedTreatmentSuggestion[], context?: TreatmentContext): EnhancedTreatmentSuggestion[] {
   // Skip optimization for high complexity treatments
   if (currentSuggestions.length > 0 && currentSuggestions[0].category === 'Alta Complejidad') {
     return [];
   }
   
-  let suggestions: TreatmentSuggestion[] = [];
+  let suggestions: EnhancedTreatmentSuggestion[] = [];
   
   // Add BMI-related suggestions
-  suggestions = suggestions.concat(getBmiSuggestions(factors.bmi));
+  suggestions = suggestions.concat(getBmiSuggestions(factors.bmi, context));
   
   // Add other factor suggestions
-  if (factors.homa < 1.0) suggestions.push(getTreatmentSuggestion('HOMA_LEVE'));
-  if (factors.prolactin < 1.0) suggestions.push(getTreatmentSuggestion('PRL_LEVE'));
-  if (factors.tsh < 1.0) suggestions.push(getTreatmentSuggestion('TSH_LIMITE_SUPERIOR'));
-  if (input.tpoAbPositive) suggestions.push(getTreatmentSuggestion('TPOAB_POSITIVO'));
+  if (factors.homa < 1.0) suggestions.push(getTreatmentSuggestion('HOMA_LEVE', context));
+  if (factors.prolactin < 1.0) suggestions.push(getTreatmentSuggestion('PRL_LEVE', context));
+  if (factors.tsh < 1.0) suggestions.push(getTreatmentSuggestion('TSH_LIMITE_SUPERIOR', context));
+  if (input.tpoAbPositive) suggestions.push(getTreatmentSuggestion('TPOAB_POSITIVO', context));
   
   return suggestions;
 }
 
-export function suggestTreatments(evaluation: EvaluationState): TreatmentSuggestion[] {
+/**
+ * 🎯 FUNCIÓN PRINCIPAL MEJORADA - SISTEMA DE CONFIANZA INTEGRADO
+ * Sugiere tratamientos basado en el EvaluationState completo con contexto clínico
+ */
+export function suggestTreatments(evaluation: EvaluationState): EnhancedTreatmentSuggestion[] {
   const { input, factors } = evaluation;
-  let suggestions: TreatmentSuggestion[] = [];
+  
+  // 🔬 CONSTRUIR CONTEXTO CLÍNICO
+  const context: TreatmentContext = {
+    input,
+    factors,
+    clinicalScore: calculateClinicalScore(input, factors),
+    riskLevel: assessRiskLevel(input, factors)
+  };
+  
+  let suggestions: EnhancedTreatmentSuggestion[] = [];
 
-  // 1. Strategic Decision
-  const strategicSuggestions = getStrategicDecisionSuggestions(input, factors);
+  // 1. Strategic Decision (CRÍTICAS - prioridad máxima)
+  const strategicSuggestions = getStrategicDecisionSuggestions(input, factors, context);
   if (strategicSuggestions.length > 0) {
-    return strategicSuggestions;
+    return prioritizeSuggestions(strategicSuggestions);
   }
 
-  // 2. Absolute FIV
-  const absoluteFIVSuggestions = getAbsoluteFIVSuggestions(input, factors);
+  // 2. Absolute FIV (INDICACIONES ABSOLUTAS)
+  const absoluteFIVSuggestions = getAbsoluteFIVSuggestions(input, factors, context);
   if (absoluteFIVSuggestions.length > 0) {
-    return absoluteFIVSuggestions;
+    return prioritizeSuggestions(absoluteFIVSuggestions);
   }
 
-  // 3. IAC
+  // 3. IAC (COMPLEJIDAD INTERMEDIA)
   const shouldSuggestFIV = absoluteFIVSuggestions.length > 0;
-  const iacSuggestions = getIACSuggestions(evaluation, input, factors, shouldSuggestFIV);
+  const iacSuggestions = getIACSuggestions(evaluation, input, factors, shouldSuggestFIV, context);
   if (iacSuggestions.length > 0) {
-    return iacSuggestions;
+    return prioritizeSuggestions(iacSuggestions);
   }
 
-  // 4. Low Complexity
-  const lowComplexitySuggestions = getLowComplexitySuggestions(input, factors);
+  // 4. Low Complexity (PRIMERA LÍNEA)
+  const lowComplexitySuggestions = getLowComplexitySuggestions(input, factors, context);
   suggestions = suggestions.concat(lowComplexitySuggestions);
 
-  // 5. Optimization
-  suggestions = suggestions.concat(getOptimizationSuggestions(input, factors, suggestions));
+  // 5. Optimization (COMPLEMENTARIAS)
+  suggestions = suggestions.concat(getOptimizationSuggestions(input, factors, suggestions, context));
 
-  // 6. Default
+  // 6. Default (FALLBACK SEGURO)
   if (suggestions.length === 0) {
-    suggestions.push(getTreatmentSuggestion('TRAT_ESTUDIO_ADICIONAL'));
+    suggestions.push(getTreatmentSuggestion('TRAT_ESTUDIO_ADICIONAL', context));
   }
 
-  // Remove duplicates
-  const uniqueSuggestions = Array.from(new Set(suggestions.map(s => JSON.stringify(s))))
-    .map(s => JSON.parse(s));
+  // 🔬 PRIORIZACIÓN Y LIMPIEZA FINAL
+  return prioritizeSuggestions(removeDuplicateSuggestions(suggestions));
+}
 
-  return uniqueSuggestions;
+/**
+ * 🎯 FUNCIONES AUXILIARES MEJORADAS
+ */
+
+function calculateClinicalScore(input: UserInput, factors: Factors): number {
+  let score = 70; // Base score
+  
+  // Factores que mejoran el score
+  if (input.age && input.age < 35) score += 10;
+  if (input.amh && input.amh > 1.5) score += 10;
+  if (factors.male === 1.0) score += 5;
+  if (factors.cycle >= 0.8) score += 5;
+  
+  // Factores que reducen el score
+  if (input.age && input.age > 40) score -= 15;
+  if (input.amh && input.amh < 1.0) score -= 10;
+  if (factors.male < 0.7) score -= 10;
+  if (input.endometriosisGrade && input.endometriosisGrade >= 3) score -= 10;
+  
+  return Math.max(0, Math.min(100, score));
+}
+
+function assessRiskLevel(input: UserInput, factors: Factors): TreatmentContext['riskLevel'] {
+  // Criterios críticos
+  if ((input.age && input.age >= 43) || 
+      (input.amh && input.amh < 0.5) || 
+      factors.otb === 0.0 ||
+      factors.hsg === 0.0) {
+    return 'CRITICAL';
+  }
+  
+  // Criterios altos
+  if ((input.age && input.age >= 38) ||
+      (input.amh && input.amh < 1.0) ||
+      (input.endometriosisGrade && input.endometriosisGrade >= 3) ||
+      factors.male < 0.5) {
+    return 'HIGH';
+  }
+  
+  // Criterios medios
+  if ((input.age && input.age >= 35) ||
+      (input.amh && input.amh < 1.5) ||
+      input.hasPcos ||
+      (input.infertilityDuration && input.infertilityDuration >= 2)) {
+    return 'MEDIUM';
+  }
+  
+  return 'LOW';
+}
+
+function prioritizeSuggestions(suggestions: EnhancedTreatmentSuggestion[]): EnhancedTreatmentSuggestion[] {
+  return suggestions.sort((a, b) => {
+    // Prioridad por urgencia
+    const urgencyWeight = { 'critical': 4, 'high': 3, 'moderate': 2, 'low': 1 };
+    const urgencyDiff = urgencyWeight[b.urgency] - urgencyWeight[a.urgency];
+    if (urgencyDiff !== 0) return urgencyDiff;
+    
+    // Luego por confianza
+    const confidenceDiff = b.confidence - a.confidence;
+    if (confidenceDiff !== 0) return confidenceDiff;
+    
+    // Finalmente por nivel de evidencia
+    const evidenceWeight = { 'A': 4, 'B': 3, 'C': 2, 'D': 1 };
+    return evidenceWeight[b.evidenceLevel] - evidenceWeight[a.evidenceLevel];
+  });
+}
+
+function removeDuplicateSuggestions(suggestions: EnhancedTreatmentSuggestion[]): EnhancedTreatmentSuggestion[] {
+  const seen = new Set<string>();
+  return suggestions.filter(suggestion => {
+    const key = `${suggestion.category}-${suggestion.title}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }

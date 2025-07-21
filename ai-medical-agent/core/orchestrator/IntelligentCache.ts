@@ -4,8 +4,8 @@
  * Optimizado para consultas médicas frecuentes
  */
 
-import { UserInput } from '../types/UnifiedTypes';
 import { createHash } from 'crypto';
+import { UserInput } from '../types/UnifiedTypes';
 
 /**
  * 📊 ENTRADA DEL CACHE
@@ -49,7 +49,7 @@ interface CacheMetrics {
  * 🧠 CACHE INTELIGENTE PRINCIPAL
  */
 export class IntelligentCache {
-  private cache = new Map<string, CacheEntry<any>>();
+  private readonly cache = new Map<string, CacheEntry<unknown>>();
   private hitCount = 0;
   private missCount = 0;
   private totalAccessTime = 0;
@@ -220,12 +220,14 @@ export class IntelligentCache {
     const entries = Array.from(this.cache.values());
     const oldestEntry = entries.length > 0 ? 
       entries.reduce((oldest, entry) => 
-        entry.timestamp < oldest.timestamp ? entry : oldest
+        entry.timestamp < oldest.timestamp ? entry : oldest, 
+        entries[0]
       ).timestamp : undefined;
     
     const newestEntry = entries.length > 0 ? 
       entries.reduce((newest, entry) => 
-        entry.timestamp > newest.timestamp ? entry : newest
+        entry.timestamp > newest.timestamp ? entry : newest,
+        entries[0]
       ).timestamp : undefined;
     
     return {
@@ -286,7 +288,7 @@ export class IntelligentCache {
    * 🔧 MÉTODOS PRIVADOS
    */
   
-  private extractRelevantFields(input: UserInput): any {
+  private extractRelevantFields(input: UserInput): Record<string, unknown> {
     // Extraer solo campos que afectan el resultado médico
     return {
       age: input.age,
@@ -304,13 +306,13 @@ export class IntelligentCache {
     };
   }
   
-  private isExpired(entry: CacheEntry<any>): boolean {
+  private isExpired(entry: CacheEntry<unknown>): boolean {
     const now = Date.now();
     const entryTime = entry.timestamp.getTime();
     return (now - entryTime) > entry.ttl;
   }
   
-  private estimateSize(data: any): number {
+  private estimateSize(data: unknown): number {
     // Estimación simple del tamaño en bytes
     return JSON.stringify(data).length * 2; // Factor 2 para Unicode
   }
@@ -351,7 +353,7 @@ export class IntelligentCache {
     console.log(`🗑️ Cache eviction: ${deletedCount} entradas eliminadas, ${Math.round(freedSpace/1024)}KB liberados`);
   }
   
-  private calculateEvictionScore(entry: CacheEntry<any>): number {
+  private calculateEvictionScore(entry: CacheEntry<unknown>): number {
     const now = Date.now();
     const age = now - entry.timestamp.getTime();
     const timeSinceLastAccess = now - entry.lastAccess.getTime();

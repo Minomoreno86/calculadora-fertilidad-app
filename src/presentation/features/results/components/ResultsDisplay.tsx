@@ -5,17 +5,17 @@
  * y capacidades avanzadas de simulación y recomendaciones clínicas.
  */
 
-import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { EvaluationState } from '@/core/domain/models';
-import Text from '@/presentation/components/common/Text';
-import { EnhancedInfoCard } from '@/presentation/components/common';
-import { useDynamicTheme } from '@/hooks/useDynamicTheme';
-import { useFertilitySimulator } from '../../simulator/useFertilitySimulator';
-import { SimulatorDashboard } from '../../simulator/components/SimulatorDashboard';
 import { clinicalContentLibrary } from '@/core/domain/logic/clinicalContentLibrary';
+import { EvaluationState } from '@/core/domain/models';
+import { useDynamicTheme } from '@/hooks/useDynamicTheme';
+import { EnhancedInfoCard } from '@/presentation/components/common';
+import Text from '@/presentation/components/common/Text';
+import { Ionicons } from '@expo/vector-icons';
+import React, { useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import AIConsultation from '../../ai-medical-agent/AIConsultation';
+import { SimulatorDashboard } from '../../simulator/components/SimulatorDashboard';
+import { useFertilitySimulator } from '../../simulator/useFertilitySimulator';
 
 // Remover línea no usada del width
 // const { width } = Dimensions.get('window');
@@ -695,6 +695,52 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     </View>
   );
 
+  // 🤖 RENDERIZAR APARTADO DEL DR. IA - DEDICADO Y PROMINENTE
+  const renderDrIASection = () => (
+    <View style={styles.drIASection}>
+      <Text style={styles.drIATitle}>🤖 Dr. IA Fertilitas - Tu Especialista Virtual</Text>
+      
+      <View style={styles.drIACard}>
+        <View style={styles.drIAHeader}>
+          <View style={styles.drIAAvatar}>
+            <Ionicons name="medical" size={32} color={theme.colors.surface} />
+          </View>
+          <View style={styles.drIAInfo}>
+            <Text style={styles.drIAName}>Dr. IA Especialista</Text>
+            <Text style={styles.drIASpecialty}>Medicina Reproductiva y Fertilidad</Text>
+            <Text style={styles.drIACapabilities}>
+              ✅ Análisis de 15+ patologías • ✅ 20+ protocolos de tratamiento • ✅ Evidencia científica
+            </Text>
+          </View>
+        </View>
+        
+        <View style={styles.drIAFeatures}>
+          <View style={styles.drIAFeature}>
+            <Ionicons name="analytics" size={20} color={theme.colors.primary} />
+            <Text style={styles.drIAFeatureText}>Análisis médico inteligente personalizado</Text>
+          </View>
+          <View style={styles.drIAFeature}>
+            <Ionicons name="chatbox" size={20} color={theme.colors.primary} />
+            <Text style={styles.drIAFeatureText}>Consulta interactiva 24/7 especializada</Text>
+          </View>
+          <View style={styles.drIAFeature}>
+            <Ionicons name="library" size={20} color={theme.colors.primary} />
+            <Text style={styles.drIAFeatureText}>Recomendaciones basadas en evidencia</Text>
+          </View>
+        </View>
+        
+        <TouchableOpacity
+          style={styles.drIAConsultButton}
+          onPress={() => setDisplayMode('ai-consultation')}
+        >
+          <Ionicons name="medical" size={24} color={theme.colors.surface} />
+          <Text style={styles.drIAConsultButtonText}>Consultar con Dr. IA</Text>
+          <Ionicons name="arrow-forward" size={20} color={theme.colors.surface} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   // 🎯 RENDERIZAR CONTENIDO SEGÚN MODO
   const renderContent = () => {
     switch (displayMode) {
@@ -702,6 +748,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         return (
           <>
             {renderKeyMetrics()}
+            {renderDrIASection()}
             {!!report?.prognosisPhrase && (
               <EnhancedInfoCard
                 type="info"
@@ -1262,6 +1309,101 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     fontWeight: 'bold',
     color: theme.colors.background,
     textTransform: 'uppercase',
+  },
+
+  // 🤖 ESTILOS PARA DR. IA SECTION - PROMINENTE Y PROFESIONAL
+  drIASection: {
+    marginBottom: 24,
+  },
+  drIATitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: theme.colors.text,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  drIACard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 20,
+    padding: 24,
+    marginHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: theme.colors.primary + '20',
+  },
+  drIAHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 20,
+  },
+  drIAAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: theme.colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  drIAInfo: {
+    flex: 1,
+  },
+  drIAName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: theme.colors.text,
+    marginBottom: 4,
+  },
+  drIASpecialty: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.primary,
+    marginBottom: 8,
+  },
+  drIACapabilities: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    lineHeight: 16,
+  },
+  drIAFeatures: {
+    marginBottom: 20,
+  },
+  drIAFeature: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingHorizontal: 12,
+  },
+  drIAFeatureText: {
+    fontSize: 14,
+    color: theme.colors.text,
+    marginLeft: 12,
+    flex: 1,
+    fontWeight: '500',
+  },
+  drIAConsultButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  drIAConsultButtonText: {
+    color: theme.colors.surface,
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginHorizontal: 12,
   },
 });
 

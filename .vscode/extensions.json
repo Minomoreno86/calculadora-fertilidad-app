@@ -1,0 +1,35 @@
+{
+  "recommendations": [
+    // 🤖 GitHub Copilot Essentials
+    "github.copilot",
+    "github.copilot-chat",
+    
+    // 📱 React Native & Expo
+    "ms-vscode.vscode-typescript-next",
+    "bradlc.vscode-tailwindcss",
+    "ms-vscode.vscode-json",
+    
+    // 🔧 Development Tools
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "ms-vsliveshare.vsliveshare",
+    
+    // 🚀 Performance & Debugging
+    "ms-vscode.vscode-js-debug-nightly",
+    "formulahendry.auto-rename-tag",
+    "christian-kohler.path-intellisense",
+    
+    // 🎨 UI/UX Enhancement
+    "pkief.material-icon-theme",
+    "zhuangtongfa.material-theme",
+    "oderwat.indent-rainbow",
+    
+    // 📊 Git & Version Control
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+    
+    // 🔍 Search & Navigation
+    "ms-vscode.references-view",
+    "alefragnani.bookmarks"
+  ]
+}

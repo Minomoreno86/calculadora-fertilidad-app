@@ -304,6 +304,9 @@ export interface UnifiedSuccessRate {
   // 📚 NIVEL DE EVIDENCIA (TreatmentProtocol.evidenceLevel)
   evidenceLevel: EvidenceLevel;
   
+  // 🎯 NIVEL DE CONFIANZA (Añadido para ConversationEngine)
+  confidence: number;          // 0-100: Nivel de confianza en la recomendación
+  
   // 📖 GUÍAS CLÍNICAS (TreatmentProtocol.guidelines)
   guidelines: string[];        // TreatmentProtocol.guidelines
 
@@ -567,17 +570,11 @@ export interface UnifiedQualityMetrics {
 // ====================================================================
 
 export type {
-  // Core types
-  UnifiedUserInput as UserInput,
-  UnifiedClinicalAnalysis as ClinicalAnalysis,
-  UnifiedSuccessRate as SuccessRate,
-  UnifiedMedicalResponse as MedicalResponse,
-  UnifiedOperationResult as OperationResult,
-  UnifiedPerformanceMetrics as PerformanceMetrics,
-  UnifiedAgentConfig as AgentConfig,
-  UnifiedSessionState as SessionState,
-  UnifiedSystemHealth as SystemHealth,
-  UnifiedConversationContext as ConversationContext
+    UnifiedAgentConfig as AgentConfig, UnifiedClinicalAnalysis as ClinicalAnalysis, UnifiedConversationContext as ConversationContext, UnifiedMedicalResponse as MedicalResponse,
+    UnifiedOperationResult as OperationResult,
+    UnifiedPerformanceMetrics as PerformanceMetrics, UnifiedSessionState as SessionState, UnifiedSuccessRate as SuccessRate, UnifiedSystemHealth as SystemHealth,
+    // Core types
+    UnifiedUserInput as UserInput
 };
 
 // También definir ComprehensiveAnalysisResult

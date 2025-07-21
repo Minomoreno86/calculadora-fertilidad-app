@@ -4,6 +4,9 @@
  * Observabilidad completa con alertas inteligentes
  */
 
+// Type aliases para metadatos
+type MetadataType = Record<string, unknown>;
+
 /**
  * 📈 MÉTRICA DE PERFORMANCE
  */
@@ -18,12 +21,7 @@ interface PerformanceMetric {
   memoryAfter: number;
   memoryDelta: number;
   timestamp: Date;
-  metadata?: {
-    cacheHit?: boolean;
-    complexity?: 'low' | 'medium' | 'high';
-    userAge?: number;
-    confidence?: number;
-  };
+  metadata?: MetadataType;
 }
 
 /**
@@ -69,7 +67,7 @@ interface PerformanceAlert {
   currentValue: number;
   timestamp: Date;
   acknowledged: boolean;
-  metadata?: any;
+  metadata?: MetadataType;
 }
 
 /**
@@ -78,7 +76,7 @@ interface PerformanceAlert {
 export class PerformanceMonitor {
   private metrics: PerformanceMetric[] = [];
   private alerts: PerformanceAlert[] = [];
-  private startTime: number;
+  private readonly startTime: number;
   
   // 🎛️ CONFIGURACIÓN
   private readonly maxMetricsHistory: number;
@@ -90,7 +88,7 @@ export class PerformanceMonitor {
   };
   
   // 📊 ESTADÍSTICAS EN TIEMPO REAL
-  private stats = {
+  private readonly stats = {
     totalOperations: 0,
     totalErrors: 0,
     totalSuccesses: 0,
