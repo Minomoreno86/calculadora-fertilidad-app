@@ -144,7 +144,10 @@ export interface Diagnostics {
   infertilityDurationComment?: string; // Propiedad añadida previamente para duración de infertilidad
   pelvicSurgeryComment?: string;
  
-
+  // 🧠 NEURAL WEIGHTING FIELDS
+  neuralFactorAnalysis?: string;
+  evidenceQuality?: string;
+  confidenceLevel?: string;
 };
 
 
