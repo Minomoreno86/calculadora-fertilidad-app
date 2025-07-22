@@ -20,6 +20,30 @@ interface UseFormProgressReturn {
   progress: FormProgress;
   getSectionProgress: (sectionName: string) => number;
   isSectionComplete: (sectionName: string) => boolean;
+
+  // 🚀 CONSOLIDACIÓN: Métricas de benchmark integradas
+  benchmarkMetrics: {
+    performanceReport: PerformanceReport;
+    isOptimal: boolean;
+    needsImprovement: boolean;
+    getBenchmarkData: () => PerformanceReport;
+    completionRate: number;
+    qualityScore: number;
+    recommendation: string;
+  };
+}
+
+// Tipos para benchmark
+interface PerformanceReport {
+  renderCount: number;
+  totalMeasurements: number;
+  averageTime: number;
+  lastMeasurement: number;
+  operations: Array<{
+    name: string;
+    duration: number;
+    timestamp: number;
+  }>;
 }
 
 export const useFormProgress = ({ formData }: UseFormProgressProps): UseFormProgressReturn => {
@@ -49,7 +73,7 @@ export const useFormProgress = ({ formData }: UseFormProgressProps): UseFormProg
       name: 'Factor Masculino',
       requiredFields: [],
       optionalFields: [
-        'spermConcentration', 'spermProgressiveMotility', 'spermNormalMorphology'
+        'spermConcentration', 'spermProgressiveMotility', 'spermNormalMorphology', 'spermVolume'
       ]
     }
   }), []);
@@ -111,9 +135,77 @@ export const useFormProgress = ({ formData }: UseFormProgressProps): UseFormProg
     };
   }, [sections, isSectionComplete]);
 
+  // 🚀 CONSOLIDACIÓN: Calcular métricas de benchmark
+  const benchmarkMetrics = useMemo(() => {
+    return generateBenchmarkMetrics(formData);
+  }, [formData]);
+
   return {
     progress,
     getSectionProgress,
-    isSectionComplete
+    isSectionComplete,
+    benchmarkMetrics,
   };
 };
+
+// ===================================================================
+// 🚀 FUNCIONES DE BENCHMARK CONSOLIDADAS (de useBenchmark.ts)
+// ===================================================================
+
+function generateBenchmarkMetrics(formData: Record<string, unknown>) {
+  const startTime = performance.now();
+  
+  // 📊 Métricas básicas de completitud
+  const totalFields = Object.keys(formData).length;
+  const completedFields = Object.values(formData).filter(value => 
+    value !== '' && value !== null && value !== undefined
+  ).length;
+  
+  const completionRate = Math.round((completedFields / totalFields) * 100);
+  
+  // 🎯 Benchmark de calidad de datos
+  const criticalFields = ['age', 'weight', 'height', 'cycleLength', 'infertilityDuration'];
+  const criticalCompleted = criticalFields.filter(field => 
+    formData[field] && formData[field] !== ''
+  ).length;
+  
+  const qualityScore = Math.round((criticalCompleted / criticalFields.length) * 100);
+  
+  // ⚡ Métricas de rendimiento
+  const benchmarkTime = performance.now() - startTime;
+  
+  const performanceReport: PerformanceReport = {
+    renderCount: 1,
+    totalMeasurements: 1,
+    averageTime: benchmarkTime,
+    lastMeasurement: benchmarkTime,
+    operations: [{
+      name: 'benchmark_calculation',
+      duration: benchmarkTime,
+      timestamp: Date.now()
+    }]
+  };
+  
+  return {
+    performanceReport,
+    isOptimal: completionRate >= 80 && qualityScore >= 90,
+    needsImprovement: qualityScore < 70,
+    getBenchmarkData: () => performanceReport,
+    completionRate,
+    qualityScore,
+    recommendation: generateRecommendation(completionRate, qualityScore)
+  };
+}
+
+function generateRecommendation(completion: number, quality: number): string {
+  if (quality < 50) {
+    return 'Completar datos críticos: edad, peso, altura, duración del ciclo';
+  }
+  if (completion < 70) {
+    return 'Agregar más información para mejorar precisión del cálculo';
+  }
+  if (quality >= 90 && completion >= 80) {
+    return 'Datos completos y de alta calidad para cálculo preciso';
+  }
+  return 'Considerar completar información adicional';
+}

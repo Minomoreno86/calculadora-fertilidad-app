@@ -4,6 +4,13 @@
     "strict": true,
     "jsx": "react-jsx",
     "baseUrl": ".",
+    "target": "ES2017",
+    "downlevelIteration": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "exactOptionalPropertyTypes": false,
+    "noUncheckedIndexedAccess": true,
     "paths": {
       "@/*": ["src/*"]
     }

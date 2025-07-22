@@ -8,8 +8,8 @@ import Text from './Text';
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 import { getModernEmoji } from './ModernIcon';
 
-type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'text';
-type ButtonSize = 'small' | 'medium' | 'large';
+type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'text' | 'medical' | 'clinical' | 'fertility';
+type ButtonSize = 'small' | 'medium' | 'large' | 'clinical';
 
 interface Props {
   title: string;
@@ -94,10 +94,11 @@ export const EnhancedButton: React.FC<Props> = memo(({
 
   // 🎨 Estilos dinámicos
   const getButtonStyle = () => {
+    const variantStyle = variant === 'clinical' ? 'clinicalVariant' : variant;
     const baseStyle = [
       styles.button, 
       styles[size],
-      styles[variant],
+      styles[variantStyle],
       fullWidth && styles.fullWidth,
       disabled && styles.disabled,
     ];
@@ -105,10 +106,11 @@ export const EnhancedButton: React.FC<Props> = memo(({
   };
 
   const getTextStyle = () => {
+    const sizeTextKey = size === 'clinical' ? 'clinicalSizeText' : `${size}Text`;
     const baseStyle = [
       styles.buttonText, 
-      styles[`${size}Text`],
-      styles[`${variant}Text`],
+      styles[sizeTextKey as keyof typeof styles],
+      styles[`${variant}Text` as keyof typeof styles],
       disabled && styles.disabledText,
     ];
     return baseStyle;
@@ -262,6 +264,11 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     paddingVertical: theme.spacing.l,
     minHeight: 52,
   },
+  clinical: {
+    paddingHorizontal: theme.spacing.l,
+    paddingVertical: theme.spacing.m + 2,
+    minHeight: 48,
+  },
 
   // 🎨 Variantes
   primary: {
@@ -285,6 +292,35 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     backgroundColor: 'transparent',
     shadowOpacity: 0,
     elevation: 0,
+  },
+  // 🏥 MEDICAL VARIANTS
+  medical: {
+    backgroundColor: '#2e7d32', // Verde médico
+    shadowColor: '#2e7d32',
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4caf50',
+  },
+  clinicalVariant: {
+    backgroundColor: '#1565c0', // Azul clínico
+    shadowColor: '#1565c0',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+    borderBottomWidth: 2,
+    borderBottomColor: '#42a5f5',
+  },
+  fertility: {
+    backgroundColor: '#7b1fa2', // Púrpura fertilidad
+    shadowColor: '#7b1fa2',
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#ab47bc',
   },
 
   // 🔧 Estados
@@ -312,6 +348,10 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   largeText: {
     fontSize: 16,
   },
+  clinicalSizeText: {
+    fontSize: 15,
+    letterSpacing: 0.5,
+  },
   primaryText: {
     color: theme.colors.white,
   },
@@ -323,6 +363,19 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   textText: {
     color: theme.colors.primary,
+  },
+  // 🏥 MEDICAL VARIANTS TEXT
+  medicalText: {
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  clinicalText: {
+    color: '#ffffff',
+    fontSize: 15,
+  },
+  fertilityText: {
+    color: '#ffffff',
+    fontWeight: '700',
   },
   disabledText: {
     color: theme.colors.white,

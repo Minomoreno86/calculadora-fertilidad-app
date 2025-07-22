@@ -917,5 +917,13 @@ export {
   getSystemStats
 };
 
+// API BRIDGE PARA COMPATIBILIDAD CON CALCULATIONENGINE
+export async function calculateProbability(input: UserInput, _options?: ModularEngineConfig): Promise<EvaluationState> {
+  return await calculateFertilityModular(input);
+}
+
+// Re-exportar tipo principal para compatibilidad
+export type FertilityCalculationEngine = ModularFertilityEngine;
+
 // Default export
 export default ModularFertilityEngine;

@@ -906,7 +906,7 @@ export const clinicalContentLibrary: Record<string, ClinicalInfo> = {
 
 // 💾 Cache específico para contenido premium (más grande debido al volumen)
 class PremiumContentCache {
-  private cache = new Map<string, { data: unknown; timestamp: number; accessCount: number }>();
+  private readonly cache = new Map<string, { data: unknown; timestamp: number; accessCount: number }>();
   private readonly CACHE_TTL = 15 * 60 * 1000; // 15 minutos para premium
   private readonly MAX_CACHE_SIZE = 200; // Más espacio para contenido premium
 

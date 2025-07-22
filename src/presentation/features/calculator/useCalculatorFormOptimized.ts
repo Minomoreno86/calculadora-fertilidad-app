@@ -5,20 +5,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useRangeValidation } from './hooks/useRangeValidation';
 import { mapFormStateToUserInput } from './utils/dataMapper';
 import type { FormData } from './utils/validationSchemas';
 import { formSchema } from './utils/validationSchemas';
 
-// 🚀 HOOKS OPTIMIZADOS PARA PERFORMANCE
+// 🚀 HOOKS OPTIMIZADOS PARA PERFORMANCE (CONSOLIDADOS)
 import { useBenchmark } from '@/core/utils/performanceBenchmark';
 import { useCalculations } from './hooks/useCalculations';
 import { useFormProgress } from './hooks/useFormProgress';
 import { useStableFormValidation } from './hooks/useStableFormValidation';
 import { useStableWatchedFields } from './hooks/useStableWatchedFields';
 
-// 🧠⚡ AI MEDICAL AGENT V11.0 INTEGRATION
-import { generateEnhancedMedicalReport } from '@/services/AIService';
+// 🧠⚡ AI MEDICAL AGENT V12.0 INTEGRATION WITH UNIFIED PARALLEL ENGINE
+import { calculateFertilityWithAI } from '@/core/calculatorIntegration';
 
 export type FormState = FormData;
 
@@ -79,7 +78,7 @@ export interface UseCalculatorFormOptimizedReturn {
  */
 export const useCalculatorFormOptimized = (): UseCalculatorFormOptimizedReturn => {
   
-  // 🚀 Hooks especializados
+  // 🚀 Hooks especializados consolidados  
   const { getReport, clearMetrics } = useBenchmark();
   const { calculateBMI, calculateHOMA, formatBMI, formatHOMA, getBMICategory, getHOMACategory } = useCalculations();
   
@@ -143,18 +142,17 @@ export const useCalculatorFormOptimized = (): UseCalculatorFormOptimizedReturn =
     throttleTime: 100, // 100ms throttle para evitar actualizaciones excesivas
   });
 
-  // 🚀 OPTIMIZACIÓN CRÍTICA: Validación estable con debounce
+  // 🚀 OPTIMIZACIÓN CRÍTICA: Validación consolidada con rangos
   const {
     clinicalValidation,
     triggerValidation,
+    getRangeValidation
   } = useStableFormValidation({
     debounceTime: 500, // 500ms debounce para evitar validaciones excesivas
     enableRealTimeValidation: true,
-    requiredFields: ['age', 'height', 'weight']
+    requiredFields: ['age', 'height', 'weight'],
+    formData: stableWatchedFields  // ✨ CONSOLIDADO: Para validaciones de rangos
   });
-
-  // 🚀 Hook de validación de rangos (OPTIMIZADO)
-  const { getRangeValidation } = useRangeValidation(stableWatchedFields);
 
   // 🚀 Función auxiliar para validar campos (OPTIMIZADA)
   const isFieldValidValue = (fieldName: string): boolean => {
@@ -224,11 +222,11 @@ export const useCalculatorFormOptimized = (): UseCalculatorFormOptimizedReturn =
     triggerValidation(stableWatchedFields);
   }, [stableWatchedFields, triggerValidation]);
 
-  // 🚀 Función de cálculo principal (OPTIMIZADA)
+  // 🚀 Función de cálculo principal (ACTUALIZADA V12.0 - UNIFIED PARALLEL ENGINE)
   const handleCalculate = async (): Promise<string | undefined> => {
     try {
       setIsLoading(true);
-      console.log('🚀 INICIANDO CÁLCULO OPTIMIZADO...');
+      console.log('🚀 INICIANDO CÁLCULO CON UNIFIED PARALLEL ENGINE V12.0...');
       
       const data = getValues();
       
@@ -237,36 +235,107 @@ export const useCalculatorFormOptimized = (): UseCalculatorFormOptimizedReturn =
         console.warn('⚠️ Datos básicos incompletos, pero permitiendo cálculo');
       }
       
-      // Mapear datos y calcular
+      // Mapear datos del formulario
       const userInput = mapFormStateToUserInput(data, calculatedBmi, calculatedHoma);
-      console.log('📊 USER INPUT MAPEADO (OPTIMIZADO):', userInput);
+      console.log('📊 USER INPUT MAPEADO V12.0:', userInput);
       
-      const finalReport = calculateProbability(userInput);
-      console.log('✅ REPORTE GENERADO (OPTIMIZADO):', finalReport);
+      // 🚀 NUEVO: Usar UnifiedParallelEngine V12.0 con 8 workers especializados
+      console.log('🧠 PROCESANDO CON 8 WORKERS ESPECIALIZADOS...');
+      const aiCalculationResult = await calculateFertilityWithAI(userInput);
+      console.log('✅ RESULTADO AI COMPLETO V12.0:', aiCalculationResult);
       
-      // 🧠⚡ AI MEDICAL AGENT V11.0 - ENHANCED MEDICAL ANALYSIS
-      console.log('🧠 INTEGRANDO AI MEDICAL AGENT V11.0...');
-      const enhancedReport = await generateEnhancedMedicalReport(userInput, finalReport);
-      console.log('✅ REPORTE MEJORADO CON AI:', enhancedReport);
+      // Preparar reporte mejorado con datos AI
+      const enhancedReport = {
+        // Mantener compatibilidad con formato anterior
+        userInput,
+        calculationResult: {
+          successProbability: aiCalculationResult.successProbability,
+          confidence: aiCalculationResult.confidence,
+          factors: {
+            age: aiCalculationResult.ageFactorImpact,
+            medicalConditions: aiCalculationResult.medicalConditionsImpact,
+            lifestyle: aiCalculationResult.lifestyleFactorsImpact,
+            maleFactor: aiCalculationResult.maleFactorImpact
+          }
+        },
+        // Nuevos datos AI V12.0
+        aiAnalysis: {
+          treatmentRecommendations: aiCalculationResult.treatmentRecommendations,
+          pathologiesDetected: aiCalculationResult.pathologiesDetected,
+          biomarkerStatus: aiCalculationResult.biomarkerStatus,
+          riskFactors: aiCalculationResult.riskFactors,
+          urgencyLevel: aiCalculationResult.urgencyLevel,
+          processingTime: aiCalculationResult.processingTime,
+          workersUsed: aiCalculationResult.workersUsed
+        },
+        recommendations: {
+          lifestyle: aiCalculationResult.lifestyleRecommendations,
+          medical: aiCalculationResult.medicalRecommendations,
+          tests: aiCalculationResult.recommendedTests,
+          followUp: aiCalculationResult.followUpSchedule
+        },
+        metadata: {
+          version: 'v12.0',
+          timestamp: Date.now(),
+          engineUsed: 'UnifiedParallelEngine',
+          aiAnalysisUsed: aiCalculationResult.aiAnalysisUsed,
+          estimatedTimeToConception: aiCalculationResult.estimatedTimeToConception
+        }
+      };
       
-      // Guardar y navegar con reporte mejorado
+      // Guardar reporte AI mejorado
       const reportKey = `${REPORT_KEY_PREFIX}${Date.now()}`;
-      console.log('🔑 GENERANDO REPORT KEY:', { reportKey, prefix: REPORT_KEY_PREFIX, timestamp: Date.now() });
+      console.log('🔑 GENERANDO REPORT KEY V12.0:', { 
+        reportKey, 
+        aiWorkers: aiCalculationResult.workersUsed,
+        processingTime: aiCalculationResult.processingTime 
+      });
       
       await AsyncStorage.setItem(reportKey, JSON.stringify(enhancedReport));
-      console.log('💾 REPORTE AI GUARDADO CON KEY:', reportKey);
+      console.log('💾 REPORTE AI V12.0 GUARDADO CON KEY:', reportKey);
       
-      // 🚀 ARMONIZACIÓN: Navegación corregida con objeto de parámetros
-      console.log('🧭 NAVEGANDO A RESULTS CON REPORTKEY:', reportKey);
+      // Navegación mejorada
+      console.log('🧭 NAVEGANDO A RESULTS CON AI REPORT V12.0:', reportKey);
       
       router.push({
         pathname: '/results',
         params: { reportKey }
       });
+      
       return reportKey;
     } catch (error) {
-      console.error('❌ ERROR DURANTE CÁLCULO OPTIMIZADO:', error);
-      throw error;
+      console.error('❌ ERROR DURANTE CÁLCULO AI V12.0:', error);
+      
+      // Fallback: intentar cálculo básico original
+      console.log('🔄 FALLBACK: Intentando cálculo básico...');
+      try {
+        const data = getValues();
+        const userInput = mapFormStateToUserInput(data, calculatedBmi, calculatedHoma);
+        const basicReport = calculateProbability(userInput);
+        
+        const fallbackReport = {
+          userInput,
+          calculationResult: basicReport,
+          metadata: { 
+            version: 'v12.0-fallback', 
+            timestamp: Date.now(),
+            engineUsed: 'BasicCalculation'
+          }
+        };
+        
+        const reportKey = `${REPORT_KEY_PREFIX}fallback_${Date.now()}`;
+        await AsyncStorage.setItem(reportKey, JSON.stringify(fallbackReport));
+        
+        router.push({
+          pathname: '/results',
+          params: { reportKey }
+        });
+        
+        return reportKey;
+      } catch (fallbackError) {
+        console.error('❌ FALLBACK TAMBIÉN FALLÓ:', fallbackError);
+        throw fallbackError;
+      }
     } finally {
       setIsLoading(false);
     }
@@ -279,7 +348,7 @@ export const useCalculatorFormOptimized = (): UseCalculatorFormOptimizedReturn =
     setValue,
     getValues,
     formState: { errors },
-    watchedFields: stableWatchedFields as FormState,
+    watchedFields: stableWatchedFields,
     
     // Cálculos automáticos
     calculatedBmi,
@@ -294,9 +363,17 @@ export const useCalculatorFormOptimized = (): UseCalculatorFormOptimizedReturn =
     completionPercentage,
     currentStep,
     
-    // Validación
+    // Validación consolidada
     clinicalValidation,
-    getRangeValidation,
+    getRangeValidation: (fieldName: string) => {
+      // Adaptador para mantener compatibilidad con API anterior
+      const fieldValue = (stableWatchedFields as Record<string, unknown>)[fieldName];
+      const numericValue = parseFloat(String(fieldValue || '0'));
+      if (fieldName === 'age' || fieldName === 'weight' || fieldName === 'height') {
+        return getRangeValidation(fieldName, numericValue);
+      }
+      return { isNormal: true, isWarning: false, isError: false, message: 'Campo no validable', range: { min: 0, max: 0 } };
+    },
     
     // Función principal
     handleCalculate,

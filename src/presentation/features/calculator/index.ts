@@ -13,13 +13,13 @@ export type { UseCalculatorFormReturn as UseCalculatorFormModularReturn } from '
 // 🚀 NUEVO: Hook de validación paralela independiente
 export { useCalculatorParallelValidation } from './hooks/useCalculatorParallelValidation';
 
-// 🎯 Hooks especializados
+// 🎯 Hooks especializados consolidados
 export { useFormState } from './hooks/useFormState';
 export { useFormValidation } from './hooks/useFormValidation';
 export { useCalculations } from './hooks/useCalculations';
-export { useFormProgress } from './hooks/useFormProgress';
+export { useFormProgress } from './hooks/useFormProgress'; // ✨ Incluye métricas de benchmark consolidadas
 export { useUXEnhancements } from './hooks/useUXEnhancements';
-export { useBenchmark } from './hooks/useBenchmark';
+export { useStableFormValidation } from './hooks/useStableFormValidation'; // ✨ Incluye validaciones de rangos consolidadas
 
 // 🛠️ Servicios
 export { CalculationService } from './services/calculationService';

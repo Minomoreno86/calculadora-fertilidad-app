@@ -5,7 +5,24 @@
  * el sistema de validación paralela con streaming progresivo.
  * 
  * Características:
- * - API simple y familiar
+ * - API s  const getQuickValidation = useCallback(async (_data: unknown): Promise<ValidationResult[]> => {
+    // Simular validación rápida
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
+    return [
+      {
+        taskId: 'quick-validation',
+        success: true,
+        isValid: true,
+        result: {
+          isValid: true,
+          severity: 'low' as const,
+          recommendations: ['Validación rápida completada'],
+          confidence: 0.9
+        },
+        processingTime: 50
+      }
+    ];
  * - Estado reactivo en tiempo real
  * - Métricas de performance
  * - Control de flujo avanzado
@@ -15,10 +32,12 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import ValidationStreamingEngine, { 
   StreamingProgress, 
   StreamingConfig, 
-  StreamingCallbacks 
+  StreamingCallbacks,
+  ValidationGroup
 } from '@/core/workers/validationStreamingEngine';
-import { ValidationGroup, ValidationMetrics } from '@/core/workers/parallelValidationEngine';
+import { ValidationMetrics } from '@/core/workers/parallelValidationEngine';
 import type { ValidationResult } from '@/core/workers/validationWorker';
+import type { UserInput } from '@/core/domain/models';
 
 export interface ParallelValidationState {
   isRunning: boolean;
@@ -176,7 +195,7 @@ export function useParallelValidation(
   /**
    * Iniciar validación paralela
    */
-  const startValidation = useCallback(async (groups: ValidationGroup[]) => {
+  const startValidation = useCallback(async (groups: ValidationGroup[], userInput?: Partial<UserInput>) => {
     if (!engineRef.current) {
       throw new Error('Motor de validación no inicializado');
     }
@@ -192,7 +211,7 @@ export function useParallelValidation(
     }));
 
     try {
-      await engineRef.current.startStreamingValidation(groups);
+      await engineRef.current.startStreamingValidation(groups, userInput as UserInput || {} as UserInput);
     } catch (error) {
       setState(prev => ({
         ...prev,
@@ -222,7 +241,7 @@ export function useParallelValidation(
   /**
    * Validación rápida para casos simples
    */
-  const getQuickValidation = useCallback(async (data: unknown): Promise<ValidationResult[]> => {
+  const getQuickValidation = useCallback(async (_data: unknown): Promise<ValidationResult[]> => {
     // Simular validación rápida sin streaming
     await new Promise(resolve => setTimeout(resolve, 50));
     
@@ -230,10 +249,12 @@ export function useParallelValidation(
       {
         taskId: 'quick-validation',
         success: true,
+        isValid: true,
         result: {
           isValid: true,
-          confidence: 0.9,
-          data
+          severity: 'low' as const,
+          recommendations: ['Validación rápida completada'],
+          confidence: 0.9
         },
         processingTime: 50
       }
@@ -294,7 +315,7 @@ export function useQuickValidation() {
   const [results, setResults] = useState<ValidationResult[]>([]);
   const [error, setError] = useState<Error | undefined>();
 
-  const validate = useCallback(async (data: unknown) => {
+  const validate = useCallback(async (_data: unknown) => {
     setIsValidating(true);
     setError(undefined);
 
@@ -306,7 +327,13 @@ export function useQuickValidation() {
         {
           taskId: 'quick-basic',
           success: true,
-          result: { isValid: true, data },
+          isValid: true,
+          result: {
+            isValid: true,
+            severity: 'low' as const,
+            recommendations: ['Validación básica completada'],
+            confidence: 0.8
+          },
           processingTime: 100
         }
       ];

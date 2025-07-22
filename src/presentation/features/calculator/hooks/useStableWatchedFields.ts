@@ -49,15 +49,15 @@ export const useStableWatchedFields = (
   options: UseStableWatchedFieldsOptions = {}
 ): UseStableWatchedFieldsReturn => {
   
-  const { throttleTime = 100, watchFields } = options;
+  const { throttleTime = 100 } = options;
   
   // 🚀 Referencias estables
   const watchedFieldsRef = useRef<string>('{}');
   const stableFieldsRef = useRef<FormState>({} as FormState);
   const lastUpdateRef = useRef<number>(0);
   
-  // 🚀 Observar campos con throttling
-  const watchedFieldsRaw = watch(watchFields as any);
+  // 🚀 Observar campos con throttling - versión simplificada
+  const watchedFieldsRaw = watch(); // Observar todos los campos
   
   // 🚀 Estabilizar watchedFields solo cuando sea necesario
   const stableWatchedFields = useMemo(() => {
@@ -71,7 +71,7 @@ export const useStableWatchedFields = (
     ) {
       watchedFieldsRef.current = watchedFieldsString;
       lastUpdateRef.current = now;
-      stableFieldsRef.current = { ...(watchedFieldsRaw || {}) } as FormState;
+      stableFieldsRef.current = watchedFieldsRaw || {} as FormState;
     }
     
     return stableFieldsRef.current;
@@ -82,7 +82,7 @@ export const useStableWatchedFields = (
     const watchedFieldsString = JSON.stringify(watchedFieldsRaw || {});
     watchedFieldsRef.current = watchedFieldsString;
     lastUpdateRef.current = Date.now();
-    stableFieldsRef.current = { ...(watchedFieldsRaw || {}) } as FormState;
+    stableFieldsRef.current = watchedFieldsRaw || {} as FormState;
   }, [watchedFieldsRaw]);
   
   // 🚀 Función optimizada para verificar validez de campo
@@ -106,7 +106,7 @@ export const useStableWatchedFields = (
         'spermConcentration', 'spermProgressiveMotility', 'spermNormalMorphology'
       ];
       
-      if (numericFields.includes(fieldName as string)) {
+      if (numericFields.includes(fieldName)) {
         const numValue = parseFloat(trimmed);
         return !isNaN(numValue) && numValue > 0;
       }
