@@ -103,6 +103,11 @@ const getTreatmentSuggestion = (key: string, context?: TreatmentContext): Enhanc
  * Implementa las reglas de decisión estratégica y clasificación terapéutica del DFCA.
  */
 function getStrategicDecisionSuggestions(input: UserInput, factors: Factors, context?: TreatmentContext): EnhancedTreatmentSuggestion[] {
+  // 🧠 NEURAL SAFETY V13.0: Validar acceso a propiedades
+  if (!input || input.age === undefined) {
+    return [];
+  }
+  
   if (input.age >= 40 && (input.amh !== undefined && input.amh < 1.0)) {
     return [getTreatmentSuggestion('DECISION_FIV_EDAD_AMH_CRITICO', context)];
   }
@@ -124,14 +129,17 @@ function getStrategicDecisionSuggestions(input: UserInput, factors: Factors, con
 }
 
 function shouldSuggestFIV(input: UserInput, factors: Factors): boolean {
+  // 🧠 NEURAL SAFETY V13.0: Validar input antes de acceso a propiedades
+  if (!input || !factors) return false;
+  
   return (
     factors.otb === 0.0 ||
     factors.hsg === 0.0 ||
     factors.male === 0.0 ||
-    ((input.amh !== undefined && input.amh < 1.0) && input.age > 35) ||
-    (input.endometriosisGrade >= 3 && input.age > 35) ||
+    ((input.amh !== undefined && input.amh < 1.0) && (input.age !== undefined && input.age > 35)) ||
+    ((input.endometriosisGrade !== undefined && input.endometriosisGrade >= 3) && (input.age !== undefined && input.age > 35)) ||
     (input.adenomyosisType === AdenomyosisType.Diffuse) ||
-    (input.age >= 43 && (input.amh !== undefined && input.amh < 0.5))
+    ((input.age !== undefined && input.age >= 43) && (input.amh !== undefined && input.amh < 0.5))
   );
 }
 
@@ -143,6 +151,9 @@ function shouldSuggestICSI(input: UserInput): boolean {
 }
 
 function shouldSuggestOvodonacion(input: UserInput): boolean {
+  // 🧠 NEURAL SAFETY V13.0: Validar input y age
+  if (!input || input.age === undefined) return false;
+  
   return input.age >= 43 && (input.amh !== undefined && input.amh < 0.5);
 }
 
@@ -162,13 +173,16 @@ function getAbsoluteFIVSuggestions(input: UserInput, factors: Factors, context?:
 }
 
 function shouldSuggestIACHelper(evaluation: EvaluationState, input: UserInput, factors: Factors, shouldSuggestFIV: boolean): boolean {
+  // 🧠 NEURAL SAFETY V13.0: Validar input
+  if (!input || !factors) return false;
+  
   const isSpermLimit =
     (input.spermProgressiveMotility !== undefined && input.spermProgressiveMotility >= 30 && input.spermProgressiveMotility < 40) ||
     (input.spermConcentration !== undefined && input.spermConcentration >= 10 && input.spermConcentration < 16);
 
   if (isSpermLimit && (factors.cycle !== undefined && factors.cycle >= 0.85)) return true;
   if (input.hsgResult === HsgResult.Unilateral) return true;
-  if ((input.endometriosisGrade === 1 || input.endometriosisGrade === 2) && input.age < 35 && (input.amh !== undefined && input.amh >= 1.5)) return true;
+  if ((input.endometriosisGrade === 1 || input.endometriosisGrade === 2) && (input.age !== undefined && input.age < 35) && (input.amh !== undefined && input.amh >= 1.5)) return true;
   if (
     evaluation.diagnostics.missingData !== undefined &&
     evaluation.diagnostics.missingData.length === 0 &&
@@ -180,12 +194,15 @@ function shouldSuggestIACHelper(evaluation: EvaluationState, input: UserInput, f
 }
 
 function isIACContraindicatedHelper(input: UserInput, factors: Factors): boolean {
+  // 🧠 NEURAL SAFETY V13.0: Validar input
+  if (!input || !factors) return false;
+  
   return (
     factors.hsg === 0.0 ||
     (input.spermProgressiveMotility !== undefined && input.spermProgressiveMotility < 30) ||
     (input.spermNormalMorphology !== undefined && input.spermNormalMorphology < 2) ||
     (input.amh !== undefined && input.amh < 1.0) ||
-    input.age > 38 ||
+    (input.age !== undefined && input.age > 38) ||
     input.adenomyosisType === AdenomyosisType.Diffuse
   );
 }
@@ -202,11 +219,14 @@ function getIACSuggestions(evaluation: EvaluationState, input: UserInput, factor
 }
 
 function getLowComplexitySuggestions(input: UserInput, factors: Factors, context?: TreatmentContext): EnhancedTreatmentSuggestion[] {
+  // 🧠 NEURAL SAFETY V13.0: Validar input
+  if (!input || !factors) return [];
+  
   let suggestions: EnhancedTreatmentSuggestion[] = [];
   let shouldSuggestLowComplexity = false;
 
   if (
-    input.age < 35 &&
+    (input.age !== undefined && input.age < 35) &&
     (input.amh !== undefined && input.amh >= 1.0) &&
     (factors.cycle !== undefined && factors.cycle >= 0.85) &&
     (factors.male !== undefined && factors.male === 1.0) &&
@@ -218,7 +238,7 @@ function getLowComplexitySuggestions(input: UserInput, factors: Factors, context
     shouldSuggestLowComplexity = true;
   }
   if (
-    input.age < 32 &&
+    (input.age !== undefined && input.age < 32) &&
     (input.amh !== undefined && input.amh > 4.5) &&
     input.hasPcos &&
     (input.spermNormalMorphology !== undefined && input.spermNormalMorphology >= 4) &&
@@ -232,14 +252,14 @@ function getLowComplexitySuggestions(input: UserInput, factors: Factors, context
   if (
     (input.endometriosisGrade === 1 || input.endometriosisGrade === 2) &&
     (input.amh !== undefined && input.amh >= 1.5) &&
-    input.age < 35
+    (input.age !== undefined && input.age < 35)
   ) {
     suggestions.push(getTreatmentSuggestion('INT_ENDO_LEVE_AMH_NORMAL_JOVEN', context));
     shouldSuggestLowComplexity = true;
   }
   if (
     input.hsgResult === HsgResult.Unilateral &&
-    input.age < 35 &&
+    (input.age !== undefined && input.age < 35) &&
     (input.spermConcentration !== undefined && input.spermConcentration >= 16) &&
     (input.spermProgressiveMotility !== undefined && input.spermProgressiveMotility >= 30)
   ) {
@@ -247,7 +267,7 @@ function getLowComplexitySuggestions(input: UserInput, factors: Factors, context
     shouldSuggestLowComplexity = true;
   }
   if (
-    input.age < 34 &&
+    (input.age !== undefined && input.age < 34) &&
     input.polypType === PolypType.Small &&
     (input.cycleDuration !== undefined && input.cycleDuration >= 24 && input.cycleDuration <= 35) &&
     (input.spermNormalMorphology !== undefined && input.spermNormalMorphology >= 4)
@@ -256,7 +276,7 @@ function getLowComplexitySuggestions(input: UserInput, factors: Factors, context
     shouldSuggestLowComplexity = true;
   }
   if (
-    input.age < 30 &&
+    (input.age !== undefined && input.age < 30) &&
     (input.amh !== undefined && input.amh > 5) &&
     input.hasPcos &&
     (input.homaIr !== undefined && input.homaIr < 2) &&
@@ -287,8 +307,11 @@ function getBmiSuggestions(bmi: number, context?: TreatmentContext): EnhancedTre
 }
 
 function getOptimizationSuggestions(input: UserInput, factors: Factors, currentSuggestions: EnhancedTreatmentSuggestion[], context?: TreatmentContext): EnhancedTreatmentSuggestion[] {
+  // 🧠 NEURAL SAFETY V13.0: Validar input, factors y currentSuggestions
+  if (!input || !factors || !currentSuggestions) return [];
+  
   // Skip optimization for high complexity treatments
-  if (currentSuggestions.length > 0 && currentSuggestions[0].category === 'Alta Complejidad') {
+  if (currentSuggestions.length > 0 && currentSuggestions[0]?.category === 'Alta Complejidad') {
     return [];
   }
   
@@ -311,7 +334,44 @@ function getOptimizationSuggestions(input: UserInput, factors: Factors, currentS
  * Sugiere tratamientos basado en el EvaluationState completo con contexto clínico
  */
 export function suggestTreatments(evaluation: EvaluationState): EnhancedTreatmentSuggestion[] {
+  // 🧠 NEURAL SAFETY V13.0: Validar que evaluation y sus propiedades existan
+  if (!evaluation) {
+    console.warn('⚠️ Treatment Suggester: evaluation is null/undefined');
+    return [{
+      category: 'Estudio Adicional',
+      title: 'Datos insuficientes para análisis',
+      details: 'No se pudo procesar la evaluación. Por favor, complete los datos requeridos.',
+      source: 'Sistema de Validación',
+      confidence: 0,
+      urgency: 'low',
+      evidenceLevel: 'D',
+      contraindications: ['Datos incompletos'],
+      prerequisites: ['Completar formulario de evaluación']
+    }];
+  }
+
   const { input, factors } = evaluation;
+  
+  // 🧠 NEURAL SAFETY V13.0: Validar que input y factors existan y sean objetos válidos
+  if (!input || !factors || input === false || factors === false || typeof input !== 'object' || typeof factors !== 'object') {
+    console.warn('⚠️ Treatment Suggester: input or factors are null/undefined/invalid', { 
+      input: !!input, 
+      factors: !!factors,
+      inputType: typeof input,
+      factorsType: typeof factors
+    });
+    return [{
+      category: 'Estudio Adicional',
+      title: 'Datos de entrada incompletos',
+      details: 'Faltan datos críticos para el análisis. Por favor, revise el formulario.',
+      source: 'Sistema de Validación',
+      confidence: 0,
+      urgency: 'low',
+      evidenceLevel: 'D',
+      contraindications: ['Input o factors faltantes o inválidos'],
+      prerequisites: ['Validar datos de entrada completos']
+    }];
+  }
   
   // 🔬 CONSTRUIR CONTEXTO CLÍNICO
   const context: TreatmentContext = {
@@ -363,37 +423,43 @@ export function suggestTreatments(evaluation: EvaluationState): EnhancedTreatmen
  */
 
 function calculateClinicalScore(input: UserInput, factors: Factors): number {
+  // 🧠 NEURAL SAFETY V13.0: Validar input y factors
+  if (!input || !factors) return 50; // Score neutro si no hay datos
+  
   let score = 70; // Base score
   
   // Factores que mejoran el score
-  if (input.age && input.age < 35) score += 10;
-  if (input.amh && input.amh > 1.5) score += 10;
+  if (input.age !== undefined && input.age < 35) score += 10;
+  if (input.amh !== undefined && input.amh > 1.5) score += 10;
   if (factors.male === 1.0) score += 5;
-  if (factors.cycle >= 0.8) score += 5;
+  if (factors.cycle !== undefined && factors.cycle >= 0.8) score += 5;
   
   // Factores que reducen el score
-  if (input.age && input.age > 40) score -= 15;
-  if (input.amh && input.amh < 1.0) score -= 10;
-  if (factors.male < 0.7) score -= 10;
-  if (input.endometriosisGrade && input.endometriosisGrade >= 3) score -= 10;
+  if (input.age !== undefined && input.age > 40) score -= 15;
+  if (input.amh !== undefined && input.amh < 1.0) score -= 10;
+  if (factors.male !== undefined && factors.male < 0.7) score -= 10;
+  if (input.endometriosisGrade !== undefined && input.endometriosisGrade >= 3) score -= 10;
   
   return Math.max(0, Math.min(100, score));
 }
 
 function assessRiskLevel(input: UserInput, factors: Factors): TreatmentContext['riskLevel'] {
+  // 🧠 NEURAL SAFETY V13.0: Validar input y factors
+  if (!input || !factors) return 'MEDIUM'; // Risk level neutro si no hay datos
+  
   // Criterios críticos
-  if ((input.age && input.age >= 43) || 
-      (input.amh && input.amh < 0.5) || 
+  if ((input.age !== undefined && input.age >= 43) || 
+      (input.amh !== undefined && input.amh < 0.5) || 
       factors.otb === 0.0 ||
       factors.hsg === 0.0) {
     return 'CRITICAL';
   }
   
   // Criterios altos
-  if ((input.age && input.age >= 38) ||
-      (input.amh && input.amh < 1.0) ||
-      (input.endometriosisGrade && input.endometriosisGrade >= 3) ||
-      factors.male < 0.5) {
+  if ((input.age !== undefined && input.age >= 38) ||
+      (input.amh !== undefined && input.amh < 1.0) ||
+      (input.endometriosisGrade !== undefined && input.endometriosisGrade >= 3) ||
+      (factors.male !== undefined && factors.male < 0.5)) {
     return 'HIGH';
   }
   

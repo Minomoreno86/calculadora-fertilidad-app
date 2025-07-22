@@ -142,6 +142,25 @@ export const useCalculatorFormOptimized = (): UseCalculatorFormOptimizedReturn =
     throttleTime: 100, // 100ms throttle para evitar actualizaciones excesivas
   });
 
+  // 🧠 NEURAL FIX V13.0: Asegurar que watchedFields nunca sea undefined
+  const safeWatchedFields = useMemo(() => {
+    // Si stableWatchedFields está vacío, usar valores iniciales
+    if (!stableWatchedFields || Object.keys(stableWatchedFields).length === 0) {
+      return initialFormValues;
+    }
+    
+    // Si faltan propiedades críticas, mezclar con iniciales
+    const hasAge = stableWatchedFields.age !== undefined;
+    const hasWeight = stableWatchedFields.weight !== undefined;
+    const hasHeight = stableWatchedFields.height !== undefined;
+    
+    if (!hasAge || !hasWeight || !hasHeight) {
+      return { ...initialFormValues, ...stableWatchedFields };
+    }
+    
+    return stableWatchedFields;
+  }, [stableWatchedFields]);
+
   // 🚀 OPTIMIZACIÓN CRÍTICA: Validación consolidada con rangos
   const {
     clinicalValidation,
@@ -151,7 +170,7 @@ export const useCalculatorFormOptimized = (): UseCalculatorFormOptimizedReturn =
     debounceTime: 500, // 500ms debounce para evitar validaciones excesivas
     enableRealTimeValidation: true,
     requiredFields: ['age', 'height', 'weight'],
-    formData: stableWatchedFields  // ✨ CONSOLIDADO: Para validaciones de rangos
+    formData: safeWatchedFields  // ✨ NEURAL FIX: Usar safeWatchedFields
   });
 
   // 🚀 Función auxiliar para validar campos (OPTIMIZADA)
@@ -176,22 +195,22 @@ export const useCalculatorFormOptimized = (): UseCalculatorFormOptimizedReturn =
     if (!isLabComplete) return 2;
     if (!isMaleFactorComplete) return 3;
     return 3;
-  }, [stableWatchedFields]);
+  }, [safeWatchedFields]); // ✨ NEURAL FIX: Usar safeWatchedFields
 
-  // 🚀 Cálculos optimizados con memoización
+  // 🚀 Cálculos optimizados con memoización - NEURAL FIX V13.0
   const calculatedBmi = useMemo(() => 
-    calculateBMI(stableWatchedFields.height as string | number, stableWatchedFields.weight as string | number), 
-    [stableWatchedFields.weight, stableWatchedFields.height, calculateBMI]
+    calculateBMI(safeWatchedFields.height as string | number, safeWatchedFields.weight as string | number), 
+    [safeWatchedFields.weight, safeWatchedFields.height, calculateBMI]
   );
 
   const calculatedHoma = useMemo(() => 
-    calculateHOMA(stableWatchedFields.insulinValue as string | number, stableWatchedFields.glucoseValue as string | number), 
-    [stableWatchedFields.insulinValue, stableWatchedFields.glucoseValue, calculateHOMA]
+    calculateHOMA(safeWatchedFields.insulinValue as string | number, safeWatchedFields.glucoseValue as string | number), 
+    [safeWatchedFields.insulinValue, safeWatchedFields.glucoseValue, calculateHOMA]
   );
 
-  // 🚀 Hook de progreso optimizado
+  // 🚀 Hook de progreso optimizado - NEURAL FIX V13.0
   const progressData = useFormProgress({ 
-    formData: stableWatchedFields 
+    formData: safeWatchedFields 
   });
 
   // 🚀 Adaptar al formato esperado por la interfaz
@@ -217,10 +236,10 @@ export const useCalculatorFormOptimized = (): UseCalculatorFormOptimizedReturn =
     [calculatedHoma, getHOMACategory]
   );
 
-  // 🚀 Disparar validación clínica cuando cambien los datos
+  // 🚀 Disparar validación clínica cuando cambien los datos - NEURAL FIX V13.0
   useMemo(() => {
-    triggerValidation(stableWatchedFields);
-  }, [stableWatchedFields, triggerValidation]);
+    triggerValidation(safeWatchedFields);
+  }, [safeWatchedFields, triggerValidation]);
 
   // 🚀 Función de cálculo principal (ACTUALIZADA V12.0 - UNIFIED PARALLEL ENGINE)
   const handleCalculate = async (): Promise<string | undefined> => {
@@ -242,44 +261,41 @@ export const useCalculatorFormOptimized = (): UseCalculatorFormOptimizedReturn =
       // 🚀 NUEVO: Usar UnifiedParallelEngine V12.0 con 8 workers especializados
       console.log('🧠 PROCESANDO CON 8 WORKERS ESPECIALIZADOS...');
       const aiCalculationResult = await calculateFertilityWithAI(userInput);
+      // 🧠 RESULTADO AI COMPLETO V12.0 - PREPARAR EVALUATIONSTATE
       console.log('✅ RESULTADO AI COMPLETO V12.0:', aiCalculationResult);
       
-      // Preparar reporte mejorado con datos AI
+      // Obtener cálculo básico para completar la estructura EvaluationState
+      const basicCalculation = calculateProbability(userInput);
+      
+      // Preparar reporte según interface EvaluationState
       const enhancedReport = {
-        // Mantener compatibilidad con formato anterior
-        userInput,
-        calculationResult: {
-          successProbability: aiCalculationResult.successProbability,
-          confidence: aiCalculationResult.confidence,
-          factors: {
-            age: aiCalculationResult.ageFactorImpact,
-            medicalConditions: aiCalculationResult.medicalConditionsImpact,
-            lifestyle: aiCalculationResult.lifestyleFactorsImpact,
-            maleFactor: aiCalculationResult.maleFactorImpact
-          }
-        },
-        // Nuevos datos AI V12.0
-        aiAnalysis: {
-          treatmentRecommendations: aiCalculationResult.treatmentRecommendations,
-          pathologiesDetected: aiCalculationResult.pathologiesDetected,
-          biomarkerStatus: aiCalculationResult.biomarkerStatus,
-          riskFactors: aiCalculationResult.riskFactors,
-          urgencyLevel: aiCalculationResult.urgencyLevel,
-          processingTime: aiCalculationResult.processingTime,
-          workersUsed: aiCalculationResult.workersUsed
-        },
-        recommendations: {
-          lifestyle: aiCalculationResult.lifestyleRecommendations,
-          medical: aiCalculationResult.medicalRecommendations,
-          tests: aiCalculationResult.recommendedTests,
-          followUp: aiCalculationResult.followUpSchedule
-        },
+        input: userInput,
+        factors: basicCalculation.factors,
+        diagnostics: basicCalculation.diagnostics,
+        report: basicCalculation.report,
+        // Datos adicionales AI V12.0 mantenidos para compatibilidad
         metadata: {
           version: 'v12.0',
           timestamp: Date.now(),
           engineUsed: 'UnifiedParallelEngine',
           aiAnalysisUsed: aiCalculationResult.aiAnalysisUsed,
-          estimatedTimeToConception: aiCalculationResult.estimatedTimeToConception
+          estimatedTimeToConception: aiCalculationResult.estimatedTimeToConception,
+          // Datos AI extendidos
+          aiAnalysis: {
+            treatmentRecommendations: aiCalculationResult.treatmentRecommendations,
+            pathologiesDetected: aiCalculationResult.pathologiesDetected,
+            biomarkerStatus: aiCalculationResult.biomarkerStatus,
+            riskFactors: aiCalculationResult.riskFactors,
+            urgencyLevel: aiCalculationResult.urgencyLevel,
+            processingTime: aiCalculationResult.processingTime,
+            workersUsed: aiCalculationResult.workersUsed
+          },
+          recommendations: {
+            lifestyle: aiCalculationResult.lifestyleRecommendations,
+            medical: aiCalculationResult.medicalRecommendations,
+            tests: aiCalculationResult.recommendedTests,
+            followUp: aiCalculationResult.followUpSchedule
+          }
         }
       };
       
@@ -313,9 +329,12 @@ export const useCalculatorFormOptimized = (): UseCalculatorFormOptimizedReturn =
         const userInput = mapFormStateToUserInput(data, calculatedBmi, calculatedHoma);
         const basicReport = calculateProbability(userInput);
         
+        // Estructura según EvaluationState interface
         const fallbackReport = {
-          userInput,
-          calculationResult: basicReport,
+          input: userInput,
+          factors: basicReport.factors,
+          diagnostics: basicReport.diagnostics,
+          report: basicReport.report,
           metadata: { 
             version: 'v12.0-fallback', 
             timestamp: Date.now(),
@@ -348,7 +367,7 @@ export const useCalculatorFormOptimized = (): UseCalculatorFormOptimizedReturn =
     setValue,
     getValues,
     formState: { errors },
-    watchedFields: stableWatchedFields,
+    watchedFields: safeWatchedFields, // ✨ NEURAL FIX: Usar safeWatchedFields en lugar de stableWatchedFields
     
     // Cálculos automáticos
     calculatedBmi,
@@ -366,9 +385,12 @@ export const useCalculatorFormOptimized = (): UseCalculatorFormOptimizedReturn =
     // Validación consolidada
     clinicalValidation,
     getRangeValidation: (fieldName: string) => {
-      // Adaptador para mantener compatibilidad con API anterior
-      const fieldValue = (stableWatchedFields as Record<string, unknown>)[fieldName];
-      const numericValue = parseFloat(String(fieldValue || '0'));
+      // ✨ NEURAL FIX V13.0: Acceso seguro a fieldValue desde safeWatchedFields
+      const fieldValue = (safeWatchedFields as Record<string, unknown>)[fieldName];
+      const safeValue = fieldValue === null || fieldValue === undefined ? '0' : 
+                       (typeof fieldValue === 'object' ? JSON.stringify(fieldValue) : String(fieldValue));
+      const numericValue = parseFloat(safeValue);
+      
       if (fieldName === 'age' || fieldName === 'weight' || fieldName === 'height') {
         return getRangeValidation(fieldName, numericValue);
       }

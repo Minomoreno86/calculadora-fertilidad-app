@@ -206,7 +206,9 @@ class CalculationEngineCache {
     
     pattern.frequency++;
     pattern.lastUsed = now;
-    pattern.timeOfDay[hourOfDay]++;
+    if (pattern.timeOfDay[hourOfDay] !== undefined) {
+      pattern.timeOfDay[hourOfDay]++;
+    }
     
     // Identificar patrones relacionados (inputs similares usados juntos)
     const recentPatterns = Array.from(this.usagePatterns.entries())
@@ -359,15 +361,18 @@ class CalculationEngineCache {
     const removedHashes: string[] = [];
     
     for (let i = 0; i < toRemove; i++) {
-      const [hash] = entries[i];
-      cache.delete(hash);
-      removedHashes.push(hash);
-      
-      // 🆕 Limpiar datos comprimidos asociados
-      this.compressionCache.delete(hash);
-      
-      // 🆕 Actualizar métricas
-      this.metrics.cacheEvictions++;
+      const entry = entries[i];
+      if (entry) {
+        const [hash] = entry;
+        cache.delete(hash);
+        removedHashes.push(hash);
+        
+        // 🆕 Limpiar datos comprimidos asociados
+        this.compressionCache.delete(hash);
+        
+        // 🆕 Actualizar métricas
+        this.metrics.cacheEvictions++;
+      }
     }
     
     // 🚀 SMART LOGGING: Cache cleanup con métricas optimizadas
@@ -974,7 +979,7 @@ function _updateEvaluationState<K extends keyof Factors, D extends keyof Diagnos
   }
 }
 
-// 🔄 FUNCIÓN LEGACY SIMPLIFICADA - COMPLEJIDAD COGNITIVA: 6/15 ✅  
+// 🔄 FUNCIÓN LEGACY SIMPLIFICADA - COMPLEJIDAD COGNITIVA: 15/15 ✅  
 // (Mantenida para compatibilidad, utiliza nueva arquitectura interna)
 function _evaluateAllFactors(userInput: UserInput, factors: Factors, diagnostics: Diagnostics): void {
   console.log('🔧 MOTOR DE CÁLCULO LEGACY - Redirigiendo a versión optimizada...');
@@ -983,80 +988,85 @@ function _evaluateAllFactors(userInput: UserInput, factors: Factors, diagnostics
   try {
     _evaluateAllFactorsOptimized(userInput, factors, diagnostics);
     console.log('✅ Evaluación legacy completada exitosamente vía sistema optimizado');
+    return;
   } catch (optimizedError) {
     console.warn('⚠️ Sistema optimizado falló, ejecutando evaluación básica de emergencia:', optimizedError);
     
-    // 🛡️ SISTEMA DE EMERGENCIA - Evaluación mínima crítica
-    const emergencyFactors = ['baseAgeProbability', 'bmi', 'infertilityDuration'] as const;
-    let emergencySuccessCount = 0;
-    
-    for (const factorKey of emergencyFactors) {
-      try {
-        let evaluation;
-        
-        switch (factorKey) {
-          case 'baseAgeProbability':
-            evaluation = _safeEvaluateFactor(
-              factorEvaluators.evaluateAgeBaseline,
-              [userInput.age],
-              'baseAgeProbability'
-            );
-            break;
-          case 'bmi':
-            evaluation = _safeEvaluateFactor(
-              factorEvaluators.evaluateBmi,
-              [userInput.bmi],
-              'bmi'
-            );
-            break;
-          case 'infertilityDuration':
-            evaluation = _safeEvaluateFactor(
-              factorEvaluators.evaluateInfertilityDuration,
-              [userInput.infertilityDuration],
-              'infertilityDuration'
-            );
-            break;
-          default:
-            continue;
-        }
-        
-        if (evaluation.success && evaluation.factorResult?.factors?.[factorKey]) {
-          factors[factorKey] = evaluation.factorResult.factors[factorKey];
-          emergencySuccessCount++;
-          console.log(`🆘 Factor de emergencia ${factorKey} evaluado exitosamente`);
-        } else {
-          factors[factorKey] = DEFAULT_FACTOR_VALUE;
-          console.warn(`🆘 Factor de emergencia ${factorKey} falló, aplicando valor por defecto`);
-        }
-      } catch {
-        factors[factorKey] = DEFAULT_FACTOR_VALUE;
-        console.error(`🆘 Error crítico en factor de emergencia ${factorKey}`);
-      }
-    }
-    
-    // Aplicar valores por defecto para factores restantes
-    const allFactorKeys: (keyof Factors)[] = [
-      'cycle', 'pcos', 'endometriosis', 'myoma', 'adenomyosis', 
-      'polyp', 'hsg', 'otb', 'amh', 'prolactin', 'tsh', 'homa', 
-      'male', 'pelvicSurgery'
-    ];
-    
-    for (const factorKey of allFactorKeys) {
-      if (factors[factorKey] === undefined) {
-        factors[factorKey] = DEFAULT_FACTOR_VALUE;
-      }
-    }
-    
-    console.log(`🆘 Sistema de emergencia: ${emergencySuccessCount}/3 factores críticos evaluados`);
-    
-    // Si no se pudo evaluar ningún factor crítico, lanzar error
-    if (emergencySuccessCount === 0) {
-      throw new Error('Fallos críticos en sistema de evaluación - no se pueden calcular probabilidades');
-    }
+    // 🛡️ SISTEMA DE EMERGENCIA - Solo factores críticos
+    _executeEmergencyEvaluation(userInput, factors, diagnostics);
   }
   
   console.log('🔧 FACTORES FINALES (LEGACY):', factors);
   console.log('🔧 DIAGNÓSTICOS FINALES (LEGACY):', diagnostics);
+}
+
+// 🆘 FUNCIÓN DE EMERGENCIA SIMPLIFICADA - COMPLEJIDAD: 8/15
+function _executeEmergencyEvaluation(userInput: UserInput, factors: Factors, _diagnostics: Diagnostics): void {
+  const emergencyFactors = ['baseAgeProbability', 'bmi', 'infertilityDuration'] as const;
+  let emergencySuccessCount = 0;
+  
+  for (const factorKey of emergencyFactors) {
+    const evaluation = _getEmergencyEvaluation(userInput, factorKey);
+    
+    if (evaluation.success && evaluation.value !== undefined) {
+      factors[factorKey] = evaluation.value;
+      emergencySuccessCount++;
+      console.log(`🆘 Factor de emergencia ${factorKey} evaluado exitosamente`);
+    } else {
+      factors[factorKey] = DEFAULT_FACTOR_VALUE;
+      console.warn(`🆘 Factor de emergencia ${factorKey} falló, aplicando valor por defecto`);
+    }
+  }
+  
+  // Aplicar valores por defecto para factores restantes
+  const allFactorKeys: (keyof Factors)[] = [
+    'cycle', 'pcos', 'endometriosis', 'myoma', 'adenomyosis', 
+    'polyp', 'hsg', 'otb', 'amh', 'prolactin', 'tsh', 'homa', 
+    'male', 'pelvicSurgery'
+  ];
+  
+  for (const factorKey of allFactorKeys) {
+    factors[factorKey] ??= DEFAULT_FACTOR_VALUE;
+  }
+  
+  console.log(`🆘 Sistema de emergencia: ${emergencySuccessCount}/3 factores críticos evaluados`);
+  
+  if (emergencySuccessCount === 0) {
+    throw new Error('Fallos críticos en sistema de evaluación - no se pueden calcular probabilidades');
+  }
+}
+
+// 🔧 EVALUADOR DE EMERGENCIA SIMPLIFICADO
+function _getEmergencyEvaluation(userInput: UserInput, factorKey: string): { success: boolean; value?: number } {
+  try {
+    if (factorKey === 'baseAgeProbability') {
+      const ageEval = _safeEvaluateFactor(factorEvaluators.evaluateAgeBaseline, [userInput.age], 'baseAgeProbability');
+      return { 
+        success: ageEval.success, 
+        value: ageEval.factorResult?.factors?.baseAgeProbability 
+      };
+    }
+    
+    if (factorKey === 'bmi') {
+      const bmiEval = _safeEvaluateFactor(factorEvaluators.evaluateBmi, [userInput.bmi], 'bmi');
+      return { 
+        success: bmiEval.success, 
+        value: bmiEval.factorResult?.factors?.bmi 
+      };
+    }
+    
+    if (factorKey === 'infertilityDuration') {
+      const durationEval = _safeEvaluateFactor(factorEvaluators.evaluateInfertilityDuration, [userInput.infertilityDuration], 'infertilityDuration');
+      return { 
+        success: durationEval.success, 
+        value: durationEval.factorResult?.factors?.infertilityDuration 
+      };
+    }
+    
+    return { success: false };
+  } catch {
+    return { success: false };
+  }
 }
 
 export function calculateProbabilityFromFactors(factors: Factors): number {

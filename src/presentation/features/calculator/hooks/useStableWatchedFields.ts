@@ -53,7 +53,7 @@ export const useStableWatchedFields = (
   
   // 🚀 Referencias estables
   const watchedFieldsRef = useRef<string>('{}');
-  const stableFieldsRef = useRef<FormState>({} as FormState);
+  const stableFieldsRef = useRef<FormState | null>(null);
   const lastUpdateRef = useRef<number>(0);
   
   // 🚀 Observar campos con throttling - versión simplificada
@@ -63,6 +63,14 @@ export const useStableWatchedFields = (
   const stableWatchedFields = useMemo(() => {
     const now = Date.now();
     const watchedFieldsString = JSON.stringify(watchedFieldsRaw || {});
+    
+    // NEURAL FIX V13.0: Inicializar con datos reales del formulario
+    if (stableFieldsRef.current === null && watchedFieldsRaw) {
+      stableFieldsRef.current = watchedFieldsRaw;
+      watchedFieldsRef.current = watchedFieldsString;
+      lastUpdateRef.current = now;
+      return watchedFieldsRaw;
+    }
     
     // Solo actualizar si han pasado suficiente tiempo Y los datos cambiaron
     if (
@@ -74,7 +82,7 @@ export const useStableWatchedFields = (
       stableFieldsRef.current = watchedFieldsRaw || {} as FormState;
     }
     
-    return stableFieldsRef.current;
+    return stableFieldsRef.current || ({} as FormState);
   }, [watchedFieldsRaw, throttleTime]);
   
   // 🚀 Función para forzar actualización
@@ -82,7 +90,7 @@ export const useStableWatchedFields = (
     const watchedFieldsString = JSON.stringify(watchedFieldsRaw || {});
     watchedFieldsRef.current = watchedFieldsString;
     lastUpdateRef.current = Date.now();
-    stableFieldsRef.current = watchedFieldsRaw || {} as FormState;
+    stableFieldsRef.current = watchedFieldsRaw || ({} as FormState);
   }, [watchedFieldsRaw]);
   
   // 🚀 Función optimizada para verificar validez de campo

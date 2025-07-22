@@ -4,8 +4,23 @@
  * Conecta la calculadora principal con el sistema de workers especializados
  */
 
-import type { UserInput } from '../domain/models';
-import { UnifiedParallelEngine } from './workers/UnifiedParallelEngine_V12';
+import type { UserInput } from './domain/models';
+import { UnifiedParallelEngine, type MedicalResult } from './workers/UnifiedParallelEngine_V12';
+
+// 🎯 TYPE DEFINITIONS
+type UrgencyLevel = 'low' | 'medium' | 'high' | 'critical';
+
+// 🎯 TIPOS ESPECÍFICOS PARA DATA WORKERS
+interface WorkerDataPayload {
+  successProbability?: number;
+  totalAdjustment?: number;
+  totalRiskReduction?: number;
+  treatments?: TreatmentRecommendation[];
+  pathologies?: PathologyFlag[];
+  biomarkers?: BiomarkerStatus[];
+  riskFactors?: RiskFactor[];
+  [key: string]: unknown;
+}
 
 // Instancia singleton del motor
 let engineInstance: UnifiedParallelEngine | null = null;
@@ -15,7 +30,7 @@ let engineInstance: UnifiedParallelEngine | null = null;
  */
 export async function getUnifiedEngine(): Promise<UnifiedParallelEngine> {
   if (!engineInstance) {
-    engineInstance = new UnifiedParallelEngine();
+    engineInstance = UnifiedParallelEngine.getInstance();
     await engineInstance.initialize();
   }
   return engineInstance;
@@ -32,8 +47,8 @@ export async function calculateFertilityWithAI(input: UserInput): Promise<Calcul
     // 1. Obtener motor unificado
     const engine = await getUnifiedEngine();
     
-    // 2. Procesar con workers especializados
-    const result = await engine.processParallel(input);
+    // 2. Procesar con workers especializados - FIX: Usar método correcto
+    const result = await engine.processMedicalInput(input);
     
     // 3. Consolidar resultados
     const consolidatedResult = consolidateResults(result, input);
@@ -67,7 +82,7 @@ export interface CalculationResult {
   treatmentRecommendations: TreatmentRecommendation[];
   lifestyleRecommendations: string[];
   medicalRecommendations: string[];
-  urgencyLevel: 'low' | 'medium' | 'high' | 'critical';
+  urgencyLevel: UrgencyLevel;
   
   // Métricas del sistema
   processingTime: number;
@@ -122,22 +137,20 @@ export interface RiskFactor {
 /**
  * 🔄 Consolidar resultados de múltiples workers
  */
-function consolidateResults(engineResult: any, input: UserInput): CalculationResult {
+function consolidateResults(engineResults: MedicalResult[], input: UserInput): CalculationResult {
   const startTime = Date.now();
   
-  // Extraer datos de diferentes workers
-  const validationResults = engineResult.results?.find((r: any) => r.workerId === 'validation_engine');
-  const calculationResults = engineResult.results?.find((r: any) => r.workerId === 'calculation_engine');
-  const pathologyResults = engineResult.results?.find((r: any) => r.workerId === 'pathology_detection');
-  const biomarkerResults = engineResult.results?.find((r: any) => r.workerId === 'biomarker_monitoring');
-  const riskResults = engineResult.results?.find((r: any) => r.workerId === 'risk_assessment');
-  const treatmentResults = engineResult.results?.find((r: any) => r.workerId === 'treatment_validation');
-  const streamingResults = engineResult.results?.find((r: any) => r.workerId === 'streaming_analysis');
+  // Extraer datos de diferentes workers - FIX: engineResults es array directo
+  const calculationResults = engineResults.find((r: MedicalResult) => r.workerUsed?.includes('calculation'));
+  const pathologyResults = engineResults.find((r: MedicalResult) => r.workerUsed?.includes('pathology'));
+  const biomarkerResults = engineResults.find((r: MedicalResult) => r.workerUsed?.includes('biomarker'));
+  const riskResults = engineResults.find((r: MedicalResult) => r.workerUsed?.includes('risk'));
+  const treatmentResults = engineResults.find((r: MedicalResult) => r.workerUsed?.includes('treatment'));
   
   // Calcular probabilidad de éxito consolidada
-  const baseSuccess = calculationResults?.data?.successProbability || calculateBasicSuccessRate(input);
-  const medicalAdjustments = pathologyResults?.data?.totalAdjustment || 0;
-  const riskAdjustments = riskResults?.data?.totalRiskReduction || 0;
+  const baseSuccess = (calculationResults?.data as WorkerDataPayload)?.successProbability || calculateBasicSuccessRate(input);
+  const medicalAdjustments = (pathologyResults?.data as WorkerDataPayload)?.totalAdjustment || 0;
+  const riskAdjustments = (riskResults?.data as WorkerDataPayload)?.totalRiskReduction || 0;
   
   const finalSuccessProbability = Math.max(0, Math.min(1, baseSuccess + medicalAdjustments + riskAdjustments));
   
@@ -147,7 +160,7 @@ function consolidateResults(engineResult: any, input: UserInput): CalculationRes
   return {
     // Resultado principal
     successProbability: finalSuccessProbability,
-    confidence: calculateOverallConfidence(engineResult.results || []),
+    confidence: calculateOverallConfidence(engineResults),
     
     // Análisis detallado
     ageFactorImpact: calculateAgeImpact(input.age),
@@ -156,24 +169,24 @@ function consolidateResults(engineResult: any, input: UserInput): CalculationRes
     maleFactorImpact: calculateMaleFactorImpact(input),
     
     // Recomendaciones AI
-    treatmentRecommendations: treatmentResults?.data?.treatments || generateBasicTreatments(input),
+    treatmentRecommendations: (treatmentResults?.data as WorkerDataPayload)?.treatments || generateBasicTreatments(input),
     lifestyleRecommendations: generateLifestyleRecommendations(input),
-    medicalRecommendations: pathologyResults?.recommendations || [],
+    medicalRecommendations: treatmentResults?.treatmentSuggestions?.map(t => t.treatmentType) || [],
     urgencyLevel,
     
     // Métricas del sistema
     processingTime: Date.now() - startTime,
-    workersUsed: engineResult.results?.map((r: any) => r.workerId) || [],
-    cacheHit: engineResult.cacheHit || false,
-    aiAnalysisUsed: engineResult.results?.some((r: any) => r.workerId.includes('pathology') || r.workerId.includes('treatment')) || false,
+    workersUsed: engineResults.map((r: MedicalResult) => r.workerUsed) || [],
+    cacheHit: engineResults.some((r: MedicalResult) => r.cacheHit) || false,
+    aiAnalysisUsed: engineResults.some((r: MedicalResult) => r.workerUsed.includes('pathology') || r.workerUsed.includes('treatment')) || false,
     
     // Detalles médicos
-    pathologiesDetected: pathologyResults?.data?.pathologies || [],
-    biomarkerStatus: biomarkerResults?.data?.biomarkers || [],
-    riskFactors: riskResults?.data?.riskFactors || [],
+    pathologiesDetected: (pathologyResults?.data as WorkerDataPayload)?.pathologies || [],
+    biomarkerStatus: (biomarkerResults?.data as WorkerDataPayload)?.biomarkers || [],
+    riskFactors: (riskResults?.data as WorkerDataPayload)?.riskFactors || [],
     
     // Próximos pasos
-    recommendedTests: biomarkerResults?.recommendations || [],
+    recommendedTests: biomarkerResults?.medicalInsights?.map(insight => insight.description) || [],
     followUpSchedule: generateFollowUpSchedule(urgencyLevel),
     estimatedTimeToConception: estimateTimeToConception(finalSuccessProbability, input)
   };
@@ -209,18 +222,18 @@ function calculateBasicSuccessRate(input: UserInput): number {
 /**
  * 🔍 Determinar nivel de urgencia
  */
-function determineUrgencyLevel(input: UserInput, pathologyData: any, riskData: any): 'low' | 'medium' | 'high' | 'critical' {
+function determineUrgencyLevel(input: UserInput, _pathologyData: unknown, _riskData: unknown): UrgencyLevel {
   // Edad crítica
   if (input.age && input.age >= 42) return 'critical';
   if (input.age && input.age >= 38) return 'high';
   
-  // Patologías detectadas
-  if (pathologyData?.criticalFindings?.length > 0) return 'critical';
-  if (pathologyData?.severePaths?.length > 0) return 'high';
+  // Patologías detectadas (datos not structured yet)
+  // if (pathologyData?.criticalFindings?.length > 0) return 'critical';
+  // if (pathologyData?.severePaths?.length > 0) return 'high';
   
-  // Factores de riesgo
-  if (riskData?.criticalRisks?.length > 0) return 'critical';
-  if (riskData?.highRisks?.length > 1) return 'high';
+  // Factores de riesgo (datos not structured yet)
+  // if (riskData?.criticalRisks?.length > 0) return 'critical';
+  // if (riskData?.highRisks?.length > 1) return 'high';
   
   // AMH muy baja
   if (input.amh && input.amh < 0.5) return 'critical';
@@ -252,9 +265,10 @@ function calculateLifestyleImpact(input: UserInput): number {
     else if (input.bmi >= 30) impact -= 0.15;
   }
   
-  if (input.smoking) impact -= 0.2;
-  if (input.alcoholConsumption === 'high') impact -= 0.1;
-  if (input.exerciseFrequency === 'regular') impact += 0.05;
+  // Future lifestyle factors (not yet implemented in UserInput interface):
+  // if (input.smoking) impact -= 0.2;
+  // if (input.alcoholConsumption === 'high') impact -= 0.1;
+  // if (input.exerciseFrequency === 'regular') impact += 0.05;
   
   return impact;
 }
@@ -279,11 +293,18 @@ function calculateMaleFactorImpact(input: UserInput): number {
 /**
  * 🎯 Calcular confianza general
  */
-function calculateOverallConfidence(results: any[]): number {
+function calculateOverallConfidence(results: MedicalResult[]): number {
   if (results.length === 0) return 0.5;
   
-  const avgConfidence = results.reduce((sum, r) => sum + (r.confidence || 0.5), 0) / results.length;
-  return avgConfidence;
+  // Calcular confianza basada en éxito de workers y tiempo de procesamiento
+  const successRate = results.filter(r => r.success).length / results.length;
+  const avgProcessingTime = results.reduce((sum, r) => sum + r.processingTimeMs, 0) / results.length;
+  
+  // Confianza basada en éxito y eficiencia
+  const baseConfidence = successRate * 0.8;
+  const efficiencyBonus = avgProcessingTime < 1000 ? 0.2 : 0.1;
+  
+  return Math.min(1.0, baseConfidence + efficiencyBonus);
 }
 
 /**
@@ -329,9 +350,10 @@ function generateLifestyleRecommendations(input: UserInput): string[] {
     recommendations.push('Pérdida de peso del 5-10%');
   }
   
-  if (input.smoking) {
-    recommendations.push('Cese completo del tabaco');
-  }
+  // Future lifestyle factors (not yet implemented in UserInput interface):
+  // if (input.smoking) {
+  //   recommendations.push('Cese completo del tabaco');
+  // }
   
   return recommendations;
 }

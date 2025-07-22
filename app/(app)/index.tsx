@@ -1,10 +1,4 @@
-// 🎨 TEMA Y UTILIDADES
-import { useDynamicTheme } from '@/hooks/useDynamicTheme';
-import { ConfigModal } from '@/presentation/components/common/ConfigModal';
-import { ConfigModalAdvanced } from '@/presentation/components/common/ConfigModalAdvanced';
-import { QuickConfig } from '@/presentation/components/common/QuickConfig';
-import React, { useState } from 'react';
-import { StyleSheet, ScrollView, View, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
+import { StyleSheet, ScrollView, View, KeyboardAvoidingView, Platform } from 'react-native';
 import Box from '@/presentation/components/common/Box';
 import Text from '@/presentation/components/common/Text';
 import { Button, EnhancedButton } from '@/presentation/components/common/EnhancedButton';
@@ -12,7 +6,7 @@ import { ConditionalProgressDisplay } from '@/presentation/features/calculator/c
 import { EnhancedInfoCard } from '@/presentation/components/common';
 
 // 🚀 CALCULADORA PRINCIPAL
-import { useCalculatorFormOptimized as useCalculatorForm, FormState } from '@/presentation/features/calculator/useCalculatorFormOptimized';
+import { useCalculatorFormOptimized as useCalculatorForm } from '@/presentation/features/calculator/useCalculatorFormOptimized';
 
 // 📋 COMPONENTES DEL FORMULARIO
 import { DemographicsForm } from '@/presentation/features/calculator/components/DemographicsForm';
@@ -20,9 +14,13 @@ import { GynecologyHistoryForm } from '@/presentation/features/calculator/compon
 import { LabTestsForm } from '@/presentation/features/calculator/components/LabTestsForm';
 import { MaleFactorForm } from '@/presentation/features/calculator/components/MaleFactorForm';
 
+// 🎨 TEMA Y UTILIDADES
+import { useDynamicTheme } from '@/hooks/useDynamicTheme';
+import { ConfigModal } from '@/presentation/components/common/ConfigModal';
+import React, { useState } from 'react';
+
 export default function CalculatorScreen() {
   const [configModalVisible, setConfigModalVisible] = useState(false);
-  const [advancedConfigVisible, setAdvancedConfigVisible] = useState(false);
   const theme = useDynamicTheme();
 
   // 🚀 HOOK PRINCIPAL DE CALCULADORA
@@ -38,20 +36,64 @@ export default function CalculatorScreen() {
     watchedFields
   } = useCalculatorForm();
 
-  // Valores por defecto para compatibilidad
+  // 🛡️ NEURAL SAFETY GUARDS - Validación completa de datos
   const errors = formState?.errors ?? {};
-  const formData = React.useMemo(() => watchedFields || {}, [watchedFields]);
+  const formData = React.useMemo(() => {
+    // 🧠 NEURAL DEBUG V13.0: Log para debuggear el problema
+    console.log('🔍 formData generation:', {
+      watchedFields: watchedFields ? 'exists' : 'undefined',
+      watchedFieldsType: typeof watchedFields,
+      watchedFieldsKeys: watchedFields ? Object.keys(watchedFields) : 'N/A',
+      calculatedBmi: calculatedBmi
+    });
+    
+    // 🧠 NEURAL FIX V13.0: Crear objeto base con defaults y luego sobrescribir
+    const baseDefaults = {
+      age: 25,
+      weight: 60,
+      height: 160,
+      cycleLength: 28,
+      infertilityDuration: 0,
+    };
+    
+    // Obtener datos seguros del formulario
+    const safeFormData = watchedFields || {};
+    
+    // 🎯 COMBINAR SIN DUPLICACIÓN: defaults + formData + calculatedValues
+    const result = {
+      ...baseDefaults,        // 1. Defaults base
+      ...safeFormData,       // 2. Datos del formulario (sobrescribe defaults)
+      bmi: calculatedBmi || 0, // 3. Valores calculados
+    };
+    
+    console.log('🎯 formData result:', { result, hasAge: result.age !== undefined });
+    return result;
+  }, [watchedFields, calculatedBmi]);
 
-  // 🎯 WRAPPER PARA HANDLECALCULATE
-  const onCalculatePress = React.useCallback(() => {
-    const currentFormData = formData as FormState;
-    handleCalculate(currentFormData);
-  }, [formData, handleCalculate]);
+  // 🔧 NEURAL VALIDATION - Verificar que formData tiene propiedades válidas
+  const isFormDataValid = React.useMemo(() => {
+    return formData && typeof formData === 'object' && formData.age !== undefined;
+  }, [formData]);
 
-  // 🚀 Función auxiliar canCalculate
+  // 🎯 WRAPPER PARA HANDLECALCULATE CON NEURAL SAFETY
+  const onCalculatePress = React.useCallback(async () => {
+    // 🛡️ Validar que tenemos datos válidos antes de calcular
+    if (!formData || typeof formData !== 'object') {
+      console.warn('⚠️ FormData no válido, no se puede proceder con el cálculo');
+      return;
+    }
+    
+    try {
+      await handleCalculate(); // ✨ NEURAL FIX: Agregar await
+    } catch (error) {
+      console.error('❌ Error en cálculo:', error);
+    }
+  }, [handleCalculate, formData]);
+
+  // 🚀 Función auxiliar canCalculate con NEURAL SAFETY
   const canCalculate = React.useMemo(() => {
-    return completionPercentage > 20;
-  }, [completionPercentage]);
+    return completionPercentage > 20 && isFormDataValid;
+  }, [completionPercentage, isFormDataValid]);
 
   // 🚀 Función auxiliar para validación de rangos
   const getRangeValidation = React.useCallback((_fieldName: string) => {
@@ -119,14 +161,6 @@ export default function CalculatorScreen() {
             title="✨ Calculadora Inteligente"
             message="Esta calculadora puede generar informes útiles incluso con datos parciales. Completa más campos para obtener un análisis más preciso."
           />
-          
-          {/* 🎯 BOTÓN DE CONFIGURACIÓN AVANZADA */}
-          <TouchableOpacity 
-            style={styles.advancedConfigButton} 
-            onPress={() => setAdvancedConfigVisible(true)}
-          >
-            <Text style={styles.advancedConfigText}>⚙️ Configuración Avanzada</Text>
-          </TouchableOpacity>
         </View>
 
         <Box style={styles.formContainer}>
@@ -150,7 +184,7 @@ export default function CalculatorScreen() {
           )}
         </Box>
 
-        {completionPercentage > 0 && (
+        {completionPercentage > 0 && isFormDataValid && (
           <View style={styles.progressContainer}>
             <ConditionalProgressDisplay
               formData={formData}
@@ -160,9 +194,6 @@ export default function CalculatorScreen() {
             />
           </View>
         )}
-
-        {/* 🎯 CONFIGURACIÓN RÁPIDA */}
-        <QuickConfig onOpenAdvanced={() => setAdvancedConfigVisible(true)} />
 
         <View style={styles.buttonContainer}>
           <EnhancedButton
@@ -196,14 +227,6 @@ export default function CalculatorScreen() {
         <ConfigModal
           visible={configModalVisible}
           onClose={() => setConfigModalVisible(false)}
-        />
-
-        <ConfigModalAdvanced
-          visible={advancedConfigVisible}
-          onClose={() => setAdvancedConfigVisible(false)}
-          onConfigChange={(config) => {
-            console.log('🎯 Configuración actualizada:', config);
-          }}
         />
       </ScrollView>
     </KeyboardAvoidingView>
@@ -273,21 +296,5 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     color: theme.colors.textSecondary,
     marginTop: theme.spacing.s,
     paddingHorizontal: theme.spacing.l,
-  },
-  // 🎯 ESTILOS PARA CONFIGURACIÓN AVANZADA
-  advancedConfigButton: {
-    marginTop: theme.spacing.s,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    backgroundColor: theme.colors.surface,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    alignItems: 'center',
-  },
-  advancedConfigText: {
-    ...theme.typography.bodySmall,
-    color: theme.colors.primary,
-    fontWeight: '600',
   },
 });

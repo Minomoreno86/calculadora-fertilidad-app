@@ -21,6 +21,14 @@ export const ConditionalProgressDisplay: React.FC<Props> = ({
   completionPercentage,
   stepLabels,
 }) => {
+  // 🧠 NEURAL DEBUG V13.0: Log para debuggear el problema
+  console.log('🔍 ConditionalProgressDisplay received:', {
+    formData: formData ? 'exists' : 'undefined',
+    formDataType: typeof formData,
+    formDataKeys: formData ? Object.keys(formData) : 'N/A',
+    hasAge: formData?.age !== undefined ? 'YES' : 'NO'
+  });
+  
   const featureConfig = useFeatureConfig();
   
   // Solo usar UX enhancements si están habilitadas

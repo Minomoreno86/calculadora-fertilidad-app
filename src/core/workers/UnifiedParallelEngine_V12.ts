@@ -161,7 +161,7 @@ export interface WorkerResult {
 /**
  * Resultado de procesamiento médico
  */
-interface MedicalResult {
+export interface MedicalResult {
   taskId: string;
   success: boolean;
   data?: unknown;
@@ -1025,7 +1025,7 @@ export class UnifiedParallelEngine {
       .filter(workerId => workerId.startsWith(workerType))
       .filter(workerId => !this.isWorkerBusy(workerId));
     
-    return availableWorkers.length > 0 ? availableWorkers[0] : null;
+    return availableWorkers.length > 0 ? availableWorkers[0]! : null;
   }
 
   /**

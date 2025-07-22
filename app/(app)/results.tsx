@@ -11,6 +11,15 @@ import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
+// 🚀 INTERFACE PARA ENGINE METRICS V13.0
+interface EngineMetrics {
+  responseTime: string;
+  improvement: string;
+  cacheHitRate: string;
+  aiAccuracy: string;
+  workersActive: number;
+}
+
 // 🎯 COMPONENTES ESENCIALES EVOLUTIVOS
 import { useReportLoader } from '@/presentation/features/results/hooks/useReportLoader';
 const ResultsDisplay = React.lazy(() => import('@/presentation/features/results/components/ResultsDisplay').then(module => ({ default: module.ResultsDisplay })));
@@ -39,11 +48,11 @@ export default function ResultsScreen() {
   }, [evaluation]);
 
   // 🚀 UNIFIED PARALLEL ENGINE V12.0 INTEGRATION
-  const [engineMetrics, setEngineMetrics] = React.useState(null);
+  const [engineMetrics, setEngineMetrics] = React.useState<EngineMetrics | null>(null);
   
   React.useEffect(() => {
     // Simulación de integración con UnifiedParallelEngine V12.0
-    const updateMetrics = () => {
+    const updateMetrics = (): void => {
       setEngineMetrics({
         responseTime: '82ms',
         improvement: '76%',

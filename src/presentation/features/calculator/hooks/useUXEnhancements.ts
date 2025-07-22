@@ -125,6 +125,12 @@ export const useUXEnhancements = (
 
   // 📊 CÁLCULO DE PROGRESO POR SECCIÓN
   const calculateSectionProgress = useCallback(() => {
+    // 🧠 NEURAL FIX V13.0: Validación de formData para evitar undefined errors
+    if (!formData || typeof formData !== 'object') {
+      console.warn('⚠️ useUXEnhancements: formData is undefined or invalid');
+      return {};
+    }
+    
     const sections = {
       demographics: ['age', 'weight', 'height'],
       gynecology: ['cycleLength', 'infertilityDuration', 'hasPcos'],
@@ -136,7 +142,8 @@ export const useUXEnhancements = (
 
     Object.entries(sections).forEach(([sectionName, fields]) => {
       const completedFields = fields.filter(field => {
-        const value = formData[field];
+        // 🛡️ NEURAL SAFETY: Acceso seguro a formData
+        const value = formData?.[field];
         if (typeof value === 'string') {
           return value.trim() !== '' && value !== '0' && value !== '';
         }
@@ -154,7 +161,8 @@ export const useUXEnhancements = (
         totalFields: fields.length,
         percentage: Math.round((completedFields / fields.length) * 100),
         nextSuggestedField: fields.find(field => {
-          const value = formData[field];
+          // 🛡️ NEURAL SAFETY: Acceso seguro a formData
+          const value = formData?.[field];
           if (typeof value === 'string') {
             return value.trim() === '' || value === '0';
           }
@@ -223,9 +231,15 @@ export const useUXEnhancements = (
   useEffect(() => {
     calculateSectionProgress();
     
+    // 🧠 NEURAL FIX V13.0: Validación de formData antes de Object.keys
+    if (!formData || typeof formData !== 'object') {
+      console.warn('⚠️ useUXEnhancements: formData is undefined in useEffect');
+      return;
+    }
+    
     // Actualizar estados de validación de campos
     Object.keys(formData).forEach(fieldName => {
-      const value = formData[fieldName];
+      const value = formData[fieldName]; // Ya validado arriba, seguro usar []
       const validationState = getFieldValidationState(fieldName, value);
       
       setFieldStates(prev => ({
@@ -236,7 +250,7 @@ export const useUXEnhancements = (
         }
       }));
     });
-  }, [formData]); // Solo depende de formData para evitar bucles infinitos
+  }, [formData, calculateSectionProgress, getFieldValidationState]); // ✨ Agregar dependencias
 
   // 🎯 SIGUIENTE CAMPO SUGERIDO
   const getNextSuggestedField = useCallback(() => {
