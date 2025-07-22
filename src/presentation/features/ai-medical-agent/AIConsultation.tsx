@@ -18,6 +18,13 @@ import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 import { EvaluationState } from '@/core/domain/models';
 import { AIChat } from './components/AIChat';
 
+// 🧠 IMPORTAR SISTEMA NEURAL AVANZADO
+import { 
+  NeuralMedicalAISystem, 
+  SuperintellignentAnalysisResult,
+  NeuralMedicalSystemConfig 
+} from '../../../../ai-medical-agent/core/neural-engines/NeuralMedicalAISystem';
+
 // 🧠 TIPOS DEL AGENTE IA MÉDICO INTEGRADO
 export interface MedicalAnalysis {
   diagnosticHypotheses: Array<{
@@ -64,7 +71,54 @@ export const AIConsultation: React.FC<AIConsultationProps> = ({
   const [selectedAnalysis, setSelectedAnalysis] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'analysis' | 'chat'>('analysis');
 
-  // 🧠 ANÁLISIS IA INTELIGENTE BASADO EN DATOS - VERSIÓN COMPLETA
+  // 🧠 SISTEMA NEURAL MÉDICO AVANZADO
+  const neuralMedicalSystem = useMemo(() => {
+    const config: NeuralMedicalSystemConfig = {
+      enablePatternRecognition: true,
+      enableBayesianDecisions: true,
+      enableNeuralConversation: true,
+      enableEmergentInsights: true,
+      enablePredictiveModeling: true,
+      conversationPersonality: 'empathetic',
+      analysisDepth: 'superintelligent',
+      responseSpeed: 'balanced'
+    };
+    return new NeuralMedicalAISystem(config);
+  }, []);
+
+  // 🔬 ANÁLISIS SUPERINTELIGENTE NEURAL
+  const [neuralAnalysis, setNeuralAnalysis] = useState<SuperintellignentAnalysisResult | null>(null);
+  
+  React.useEffect(() => {
+    const performNeuralAnalysis = async () => {
+      if (evaluation.factors) {
+        try {
+          console.log('🧠 Iniciando análisis superinteligente neural...');
+          const result = await neuralMedicalSystem.performSuperintellignentAnalysis(
+            evaluation.factors,
+            evaluation,
+            {
+              includeConversationReady: true,
+              generateInsights: true,
+              predictiveDepth: 3
+            }
+          );
+          setNeuralAnalysis(result);
+          console.log('✅ Análisis neural completado:', {
+            patterns: result.neuralPatternAnalysis.primaryPatterns.length,
+            insights: result.emergentInsights.hiddenConnections.length,
+            confidence: Math.round(result.systemMetrics.overallConfidence * 100) + '%'
+          });
+        } catch (error) {
+          console.error('❌ Error en análisis neural:', error);
+        }
+      }
+    };
+
+    performNeuralAnalysis();
+  }, [evaluation.factors, neuralMedicalSystem]);
+
+  // 🧠 ANÁLISIS IA INTELIGENTE BASADO EN DATOS - VERSIÓN NEURAL MEJORADA
   const medicalAnalysis = useMemo((): MedicalAnalysis => {
     const age = evaluation.input?.age || 30;
     const factors = evaluation.factors || {};
@@ -685,7 +739,159 @@ export const AIConsultation: React.FC<AIConsultationProps> = ({
     </Box>
   );
 
+  // 🧠 RENDERIZAR SECCIÓN NEURAL SUPERINTELIGENTE
+  const renderNeuralSupeIntelligenceSection = () => {
+    if (!neuralAnalysis) {
+      return (
+        <Box style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>🧠 Análisis Superinteligente Neural</Text>
+          <View style={styles.loadingContainer}>
+            <Ionicons name="hourglass" size={24} color={theme.colors.primary} />
+            <Text style={styles.loadingText}>Procesando análisis neural avanzado...</Text>
+          </View>
+        </Box>
+      );
+    }
+
+    return (
+      <>
+        {/* 🎯 Recomendación Principal Neural */}
+        <Box style={styles.neuralRecommendationCard}>
+          <Text style={styles.neuralTitle}>🎯 Recomendación Neural Integrada</Text>
+          <View style={styles.neuralRecommendationContent}>
+            <Text style={styles.primaryTreatment}>{neuralAnalysis.integralRecommendation.primaryTreatment}</Text>
+            <View style={styles.neuralMetrics}>
+              <View style={styles.neuralMetric}>
+                <Text style={styles.metricLabel}>Confianza</Text>
+                <Text style={[styles.metricValue, { color: getConfidenceColor(neuralAnalysis.integralRecommendation.confidence) }]}>
+                  {Math.round(neuralAnalysis.integralRecommendation.confidence * 100)}%
+                </Text>
+              </View>
+              <View style={styles.neuralMetric}>
+                <Text style={styles.metricLabel}>Éxito</Text>
+                <Text style={styles.metricValue}>
+                  {Math.round(neuralAnalysis.integralRecommendation.successProbability * 100)}%
+                </Text>
+              </View>
+              <View style={styles.neuralMetric}>
+                <Text style={styles.metricLabel}>Tiempo</Text>
+                <Text style={styles.metricValue}>{neuralAnalysis.integralRecommendation.timeframe}</Text>
+              </View>
+            </View>
+            <Text style={styles.bayesianReasoning}>{neuralAnalysis.integralRecommendation.bayesianReasoning}</Text>
+          </View>
+        </Box>
+
+        {/* 🌊 Insights Emergentes */}
+        {neuralAnalysis.emergentInsights.hiddenConnections.length > 0 && (
+          <Box style={styles.emergentInsightsCard}>
+            <Text style={styles.sectionTitle}>🌊 Insights Emergentes Neurales</Text>
+            {neuralAnalysis.emergentInsights.hiddenConnections.map((insight, index) => (
+              <View key={index} style={styles.insightItem}>
+                <Ionicons name="bulb" size={16} color={theme.colors.primary} />
+                <Text style={styles.insightText}>{insight}</Text>
+              </View>
+            ))}
+            {neuralAnalysis.emergentInsights.personalizedStrategies.map((strategy, index) => (
+              <View key={`strategy-${index}`} style={styles.insightItem}>
+                <Ionicons name="star" size={16} color="#FFD700" />
+                <Text style={styles.insightText}>{strategy}</Text>
+              </View>
+            ))}
+          </Box>
+        )}
+
+        {/* 🔮 Predicciones Neurales */}
+        {(neuralAnalysis.predictiveModeling.shortTermPredictions.length > 0 || 
+          neuralAnalysis.predictiveModeling.longTermPredictions.length > 0) && (
+          <Box style={styles.predictionsCard}>
+            <Text style={styles.sectionTitle}>🔮 Predicciones Neurales</Text>
+            
+            {neuralAnalysis.predictiveModeling.shortTermPredictions.length > 0 && (
+              <View style={styles.predictionCategory}>
+                <Text style={styles.predictionCategoryTitle}>📅 Corto Plazo</Text>
+                {neuralAnalysis.predictiveModeling.shortTermPredictions.map((prediction, index) => (
+                  <View key={index} style={styles.predictionItem}>
+                    <Text style={styles.predictionOutcome}>{prediction.outcome}</Text>
+                    <View style={styles.predictionDetails}>
+                      <Text style={styles.predictionProbability}>
+                        {Math.round(prediction.probability * 100)}%
+                      </Text>
+                      <Text style={styles.predictionTimeframe}>{prediction.timeframe}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {neuralAnalysis.predictiveModeling.longTermPredictions.length > 0 && (
+              <View style={styles.predictionCategory}>
+                <Text style={styles.predictionCategoryTitle}>📊 Largo Plazo</Text>
+                {neuralAnalysis.predictiveModeling.longTermPredictions.map((prediction, index) => (
+                  <View key={index} style={styles.predictionItem}>
+                    <Text style={styles.predictionOutcome}>{prediction.outcome}</Text>
+                    <View style={styles.predictionDetails}>
+                      <Text style={styles.predictionProbability}>
+                        {Math.round(prediction.probability * 100)}%
+                      </Text>
+                      <Text style={styles.predictionTimeframe}>{prediction.timeframe}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
+          </Box>
+        )}
+
+        {/* 📊 Métricas del Sistema Neural */}
+        <Box style={styles.systemMetricsCard}>
+          <Text style={styles.sectionTitle}>📊 Análisis Neural Avanzado</Text>
+          <View style={styles.metricsGrid}>
+            <View style={styles.metricBox}>
+              <Text style={styles.metricBoxLabel}>Precisión Neural</Text>
+              <Text style={styles.metricBoxValue}>
+                {Math.round(neuralAnalysis.systemMetrics.neuralAccuracy * 100)}%
+              </Text>
+            </View>
+            <View style={styles.metricBox}>
+              <Text style={styles.metricBoxLabel}>Certeza Bayesiana</Text>
+              <Text style={styles.metricBoxValue}>
+                {Math.round(neuralAnalysis.systemMetrics.bayesianCertainty * 100)}%
+              </Text>
+            </View>
+            <View style={styles.metricBox}>
+              <Text style={styles.metricBoxLabel}>Fiabilidad Predictiva</Text>
+              <Text style={styles.metricBoxValue}>
+                {Math.round(neuralAnalysis.systemMetrics.predictionReliability * 100)}%
+              </Text>
+            </View>
+            <View style={styles.metricBox}>
+              <Text style={styles.metricBoxLabel}>Profundidad Insights</Text>
+              <Text style={styles.metricBoxValue}>
+                {Math.round(neuralAnalysis.systemMetrics.insightDepth * 100)}%
+              </Text>
+            </View>
+          </View>
+          <View style={styles.overallConfidenceContainer}>
+            <Text style={styles.overallConfidenceLabel}>Confianza General del Sistema</Text>
+            <Text style={[
+              styles.overallConfidenceValue,
+              { color: getConfidenceColor(neuralAnalysis.systemMetrics.overallConfidence) }
+            ]}>
+              {Math.round(neuralAnalysis.systemMetrics.overallConfidence * 100)}%
+            </Text>
+          </View>
+        </Box>
+      </>
+    );
+  };
   // 🎯 FUNCIONES HELPER
+  const getConfidenceColor = (confidence: number) => {
+    if (confidence >= 0.8) return '#388E3C'; // Verde
+    if (confidence >= 0.6) return '#F57C00'; // Naranja
+    return '#D32F2F'; // Rojo
+  };
+
   const getUrgencyColor = () => {
     switch (medicalAnalysis.urgencyLevel) {
       case 'immediate': return '#D32F2F';
@@ -757,6 +963,7 @@ export const AIConsultation: React.FC<AIConsultationProps> = ({
       {viewMode === 'analysis' ? (
         <ScrollView showsVerticalScrollIndicator={false}>
           {renderUrgencyAlert()}
+          {renderNeuralSupeIntelligenceSection()}
           {renderDiagnosticHypotheses()}
           {renderTreatmentRecommendations()}
           {renderLifestyleRecommendations()}
@@ -784,6 +991,8 @@ export const AIConsultation: React.FC<AIConsultationProps> = ({
       ) : (
         <AIChat 
           evaluation={evaluation}
+          neuralAnalysis={neuralAnalysis}
+          neuralSystem={neuralMedicalSystem}
           onRecommendationGenerated={(recommendation) => {
             console.log('💬 Chat recommendation generated:', recommendation);
             onRecommendationSelect?.(recommendation);
@@ -1085,6 +1294,174 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     color: '#7B1FA2',
     lineHeight: 18,
     fontStyle: 'italic',
+  },
+
+  // 🧠 ESTILOS NEURAL SUPERINTELIGENTE
+  neuralRecommendationCard: {
+    margin: 16,
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+  },
+  neuralTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  neuralRecommendationContent: {
+    alignItems: 'center',
+  },
+  primaryTreatment: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  neuralMetrics: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginBottom: 12,
+  },
+  neuralMetric: {
+    alignItems: 'center',
+  },
+  bayesianReasoning: {
+    fontSize: 14,
+    color: '#4CAF50',
+    fontStyle: 'italic',
+    textAlign: 'center',
+  },
+  
+  emergentInsightsCard: {
+    margin: 16,
+    backgroundColor: 'rgba(33, 150, 243, 0.1)',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#2196F3',
+  },
+  insightItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  insightText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#1976D2',
+    lineHeight: 20,
+    marginLeft: 8,
+  },
+  
+  predictionsCard: {
+    margin: 16,
+    backgroundColor: 'rgba(156, 39, 176, 0.1)',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#9C27B0',
+  },
+  predictionCategory: {
+    marginBottom: 16,
+  },
+  predictionCategoryTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#7B1FA2',
+    marginBottom: 8,
+  },
+  predictionItem: {
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+  },
+  predictionOutcome: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4A148C',
+    marginBottom: 4,
+  },
+  predictionDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  predictionProbability: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#7B1FA2',
+  },
+  predictionTimeframe: {
+    fontSize: 12,
+    color: '#9C27B0',
+    fontStyle: 'italic',
+  },
+  
+  systemMetricsCard: {
+    margin: 16,
+    backgroundColor: 'rgba(255, 152, 0, 0.1)',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#FF9800',
+  },
+  metricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  metricBox: {
+    width: '48%',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    alignItems: 'center',
+  },
+  metricBoxLabel: {
+    fontSize: 12,
+    color: '#F57C00',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  metricBoxValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#E65100',
+  },
+  overallConfidenceContainer: {
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 8,
+  },
+  overallConfidenceLabel: {
+    fontSize: 14,
+    color: '#F57C00',
+    marginBottom: 4,
+  },
+  overallConfidenceValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 8,
   },
 });
 
