@@ -124,6 +124,8 @@ interface ConversationContext {
 interface AIChatProps {
   evaluation: EvaluationState;
   initialTopic?: string;
+  neuralAnalysis?: any; // SuperintellignentAnalysisResult
+  neuralSystem?: any; // NeuralMedicalAISystem  
   onRecommendationGenerated?: (recommendation: unknown) => void;
 }
 
@@ -1432,6 +1434,8 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => {
 export const AIChat: React.FC<AIChatProps> = ({ 
   evaluation, 
   initialTopic: _initialTopic = '',
+  neuralAnalysis,
+  neuralSystem,
   onRecommendationGenerated 
 }) => {
   const theme = useDynamicTheme();
@@ -1493,8 +1497,63 @@ export const AIChat: React.FC<AIChatProps> = ({
 
     try {
       console.log('💬 [CHAT] Generando respuesta IA...');
-      // Generar respuesta de IA
-      const aiResponse = await chatEngine.generateResponse(text);
+      
+      let aiResponse;
+      
+      // 🧠 USAR SISTEMA NEURAL SI ESTÁ DISPONIBLE
+      if (neuralSystem && neuralAnalysis && evaluation.factors) {
+        console.log('🧠 [NEURAL CHAT] Usando conversación neural avanzada...');
+        
+        try {
+          const neuralInteraction = await neuralSystem.neuralConversation(
+            text,
+            evaluation.factors,
+            {
+              medicalHistory: messages.filter(m => m.type === 'user').map(m => m.message),
+              currentConcerns: [text],
+              emotionalState: 'neutral',
+              understandingLevel: 'intermediate',
+              preferredCommunicationStyle: 'empathetic'
+            },
+            neuralAnalysis
+          );
+
+          console.log('🧠 [NEURAL CHAT] Respuesta neural generada:', neuralInteraction);
+          
+          // Convertir respuesta neural al formato del chat
+          aiResponse = {
+            response: neuralInteraction.response.mainMessage,
+            quickReplies: neuralInteraction.response.followUpQuestions.slice(0, 3).map((question, index) => ({
+              id: `neural_${index}`,
+              text: question,
+              action: 'question' as const
+            })),
+            attachments: neuralInteraction.response.actionItems.map((action, index) => ({
+              type: 'recommendation' as const,
+              title: action,
+              data: { action, source: 'neural_ai' },
+              preview: action.substring(0, 50) + '...'
+            })),
+            confidence: neuralInteraction.response.confidenceLevel,
+            medicalContext: {
+              insights: neuralInteraction.response.personalizedInsights,
+              supportingPoints: neuralInteraction.response.supportingPoints,
+              systemConfidence: neuralInteraction.systemAnalysis.systemMetrics.overallConfidence
+            }
+          };
+
+          console.log('✅ [NEURAL CHAT] Conversación neural completada exitosamente');
+          
+        } catch (neuralError) {
+          console.error('❌ [NEURAL CHAT] Error en conversación neural, fallback a sistema tradicional:', neuralError);
+          // Fallback al sistema tradicional
+          aiResponse = await chatEngine.generateResponse(text);
+        }
+      } else {
+        // Usar sistema tradicional
+        console.log('💬 [CHAT] Usando sistema de chat tradicional...');
+        aiResponse = await chatEngine.generateResponse(text);
+      }
       console.log('💬 [CHAT] Respuesta IA generada:', aiResponse);
       
       // Convertir QuickReply[] a ChatQuickReply[]
