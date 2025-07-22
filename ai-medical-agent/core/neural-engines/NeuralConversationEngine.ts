@@ -543,7 +543,7 @@ export class NeuralConversationEngine {
   }
 
   private generateFactorQuestion(factor: keyof Factors): string {
-    const questions = {
+    const questions: Record<string, string> = {
       amh: '¿Tienes resultados recientes de AMH (hormona antimulleriana) para evaluar tu reserva ovárica?',
       male: '¿Se ha realizado un espermatograma completo a tu pareja?',
       hsg: '¿Te han hecho una histerosalpingografía para evaluar las trompas?',
@@ -552,7 +552,7 @@ export class NeuralConversationEngine {
       cycle: '¿Cómo son tus ciclos menstruales? ¿Son regulares?'
     };
     
-    return questions[factor] || `¿Podrías proporcionar más información sobre ${factor}?`;
+    return questions[factor as string] || `¿Podrías proporcionar más información sobre ${String(factor)}?`;
   }
 
   /**
