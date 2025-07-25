@@ -220,7 +220,7 @@ interface ContentCache<T> {
 }
 
 class ClinicalContentCache {
-  private cache = new Map<string, ContentCache<unknown>>();
+  private readonly cache = new Map<string, ContentCache<unknown>>();
   private readonly CACHE_TTL = 10 * 60 * 1000; // 10 minutos
   private readonly MAX_CACHE_SIZE = 50;
 
@@ -253,7 +253,10 @@ class ClinicalContentCache {
     
     const toRemove = Math.floor(entries.length * 0.3);
     for (let i = 0; i < toRemove; i++) {
-      this.cache.delete(entries[i][0]);
+      const entry = entries[i];
+      if (entry) {
+        this.cache.delete(entry[0]);
+      }
     }
   }
 }
@@ -293,7 +296,7 @@ export const getClinicalInfoBatch = (keys: (keyof typeof clinicalContentLibrary)
 // 🚀 FASE 2C: Preload de contenido más usado
 export const preloadCommonContent = (): void => {
   const commonKeys: (keyof typeof clinicalContentLibrary)[] = [
-    'EDAD', 'OBESIDAD', 'SOP', 'FACTOR_MASCULINO'
+    'IMC_ALTO', 'IMC_BAJO', 'SOP', 'FACTOR_MASCULINO'
   ];
   
   // Precargar en background

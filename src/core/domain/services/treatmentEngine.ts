@@ -19,11 +19,21 @@ import { UserInput } from '../models';
 // 🎯 INTERFACES PARA TRATAMIENTOS
 // ===================================================================
 
+export type TreatmentCategory = 'lifestyle' | 'medical' | 'surgical' | 'art';
+export type TreatmentLine = 'first' | 'second' | 'third' | 'experimental';
+export type EvidenceLevel = 'A' | 'B' | 'C' | 'D';
+export type RiskLevel = 'low' | 'moderate' | 'high' | 'prohibitive';
+export type SeverityLevel = 'info' | 'warning' | 'urgent' | 'emergency';
+export type MonitoringFrequency = 'daily' | 'weekly' | 'biweekly' | 'monthly';
+export type MonitoringMethod = 'laboratory' | 'imaging' | 'clinical' | 'patient-reported';
+export type MedicationRoute = 'oral' | 'injection' | 'topical' | 'vaginal';
+export type FollowUpType = 'visit' | 'laboratory' | 'imaging' | 'phone';
+
 export interface TreatmentRecommendation {
   treatmentId: string;
   name: string;
-  category: 'lifestyle' | 'medical' | 'surgical' | 'art'; // ART = Assisted Reproductive Technology
-  line: 'first' | 'second' | 'third' | 'experimental';
+  category: TreatmentCategory; // ART = Assisted Reproductive Technology
+  line: TreatmentLine;
   priority: number; // 1-5 (1 = highest priority)
   
   // Personalización
@@ -42,7 +52,7 @@ export interface TreatmentRecommendation {
   timeframe: Timeframe;
   
   // Evidencia científica
-  evidenceLevel: 'A' | 'B' | 'C' | 'D';
+  evidenceLevel: EvidenceLevel;
   sourceMedicalGuidelines: string[];
   lastUpdated: Date;
 }
@@ -73,7 +83,7 @@ export interface MedicationDosing {
   medicationName: string;
   dose: string;
   frequency: string;
-  route: 'oral' | 'injection' | 'topical' | 'vaginal';
+  route: MedicationRoute;
   duration: number; // días
   instructions: string;
   sideEffects: string[];
@@ -84,12 +94,12 @@ export interface ContraindicationResult {
   hasContraindications: boolean;
   absoluteContraindications: string[];
   relativeContraindications: string[];
-  riskLevel: 'low' | 'moderate' | 'high' | 'prohibitive';
+  riskLevel: RiskLevel;
   mitigationStrategies: string[];
 }
 
 export interface MonitoringPlan {
-  frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly';
+  frequency: MonitoringFrequency;
   parameters: MonitoringParameter[];
   alertCriteria: AlertCriterion[];
   adjustmentProtocol: string;
@@ -99,7 +109,7 @@ export interface MonitoringPlan {
 export interface MonitoringParameter {
   parameterId: string;
   name: string;
-  method: 'laboratory' | 'imaging' | 'clinical' | 'patient-reported';
+  method: MonitoringMethod;
   frequency: string;
   targetRange?: { min: number; max: number };
   alertThresholds: { low?: number; high?: number };
@@ -108,7 +118,7 @@ export interface MonitoringParameter {
 export interface AlertCriterion {
   criterionId: string;
   description: string;
-  severity: 'info' | 'warning' | 'urgent' | 'emergency';
+  severity: SeverityLevel;
   action: string;
   responsibleClinician: string;
 }
@@ -140,7 +150,7 @@ export interface Timeframe {
 
 export interface FollowUpSchedule {
   timepoint: string; // "Week 2", "Month 1", etc.
-  type: 'visit' | 'laboratory' | 'imaging' | 'phone';
+  type: FollowUpType;
   description: string;
   objectives: string[];
   required: boolean;
@@ -163,9 +173,9 @@ export interface TreatmentOutcome {
 // ===================================================================
 
 export class TreatmentEngine {
-  private treatmentDatabase: Map<string, TreatmentProtocol> = new Map();
-  private outcomeDatabase: TreatmentOutcome[] = [];
-  private guidelinesDatabase: Map<string, string[]> = new Map();
+  private readonly treatmentDatabase: Map<string, TreatmentProtocol> = new Map();
+  private readonly outcomeDatabase: TreatmentOutcome[] = [];
+  private readonly guidelinesDatabase: Map<string, string[]> = new Map();
 
   constructor() {
     this.initializeTreatmentDatabase();
@@ -199,9 +209,10 @@ export class TreatmentEngine {
     recommendations.push(...surgicalRecommendations);
 
     // 6. Ordenar por prioridad y personalización
-    return recommendations
-      .sort((a, b) => a.priority - b.priority)
-      .slice(0, 8); // Top 8 recomendaciones más relevantes
+    const sortedRecommendations = recommendations
+      .slice()
+      .sort((a, b) => a.priority - b.priority);
+    return sortedRecommendations.slice(0, 8); // Top 8 recomendaciones más relevantes
   }
 
   /**
@@ -342,7 +353,7 @@ export class TreatmentEngine {
     return recommendations;
   }
 
-  private generateMedicalRecommendations(userInput: UserInput, treatmentLine: 'first' | 'second' | 'third'): TreatmentRecommendation[] {
+  private generateMedicalRecommendations(userInput: UserInput, treatmentLine: TreatmentLine): TreatmentRecommendation[] {
     const recommendations: TreatmentRecommendation[] = [];
 
     // Ovulation induction para PCOS/anovulación
@@ -368,7 +379,7 @@ export class TreatmentEngine {
     return recommendations;
   }
 
-  private generateARTRecommendations(userInput: UserInput, treatmentLine: 'first' | 'second' | 'third'): TreatmentRecommendation[] {
+  private generateARTRecommendations(userInput: UserInput, treatmentLine: TreatmentLine): TreatmentRecommendation[] {
     const recommendations: TreatmentRecommendation[] = [];
 
     // Determine if ART is indicated
@@ -625,7 +636,7 @@ export class TreatmentEngine {
   // 🔍 UTILIDADES Y HELPERS
   // ===================================================================
 
-  private determineTreatmentLine(userInput: UserInput): 'first' | 'second' | 'third' {
+  private determineTreatmentLine(userInput: UserInput): TreatmentLine {
     // Factores que indican líneas avanzadas de tratamiento
     let advancedFactors = 0;
 
@@ -640,7 +651,7 @@ export class TreatmentEngine {
     return 'first';
   }
 
-  private isARTIndicated(userInput: UserInput, treatmentLine: 'first' | 'second' | 'third'): {
+  private isARTIndicated(userInput: UserInput, treatmentLine: TreatmentLine): {
     iui: boolean;
     ivf: boolean;
     ovodonation: boolean;
@@ -734,8 +745,8 @@ export class TreatmentEngine {
     return names[treatmentId] || treatmentId;
   }
 
-  private getTreatmentCategory(treatmentId: string): 'lifestyle' | 'medical' | 'surgical' | 'art' {
-    const categories: { [key: string]: 'lifestyle' | 'medical' | 'surgical' | 'art' } = {
+  private getTreatmentCategory(treatmentId: string): TreatmentCategory {
+    const categories: { [key: string]: TreatmentCategory } = {
       'WEIGHT_LOSS': 'lifestyle',
       'CLOMIPHENE_CITRATE': 'medical',
       'IVF_ICSI': 'art'
@@ -743,8 +754,8 @@ export class TreatmentEngine {
     return categories[treatmentId] || 'medical';
   }
 
-  private getTreatmentLine(treatmentId: string): 'first' | 'second' | 'third' | 'experimental' {
-    const lines: { [key: string]: 'first' | 'second' | 'third' | 'experimental' } = {
+  private getTreatmentLine(treatmentId: string): TreatmentLine {
+    const lines: { [key: string]: TreatmentLine } = {
       'CLOMIPHENE_CITRATE': 'first',
       'LETROZOLE': 'first',
       'IVF_ICSI': 'second'
@@ -752,21 +763,21 @@ export class TreatmentEngine {
     return lines[treatmentId] || 'first';
   }
 
-  private calculatePriority(treatmentId: string, userInput: UserInput): number {
+  private calculatePriority(_treatmentId: string, _userInput: UserInput): number {
     // Complex priority calculation based on patient factors
     return 1; // Placeholder
   }
 
-  private calculateConfidenceLevel(treatmentId: string, userInput: UserInput): number {
+  private calculateConfidenceLevel(_treatmentId: string, _userInput: UserInput): number {
     // Confidence calculation based on available data
     return 0.8; // Placeholder
   }
 
-  private generatePersonalizedRationale(treatmentId: string, userInput: UserInput): string {
+  private generatePersonalizedRationale(_treatmentId: string, _userInput: UserInput): string {
     return `Tratamiento personalizado basado en perfil clínico individual`; // Placeholder
   }
 
-  private checkContraindications(treatmentId: string, userInput: UserInput): ContraindicationResult {
+  private checkContraindications(_treatmentId: string, _userInput: UserInput): ContraindicationResult {
     return {
       hasContraindications: false,
       absoluteContraindications: [],
@@ -789,7 +800,7 @@ export class TreatmentEngine {
     }; // Placeholder
   }
 
-  private generateMonitoringPlan(treatmentId: string, userInput: UserInput): MonitoringPlan {
+  private generateMonitoringPlan(_treatmentId: string, _userInput: UserInput): MonitoringPlan {
     return {
       frequency: 'weekly',
       parameters: [],
@@ -799,11 +810,11 @@ export class TreatmentEngine {
     }; // Placeholder
   }
 
-  private getAlternativeTreatments(treatmentId: string): string[] {
+  private getAlternativeTreatments(_treatmentId: string): string[] {
     return []; // Placeholder
   }
 
-  private calculateTreatmentCosts(treatmentId: string): CostAnalysis {
+  private calculateTreatmentCosts(_treatmentId: string): CostAnalysis {
     return {
       estimatedTotalCost: 1000,
       costBreakdown: [],
@@ -813,7 +824,7 @@ export class TreatmentEngine {
     }; // Placeholder
   }
 
-  private getTreatmentTimeframe(treatmentId: string): Timeframe {
+  private getTreatmentTimeframe(_treatmentId: string): Timeframe {
     return {
       minimumDuration: 30,
       expectedDuration: 60,
@@ -822,7 +833,7 @@ export class TreatmentEngine {
     }; // Placeholder
   }
 
-  private getTreatmentEvidenceLevel(treatmentId: string): 'A' | 'B' | 'C' | 'D' {
+  private getTreatmentEvidenceLevel(_treatmentId: string): EvidenceLevel {
     return 'A'; // Placeholder
   }
 
@@ -831,20 +842,20 @@ export class TreatmentEngine {
   }
 
   // Additional placeholder methods for complete implementations
-  private getLifestyleProtocol(type: string): TreatmentProtocol { return {} as TreatmentProtocol; }
+  private getLifestyleProtocol(_type: string): TreatmentProtocol { return {} as TreatmentProtocol; }
   private getLifestyleMonitoring(): MonitoringPlan { return {} as MonitoringPlan; }
   private getInsulinResistanceProtocol(): TreatmentProtocol { return {} as TreatmentProtocol; }
   private getMetabolicMonitoring(): MonitoringPlan { return {} as MonitoringPlan; }
-  private generateLetrozoleRecommendation(userInput: UserInput): TreatmentRecommendation { return {} as TreatmentRecommendation; }
-  private generateGonadotropinRecommendation(userInput: UserInput): TreatmentRecommendation { return {} as TreatmentRecommendation; }
-  private generateThyroidManagementRecommendation(userInput: UserInput): TreatmentRecommendation { return {} as TreatmentRecommendation; }
-  private generateProlactinManagementRecommendation(userInput: UserInput): TreatmentRecommendation { return {} as TreatmentRecommendation; }
-  private generateIUIRecommendation(userInput: UserInput): TreatmentRecommendation { return {} as TreatmentRecommendation; }
-  private generateOvodonationRecommendation(userInput: UserInput): TreatmentRecommendation { return {} as TreatmentRecommendation; }
-  private generateLaparoscopyRecommendation(userInput: UserInput): TreatmentRecommendation { return {} as TreatmentRecommendation; }
-  private generateHSGRecommendation(userInput: UserInput): TreatmentRecommendation { return {} as TreatmentRecommendation; }
-  private generateIVFRationale(userInput: UserInput): string { return 'Protocolo personalizado FIV'; }
-  private getIVFProtocol(userInput: UserInput): TreatmentProtocol { return {} as TreatmentProtocol; }
+  private generateLetrozoleRecommendation(_userInput: UserInput): TreatmentRecommendation { return {} as TreatmentRecommendation; }
+  private generateGonadotropinRecommendation(_userInput: UserInput): TreatmentRecommendation { return {} as TreatmentRecommendation; }
+  private generateThyroidManagementRecommendation(_userInput: UserInput): TreatmentRecommendation { return {} as TreatmentRecommendation; }
+  private generateProlactinManagementRecommendation(_userInput: UserInput): TreatmentRecommendation { return {} as TreatmentRecommendation; }
+  private generateIUIRecommendation(_userInput: UserInput): TreatmentRecommendation { return {} as TreatmentRecommendation; }
+  private generateOvodonationRecommendation(_userInput: UserInput): TreatmentRecommendation { return {} as TreatmentRecommendation; }
+  private generateLaparoscopyRecommendation(_userInput: UserInput): TreatmentRecommendation { return {} as TreatmentRecommendation; }
+  private generateHSGRecommendation(_userInput: UserInput): TreatmentRecommendation { return {} as TreatmentRecommendation; }
+  private generateIVFRationale(_userInput: UserInput): string { return 'Protocolo personalizado FIV'; }
+  private getIVFProtocol(_userInput: UserInput): TreatmentProtocol { return {} as TreatmentProtocol; }
   private getIVFMonitoring(): MonitoringPlan { return {} as MonitoringPlan; }
 }
 
@@ -854,8 +865,6 @@ export class TreatmentEngine {
 let treatmentEngineInstance: TreatmentEngine | null = null;
 
 export function getTreatmentEngine(): TreatmentEngine {
-  if (!treatmentEngineInstance) {
-    treatmentEngineInstance = new TreatmentEngine();
-  }
+  treatmentEngineInstance ??= new TreatmentEngine();
   return treatmentEngineInstance;
 }

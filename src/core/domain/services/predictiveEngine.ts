@@ -155,12 +155,12 @@ interface ImprovementOpportunity {
 // ===================================================================
 
 class PredictiveMLEngine {
-  private historicalData: Map<string, PredictionInput[]> = new Map();
-  private patternCache: Map<string, PatternAnalysis> = new Map();
-  private modelWeights: ModelWeights = this.initializeModelWeights();
+  private readonly historicalData: Map<string, PredictionInput[]> = new Map();
+  private readonly patternCache: Map<string, PatternAnalysis> = new Map();
+  private readonly modelWeights: ModelWeights = this.initializeModelWeights();
   
   // Métricas de rendimiento del modelo
-  private modelMetrics = {
+  private readonly modelMetrics = {
     predictions: 0,
     accuracy: 0,
     lastTraining: Date.now(),
@@ -168,7 +168,7 @@ class PredictiveMLEngine {
   };
 
   // 🆕 MÉTRICAS DEL MOTOR UNIFICADO
-  private engineMetrics: {
+  private readonly engineMetrics: {
     totalPredictions: number;
     averageComplexityScore: number;
     standardEngineUsage: number;

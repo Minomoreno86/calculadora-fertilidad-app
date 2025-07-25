@@ -10,6 +10,88 @@ export interface RangeValidation {
   message?: string;
 }
 
+const validateAge = (numValue: number): RangeValidation => {
+  if (numValue < 15) {
+    console.log(`🔴 EDAD ERROR: ${numValue} < 15`); // DEBUG
+    return { 
+      isNormal: false, 
+      isWarning: false, 
+      isError: true, 
+      message: 'Edad muy joven para embarazo' 
+    };
+  } else if (numValue >= 15 && numValue < 18) {
+    console.log(`🟠 EDAD WARNING: ${numValue} entre 15-17`); // DEBUG
+    return { 
+      isNormal: false, 
+      isWarning: true, 
+      isError: false, 
+      message: 'Edad adolescente - requiere evaluación especializada' 
+    };
+  } else if (numValue >= 35 && numValue <= 39) {
+    console.log(`🟠 EDAD WARNING: ${numValue} entre 35-39`); // DEBUG
+    return { 
+      isNormal: false, 
+      isWarning: true, 
+      isError: false, 
+      message: 'Edad materna avanzada - evaluar reserva ovárica' 
+    };
+  } else if (numValue >= 40) {
+    console.log(`🔴 EDAD ERROR: ${numValue} >= 40`); // DEBUG
+    return { 
+      isNormal: false, 
+      isWarning: false, 
+      isError: true, 
+      message: 'Edad muy avanzada - considerar ovodonación' 
+    };
+  }
+  console.log(`✅ EDAD NORMAL: ${numValue}`); // DEBUG
+  return { isNormal: true, isWarning: false, isError: false };
+};
+
+const validateWeight = (numValue: number): RangeValidation => {
+  if (numValue < 35) {
+    console.log(`🟠 PESO WARNING: ${numValue} < 35`); // DEBUG
+    return { 
+      isNormal: false, 
+      isWarning: true, 
+      isError: false, 
+      message: 'Peso muy bajo' 
+    };
+  } else if (numValue > 150) {
+    console.log(`🟠 PESO WARNING: ${numValue} > 150`); // DEBUG
+    return { 
+      isNormal: false, 
+      isWarning: true, 
+      isError: false, 
+      message: 'Peso muy alto' 
+    };
+  }
+  console.log(`✅ PESO NORMAL: ${numValue}`); // DEBUG
+  return { isNormal: true, isWarning: false, isError: false };
+};
+
+const validateHeight = (numValue: number): RangeValidation => {
+  if (numValue < 140) {
+    console.log(`🟠 ALTURA WARNING: ${numValue} < 140`); // DEBUG
+    return { 
+      isNormal: false, 
+      isWarning: true, 
+      isError: false, 
+      message: 'Estatura baja' 
+    };
+  } else if (numValue > 200) {
+    console.log(`🟠 ALTURA WARNING: ${numValue} > 200`); // DEBUG
+    return { 
+      isNormal: false, 
+      isWarning: true, 
+      isError: false, 
+      message: 'Estatura muy alta' 
+    };
+  }
+  console.log(`✅ ALTURA NORMAL: ${numValue}`); // DEBUG
+  return { isNormal: true, isWarning: false, isError: false };
+};
+
 export const validateFieldRange = (
   fieldName: string, 
   value: string | number | undefined
@@ -31,84 +113,11 @@ export const validateFieldRange = (
 
   switch (fieldName) {
     case 'age':
-      if (numValue < 15) {
-        console.log(`🔴 EDAD ERROR: ${numValue} < 15`); // DEBUG
-        return { 
-          isNormal: false, 
-          isWarning: false, 
-          isError: true, 
-          message: 'Edad muy joven para embarazo' 
-        };
-      } else if (numValue >= 15 && numValue < 18) {
-        console.log(`🟠 EDAD WARNING: ${numValue} entre 15-17`); // DEBUG
-        return { 
-          isNormal: false, 
-          isWarning: true, 
-          isError: false, 
-          message: 'Edad adolescente - requiere evaluación especializada' 
-        };
-      } else if (numValue >= 35 && numValue <= 39) {
-        console.log(`🟠 EDAD WARNING: ${numValue} entre 35-39`); // DEBUG
-        return { 
-          isNormal: false, 
-          isWarning: true, 
-          isError: false, 
-          message: 'Edad materna avanzada - evaluar reserva ovárica' 
-        };
-      } else if (numValue >= 40) {
-        console.log(`🔴 EDAD ERROR: ${numValue} >= 40`); // DEBUG
-        return { 
-          isNormal: false, 
-          isWarning: false, 
-          isError: true, 
-          message: 'Edad muy avanzada - considerar ovodonación' 
-        };
-      }
-      console.log(`✅ EDAD NORMAL: ${numValue}`); // DEBUG
-      return { isNormal: true, isWarning: false, isError: false };
-
+      return validateAge(numValue);
     case 'weight':
-      if (numValue < 35) {
-        console.log(`🟠 PESO WARNING: ${numValue} < 35`); // DEBUG
-        return { 
-          isNormal: false, 
-          isWarning: true, 
-          isError: false, 
-          message: 'Peso muy bajo' 
-        };
-      } else if (numValue > 150) {
-        console.log(`🟠 PESO WARNING: ${numValue} > 150`); // DEBUG
-        return { 
-          isNormal: false, 
-          isWarning: true, 
-          isError: false, 
-          message: 'Peso muy alto' 
-        };
-      }
-      console.log(`✅ PESO NORMAL: ${numValue}`); // DEBUG
-      return { isNormal: true, isWarning: false, isError: false };
-
+      return validateWeight(numValue);
     case 'height':
-      if (numValue < 140) {
-        console.log(`🟠 ALTURA WARNING: ${numValue} < 140`); // DEBUG
-        return { 
-          isNormal: false, 
-          isWarning: true, 
-          isError: false, 
-          message: 'Estatura baja' 
-        };
-      } else if (numValue > 200) {
-        console.log(`🟠 ALTURA WARNING: ${numValue} > 200`); // DEBUG
-        return { 
-          isNormal: false, 
-          isWarning: true, 
-          isError: false, 
-          message: 'Estatura muy alta' 
-        };
-      }
-      console.log(`✅ ALTURA NORMAL: ${numValue}`); // DEBUG
-      return { isNormal: true, isWarning: false, isError: false };
-
+      return validateHeight(numValue);
     default:
       console.log(`❓ Campo no reconocido: ${fieldName}`); // DEBUG
       return { isNormal: true, isWarning: false, isError: false };

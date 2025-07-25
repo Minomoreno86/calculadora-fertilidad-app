@@ -105,8 +105,8 @@ export class NeuralMedicalAISystem {
   private readonly neuralConversationEngine: NeuralConversationEngine;
   private readonly config: Required<NeuralMedicalSystemConfig>;
   
-  // 📊 Métricas del Sistema
-  private systemMetrics = {
+  // 📊 Métricas del Sistema (Mutable for Learning)
+  private readonly systemMetrics = {
     totalAnalyses: 0,
     totalConversations: 0,
     averageConfidence: 0,

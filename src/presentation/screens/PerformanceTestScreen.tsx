@@ -37,7 +37,7 @@ export const PerformanceTestScreen: React.FC = () => {
 
   const runBenchmarkTest = () => {
     benchmarkIterations('light_operation', () => {
-      Math.random() * 100;
+      return Math.random() * 100;
     }, 1000);
   };
 

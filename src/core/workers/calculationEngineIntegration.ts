@@ -18,7 +18,16 @@
 
 import { ParallelValidationEngine, ValidationCategory, type ParallelValidationConfig } from './parallelValidationEngine_FASE2';
 import type { UserInput } from '../domain/models';
-import type { ValidationResult } from './validationWorker';
+
+// Define ValidationResult locally to avoid module dependency issues
+interface ValidationResult {
+  taskId: string;
+  success: boolean;
+  isValid: boolean;
+  processingTime: number;
+  errors?: string[];
+  warnings?: string[];
+}
 
 // ===================================================================
 // 🎯 CONFIGURACIÓN DE INTEGRACIÓN PHASE 2
@@ -53,7 +62,7 @@ interface IntegrationMetrics {
 export class CalculationEngineIntegration {
   private readonly parallelEngine: ParallelValidationEngine;
   private readonly config: IntegrationConfig;
-  private metrics: IntegrationMetrics;
+  private readonly metrics: IntegrationMetrics;
 
   constructor(
     parallelConfig?: Partial<ParallelValidationConfig>,
@@ -366,27 +375,32 @@ export class CalculationEngineIntegration {
    * 📊 ACTUALIZAR MÉTRICAS DE INTEGRACIÓN
    */
   private updateIntegrationMetrics(processingTime: number, method: ValidationMethod): void {
-    this.metrics.totalValidations++;
+    // Crear nueva instancia para mutabilidad del objeto readonly
+    const newMetrics = { ...this.metrics };
+    newMetrics.totalValidations++;
     
     if (method === 'parallel') {
-      this.metrics.averageParallelTime = 
-        (this.metrics.averageParallelTime * (this.metrics.parallelValidations - 1) + processingTime) / 
-        this.metrics.parallelValidations;
+      newMetrics.averageParallelTime = 
+        (newMetrics.averageParallelTime * (newMetrics.parallelValidations - 1) + processingTime) / 
+        newMetrics.parallelValidations;
     } else if (method === 'sequential') {
-      this.metrics.averageSequentialTime = 
-        (this.metrics.averageSequentialTime * (this.metrics.sequentialValidations - 1) + processingTime) / 
-        this.metrics.sequentialValidations;
+      newMetrics.averageSequentialTime = 
+        (newMetrics.averageSequentialTime * (newMetrics.sequentialValidations - 1) + processingTime) / 
+        newMetrics.sequentialValidations;
     }
     
     // Calcular mejora de performance
-    if (this.metrics.averageSequentialTime > 0 && this.metrics.averageParallelTime > 0) {
-      this.metrics.performanceImprovement = 
-        Math.round((1 - this.metrics.averageParallelTime / this.metrics.averageSequentialTime) * 100);
+    if (newMetrics.averageSequentialTime > 0 && newMetrics.averageParallelTime > 0) {
+      newMetrics.performanceImprovement = 
+        Math.round((1 - newMetrics.averageParallelTime / newMetrics.averageSequentialTime) * 100);
     }
     
     // Actualizar cache hit rate desde motor paralelo
     const parallelMetrics = this.parallelEngine.getMetrics();
-    this.metrics.cacheHitRate = parallelMetrics.cacheHitRate;
+    newMetrics.cacheHitRate = parallelMetrics.cacheHitRate;
+
+    // Actualizar métricas
+    Object.assign(this.metrics, newMetrics);
   }
 
   /**

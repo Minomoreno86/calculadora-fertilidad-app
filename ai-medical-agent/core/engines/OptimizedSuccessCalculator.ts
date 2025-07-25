@@ -36,14 +36,7 @@ interface AdvancedMetrics {
   validationSource: string[];
 }
 
-interface PersonalizedRecommendation {
-  primaryOption: string;
-  alternatives: string[];
-  timelineOptimal: string;
-  costEffectiveness: number;
-  riskBenefit: number;
-  personalizedInsights: string[];
-}
+// PersonalizedRecommendation interface removed - functionality handled inline in recommendation methods
 
 export class OptimizedSuccessCalculator {
   private static instance: OptimizedSuccessCalculator;
@@ -109,14 +102,14 @@ export class OptimizedSuccessCalculator {
   // 📊 GITHUB MCP INTEGRATION VERSIONING
   private static readonly MODEL_VERSION = '2.1.0';
   private static readonly LAST_VALIDATION = new Date('2025-01-15');
-  private predictiveModel: Map<string, PredictiveFactors> = new Map();
-  private validationMetrics: AdvancedMetrics = {
+  private readonly predictiveModel: Map<string, PredictiveFactors> = new Map();
+  private readonly validationMetrics: AdvancedMetrics = {
     confidence: 0.94,
     evidenceQuality: 'A',
     modelVersion: OptimizedSuccessCalculator.MODEL_VERSION,
     lastUpdated: OptimizedSuccessCalculator.LAST_VALIDATION,
     validationSource: ['Cochrane Reviews 2024', 'ASRM Guidelines 2025', 'ESHRE Position Papers']
-  };
+  } as const;
 
   private constructor() {}
 
@@ -609,30 +602,91 @@ export class OptimizedSuccessCalculator {
     return '4-8 meses';
   }
 
+  /**
+   * 🎯 GENERACIÓN DINÁMICA DE INDICACIONES - NEURALMENTE OPTIMIZADA
+   */
   private generateDynamicIndications(technique: string, userInput: UserInput, clinicalAnalysis?: ClinicalAnalysis): string[] {
-    const indications = [];
+    return this.buildIndicationsByTechnique(technique, userInput, clinicalAnalysis);
+  }
+
+  /**
+   * 🧠 CONSTRUCTOR DE INDICACIONES POR TÉCNICA
+   */
+  private buildIndicationsByTechnique(technique: string, userInput: UserInput, clinicalAnalysis?: ClinicalAnalysis): string[] {
+    const indications: string[] = [];
     
-    if (technique === 'IUI') {
-      if (userInput.partner?.spermAnalysis) indications.push('Factor masculino leve-moderado');
-      if (clinicalAnalysis?.primaryDiagnosis.pathology.includes('PCOS')) indications.push('PCOS con ovulación asistida');
-      if (userInput.age < 35) indications.push('Edad reproductiva óptima');
-      indications.push('Cervical/ovulatorio');
-    } else if (technique === 'IVF') {
-      if (clinicalAnalysis?.primaryDiagnosis.pathology.includes('TUBAL_FACTOR')) indications.push('Factor tubárico');
-      if (userInput.partner?.spermAnalysis) indications.push('Factor masculino severo');
-      if (userInput.age >= 38) indications.push('Factor edad');
-      indications.push('Falla IUI repetida');
-    } else if (technique === 'FET') {
-      indications.push('Embriones congelados disponibles');
-      indications.push('Transferencia diferida por SHO');
-      indications.push('Testing genético preimplantacional');
-    } else if (technique === 'DONOR') {
-      if (userInput.age >= 43) indications.push('Edad materna avanzada');
-      if (userInput.labs?.amh && userInput.labs.amh < 0.5) indications.push('Falla ovárica prematura');
-      indications.push('Baja reserva ovárica severa');
+    switch (technique) {
+      case 'IUI':
+        this.addIUIIndications(indications, userInput, clinicalAnalysis);
+        break;
+      case 'IVF':
+        this.addIVFIndications(indications, userInput, clinicalAnalysis);
+        break;
+      case 'FET':
+        this.addFETIndications(indications);
+        break;
+      case 'DONOR':
+        this.addDonorIndications(indications, userInput);
+        break;
+      default:
+        indications.push('Indicación estándar');
     }
     
     return indications.length > 0 ? indications : ['Indicación estándar'];
+  }
+
+  /**
+   * 🏥 INDICACIONES ESPECÍFICAS IUI
+   */
+  private addIUIIndications(indications: string[], userInput: UserInput, clinicalAnalysis?: ClinicalAnalysis): void {
+    if (userInput.partner?.spermAnalysis) {
+      indications.push('Factor masculino leve-moderado');
+    }
+    if (clinicalAnalysis?.primaryDiagnosis.pathology.includes('PCOS')) {
+      indications.push('PCOS con ovulación asistida');
+    }
+    if (userInput.age < 35) {
+      indications.push('Edad reproductiva óptima');
+    }
+    indications.push('Cervical/ovulatorio');
+  }
+
+  /**
+   * 🧪 INDICACIONES ESPECÍFICAS IVF
+   */
+  private addIVFIndications(indications: string[], userInput: UserInput, clinicalAnalysis?: ClinicalAnalysis): void {
+    if (clinicalAnalysis?.primaryDiagnosis.pathology.includes('TUBAL_FACTOR')) {
+      indications.push('Factor tubárico');
+    }
+    if (userInput.partner?.spermAnalysis) {
+      indications.push('Factor masculino severo');
+    }
+    if (userInput.age >= 38) {
+      indications.push('Factor edad');
+    }
+    indications.push('Falla IUI repetida');
+  }
+
+  /**
+   * ❄️ INDICACIONES ESPECÍFICAS FET
+   */
+  private addFETIndications(indications: string[]): void {
+    indications.push('Embriones congelados disponibles');
+    indications.push('Transferencia diferida por SHO');
+    indications.push('Testing genético preimplantacional');
+  }
+
+  /**
+   * 🥚 INDICACIONES ESPECÍFICAS DONOR
+   */
+  private addDonorIndications(indications: string[], userInput: UserInput): void {
+    if (userInput.age >= 43) {
+      indications.push('Edad materna avanzada');
+    }
+    if (userInput.labs?.amh && userInput.labs.amh < 0.5) {
+      indications.push('Falla ovárica prematura');
+    }
+    indications.push('Baja reserva ovárica severa');
   }
 
   private calculatePersonalizedCosts(technique: string, userInput: UserInput): string {

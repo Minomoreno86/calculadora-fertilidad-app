@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import { useAdvancedConfig, AdvancedConfigState } from '../hooks/useAdvancedConfig';
 
 // 🎯 TIPOS DEL CONTEXTO
@@ -11,7 +11,7 @@ interface ConfigContextType {
   updateConfig: <T extends keyof AdvancedConfigState>(
     section: T,
     key: keyof AdvancedConfigState[T],
-    value: any
+    value: AdvancedConfigState[T][keyof AdvancedConfigState[T]]
   ) => void;
   updateSection: <T extends keyof AdvancedConfigState>(
     section: T,
@@ -30,7 +30,7 @@ interface ConfigContextType {
   };
   
   // Import/Export
-  exportConfig: () => any;
+  exportConfig: () => unknown;
   importConfig: (configData: string) => Promise<boolean>;
 }
 
@@ -45,9 +45,9 @@ interface ConfigProviderProps {
 export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
   const configHook = useAdvancedConfig();
 
-  const contextValue: ConfigContextType = {
+  const contextValue: ConfigContextType = useMemo(() => ({
     ...configHook,
-  };
+  }), [configHook]);
 
   return (
     <ConfigContext.Provider value={contextValue}>
@@ -77,7 +77,7 @@ export const useAppearanceConfig = () => {
   
   return {
     ...config.appearance,
-    updateAppearance: (key: keyof typeof config.appearance, value: any) =>
+    updateAppearance: (key: keyof typeof config.appearance, value: typeof config.appearance[keyof typeof config.appearance]) =>
       updateConfig('appearance', key, value),
   };
 };
@@ -90,7 +90,7 @@ export const useCalculationConfig = () => {
   
   return {
     ...config.calculation,
-    updateCalculation: (key: keyof typeof config.calculation, value: any) =>
+    updateCalculation: (key: keyof typeof config.calculation, value: typeof config.calculation[keyof typeof config.calculation]) =>
       updateConfig('calculation', key, value),
   };
 };
@@ -103,7 +103,7 @@ export const useMedicalConfig = () => {
   
   return {
     ...config.medical,
-    updateMedical: (key: keyof typeof config.medical, value: any) =>
+    updateMedical: (key: keyof typeof config.medical, value: typeof config.medical[keyof typeof config.medical]) =>
       updateConfig('medical', key, value),
   };
 };
@@ -116,7 +116,7 @@ export const useUXConfig = () => {
   
   return {
     ...config.ux,
-    updateUX: (key: keyof typeof config.ux, value: any) =>
+    updateUX: (key: keyof typeof config.ux, value: typeof config.ux[keyof typeof config.ux]) =>
       updateConfig('ux', key, value),
   };
 };
@@ -129,7 +129,7 @@ export const useNotificationsConfig = () => {
   
   return {
     ...config.notifications,
-    updateNotifications: (key: keyof typeof config.notifications, value: any) =>
+    updateNotifications: (key: keyof typeof config.notifications, value: typeof config.notifications[keyof typeof config.notifications]) =>
       updateConfig('notifications', key, value),
   };
 };
@@ -142,7 +142,7 @@ export const usePrivacyConfig = () => {
   
   return {
     ...config.privacy,
-    updatePrivacy: (key: keyof typeof config.privacy, value: any) =>
+    updatePrivacy: (key: keyof typeof config.privacy, value: typeof config.privacy[keyof typeof config.privacy]) =>
       updateConfig('privacy', key, value),
   };
 };

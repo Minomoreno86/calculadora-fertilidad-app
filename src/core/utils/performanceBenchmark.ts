@@ -52,8 +52,8 @@ interface TrendAnalysis {
 
 class PerformanceBenchmark {
   private metrics: PerformanceMetric[] = [];
-  private renderMetrics = new Map<string, ComponentRenderMetrics>();
-  private isEnabled = process.env.NODE_ENV === 'development';
+  private readonly renderMetrics = new Map<string, ComponentRenderMetrics>();
+  private readonly isEnabled = process.env.NODE_ENV === 'development';
 
   // 🎯 Medición de tiempo de ejecución
   measureTime<T>(name: string, fn: () => T, category: PerformanceMetric['category'] = 'calculation'): T {
@@ -245,10 +245,8 @@ class PerformanceBenchmark {
     this.metrics.forEach(metric => {
       categories[metric.category] = (categories[metric.category] || 0) + 1;
       
-      if (!averageTimes[metric.name]) {
-        averageTimes[metric.name] = [];
-      }
-      averageTimes[metric.name].push(metric.value);
+      averageTimes[metric.name] ??= [];
+      averageTimes[metric.name]!.push(metric.value);
     });
 
     const avgTimes: Record<string, number> = {};
@@ -361,45 +359,62 @@ class PerformanceBenchmark {
   // 🔍 Detectar tipo de dispositivo para umbrales dinámicos
   private detectDeviceType(): DeviceType {
     try {
-      const nav = navigator as Navigator & {
-        connection?: { effectiveType?: string };
-        mozConnection?: { effectiveType?: string };
-        webkitConnection?: { effectiveType?: string };
-      };
-      const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
-      
-      // Detectar por user agent
-      const userAgent = navigator.userAgent.toLowerCase();
-      const isMobile = /mobile|android|iphone|ipad/.test(userAgent);
-      const isTablet = /tablet|ipad/.test(userAgent);
-      
-      // Detectar por memoria disponible
-      const memInfo = (performance as Performance & {
-        memory?: { jsHeapSizeLimit: number };
-      }).memory;
-      const memoryGB = memInfo ? memInfo.jsHeapSizeLimit / (1024 * 1024 * 1024) : 4;
-      
-      // Detectar por conexión
-      const slowConnection = connection && connection.effectiveType && 
-        ['slow-2g', '2g', '3g'].includes(connection.effectiveType);
-      
-      let category: DeviceType['category'] = 'unknown';
-      let performanceLevel: DeviceType['performance'] = 'medium';
-      
-      if (isMobile && !isTablet) {
-        category = 'mobile';
-        performanceLevel = memoryGB > 2 && !slowConnection ? 'medium' : 'low';
-      } else if (isTablet) {
-        category = 'tablet';
-        performanceLevel = memoryGB > 4 ? 'high' : 'medium';
-      } else {
-        category = 'desktop';
-        performanceLevel = memoryGB > 8 ? 'high' : 'medium';
-      }
+      const deviceInfo = this.getDeviceInfo();
+      const category = this.categorizeDevice(deviceInfo);
+      const performanceLevel = this.assessPerformanceLevel(category, deviceInfo);
       
       return { category, performance: performanceLevel };
     } catch {
       return { category: 'unknown', performance: 'medium' };
+    }
+  }
+
+  private getDeviceInfo() {
+    const nav = navigator as Navigator & {
+      connection?: { effectiveType?: string };
+      mozConnection?: { effectiveType?: string };
+      webkitConnection?: { effectiveType?: string };
+    };
+    const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
+    
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isMobile = /mobile|android|iphone|ipad/.test(userAgent);
+    const isTablet = /tablet|ipad/.test(userAgent);
+    
+    const memInfo = (performance as Performance & {
+      memory?: { jsHeapSizeLimit: number };
+    }).memory;
+    const memoryGB = memInfo ? memInfo.jsHeapSizeLimit / (1024 * 1024 * 1024) : 4;
+    
+    const slowConnection = Boolean(connection?.effectiveType && 
+      ['slow-2g', '2g', '3g'].includes(connection.effectiveType));
+
+    return { isMobile, isTablet, memoryGB, slowConnection };
+  }
+
+  private categorizeDevice(deviceInfo: { isMobile: boolean; isTablet: boolean }): DeviceType['category'] {
+    const { isMobile, isTablet } = deviceInfo;
+    
+    if (isMobile && !isTablet) return 'mobile';
+    if (isTablet) return 'tablet';
+    return 'desktop';
+  }
+
+  private assessPerformanceLevel(
+    category: DeviceType['category'], 
+    deviceInfo: { memoryGB: number; slowConnection: boolean }
+  ): DeviceType['performance'] {
+    const { memoryGB, slowConnection } = deviceInfo;
+    
+    switch (category) {
+      case 'mobile':
+        return memoryGB > 2 && !slowConnection ? 'medium' : 'low';
+      case 'tablet':
+        return memoryGB > 4 ? 'high' : 'medium';
+      case 'desktop':
+        return memoryGB > 8 ? 'high' : 'medium';
+      default:
+        return 'medium';
     }
   }
 

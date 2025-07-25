@@ -158,21 +158,44 @@ export const INFERTILITY_TIMELINE = {
 // ============= FUNCIONES AUXILIARES =============
 
 /**
+ * 🧠 NEURAL AMH PERCENTILE TYPE V13.0
+ * Tipo explícito para percentiles AMH
+ */
+export type AMHPercentiles = {
+  p5: number;
+  p10: number;
+  p25: number;
+  p50: number;
+  p75: number;
+  p90: number;
+  p95: number;
+};
+
+/**
  * Obtiene percentiles de AMH interpolados para edad exacta
  */
-export function getAMHPercentilesForAge(age: number): typeof AMH_PERCENTILES_2024[25] {
+export function getAMHPercentilesForAge(age: number): AMHPercentiles {
   const clampedAge = Math.max(25, Math.min(45, age));
   const floorAge = Math.floor(clampedAge);
   const ceilAge = Math.ceil(clampedAge);
   
-  if (floorAge === ceilAge || !AMH_PERCENTILES_2024[ceilAge]) {
-    return AMH_PERCENTILES_2024[floorAge] || AMH_PERCENTILES_2024[25];
+  // 🧠 NEURAL SAFETY V13.0: Garantizar valores por defecto seguros
+  const defaultPercentiles = AMH_PERCENTILES_2024[25];
+  
+  if (floorAge === ceilAge) {
+    return (AMH_PERCENTILES_2024[floorAge] as AMHPercentiles) ?? defaultPercentiles;
   }
   
-  // Interpolación lineal
-  const weight = clampedAge - floorAge;
+  // 🧠 NEURAL SAFE INTERPOLATION V13.0: Validación de datos antes de interpolación
   const lower = AMH_PERCENTILES_2024[floorAge];
   const upper = AMH_PERCENTILES_2024[ceilAge];
+  
+  if (!lower || !upper) {
+    return (AMH_PERCENTILES_2024[floorAge] as AMHPercentiles) ?? defaultPercentiles;
+  }
+  
+  // Interpolación lineal segura
+  const weight = clampedAge - floorAge;
   
   return {
     p5: lower.p5 + (upper.p5 - lower.p5) * weight,
@@ -193,6 +216,7 @@ export function shouldEvaluateInfertility(age: number, monthsTrying: number): {
   urgency: 'routine' | 'urgent' | 'immediate';
   reason: string;
 } {
+  // 🧠 NEURAL AGE-BASED EVALUATION V13.0: Evaluación estructurada por edad
   if (age < 35) {
     if (monthsTrying >= 12) {
       return {
@@ -209,14 +233,12 @@ export function shouldEvaluateInfertility(age: number, monthsTrying: number): {
         reason: 'Edad materna avanzada: ≥6 meses intentando'
       };
     }
-  } else {
-    if (monthsTrying >= 3) {
-      return {
-        shouldEvaluate: true,
-        urgency: 'immediate',
-        reason: 'Edad ≥40 años: evaluación inmediata'
-      };
-    }
+  } else if (monthsTrying >= 3) {
+    return {
+      shouldEvaluate: true,
+      urgency: 'immediate',
+      reason: 'Edad ≥40 años: evaluación inmediata'
+    };
   }
   
   return {

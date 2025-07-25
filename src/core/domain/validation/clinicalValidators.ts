@@ -40,7 +40,25 @@ export interface FieldValidationResult extends ValidationResult {
   };
 }
 
-// ============= FUNCIÓN AUXILIAR =============
+/**
+ * 🧠 NEURAL AGE CATEGORY HELPER V13.0
+ * Helper para determinar categoría de edad reproductiva
+ */
+function getAgeCategory(age: number): string {
+  if (age < 35) return 'Óptima';
+  if (age < 40) return 'Avanzada';
+  return 'Muy avanzada';
+}
+
+/**
+ * 🧠 NEURAL TIME RANGE HELPER V13.0
+ * Helper para determinar rango normal de tiempo según edad
+ */
+function getTimeNormalRange(age: number): string {
+  if (age < 35) return '<12 meses';
+  if (age < 40) return '<6 meses';
+  return '<3 meses';
+}
 
 /**
  * Combina múltiples mensajes en un resumen
@@ -115,7 +133,7 @@ export class ClinicalValidators {
       recommendations: combined.criticalAlerts.map(alert => alert.recommendation || '').filter(Boolean),
       clinicalScore,
       interpretedValue: {
-        category: age < 35 ? 'Óptima' : (age < 40 ? 'Avanzada' : 'Muy avanzada'),
+        category: getAgeCategory(age),
         normalRange: '<35 años para fertilidad óptima'
       }
     };
@@ -203,7 +221,6 @@ export class ClinicalValidators {
    */
   static validateAMH(amh: number, age: number): FieldValidationResult {
     const messages: (ValidationMessage | null)[] = [];
-    let clinicalScore = 100;
     
     // Validación básica
     if (amh < 0 || amh > 20) {
@@ -224,6 +241,7 @@ export class ClinicalValidators {
     let category: string;
     
     // Determinar percentil y categoría
+    let clinicalScore: number;
     if (amh <= percentiles.p5) {
       percentile = 5;
       category = 'Muy bajo';
@@ -418,7 +436,6 @@ export class ClinicalValidators {
    */
   static validateTimeToConception(months: number, age: number): FieldValidationResult {
     const messages: (ValidationMessage | null)[] = [];
-    let clinicalScore = 100;
     
     if (months < 0 || months > 120) {
       return {
@@ -439,6 +456,7 @@ export class ClinicalValidators {
     
     const evaluation = shouldEvaluateInfertility(age, months);
     
+    let clinicalScore: number;
     if (evaluation.shouldEvaluate) {
       if (evaluation.urgency === 'immediate') {
         messages.push({
@@ -471,9 +489,80 @@ export class ClinicalValidators {
       clinicalScore,
       interpretedValue: {
         category: evaluation.shouldEvaluate ? 'Requiere evaluación' : 'Continuar intentos',
-        normalRange: age < 35 ? '<12 meses' : (age < 40 ? '<6 meses' : '<3 meses')
+        normalRange: getTimeNormalRange(age)
       }
     };
+  }
+
+  /**
+   * 🧠 NEURAL FIELD VALIDATION HELPERS V13.0
+   * Funciones modulares para reducir complejidad cognitiva
+   */
+  private static processAgeValidation(data: { age?: number }, fieldValidations: FieldValidationResult[]): number {
+    if (!data.age) return 0;
+    const ageValidation = this.validateAge(data.age);
+    fieldValidations.push(ageValidation);
+    return ageValidation.clinicalScore * 0.25; // 25% peso
+  }
+
+  private static processBMIValidation(data: { height?: number; weight?: number }, fieldValidations: FieldValidationResult[]): number {
+    if (!data.height || !data.weight) return 0;
+    const bmiValidation = this.validateBMI(data.height, data.weight);
+    fieldValidations.push(bmiValidation);
+    return bmiValidation.clinicalScore * 0.15; // 15% peso
+  }
+
+  private static processTimeValidation(data: { timeToConception?: number; age?: number }, fieldValidations: FieldValidationResult[]): number {
+    if (data.timeToConception === undefined || !data.age) return 0;
+    const timeValidation = this.validateTimeToConception(data.timeToConception, data.age);
+    fieldValidations.push(timeValidation);
+    return timeValidation.clinicalScore * 0.20; // 20% peso
+  }
+
+  private static processAMHValidation(data: { amh?: number; age?: number }, fieldValidations: FieldValidationResult[]): number {
+    if (!data.amh || !data.age) return 0;
+    const amhValidation = this.validateAMH(data.amh, data.age);
+    fieldValidations.push(amhValidation);
+    return amhValidation.clinicalScore * 0.25; // 25% peso
+  }
+
+  private static processHOMAValidation(data: { glucose?: number; insulin?: number }, fieldValidations: FieldValidationResult[]): number {
+    if (!data.glucose || !data.insulin) return 0;
+    const homaValidation = this.validateHOMAIR(data.glucose, data.insulin);
+    fieldValidations.push(homaValidation);
+    return homaValidation.clinicalScore * 0.10; // 10% peso
+  }
+
+  private static processSemenValidation(data: { spermConcentration?: number; spermProgressiveMotility?: number; spermNormalMorphology?: number }, fieldValidations: FieldValidationResult[]): number {
+    if (!data.spermConcentration && !data.spermProgressiveMotility && !data.spermNormalMorphology) return 0;
+    const semenValidation = this.validateSemenAnalysis({
+      concentration: data.spermConcentration,
+      progressiveMotility: data.spermProgressiveMotility,
+      normalMorphology: data.spermNormalMorphology
+    });
+    fieldValidations.push(semenValidation);
+    return semenValidation.clinicalScore * 0.05; // 5% peso
+  }
+
+  private static consolidateValidationResults(fieldValidations: FieldValidationResult[]): {
+    allErrors: ValidationMessage[];
+    allWarnings: ValidationMessage[];
+    allCriticalAlerts: ValidationMessage[];
+    allMessages: ValidationMessage[];
+  } {
+    const allMessages: ValidationMessage[] = [];
+    const allErrors: ValidationMessage[] = [];
+    const allWarnings: ValidationMessage[] = [];
+    const allCriticalAlerts: ValidationMessage[] = [];
+    
+    fieldValidations.forEach(fv => {
+      allMessages.push(...fv.errors, ...fv.warnings, ...fv.criticalAlerts);
+      allErrors.push(...fv.errors);
+      allWarnings.push(...fv.warnings);
+      allCriticalAlerts.push(...fv.criticalAlerts);
+    });
+
+    return { allErrors, allWarnings, allCriticalAlerts, allMessages };
   }
 
   /**
@@ -503,86 +592,36 @@ export class ClinicalValidators {
     let validFieldsCount = 0;
     let totalFieldsCount = 0;
     
-    // Validar campos requeridos
-    if (data.age) {
-      const ageValidation = this.validateAge(data.age);
-      fieldValidations.push(ageValidation);
-      overallScore += ageValidation.clinicalScore * 0.25; // 25% peso
-      validFieldsCount += ageValidation.isValid ? 1 : 0;
-      totalFieldsCount++;
-    }
+    // 🧠 NEURAL MODULAR VALIDATION V13.0: Procesamiento modular para reducir complejidad
+    const scoreContributions = [
+      this.processAgeValidation(data, fieldValidations),
+      this.processBMIValidation(data, fieldValidations),
+      this.processTimeValidation(data, fieldValidations),
+      this.processAMHValidation(data, fieldValidations),
+      this.processHOMAValidation(data, fieldValidations),
+      this.processSemenValidation(data, fieldValidations)
+    ];
+
+    overallScore = scoreContributions.reduce((sum, score) => sum + score, 0);
+    totalFieldsCount = fieldValidations.length;
+    validFieldsCount = fieldValidations.filter(fv => fv.isValid).length;
     
-    if (data.height && data.weight) {
-      const bmiValidation = this.validateBMI(data.height, data.weight);
-      fieldValidations.push(bmiValidation);
-      overallScore += bmiValidation.clinicalScore * 0.15; // 15% peso
-      validFieldsCount += bmiValidation.isValid ? 1 : 0;
-      totalFieldsCount++;
-    }
-    
-    if (data.timeToConception !== undefined && data.age) {
-      const timeValidation = this.validateTimeToConception(data.timeToConception, data.age);
-      fieldValidations.push(timeValidation);
-      overallScore += timeValidation.clinicalScore * 0.20; // 20% peso
-      validFieldsCount += timeValidation.isValid ? 1 : 0;
-      totalFieldsCount++;
-    }
-    
-    // Validar campos opcionales pero importantes
-    if (data.amh && data.age) {
-      const amhValidation = this.validateAMH(data.amh, data.age);
-      fieldValidations.push(amhValidation);
-      overallScore += amhValidation.clinicalScore * 0.25; // 25% peso
-      validFieldsCount += amhValidation.isValid ? 1 : 0;
-      totalFieldsCount++;
-    }
-    
-    if (data.glucose && data.insulin) {
-      const homaValidation = this.validateHOMAIR(data.glucose, data.insulin);
-      fieldValidations.push(homaValidation);
-      overallScore += homaValidation.clinicalScore * 0.10; // 10% peso
-      validFieldsCount += homaValidation.isValid ? 1 : 0;
-      totalFieldsCount++;
-    }
-    
-    if (data.spermConcentration || data.spermProgressiveMotility || data.spermNormalMorphology) {
-      const semenValidation = this.validateSemenAnalysis({
-        concentration: data.spermConcentration,
-        progressiveMotility: data.spermProgressiveMotility,
-        normalMorphology: data.spermNormalMorphology
-      });
-      fieldValidations.push(semenValidation);
-      overallScore += semenValidation.clinicalScore * 0.05; // 5% peso
-      validFieldsCount += semenValidation.isValid ? 1 : 0;
-      totalFieldsCount++;
-    }
-    
-    // Consolidar resultados
-    const allMessages: ValidationMessage[] = [];
-    const allErrors: ValidationMessage[] = [];
-    const allWarnings: ValidationMessage[] = [];
-    const allCriticalAlerts: ValidationMessage[] = [];
-    
-    fieldValidations.forEach(fv => {
-      allMessages.push(...fv.errors, ...fv.warnings, ...fv.criticalAlerts);
-      allErrors.push(...fv.errors);
-      allWarnings.push(...fv.warnings);
-      allCriticalAlerts.push(...fv.criticalAlerts);
-    });
+    // Consolidar resultados usando helper neural
+    const consolidated = this.consolidateValidationResults(fieldValidations);
     
     const completionScore = totalFieldsCount > 0 ? Math.round((validFieldsCount / totalFieldsCount) * 100) : 0;
     const canProceedWithCalculation = 
       validFieldsCount >= 3 && // Mínimo 3 campos válidos
-      allErrors.length === 0 && // Sin errores críticos
+      consolidated.allErrors.length === 0 && // Sin errores críticos
       completionScore >= 60; // Al menos 60% completitud
     
     return {
       overallValidation: {
-        isValid: allErrors.length === 0,
-        errors: allErrors,
-        warnings: allWarnings,
-        criticalAlerts: allCriticalAlerts,
-        recommendations: [...new Set(allMessages.map(msg => msg.recommendation || '').filter(Boolean))],
+        isValid: consolidated.allErrors.length === 0,
+        errors: consolidated.allErrors,
+        warnings: consolidated.allWarnings,
+        criticalAlerts: consolidated.allCriticalAlerts,
+        recommendations: [...new Set(consolidated.allMessages.map(msg => msg.recommendation || '').filter(Boolean))],
         clinicalScore: Math.round(overallScore)
       },
       fieldValidations,

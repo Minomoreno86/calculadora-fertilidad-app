@@ -1,5 +1,14 @@
 /**
- * 🚀 FASE 2: MOTOR DE VALIDACIÓN PARALELA REAL
+ * 🚀 FASE 2: MOTOR DE VALIDACIÓN PARAinterface ValidationTask {
+  id: string;
+  type: 'range' | 'clinical' | 'cross-field';
+  priority: 'low' | 'medium' | 'high';
+  timestamp: number;
+  data: {
+    value: unknown;
+    field: string;
+  };
+}
  * 
  * Sistema completo de paralelización que integra con calculationEngine.ts
  * para lograr 60% de mejora en performance (330ms → 135ms).
@@ -37,13 +46,29 @@
  * • Cache hits predictivos: 85%+ efficiency
  */
 
-import type { 
-  ValidationTask, 
-  ValidationResult
-} from './validationWorker';
-
 // 🔄 INTEGRACIÓN CON CALCULATION ENGINE (FASE 3A)
 import type { UserInput } from '../domain/models';
+
+// Define ValidationTask and ValidationResult locally to avoid module dependency issues
+interface ValidationTask {
+  id: string;
+  type: 'range' | 'clinical' | 'cross-field';
+  priority: 'low' | 'medium' | 'high';
+  timestamp: number;
+  data: {
+    value: unknown;
+    field: string;
+  };
+}
+
+interface ValidationResult {
+  taskId: string;
+  success: boolean;
+  isValid: boolean;
+  processingTime: number;
+  errors?: string[];
+  warnings?: string[];
+}
 
 // ===================================================================
 // 🚀 FASE 2: TIPOS AVANZADOS PARA PARALELIZACIÓN REAL
@@ -130,11 +155,11 @@ export class ParallelValidationEngine {
   private readonly activeValidations = new Map<string, WorkerJob>();
   private readonly results = new Map<string, ValidationResult>();
   private readonly cache = new Map<string, ParallelCacheEntry>();
-  private metrics: ValidationMetrics;
+  private readonly metrics: ValidationMetrics;
   private readonly config: ParallelValidationConfig;
 
   // 📊 MÉTRICAS DE PERFORMANCE EN TIEMPO REAL
-  private performanceMonitor = {
+  private readonly performanceMonitor = {
     startTime: 0,
     categoryTimes: new Map<ValidationCategory, number>(),
     parallelizationRatio: 0,
@@ -266,137 +291,158 @@ export class ParallelValidationEngine {
     const categorizedTasks = new Map<ValidationCategory, ValidationTask[]>();
     
     categories.forEach(category => {
-      const tasks: ValidationTask[] = [];
-      
-      switch (category) {
-        case 'hormonal':
-          // Validaciones hormonales: AMH, TSH, Prolactin
-          if (input.amh !== undefined) {
-            tasks.push({
-              id: `amh-${Date.now()}`,
-              type: 'range',
-              priority: 'high' as const,
-              timestamp: Date.now(),
-              data: { value: input.amh, field: 'amh' }
-            });
-          }
-          if (input.tsh !== undefined) {
-            tasks.push({
-              id: `tsh-${Date.now()}`,
-              type: 'range',
-              priority: 'high' as const,
-              timestamp: Date.now(),
-              data: { value: input.tsh, field: 'tsh' }
-            });
-          }
-          if (input.prolactin !== undefined) {
-            tasks.push({
-              id: `prolactin-${Date.now()}`,
-              type: 'clinical',
-              priority: 'medium' as const,
-              timestamp: Date.now(),
-              data: { value: input.prolactin, field: 'prolactin' }
-            });
-          }
-          break;
-
-        case 'metabolic':
-          // Validaciones metabólicas: BMI, HOMA-IR
-          if (input.bmi !== null && input.bmi !== undefined) {
-            tasks.push({
-              id: `bmi-${Date.now()}`,
-              type: 'range',
-              priority: 'high' as const,
-              timestamp: Date.now(),
-              data: { value: input.bmi, field: 'bmi' }
-            });
-          }
-          if (input.homaIr !== undefined) {
-            tasks.push({
-              id: `homa-${Date.now()}`,
-              type: 'range',
-              priority: 'medium' as const,
-              timestamp: Date.now(),
-              data: { value: input.homaIr, field: 'homaIr' }
-            });
-          }
-          break;
-
-        case 'anatomical':
-          // Validaciones anatómicas: HSG, Endometriosis, Miomas
-          if (input.hsgResult) {
-            tasks.push({
-              id: `hsg-${Date.now()}`,
-              type: 'clinical',
-              priority: 'high' as const,
-              timestamp: Date.now(),
-              data: { value: input.hsgResult, field: 'hsgResult' }
-            });
-          }
-          if (input.endometriosisGrade !== undefined) {
-            tasks.push({
-              id: `endometriosis-${Date.now()}`,
-              type: 'clinical',
-              priority: 'high' as const,
-              timestamp: Date.now(),
-              data: { value: input.endometriosisGrade, field: 'endometriosis' }
-            });
-          }
-          break;
-
-        case 'masculine':
-          // Validaciones masculinas: Espermatograma
-          if (input.spermConcentration !== undefined) {
-            tasks.push({
-              id: `sperm-${Date.now()}`,
-              type: 'range',
-              priority: 'medium' as const,
-              timestamp: Date.now(),
-              data: { value: input.spermConcentration, field: 'spermConcentration' }
-            });
-          }
-          break;
-
-        case 'temporal':
-          // Validaciones temporales: Edad, Duración infertilidad
-          tasks.push({
-            id: `age-${Date.now()}`,
-            type: 'range',
-            priority: 'high' as const,
-            timestamp: Date.now(),
-            data: { value: input.age, field: 'age' }
-          });
-          if (input.infertilityDuration !== undefined) {
-            tasks.push({
-              id: `duration-${Date.now()}`,
-              type: 'clinical',
-              priority: 'medium' as const,
-              timestamp: Date.now(),
-              data: { value: input.infertilityDuration, field: 'infertilityDuration' }
-            });
-          }
-          break;
-
-        case 'surgical':
-          // Validaciones quirúrgicas
-          if (input.pelvicSurgeriesNumber !== undefined) {
-            tasks.push({
-              id: `surgeries-${Date.now()}`,
-              type: 'clinical',
-              priority: 'low' as const,
-              timestamp: Date.now(),
-              data: { value: input.pelvicSurgeriesNumber, field: 'surgeries' }
-            });
-          }
-          break;
-      }
-      
+      const tasks = this.createCategoryTasks(input, category);
       if (tasks.length > 0) {
         categorizedTasks.set(category, tasks);
       }
     });
     
     return categorizedTasks;
+  }
+
+  /**
+   * 🔧 CREAR TAREAS PARA UNA CATEGORÍA ESPECÍFICA
+   */
+  private createCategoryTasks(input: UserInput, category: ValidationCategory): ValidationTask[] {
+    const tasks: ValidationTask[] = [];
+    
+    switch (category) {
+      case 'hormonal':
+        this.addHormonalTasks(input, tasks);
+        break;
+      case 'metabolic':
+        this.addMetabolicTasks(input, tasks);
+        break;
+      case 'anatomical':
+        this.addAnatomicalTasks(input, tasks);
+        break;
+      case 'masculine':
+        this.addMasculineTasks(input, tasks);
+        break;
+      case 'temporal':
+        this.addTemporalTasks(input, tasks);
+        break;
+      case 'surgical':
+        this.addSurgicalTasks(input, tasks);
+        break;
+    }
+    
+    return tasks;
+  }
+
+  private addHormonalTasks(input: UserInput, tasks: ValidationTask[]): void {
+    if (input.amh !== undefined) {
+      tasks.push({
+        id: `amh-${Date.now()}`,
+        type: 'range',
+        priority: 'high' as const,
+        timestamp: Date.now(),
+        data: { value: input.amh, field: 'amh' }
+      });
+    }
+    if (input.tsh !== undefined) {
+      tasks.push({
+        id: `tsh-${Date.now()}`,
+        type: 'range',
+        priority: 'high' as const,
+        timestamp: Date.now(),
+        data: { value: input.tsh, field: 'tsh' }
+      });
+    }
+    if (input.prolactin !== undefined) {
+      tasks.push({
+        id: `prolactin-${Date.now()}`,
+        type: 'clinical',
+        priority: 'medium' as const,
+        timestamp: Date.now(),
+        data: { value: input.prolactin, field: 'prolactin' }
+      });
+    }
+  }
+
+  private addMetabolicTasks(input: UserInput, tasks: ValidationTask[]): void {
+    if (input.bmi !== null && input.bmi !== undefined) {
+      tasks.push({
+        id: `bmi-${Date.now()}`,
+        type: 'range',
+        priority: 'high' as const,
+        timestamp: Date.now(),
+        data: { value: input.bmi, field: 'bmi' }
+      });
+    }
+    if (input.homaIr !== undefined) {
+      tasks.push({
+        id: `homa-${Date.now()}`,
+        type: 'range',
+        priority: 'medium' as const,
+        timestamp: Date.now(),
+        data: { value: input.homaIr, field: 'homaIr' }
+      });
+    }
+  }
+
+  private addAnatomicalTasks(input: UserInput, tasks: ValidationTask[]): void {
+    if (input.hsgResult) {
+      tasks.push({
+        id: `hsg-${Date.now()}`,
+        type: 'clinical',
+        priority: 'high' as const,
+        timestamp: Date.now(),
+        data: { value: input.hsgResult, field: 'hsgResult' }
+      });
+    }
+    if (input.endometriosisGrade !== undefined) {
+      tasks.push({
+        id: `endometriosis-${Date.now()}`,
+        type: 'clinical',
+        priority: 'high' as const,
+        timestamp: Date.now(),
+        data: { value: input.endometriosisGrade, field: 'endometriosis' }
+      });
+    }
+  }
+
+  private addMasculineTasks(input: UserInput, tasks: ValidationTask[]): void {
+    if (input.spermConcentration !== undefined) {
+      tasks.push({
+        id: `sperm-${Date.now()}`,
+        type: 'range',
+        priority: 'medium' as const,
+        timestamp: Date.now(),
+        data: { value: input.spermConcentration, field: 'spermConcentration' }
+      });
+    }
+  }
+
+  private addTemporalTasks(input: UserInput, tasks: ValidationTask[]): void {
+    tasks.push({
+      id: `age-${Date.now()}`,
+      type: 'range',
+      priority: 'high' as const,
+      timestamp: Date.now(),
+      data: { value: input.age, field: 'age' }
+    });
+    if (input.infertilityDuration !== undefined) {
+      tasks.push({
+        id: `duration-${Date.now()}`,
+        type: 'clinical',
+        priority: 'medium' as const,
+        timestamp: Date.now(),
+        data: { value: input.infertilityDuration, field: 'infertilityDuration' }
+      });
+    }
+  }
+
+  private addSurgicalTasks(input: UserInput, tasks: ValidationTask[]): void {
+    if (input.pelvicSurgeriesNumber !== undefined) {
+      tasks.push({
+        id: `surgeries-${Date.now()}`,
+        type: 'clinical',
+        priority: 'low' as const,
+        timestamp: Date.now(),
+        data: { value: input.pelvicSurgeriesNumber, field: 'surgeries' }
+      });
+    }
   }
 
   /**
@@ -467,7 +513,10 @@ export class ParallelValidationEngine {
         if (result.status === 'fulfilled') {
           successfulResults.push(result.value);
         } else {
-          console.error(`🚨 Error en tarea ${tasks[index].id}:`, result.reason);
+          const task = tasks[index];
+          if (task) {
+            console.error(`🚨 Error en tarea ${task.id}:`, result.reason);
+          }
         }
       });
       
@@ -560,8 +609,9 @@ export class ParallelValidationEngine {
    * 🔑 GENERAR CLAVE DE CACHE PARA INPUT
    */
   private generateCacheKey(_input: UserInput, categories: ValidationCategory[]): string {
+    const sortedCategories = [...categories].sort((a, b) => a.localeCompare(b));
     const inputHash = JSON.stringify({
-      categories: categories.sort()
+      categories: sortedCategories
     });
     
     return `parallel_${btoa(inputHash).substring(0, 16)}`;
@@ -621,16 +671,21 @@ export class ParallelValidationEngine {
     const categoryTimes = Array.from(this.performanceMonitor.categoryTimes.values());
     const sequentialTime = categoryTimes.reduce((sum, time) => sum + time, 0);
     
-    this.performanceMonitor.parallelizationRatio = 
-      sequentialTime > 0 ? totalTime / sequentialTime : 1;
+    // Actualizar parallelizationRatio en el monitor
+    const newRatio = sequentialTime > 0 ? totalTime / sequentialTime : 1;
+    Object.assign(this.performanceMonitor, { parallelizationRatio: newRatio });
     
-    // Actualizar métricas globales
-    this.metrics.totalTasks += results.size;
-    this.metrics.completedTasks += results.size;
-    this.metrics.averageTime = 
-      (this.metrics.averageTime * (this.metrics.totalTasks - results.size) + totalTime) / 
-      this.metrics.totalTasks;
-    this.metrics.concurrencyLevel = this.config.maxConcurrency;
+    // Crear nuevas métricas para mutabilidad del objeto readonly
+    const newMetrics = { ...this.metrics };
+    newMetrics.totalTasks += results.size;
+    newMetrics.completedTasks += results.size;
+    newMetrics.averageTime = 
+      (newMetrics.averageTime * (newMetrics.totalTasks - results.size) + totalTime) / 
+      newMetrics.totalTasks;
+    newMetrics.concurrencyLevel = this.config.maxConcurrency;
+    
+    // Actualizar métricas
+    Object.assign(this.metrics, newMetrics);
   }
 
   /**

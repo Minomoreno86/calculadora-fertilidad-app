@@ -52,14 +52,14 @@ class SmartLogger {
   };
 
   private logBuffer: LogEntry[] = [];
-  private metrics = {
+  private readonly metrics = {
     totalLogs: 0,
     logsByLevel: new Map<LogLevel, number>(),
     avgLogTime: 0,
     lastFlush: Date.now()
   };
 
-  private timers = new Map<string, number>();
+  private readonly timers = new Map<string, number>();
 
   configure(newConfig: Partial<LoggerConfig>): void {
     this.config = { ...this.config, ...newConfig };
@@ -217,7 +217,7 @@ class SmartLogger {
 
   private outputLog(entry: LogEntry): void {
     const levelName = LogLevel[entry.level];
-    const timestamp = new Date(entry.timestamp).toISOString().split('T')[1].split('.')[0];
+    const timestamp = new Date(entry.timestamp).toISOString().split('T')[1]?.split('.')[0] || '00:00:00';
     const prefix = `[${timestamp}] [${levelName}] [${entry.category}]`;
     
     if (entry.data !== undefined) {
@@ -244,7 +244,7 @@ class SmartLogger {
   }
 
   exportLogs(): LogEntry[] {
-    this.flushLogs(); // Asegurar que todo esté flushed
+    this.flushLogs(); 
     return [...this.logBuffer];
   }
 

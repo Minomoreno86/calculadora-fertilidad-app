@@ -186,7 +186,7 @@ export const useAdvancedConfig = () => {
   const updateConfig = useCallback(<T extends keyof AdvancedConfigState>(
     section: T,
     key: keyof AdvancedConfigState[T],
-    value: any
+    value: AdvancedConfigState[T][keyof AdvancedConfigState[T]]
   ) => {
     setConfig(prev => {
       const updated = {
@@ -290,15 +290,16 @@ export const useAdvancedConfig = () => {
     
     if (!section || !key) return false;
     
-    const sectionConfig = config[section] as any;
+    const sectionConfig = config[section] as Record<string, unknown>;
     return sectionConfig?.[key] === true;
   }, [config]);
 
   // 📊 OBTENER ESTADÍSTICAS DE CONFIGURACIÓN
   const getConfigStats = useCallback(() => {
     const enabledFeatures = Object.entries(config).reduce((acc, [section, sectionConfig]) => {
-      const enabled = Object.values(sectionConfig as any).filter(value => value === true).length;
-      const total = Object.keys(sectionConfig as any).length;
+      const configValues = Object.values(sectionConfig as Record<string, unknown>);
+      const enabled = configValues.filter(value => value === true).length;
+      const total = Object.keys(sectionConfig as Record<string, unknown>).length;
       acc[section] = { enabled, total, percentage: Math.round((enabled / total) * 100) };
       return acc;
     }, {} as Record<string, { enabled: number; total: number; percentage: number }>);
@@ -363,12 +364,14 @@ function mergeConfigs(
 ): AdvancedConfigState {
   const merged = { ...defaultConfig };
   
-  for (const [section, sectionConfig] of Object.entries(userConfig)) {
-    if (merged[section as keyof AdvancedConfigState] && typeof sectionConfig === 'object') {
-      merged[section as keyof AdvancedConfigState] = {
-        ...merged[section as keyof AdvancedConfigState],
+  // Type-safe merging for each section
+  for (const [sectionKey, sectionConfig] of Object.entries(userConfig)) {
+    const section = sectionKey as keyof AdvancedConfigState;
+    if (merged[section] && typeof sectionConfig === 'object' && sectionConfig !== null) {
+      (merged[section] as Record<string, unknown>) = {
+        ...merged[section],
         ...sectionConfig,
-      } as any;
+      };
     }
   }
   
@@ -378,13 +381,13 @@ function mergeConfigs(
 /**
  * Validar estructura de configuración
  */
-function isValidConfig(config: any): config is AdvancedConfigState {
+function isValidConfig(config: unknown): config is AdvancedConfigState {
   if (!config || typeof config !== 'object') return false;
   
   const requiredSections = ['appearance', 'notifications', 'calculation', 'medical', 'privacy', 'ux'];
   
   return requiredSections.every(section => 
-    config[section] && typeof config[section] === 'object'
+    (config as Record<string, unknown>)[section] && typeof (config as Record<string, unknown>)[section] === 'object'
   );
 }
 

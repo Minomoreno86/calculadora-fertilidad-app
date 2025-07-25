@@ -939,7 +939,10 @@ class PremiumContentCache {
     
     const toRemove = Math.floor(entries.length * 0.3);
     for (let i = 0; i < toRemove; i++) {
-      this.cache.delete(entries[i][0]);
+      const entry = entries[i];
+      if (entry) {
+        this.cache.delete(entry[0]);
+      }
     }
   }
 
@@ -966,7 +969,7 @@ export const getPremiumContentOptimized = <T>(
   let content = premiumContentCache.get<T>(cacheKey);
   
   if (!content) {
-    content = source[key] || null;
+    content = source[key] ?? null;
     if (content) {
       premiumContentCache.set(cacheKey, content);
     }

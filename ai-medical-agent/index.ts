@@ -89,7 +89,7 @@ export async function quickMedicalAnalysis(
   successRates: SuccessRate[];
   recommendations: string[];
   confidence: number;
-  alerts: UnifiedAlert[];
+  alerts: UnifiedAlert;
   qualityMetrics: UnifiedQualityMetrics;
 }> {
   
@@ -108,7 +108,7 @@ export async function quickMedicalAnalysis(
     successRates: data.successRates,
     recommendations: data.primaryRecommendations,
     confidence: data.qualityMetrics.overallConfidence,
-    alerts: [...data.alerts.critical, ...data.alerts.warnings],
+    alerts: data.alerts,
     qualityMetrics: data.qualityMetrics
   };
 }

@@ -40,7 +40,7 @@ export interface UnifiedMedicalAIConfig extends Partial<AgentConfig> {
 export class UnifiedMedicalAI {
   private readonly orchestrator: MedicalOrchestrator;
   private readonly config: UnifiedMedicalAIConfig;
-  private isReady: boolean = false;
+  private readonly isReady: boolean = true; // Sistema siempre listo - inicialización síncrona
   
   constructor(config: UnifiedMedicalAIConfig = {}) {
     this.config = {
@@ -56,8 +56,6 @@ export class UnifiedMedicalAI {
     };
     
     this.orchestrator = new MedicalOrchestrator(this.config);
-    // Marcamos como listo inmediatamente - no hay operaciones asíncronas en constructor
-    this.isReady = true;
     
     // Log de inicialización
     this.logInitialization();

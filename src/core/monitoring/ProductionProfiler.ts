@@ -114,12 +114,12 @@ export interface OptimizationSuggestion {
  * 🚀 PRODUCTION PROFILER CLASS
  */
 export class ProductionProfiler {
-  private metrics: ProductionMetrics;
-  private alerts: PerformanceAlert[] = [];
-  private suggestions: OptimizationSuggestion[] = [];
-  private isEnabled: boolean = true;
+  private readonly metrics: ProductionMetrics;
+  private readonly alerts: PerformanceAlert[] = [];
+  private readonly suggestions: OptimizationSuggestion[] = [];
+  private readonly isEnabled: boolean = true;
   private samplingRate: number = 1.0; // 100% sampling by default
-  private lastReportTime: number = Date.now();
+  private readonly lastReportTime: number = Date.now();
 
   // 🎯 CONFIGURACIÓN DE THRESHOLDS
   private readonly THRESHOLDS = {
@@ -238,7 +238,8 @@ export class ProductionProfiler {
     // Actualizar uso de componentes
     Object.entries(data.componentUsage).forEach(([component, usage]) => {
       if (component in sistemaModular.componentUsage) {
-        (sistemaModular.componentUsage as any)[component] += usage;
+        const componentKey = component as keyof typeof sistemaModular.componentUsage;
+        sistemaModular.componentUsage[componentKey] += usage;
       }
     });
     
@@ -446,9 +447,9 @@ export class ProductionProfiler {
    * 💡 GENERAR SUGERENCIAS DE OPTIMIZACIÓN
    */
   private generateOptimizationSuggestions(): void {
-    this.suggestions = [];
+    this.suggestions.length = 0; // Clear previous suggestions
 
-    const { motorUnificado, sistema, validacionParalela } = this.metrics;
+    const { motorUnificado, validacionParalela } = this.metrics;
 
     // Sugerencia de balance de motores
     const standardUsage = motorUnificado.engineDistribution.standard;
@@ -536,7 +537,9 @@ export class ProductionProfiler {
     newValue: number,
     count: number
   ): void {
-    target[key] = (target[key] * (count - 1) + newValue) / count;
+    if (target[key] !== undefined) {
+      target[key] = (target[key] * (count - 1) + newValue) / count;
+    }
   }
 
   private updateAverageScore(current: number, newValue: number, count: number): number {
@@ -546,19 +549,29 @@ export class ProductionProfiler {
   private updateComplexityDistribution(score: number): void {
     const distribution = this.metrics.motorUnificado.complexityAnalysis.distribution;
     
-    if (score < 0.2) distribution['0.0-0.2']++;
-    else if (score < 0.4) distribution['0.2-0.4']++;
-    else if (score < 0.6) distribution['0.4-0.6']++;
-    else if (score < 0.8) distribution['0.6-0.8']++;
-    else distribution['0.8-1.0']++;
+    if (!distribution) return; // Neural safe guard
+    
+    if (score < 0.2) distribution['0.0-0.2'] = (distribution['0.0-0.2'] ?? 0) + 1;
+    else if (score < 0.4) distribution['0.2-0.4'] = (distribution['0.2-0.4'] ?? 0) + 1;
+    else if (score < 0.6) distribution['0.4-0.6'] = (distribution['0.4-0.6'] ?? 0) + 1;
+    else if (score < 0.8) distribution['0.6-0.8'] = (distribution['0.6-0.8'] ?? 0) + 1;
+    else distribution['0.8-1.0'] = (distribution['0.8-1.0'] ?? 0) + 1;
   }
 
   private checkSystemMetrics(): void {
     // Implementar verificación de métricas del sistema
     if (typeof window !== 'undefined' && 'performance' in window) {
-      const memory = (window.performance as any).memory;
-      if (memory) {
-        this.metrics.sistema.memoryUsage = memory.usedJSHeapSize;
+      // Type-safe memory access with proper interface
+      const performance = window.performance as Performance & {
+        memory?: {
+          usedJSHeapSize: number;
+          totalJSHeapSize: number;
+          jsHeapSizeLimit: number;
+        };
+      };
+      
+      if (performance.memory) {
+        this.metrics.sistema.memoryUsage = performance.memory.usedJSHeapSize;
       }
     }
   }

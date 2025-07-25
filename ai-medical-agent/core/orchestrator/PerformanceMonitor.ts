@@ -132,7 +132,7 @@ export class PerformanceMonitor {
   async measureOperation<T>(
     operation: () => Promise<T>,
     operationType: string,
-    metadata?: any
+    metadata?: MetadataType
   ): Promise<MeasuredResult<T>> {
     
     const startTime = performance.now();
@@ -171,7 +171,7 @@ export class PerformanceMonitor {
           duration,
           success: true,
           memoryUsage: memoryDelta,
-          cacheHit: metadata?.cacheHit
+          cacheHit: typeof metadata?.cacheHit === 'boolean' ? metadata.cacheHit : undefined
         }
       };
       
@@ -210,7 +210,7 @@ export class PerformanceMonitor {
   measureSync<T>(
     operation: () => T,
     operationType: string,
-    metadata?: any
+    metadata?: MetadataType
   ): MeasuredResult<T> {
     
     const startTime = performance.now();
@@ -365,7 +365,7 @@ export class PerformanceMonitor {
     message: string;
     threshold: number;
     currentValue: number;
-    metadata?: any;
+    metadata?: MetadataType;
   }): void {
     
     const alert: PerformanceAlert = {
@@ -409,7 +409,12 @@ export class PerformanceMonitor {
    * 📈 OBTENER ESTADÍSTICAS
    */
   getStats(): {
-    global: typeof this.stats & {
+    global: {
+      totalOperations: number;
+      totalErrors: number;
+      totalSuccesses: number;
+      totalDuration: number;
+      totalMemoryUsed: number;
       averageResponseTime: number;
       successRate: number;
       errorRate: number;
@@ -435,7 +440,11 @@ export class PerformanceMonitor {
     
     return {
       global: {
-        ...this.stats,
+        totalOperations: this.stats.totalOperations,
+        totalErrors: this.stats.totalErrors,
+        totalSuccesses: this.stats.totalSuccesses,
+        totalDuration: this.stats.totalDuration,
+        totalMemoryUsed: this.stats.totalMemoryUsed,
         averageResponseTime,
         successRate,
         errorRate,
@@ -509,7 +518,7 @@ export class PerformanceMonitor {
       });
     });
     
-    return results.sort((a, b) => b.totalOperations - a.totalOperations);
+    return [...results].sort((a, b) => b.totalOperations - a.totalOperations);
   }
   
   /**
@@ -680,20 +689,20 @@ export class PerformanceMonitor {
     const operationStats = this.getStatsByOperation();
     
     // Operaciones más lentas
-    const slowestOperations = operationStats
-      .sort((a, b) => b.averageDuration - a.averageDuration)
+    const sortedByDuration = [...operationStats].sort((a, b) => b.averageDuration - a.averageDuration);
+    const slowestOperations = sortedByDuration
       .slice(0, 5)
       .map(stat => ({ operation: stat.operationType, duration: stat.averageDuration }));
     
     // Operaciones más rápidas
-    const fastestOperations = operationStats
-      .sort((a, b) => a.averageDuration - b.averageDuration)
+    const sortedBySpeed = [...operationStats].sort((a, b) => a.averageDuration - b.averageDuration);
+    const fastestOperations = sortedBySpeed
       .slice(0, 5)
       .map(stat => ({ operation: stat.operationType, duration: stat.averageDuration }));
     
     // Operaciones que consumen más memoria
-    const memoryIntensiveOperations = operationStats
-      .sort((a, b) => b.averageMemoryUsed - a.averageMemoryUsed)
+    const sortedByMemory = [...operationStats].sort((a, b) => b.averageMemoryUsed - a.averageMemoryUsed);
+    const memoryIntensiveOperations = sortedByMemory
       .slice(0, 5)
       .map(stat => ({ operation: stat.operationType, memory: stat.averageMemoryUsed }));
     
@@ -743,7 +752,17 @@ export class PerformanceMonitor {
   }
   
   private generateRecommendations(
-    globalStats: any,
+    globalStats: {
+      totalOperations: number;
+      totalErrors: number;
+      totalSuccesses: number;
+      totalDuration: number;
+      totalMemoryUsed: number;
+      averageResponseTime: number;
+      successRate: number;
+      errorRate: number;
+      uptime: number;
+    },
     operationStats: AggregatedStats[],
     alerts: PerformanceAlert[]
   ): string[] {

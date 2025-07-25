@@ -21,9 +21,71 @@ export interface StreamingResult {
 export interface IntermediateResult {
   stage: AnalysisStage;
   timestamp: number;
-  result: any;
+  result: StageResult;
   confidence: number;
   processingTime: number;
+}
+
+export type StageResult = 
+  | InitializationResult 
+  | ValidationResult 
+  | BaseCalculationResult 
+  | MedicalAnalysisResult 
+  | RiskAssessmentResult 
+  | TreatmentMatchingResult 
+  | OptimizationResult 
+  | FinalizationResult;
+
+export interface InitializationResult {
+  taskId: string;
+  inputHash: string;
+  startTime: number;
+  settings: AdaptiveSettings;
+}
+
+export interface ValidationResult {
+  age: boolean;
+  bmi: boolean;
+  completeness: number;
+  warnings: string[];
+}
+
+export interface BaseCalculationResult {
+  baseScore: number;
+  ageContribution: number;
+  bmiContribution: number;
+}
+
+export interface MedicalAnalysisResult {
+  individualAdjustments: {
+    pcos: number;
+    endometriosis: number;
+    amh: number;
+    hormonal: number;
+  };
+  totalAdjustment: number;
+  medicalComplexity: number;
+}
+
+export interface RiskAssessmentResult {
+  risks: RiskFactor[];
+}
+
+export interface TreatmentMatchingResult {
+  treatments: TreatmentRecommendation[];
+}
+
+export interface OptimizationResult {
+  lifestyle: string[];
+  medical: string[];
+  timing: string[];
+}
+
+export interface FinalizationResult {
+  processingComplete: boolean;
+  totalProcessingTime: number;
+  finalCalculationTime: number;
+  qualityScore: number;
 }
 
 export interface CalculationResult {
@@ -77,13 +139,14 @@ export type AnalysisStage =
   | 'finalization';
 
 export class StreamingAnalysisWorker {
-  private activeStreams: Map<string, StreamingAnalysis>;
+  private readonly activeStreams: Map<string, StreamingAnalysis>;
   private readonly maxConcurrentStreams = 10;
-  private adaptiveSettings: AdaptiveSettings;
+  private readonly adaptiveSettings: AdaptiveSettings;
 
   constructor() {
     this.activeStreams = new Map();
-    this.adaptiveSettings = this.initializeAdaptiveSettings();
+    // Crear nueva instancia para mutable settings
+    this.adaptiveSettings = { ...this.initializeAdaptiveSettings() };
     this.startAdaptiveMonitoring();
   }
 
@@ -191,7 +254,7 @@ export class StreamingAnalysisWorker {
     if (input.spermConcentration !== undefined) complexity += 0.3;
     if (input.hasPcos) complexity += 0.4;
     if (input.endometriosisGrade > 0) complexity += 0.5;
-    if (input.infertilityDuration > 24) complexity += 0.3;
+    if (input.infertilityDuration && input.infertilityDuration > 24) complexity += 0.3;
 
     return complexity;
   }
@@ -250,7 +313,7 @@ class StreamingAnalysis {
   public readonly startTime: number;
   private currentStage: AnalysisStage;
   private progressPercentage: number;
-  private intermediateResults: IntermediateResult[];
+  private readonly intermediateResults: IntermediateResult[];
   private finalResult?: CalculationResult;
   private isComplete: boolean;
   private isRunning: boolean;
@@ -308,17 +371,20 @@ class StreamingAnalysis {
     ];
 
     for (let i = 0; i < stages.length && this.isRunning; i++) {
-      this.currentStage = stages[i];
+      const stage = stages[i];
+      if (!stage) continue; // Type guard
+      
+      this.currentStage = stage;
       this.stageStartTime = Date.now();
       this.progressPercentage = (i / stages.length) * 100;
 
-      const result = await this.processStage(stages[i]);
+      const result = await this.processStage(stage);
       
       this.intermediateResults.push({
-        stage: stages[i],
+        stage,
         timestamp: Date.now(),
         result,
-        confidence: this.calculateStageConfidence(stages[i]),
+        confidence: this.calculateStageConfidence(stage),
         processingTime: Date.now() - this.stageStartTime
       });
 
@@ -333,7 +399,7 @@ class StreamingAnalysis {
     }
   }
 
-  private async processStage(stage: AnalysisStage): Promise<any> {
+  private async processStage(stage: AnalysisStage): Promise<StageResult> {
     switch (stage) {
       case 'initialization':
         return this.initializeCalculation();
@@ -360,11 +426,16 @@ class StreamingAnalysis {
         return this.finalizeResults();
       
       default:
-        return {};
+        return {
+          processingComplete: false,
+          totalProcessingTime: 0,
+          finalCalculationTime: Date.now(),
+          qualityScore: 0
+        } as FinalizationResult;
     }
   }
 
-  private async initializeCalculation(): Promise<any> {
+  private async initializeCalculation(): Promise<InitializationResult> {
     return {
       taskId: this.task.id,
       inputHash: this.generateInputHash(),
@@ -373,7 +444,7 @@ class StreamingAnalysis {
     };
   }
 
-  private async validateInputs(): Promise<any> {
+  private async validateInputs(): Promise<ValidationResult> {
     const input = this.task.input;
     const validationResults = {
       age: input.age >= 18 && input.age <= 50,
@@ -393,35 +464,57 @@ class StreamingAnalysis {
     return validationResults;
   }
 
-  private async calculateBaseScore(): Promise<any> {
+  private async calculateBaseScore(): Promise<BaseCalculationResult> {
     const input = this.task.input;
     let baseScore = 0.5; // 50% base
 
-    // Age factor (most important)
+    // Age factor calculation
+    let ageContribution = 0;
     if (input.age) {
-      if (input.age < 30) baseScore += 0.25;
-      else if (input.age < 35) baseScore += 0.15;
-      else if (input.age < 40) baseScore -= 0.05;
-      else if (input.age < 43) baseScore -= 0.20;
-      else baseScore -= 0.35;
+      if (input.age < 30) {
+        ageContribution = 0.25;
+        baseScore += ageContribution;
+      } else if (input.age < 35) {
+        ageContribution = 0.15;
+        baseScore += ageContribution;
+      } else if (input.age < 40) {
+        ageContribution = -0.05;
+        baseScore += ageContribution;
+      } else if (input.age < 43) {
+        ageContribution = -0.20;
+        baseScore += ageContribution;
+      } else {
+        ageContribution = -0.35;
+        baseScore += ageContribution;
+      }
     }
 
-    // BMI factor
+    // BMI factor calculation
+    let bmiContribution = 0;
     if (input.bmi) {
-      if (input.bmi >= 18.5 && input.bmi < 25) baseScore += 0.10;
-      else if (input.bmi >= 25 && input.bmi < 30) baseScore -= 0.05;
-      else if (input.bmi >= 30) baseScore -= 0.15;
-      else if (input.bmi < 18.5) baseScore -= 0.10;
+      if (input.bmi >= 18.5 && input.bmi < 25) {
+        bmiContribution = 0.10;
+        baseScore += bmiContribution;
+      } else if (input.bmi >= 25 && input.bmi < 30) {
+        bmiContribution = -0.05;
+        baseScore += bmiContribution;
+      } else if (input.bmi >= 30) {
+        bmiContribution = -0.15;
+        baseScore += bmiContribution;
+      } else if (input.bmi < 18.5) {
+        bmiContribution = -0.10;
+        baseScore += bmiContribution;
+      }
     }
 
     return {
       baseScore: Math.max(0, Math.min(1, baseScore)),
-      ageContribution: input.age ? this.getAgeContribution(input.age) : 0,
-      bmiContribution: input.bmi ? this.getBmiContribution(input.bmi) : 0
+      ageContribution,
+      bmiContribution
     };
   }
 
-  private async analyzeMedicalFactors(): Promise<any> {
+  private async analyzeMedicalFactors(): Promise<MedicalAnalysisResult> {
     const input = this.task.input;
     const medicalAdjustments = {
       pcos: input.hasPcos ? -0.15 : 0,
@@ -439,7 +532,7 @@ class StreamingAnalysis {
     };
   }
 
-  private async assessRisks(): Promise<RiskFactor[]> {
+  private async assessRisks(): Promise<RiskAssessmentResult> {
     const input = this.task.input;
     const risks: RiskFactor[] = [];
 
@@ -470,10 +563,10 @@ class StreamingAnalysis {
       });
     }
 
-    return risks;
+    return { risks };
   }
 
-  private async matchTreatments(): Promise<TreatmentRecommendation[]> {
+  private async matchTreatments(): Promise<TreatmentMatchingResult> {
     const input = this.task.input;
     const treatments: TreatmentRecommendation[] = [];
 
@@ -522,10 +615,10 @@ class StreamingAnalysis {
       }
     }
 
-    return treatments;
+    return { treatments };
   }
 
-  private async optimizeRecommendations(): Promise<any> {
+  private async optimizeRecommendations(): Promise<OptimizationResult> {
     const optimizations = {
       lifestyle: [
         'Dieta mediterránea rica en antioxidantes',
@@ -549,7 +642,7 @@ class StreamingAnalysis {
     return optimizations;
   }
 
-  private async finalizeResults(): Promise<any> {
+  private async finalizeResults(): Promise<FinalizationResult> {
     return {
       processingComplete: true,
       totalProcessingTime: this.getProcessingTime(),
@@ -559,11 +652,11 @@ class StreamingAnalysis {
   }
 
   private compileFinalResult(): CalculationResult {
-    const baseCalculation = this.intermediateResults.find(r => r.stage === 'base_calculation')?.result;
-    const medicalAnalysis = this.intermediateResults.find(r => r.stage === 'medical_analysis')?.result;
-    const riskAssessment = this.intermediateResults.find(r => r.stage === 'risk_assessment')?.result;
-    const treatmentMatching = this.intermediateResults.find(r => r.stage === 'treatment_matching')?.result;
-    const optimization = this.intermediateResults.find(r => r.stage === 'optimization')?.result;
+    const baseCalculation = this.intermediateResults.find(r => r.stage === 'base_calculation')?.result as BaseCalculationResult;
+    const medicalAnalysis = this.intermediateResults.find(r => r.stage === 'medical_analysis')?.result as MedicalAnalysisResult;
+    const riskAssessment = this.intermediateResults.find(r => r.stage === 'risk_assessment')?.result as RiskAssessmentResult;
+    const treatmentMatching = this.intermediateResults.find(r => r.stage === 'treatment_matching')?.result as TreatmentMatchingResult;
+    const optimization = this.intermediateResults.find(r => r.stage === 'optimization')?.result as OptimizationResult;
 
     const baseScore = baseCalculation?.baseScore || 0.5;
     const medicalAdjustment = medicalAnalysis?.totalAdjustment || 0;
@@ -571,8 +664,8 @@ class StreamingAnalysis {
 
     return {
       successProbability: finalScore,
-      treatmentRecommendations: treatmentMatching || [],
-      riskFactors: riskAssessment || [],
+      treatmentRecommendations: treatmentMatching?.treatments || [],
+      riskFactors: riskAssessment?.risks || [],
       optimizationSuggestions: optimization?.lifestyle || [],
       confidence: this.calculateOverallConfidence(),
       calculationBreakdown: {

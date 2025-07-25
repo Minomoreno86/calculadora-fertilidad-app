@@ -2,6 +2,7 @@
 // 🎯 SERVICIO DE ALMACENAMIENTO - Persistencia de datos del formulario
 // ===================================================================
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { FormState } from '../types/calculator.types';
 
 /**
@@ -14,9 +15,9 @@ export class StorageService {
   private static readonly CURRENT_VERSION = '1.0.0';
 
   /**
-   * Guarda el estado del formulario en localStorage
+   * Guarda el estado del formulario en AsyncStorage
    */
-  static saveFormData(formData: FormState): boolean {
+  static async saveFormData(formData: FormState): Promise<boolean> {
     try {
       const dataToSave = {
         version: this.CURRENT_VERSION,
@@ -25,12 +26,12 @@ export class StorageService {
       };
 
       // Guardar datos principales
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(dataToSave));
+      await AsyncStorage.setItem(this.STORAGE_KEY, JSON.stringify(dataToSave));
       
       // Crear backup
-      const existingData = localStorage.getItem(this.STORAGE_KEY);
+      const existingData = await AsyncStorage.getItem(this.STORAGE_KEY);
       if (existingData) {
-        localStorage.setItem(this.BACKUP_KEY, existingData);
+        await AsyncStorage.setItem(this.BACKUP_KEY, existingData);
       }
 
       console.log('💾 Datos del formulario guardados correctamente');
@@ -42,11 +43,11 @@ export class StorageService {
   }
 
   /**
-   * Recupera el estado del formulario desde localStorage
+   * Recupera el estado del formulario desde AsyncStorage
    */
-  static loadFormData(): FormState | null {
+  static async loadFormData(): Promise<FormState | null> {
     try {
-      const savedData = localStorage.getItem(this.STORAGE_KEY);
+      const savedData = await AsyncStorage.getItem(this.STORAGE_KEY);
       if (!savedData) {
         console.log('📭 No hay datos guardados del formulario');
         return null;
@@ -57,7 +58,7 @@ export class StorageService {
       // Validar versión
       if (parsed.version !== this.CURRENT_VERSION) {
         console.warn('⚠️ Versión de datos incompatible, usando backup o valores por defecto');
-        return this.loadBackupData();
+        return await this.loadBackupData();
       }
 
       // Validar estructura de datos
@@ -70,16 +71,16 @@ export class StorageService {
       return parsed.data;
     } catch (error) {
       console.error('❌ Error cargando datos del formulario:', error);
-      return this.loadBackupData();
+      return await this.loadBackupData();
     }
   }
 
   /**
    * Carga datos desde backup
    */
-  private static loadBackupData(): FormState | null {
+  private static async loadBackupData(): Promise<FormState | null> {
     try {
-      const backupData = localStorage.getItem(this.BACKUP_KEY);
+      const backupData = await AsyncStorage.getItem(this.BACKUP_KEY);
       if (!backupData) return null;
 
       const parsed = JSON.parse(backupData);
@@ -96,11 +97,11 @@ export class StorageService {
   /**
    * Limpia los datos guardados
    */
-  static clearFormData(): boolean {
+  static async clearFormData(): Promise<boolean> {
     try {
-      localStorage.removeItem(this.STORAGE_KEY);
-      localStorage.removeItem(this.BACKUP_KEY);
-      localStorage.removeItem(this.VERSION_KEY);
+      await AsyncStorage.removeItem(this.STORAGE_KEY);
+      await AsyncStorage.removeItem(this.BACKUP_KEY);
+      await AsyncStorage.removeItem(this.VERSION_KEY);
       console.log('🧹 Datos del formulario limpiados');
       return true;
     } catch (error) {
@@ -112,9 +113,9 @@ export class StorageService {
   /**
    * Verifica si hay datos guardados
    */
-  static hasStoredData(): boolean {
+  static async hasStoredData(): Promise<boolean> {
     try {
-      const data = localStorage.getItem(this.STORAGE_KEY);
+      const data = await AsyncStorage.getItem(this.STORAGE_KEY);
       return data !== null && data !== '';
     } catch {
       return false;
@@ -124,14 +125,14 @@ export class StorageService {
   /**
    * Obtiene información sobre los datos guardados
    */
-  static getStorageInfo(): {
+  static async getStorageInfo(): Promise<{
     hasData: boolean;
     timestamp?: number;
     version?: string;
     size?: number;
-  } {
+  }> {
     try {
-      const data = localStorage.getItem(this.STORAGE_KEY);
+      const data = await AsyncStorage.getItem(this.STORAGE_KEY);
       if (!data) {
         return { hasData: false };
       }
@@ -157,8 +158,8 @@ export class StorageService {
       clearTimeout(this.autoSaveTimeout);
     }
 
-    this.autoSaveTimeout = setTimeout(() => {
-      this.saveFormData(formData);
+    this.autoSaveTimeout = setTimeout(async () => {
+      await this.saveFormData(formData);
     }, 2000); // Auto-save después de 2 segundos de inactividad
   }
 
@@ -198,28 +199,29 @@ export class StorageService {
   /**
    * Obtiene estadísticas de uso del almacenamiento
    */
-  static getStorageStats(): {
+  static async getStorageStats(): Promise<{
     totalSize: number;
     availableSpace: number;
     itemCount: number;
-  } {
+  }> {
     try {
       let totalSize = 0;
       let itemCount = 0;
       
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key?.startsWith('fertility_calculator')) {
-          const value = localStorage.getItem(key);
-          if (value) {
-            totalSize += value.length;
-            itemCount++;
-          }
+      // AsyncStorage no tiene getAllKeys sincrónico, usamos un approach simplificado
+      const keys = await AsyncStorage.getAllKeys();
+      const fertilityKeys = keys.filter(key => key.startsWith('fertility_calculator'));
+      
+      for (const key of fertilityKeys) {
+        const value = await AsyncStorage.getItem(key);
+        if (value) {
+          totalSize += value.length;
+          itemCount++;
         }
       }
 
-      // Estimar espacio disponible (la mayoría de navegadores tienen ~5-10MB)
-      const estimatedAvailable = 5 * 1024 * 1024 - totalSize; // 5MB estimado
+      // Estimar espacio disponible (AsyncStorage típicamente ~6MB)
+      const estimatedAvailable = 6 * 1024 * 1024 - totalSize; // 6MB estimado
 
       return {
         totalSize,

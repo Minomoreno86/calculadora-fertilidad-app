@@ -232,12 +232,12 @@ export class NeuralConversationEngine {
    * 🎭 DETECCIÓN DE ESTADO EMOCIONAL
    */
   private detectEmotionalState(query: string): ConversationContext['emotionalState'] {
-    const emotions = this.CONVERSATION_PATTERNS.emotions;
+    const emotions = this?.CONVERSATION_PATTERNS?.emotions;
     
-    if (emotions.anxiety.test(query)) return 'anxious';
-    if (emotions.hope.test(query)) return 'hopeful';
-    if (emotions.sadness.test(query)) return 'worried';
-    if (emotions.determination.test(query)) return 'determined';
+    if (emotions?.anxiety?.test(query)) return 'anxious';
+    if (emotions?.hope?.test(query)) return 'hopeful';
+    if (emotions?.sadness?.test(query)) return 'worried';
+    if (emotions?.determination?.test(query)) return 'determined';
     
     return 'neutral';
   }
@@ -255,7 +255,7 @@ export class NeuralConversationEngine {
     }
     
     // 🧠 ADAPTACIÓN INTELIGENTE BASADA EN CONSULTA
-    if (queryAnalysis?.emotionalMarkers.length && queryAnalysis.emotionalMarkers.length > 0) {
+    if (queryAnalysis?.emotionalMarkers.length && queryAnalysis?.emotionalMarkers && queryAnalysis.emotionalMarkers.length > 0) {
       return 'empathetic';
     }
     
@@ -280,30 +280,30 @@ export class NeuralConversationEngine {
     style: keyof typeof this.PERSONALITY_PROFILES
   ): string {
     const profile = this.PERSONALITY_PROFILES[style];
-    const primaryPattern = neuralAnalysis.primaryPatterns[0];
+    const primaryPattern = neuralAnalysis.primaryPatterns?.[0];
     const primaryRecommendation = bayesianAnalysis.primaryRecommendation;
     
     // 🎭 INICIO EMPÁTICO ADAPTADO AL ESTILO
-    let opener = profile.phrases[Math.floor(Math.random() * profile.phrases.length)];
+    let opener = profile.phrases[Math.floor(Math.random() * profile?.phrases?.length)];
     
     // 🔬 CONTENIDO MÉDICO CONTEXTUAL
     let medicalContent = '';
     if (primaryPattern) {
-      medicalContent = `he identificado un patrón de ${primaryPattern.condition.toLowerCase()} ` +
+      medicalContent = `he identificado un patrón de ${primaryPattern?.condition?.toLowerCase()} ` +
                       `con ${Math.round(primaryPattern.confidence * 100)}% de confianza. `;
     }
     
     // 🎯 RECOMENDACIÓN PRINCIPAL
     let recommendation = '';
     if (primaryRecommendation) {
-      recommendation = `Mi recomendación principal es ${primaryRecommendation.treatment.toLowerCase()}, ` +
-                      `con una probabilidad de éxito de ${Math.round(primaryRecommendation.expectedOutcome.successRate * 100)}%.`;
+      recommendation = `Mi recomendación principal es ${primaryRecommendation?.treatment?.toLowerCase()}, ` +
+                      `con una probabilidad de éxito de ${Math.round(primaryRecommendation?.expectedOutcome?.successRate * 100)}%.`;
     }
     
     // 🌟 INSIGHTS EMERGENTES DESTACADOS
     let emergentInsight = '';
-    if (neuralAnalysis.emergentInsights.length > 0) {
-      emergentInsight = ` Un insight importante que he detectado: ${neuralAnalysis.emergentInsights[0]}`;
+    if (neuralAnalysis?.emergentInsights && neuralAnalysis.emergentInsights.length > 0) {
+      emergentInsight = ` Un insight importante que he detectado: ${neuralAnalysis.emergentInsights?.[0]}`;
     }
     
     return `${opener}. Basándome en mi análisis neural de tu caso, ${medicalContent}${recommendation}${emergentInsight}`;
@@ -320,26 +320,26 @@ export class NeuralConversationEngine {
     const points: string[] = [];
     
     // 🔍 EVIDENCIA CIENTÍFICA
-    if (bayesianAnalysis.primaryRecommendation.evidenceSupport.length > 0) {
-      const evidence = bayesianAnalysis.primaryRecommendation.evidenceSupport[0];
+    if (bayesianAnalysis.primaryRecommendation?.evidenceSupport && bayesianAnalysis.primaryRecommendation.evidenceSupport.length > 0) {
+      const evidence = bayesianAnalysis?.primaryRecommendation?.evidenceSupport?.[0];
       points.push(`Esta recomendación se basa en evidencia científica nivel ${evidence.evidenceLevel} con alta confiabilidad.`);
     }
     
     // 🧠 CORRELACIONES OCULTAS
-    if (neuralAnalysis.hiddenCorrelations.length > 0) {
-      const correlation = neuralAnalysis.hiddenCorrelations[0];
+    if (neuralAnalysis?.hiddenCorrelations && neuralAnalysis.hiddenCorrelations.length > 0) {
+      const correlation = neuralAnalysis.hiddenCorrelations?.[0];
       points.push(`He detectado una correlación importante: ${correlation.insight}`);
     }
     
     // 🔮 INDICADORES PREDICTIVOS
-    if (neuralAnalysis.predictiveIndicators.length > 0) {
-      const predictor = neuralAnalysis.predictiveIndicators[0];
-      points.push(`Predicción: ${Math.round(predictor.probability * 100)}% probabilidad de ${predictor.outcome.toLowerCase()} en ${predictor.timeframe}.`);
+    if (neuralAnalysis?.predictiveIndicators && neuralAnalysis.predictiveIndicators.length > 0) {
+      const predictor = neuralAnalysis.predictiveIndicators?.[0];
+      points.push(`Predicción: ${Math.round(predictor.probability * 100)}% probabilidad de ${predictor?.outcome?.toLowerCase()} en ${predictor.timeframe}.`);
     }
     
     // ⚠️ EVALUACIÓN DE RIESGOS
-    if (bayesianAnalysis.riskAssessment.immediateRisks.length > 0) {
-      points.push(`Consideración importante: ${bayesianAnalysis.riskAssessment.immediateRisks[0]}`);
+    if (bayesianAnalysis.riskAssessment?.immediateRisks && bayesianAnalysis.riskAssessment.immediateRisks.length > 0) {
+      points.push(`Consideración importante: ${bayesianAnalysis?.riskAssessment?.immediateRisks?.[0]}`);
     }
     
     return points;
@@ -357,26 +357,26 @@ export class NeuralConversationEngine {
     const insights: string[] = [];
     
     // 🧠 INSIGHTS BASADOS EN PATRONES ÚNICOS
-    neuralAnalysis.primaryPatterns.forEach(pattern => {
-      if (pattern.phenotype) {
+    neuralAnalysis?.primaryPatterns?.forEach(pattern => {
+      if (pattern?.phenotype) {
         insights.push(`Tu caso presenta un ${pattern.phenotype}, lo que permite un enfoque muy específico de tratamiento.`);
       }
     });
     
     // 🎯 INSIGHTS BAYESIANOS PERSONALIZADOS
-    const confidence = bayesianAnalysis.primaryRecommendation.confidence;
+    const confidence = bayesianAnalysis?.primaryRecommendation?.confidence;
     if (confidence > 0.8) {
       insights.push(`Tengo alta confianza (${Math.round(confidence * 100)}%) en que este enfoque será efectivo para tu caso específico.`);
     }
     
     // 🔮 INSIGHTS PREDICTIVOS ÚNICOS
     if (queryAnalysis.concernType === 'time') {
-      const timeEstimate = bayesianAnalysis.primaryRecommendation.expectedOutcome.timeToPregnancy;
+      const timeEstimate = bayesianAnalysis?.primaryRecommendation?.expectedOutcome.timeToPregnancy;
       insights.push(`Basándome en tu perfil, estimo un tiempo aproximado de ${timeEstimate} meses para lograr el embarazo.`);
     }
     
     // 🌊 INSIGHTS EMERGENTES CONTEXTUALIZADOS
-    neuralAnalysis.emergentInsights.forEach(insight => {
+    neuralAnalysis?.emergentInsights?.forEach(insight => {
       if (!insights.some(existing => existing.includes(insight.substring(0, 20)))) {
         insights.push(`Insight específico para tu caso: ${insight}`);
       }
@@ -411,7 +411,7 @@ export class NeuralConversationEngine {
     }
     
     // 🎭 PREGUNTAS EMOCIONALES/DE APOYO
-    if (queryAnalysis.emotionalMarkers.length > 0) {
+    if (queryAnalysis?.emotionalMarkers && queryAnalysis.emotionalMarkers.length > 0) {
       questions.push('¿Cómo te sientes con la información que te he proporcionado? ¿Hay algo que te genere más ansiedad?');
     }
     
@@ -431,16 +431,16 @@ export class NeuralConversationEngine {
     const actions: string[] = [];
     
     // 🎯 ACCIÓN PRINCIPAL
-    actions.push(`Agendar consulta con especialista en ${bayesianAnalysis.primaryRecommendation.treatment.toLowerCase()}`);
+    actions.push(`Agendar consulta con especialista en ${bayesianAnalysis?.primaryRecommendation?.treatment.toLowerCase()}`);
     
     // 🔬 ESTUDIOS COMPLEMENTARIOS
-    if (bayesianAnalysis.primaryRecommendation.evidenceSupport.length > 0) {
+    if (bayesianAnalysis.primaryRecommendation?.evidenceSupport && bayesianAnalysis.primaryRecommendation.evidenceSupport.length > 0) {
       actions.push('Solicitar estudios complementarios específicos para tu caso');
     }
     
     // 🌱 OPTIMIZACIÓN INMEDIATA
-    if (bayesianAnalysis.riskAssessment.mitigationStrategies.length > 0) {
-      actions.push(bayesianAnalysis.riskAssessment.mitigationStrategies[0]);
+    if (bayesianAnalysis.riskAssessment?.mitigationStrategies && bayesianAnalysis.riskAssessment.mitigationStrategies.length > 0) {
+      actions.push(bayesianAnalysis?.riskAssessment?.mitigationStrategies?.[0]);
     }
     
     // ⏰ URGENCIA TEMPORAL
@@ -454,7 +454,7 @@ export class NeuralConversationEngine {
   // 🛠️ MÉTODOS AUXILIARES
 
   private identifyPrimaryConcern(query: string): string {
-    const patterns = this.CONVERSATION_PATTERNS.concerns;
+    const patterns = this?.CONVERSATION_PATTERNS?.concerns;
     
     for (const [concern, pattern] of Object.entries(patterns)) {
       if (pattern.test(query)) return concern;
@@ -465,7 +465,7 @@ export class NeuralConversationEngine {
 
   private extractEmotionalMarkers(query: string): string[] {
     const markers: string[] = [];
-    const emotions = this.CONVERSATION_PATTERNS.emotions;
+    const emotions = this?.CONVERSATION_PATTERNS?.emotions;
     
     for (const [emotion, pattern] of Object.entries(emotions)) {
       if (pattern.test(query)) markers.push(emotion);
@@ -516,9 +516,9 @@ export class NeuralConversationEngine {
     neuralAnalysis: NeuralAnalysis,
     bayesianAnalysis: BayesianAnalysis
   ): number {
-    const neuralConfidence = neuralAnalysis.primaryPatterns.length > 0 ? 
-      neuralAnalysis.primaryPatterns[0].confidence : 0.5;
-    const bayesianConfidence = bayesianAnalysis.primaryRecommendation.confidence;
+    const neuralConfidence = neuralAnalysis?.primaryPatterns && neuralAnalysis.primaryPatterns.length > 0 ? 
+      neuralAnalysis.primaryPatterns[0]?.confidence : 0.5;
+    const bayesianConfidence = bayesianAnalysis?.primaryRecommendation?.confidence;
     
     return (neuralConfidence + bayesianConfidence) / 2;
   }
@@ -528,13 +528,13 @@ export class NeuralConversationEngine {
     analysis: ReturnType<typeof this.analyzeQuery>,
     emotion: ConversationContext['emotionalState']
   ): void {
-    this.conversationMemory.previousQuestions.push(query);
-    this.conversationMemory.identifiedPatterns.push(analysis.concernType);
-    this.conversationMemory.emotionalJourney.push(emotion);
+    this?.conversationMemory?.previousQuestions.push(query);
+    this?.conversationMemory?.identifiedPatterns.push(analysis.concernType);
+    this?.conversationMemory?.emotionalJourney.push(emotion);
     
     // Mantener solo los últimos 10 elementos para eficiencia
     Object.keys(this.conversationMemory).forEach(key => {
-      const arr = this.conversationMemory[key as keyof ConversationMemory] as string[];
+      const arr = this.conversationMemory[key as keyof ConversationMemory];
       if (arr.length > 10) {
         arr.splice(0, arr.length - 10);
       }
@@ -581,23 +581,23 @@ export class NeuralConversationEngine {
     commonPatterns: string[];
     adaptationHistory: string[];
   } {
-    const emotionalTrends = this.conversationMemory.emotionalJourney.reduce((acc, emotion) => {
+    const emotionalTrends = this?.conversationMemory?.emotionalJourney.reduce((acc, emotion) => {
       acc[emotion] = (acc[emotion] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
     
-    const commonPatterns = [...new Set(this.conversationMemory.identifiedPatterns)]
+    const commonPatterns = [...new Set(this?.conversationMemory?.identifiedPatterns)]
       .sort((a, b) => {
-        const countA = this.conversationMemory.identifiedPatterns.filter(p => p === a).length;
-        const countB = this.conversationMemory.identifiedPatterns.filter(p => p === b).length;
+        const countA = this?.conversationMemory?.identifiedPatterns.filter(p => p === a).length;
+        const countB = this?.conversationMemory?.identifiedPatterns.filter(p => p === b).length;
         return countB - countA;
       });
     
     return {
-      totalQuestions: this.conversationMemory.previousQuestions.length,
+      totalQuestions: this?.conversationMemory?.previousQuestions.length,
       emotionalTrends,
       commonPatterns,
-      adaptationHistory: this.conversationMemory.preferenceAdaptations
+      adaptationHistory: this?.conversationMemory?.preferenceAdaptations
     };
   }
 }

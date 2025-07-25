@@ -66,9 +66,9 @@ export interface MedicalRecommendation {
 // ===================================================================
 
 export class MedicalKnowledgeEngine {
-  private knowledgeBase: Map<string, MedicalKnowledge> = new Map();
-  private clinicalRules: Map<string, (input: UserInput) => number> = new Map();
-  private evidenceWeights: Map<string, number> = new Map();
+  private readonly knowledgeBase: Map<string, MedicalKnowledge> = new Map();
+  private readonly clinicalRules: Map<string, (input: UserInput) => number> = new Map();
+  private readonly evidenceWeights: Map<string, number> = new Map();
 
   constructor() {
     this.initializeKnowledgeBase();
@@ -544,8 +544,6 @@ export class MedicalKnowledgeEngine {
 let medicalKnowledgeEngineInstance: MedicalKnowledgeEngine | null = null;
 
 export function getMedicalKnowledgeEngine(): MedicalKnowledgeEngine {
-  if (!medicalKnowledgeEngineInstance) {
-    medicalKnowledgeEngineInstance = new MedicalKnowledgeEngine();
-  }
+  medicalKnowledgeEngineInstance ??= new MedicalKnowledgeEngine();
   return medicalKnowledgeEngineInstance;
 }

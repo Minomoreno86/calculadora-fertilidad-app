@@ -26,15 +26,21 @@ export const FindingsSection: React.FC<Props> = ({ findings }) => {
         <View key={finding.key} style={[styles.findingItem, index < findings.length - 1 && styles.divider]}>
           <Text style={styles.findingTitle}>{finding.title}</Text>
           <Text style={styles.definition}>{finding.definition}</Text>
-          {finding.justification && (
-            <Text style={styles.justification}>**Justificación:** {finding.justification}</Text>
+          
+          {Boolean(finding.justification) && (
+            <Text style={styles.justification}>{finding.justification}</Text>
           )}
-          <Text style={styles.recTitle}>Recomendaciones:</Text>
-          {finding.recommendations.map((rec, recIndex) => (
-            <Text key={recIndex} style={styles.recommendation}>
-              • {rec}
-            </Text>
-          ))}
+          
+          {finding.recommendations && finding.recommendations.length > 0 && (
+            <View>
+              <Text style={styles.recTitle}>Recomendaciones:</Text>
+              {finding.recommendations.map((rec, recIndex) => (
+                <Text key={`${finding.title}-rec-${recIndex}`} style={styles.recommendation}>
+                  • {rec}
+                </Text>
+              ))}
+            </View>
+          )}
         </View>
       ))}
     </Box>

@@ -221,7 +221,6 @@ export default function CalculatorScreen() {
           title="Progreso del Formulario"
           message={`${completionPercentage}% completado - Listo para calcular`}
           showIcon={true}
-          animated={false}
         />
 
         <ConfigModal

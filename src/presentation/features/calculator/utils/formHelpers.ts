@@ -197,9 +197,12 @@ export function getCurrentStep(formData: FormState): number {
   const sections = Object.keys(FORM_SECTIONS);
   
   for (let i = 0; i < sections.length; i++) {
-    const sectionProgress = calculateSectionProgress(formData, sections[i]);
-    if (sectionProgress < 80) { // Si una sección no está al 80%, es el step actual
-      return i + 1;
+    const sectionKey = sections[i];
+    if (sectionKey) {
+      const sectionProgress = calculateSectionProgress(formData, sectionKey);
+      if (sectionProgress < 80) { // Si una sección no está al 80%, es el step actual
+        return i + 1;
+      }
     }
   }
   
@@ -212,7 +215,7 @@ export function validateFieldRange(fieldName: keyof FormState, value: string): {
   error?: string;
 } {
   const config = FIELD_CONFIGS.find(c => c.name === fieldName);
-  if (!config || !config.validation) {
+  if (!config?.validation) {
     return { isValid: true };
   }
   

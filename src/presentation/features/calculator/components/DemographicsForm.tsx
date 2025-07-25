@@ -14,11 +14,10 @@
 
 import { StyleSheet, View } from 'react-native';
 import { Control, FieldErrors } from 'react-hook-form';
-import Text from '@/presentation/components/common/Text';
-import { ControlledTextInputFinal } from '@/presentation/components/common/ControlledTextInputFinal';
-import { OptimizedNumericInput } from '@/presentation/components/common/OptimizedNumericInput';
-import { CalculatedValue } from '@/presentation/components/common/CalculatedValue';
-import { useDynamicTheme } from '@/hooks/useDynamicTheme';
+import Text from '../../../components/common/Text';
+import { OptimizedNumericInput } from '../../../components/common';
+import { CalculatedValue } from '../../../components/common/CalculatedValue';
+import { useDynamicTheme } from '../../../../hooks/useDynamicTheme';
 import { FormState } from '../useCalculatorFormOptimized';
 
 type Props = {
@@ -31,42 +30,42 @@ type Props = {
 // 🎨 Función para crear estilos dinámicos
 const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
   container: {
-    marginBottom: theme.spacing.l,
+    marginBottom: theme?.spacing?.l,
   },
   groupLabel: {
-    ...theme.typography.h3,
-    marginBottom: theme.spacing.m,
+    ...theme?.typography?.h3,
+    marginBottom: theme?.spacing?.m,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-    paddingBottom: theme.spacing.xs,
-    color: theme.colors.primary,
+    borderBottomColor: theme?.colors?.border,
+    paddingBottom: theme?.spacing?.xs,
+    color: theme?.colors?.primary,
   },
   fieldContainer: {
-    marginBottom: theme.spacing.s,
+    marginBottom: theme?.spacing?.s,
   },
   bmiContainer: {
-    marginTop: theme.spacing.m,
-    padding: theme.spacing.m,
-    backgroundColor: theme.colors.surface,
+    marginTop: theme?.spacing?.m,
+    padding: theme?.spacing?.m,
+    backgroundColor: theme?.colors?.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    shadowColor: theme.isDark ? theme.colors.black : '#000000',
+    borderColor: theme?.colors?.border,
+    shadowColor: theme.isDark ? theme?.colors?.black : '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: theme.isDark ? 0.3 : 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
   clinicalNoteContainer: {
-    marginTop: theme.spacing.xs,
-    padding: theme.spacing.xs,
-    backgroundColor: theme.colors.background,
+    marginTop: theme?.spacing?.xs,
+    padding: theme?.spacing?.xs,
+    backgroundColor: theme?.colors?.background,
     borderRadius: 8,
     borderLeftWidth: 3,
-    borderLeftColor: theme.colors.info,
+    borderLeftColor: theme?.colors?.info,
   },
   clinicalNote: {
-    color: theme.colors.textSecondary,
+    color: theme?.colors?.textSecondary,
     fontStyle: 'italic',
     lineHeight: 18,
   },

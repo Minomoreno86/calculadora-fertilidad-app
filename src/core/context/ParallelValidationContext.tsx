@@ -5,7 +5,7 @@
  * que necesitan acceso a sus métricas y estado en tiempo real.
  */
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
 import type { ValidationMetrics } from '@/core/workers/parallelValidationEngine_FASE2';
 
 // 🚀 MÉTRICAS EXTENDIDAS DEL MOTOR PARALELO
@@ -65,16 +65,17 @@ export const ParallelValidationProvider: React.FC<{ children: ReactNode }> = ({ 
     setIsEngineActive(false);
   }, []);
 
+  // 🧠 NEURAL OPTIMIZATION: Memoizar value object para prevenir re-renders
+  const contextValue = useMemo(() => ({
+    metrics,
+    updateMetrics,
+    isEngineActive,
+    markEngineActive,
+    markEngineInactive
+  }), [metrics, updateMetrics, isEngineActive, markEngineActive, markEngineInactive]);
+
   return (
-    <ParallelValidationContext.Provider
-      value={{
-        metrics,
-        updateMetrics,
-        isEngineActive,
-        markEngineActive,
-        markEngineInactive
-      }}
-    >
+    <ParallelValidationContext.Provider value={contextValue}>
       {children}
     </ParallelValidationContext.Provider>
   );

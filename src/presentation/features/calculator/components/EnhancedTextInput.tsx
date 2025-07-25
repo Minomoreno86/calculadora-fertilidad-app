@@ -147,7 +147,7 @@ export const EnhancedTextInput: React.FC<Props> = ({
     if (rangeValidation) {
       if (rangeValidation.isError) return colors.error;
       if (rangeValidation.isWarning) return colors.warning;
-      if (rangeValidation.isNormal || rangeValidation.isValid) return colors.valid;
+      if (rangeValidation.isNormal) return colors.valid;
     }
 
     return colors[validationState];
@@ -217,7 +217,7 @@ export const EnhancedTextInput: React.FC<Props> = ({
                 styles.input,
                 iconName && styles.inputWithIcon,
               ]}
-              onBlur={(e) => {
+              onBlur={(_e) => {
                 fieldOnBlur();
                 onBlur?.(name);
               }}

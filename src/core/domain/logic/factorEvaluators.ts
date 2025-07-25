@@ -529,10 +529,16 @@ export const evaluateMaleFactor = (input: UserInput): PartialEvaluation => {
   }
 
   // 🎯 Determinar el factor más restrictivo
-  const worstAlteration = alterations.reduce(
-    (min, current) => (current.factor < min.factor ? current : min),
-    alterations[0],
-  );
+  const worstAlteration = alterations.length > 0 
+    ? alterations.reduce((min, current) => (!min || current.factor < min.factor ? current : min), alterations[0])
+    : null;
+
+  if (!worstAlteration) {
+    return { 
+      factors: { male: 1.0 }, 
+      diagnostics: { maleFactorDetailed: 'Error en evaluación de factor masculino' } 
+    };
+  }
 
   const allDiagnoses = alterations.map((a) => a.diagnosis).join(', ');
   

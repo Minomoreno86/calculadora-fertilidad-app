@@ -31,8 +31,14 @@ export interface ValidationError {
   isBlocking: boolean;
 }
 
+export interface ValidationRule {
+  min: number;
+  max: number;
+  required: boolean;
+}
+
 export class ValidationEngineWorker {
-  private validationRules: Map<string, any>;
+  private readonly validationRules: Map<string, ValidationRule>;
 
   constructor() {
     this.validationRules = new Map();
@@ -221,7 +227,13 @@ export class ValidationEngineWorker {
   }
 
   private validateHormonalValues(input: UserInput, warnings: ValidationWarning[], errors: ValidationError[]): void {
-    // AMH validation
+    this.validateAmh(input, warnings, errors);
+    this.validateProlactin(input, warnings, errors);
+    this.validateTsh(input, warnings, errors);
+    this.validateHomaIr(input, warnings, errors);
+  }
+
+  private validateAmh(input: UserInput, warnings: ValidationWarning[], errors: ValidationError[]): void {
     if (input.amh !== undefined) {
       if (input.amh < 0 || input.amh > 20) {
         errors.push({
@@ -240,8 +252,9 @@ export class ValidationEngineWorker {
         });
       }
     }
+  }
 
-    // Prolactin validation
+  private validateProlactin(input: UserInput, warnings: ValidationWarning[], errors: ValidationError[]): void {
     if (input.prolactin !== undefined) {
       if (input.prolactin < 0 || input.prolactin > 500) {
         errors.push({
@@ -260,8 +273,9 @@ export class ValidationEngineWorker {
         });
       }
     }
+  }
 
-    // TSH validation
+  private validateTsh(input: UserInput, warnings: ValidationWarning[], errors: ValidationError[]): void {
     if (input.tsh !== undefined) {
       if (input.tsh < 0 || input.tsh > 50) {
         errors.push({
@@ -280,8 +294,9 @@ export class ValidationEngineWorker {
         });
       }
     }
+  }
 
-    // HOMA-IR validation
+  private validateHomaIr(input: UserInput, warnings: ValidationWarning[], errors: ValidationError[]): void {
     if (input.homaIr !== undefined) {
       if (input.homaIr < 0 || input.homaIr > 20) {
         errors.push({
@@ -303,7 +318,13 @@ export class ValidationEngineWorker {
   }
 
   private validateMaleFactorValues(input: UserInput, warnings: ValidationWarning[], errors: ValidationError[]): void {
-    // Sperm concentration validation
+    this.validateSpermConcentration(input, warnings, errors);
+    this.validateSpermMotility(input, warnings, errors);
+    this.validateSpermMorphology(input, warnings, errors);
+    this.validateSemenVolume(input, warnings, errors);
+  }
+
+  private validateSpermConcentration(input: UserInput, warnings: ValidationWarning[], errors: ValidationError[]): void {
     if (input.spermConcentration !== undefined) {
       if (input.spermConcentration < 0 || input.spermConcentration > 1000) {
         errors.push({
@@ -322,8 +343,9 @@ export class ValidationEngineWorker {
         });
       }
     }
+  }
 
-    // Progressive motility validation
+  private validateSpermMotility(input: UserInput, warnings: ValidationWarning[], errors: ValidationError[]): void {
     if (input.spermProgressiveMotility !== undefined) {
       if (input.spermProgressiveMotility < 0 || input.spermProgressiveMotility > 100) {
         errors.push({
@@ -342,8 +364,9 @@ export class ValidationEngineWorker {
         });
       }
     }
+  }
 
-    // Normal morphology validation
+  private validateSpermMorphology(input: UserInput, warnings: ValidationWarning[], errors: ValidationError[]): void {
     if (input.spermNormalMorphology !== undefined) {
       if (input.spermNormalMorphology < 0 || input.spermNormalMorphology > 100) {
         errors.push({
@@ -362,8 +385,9 @@ export class ValidationEngineWorker {
         });
       }
     }
+  }
 
-    // Semen volume validation
+  private validateSemenVolume(input: UserInput, warnings: ValidationWarning[], errors: ValidationError[]): void {
     if (input.semenVolume !== undefined) {
       if (input.semenVolume < 0 || input.semenVolume > 20) {
         errors.push({
@@ -384,7 +408,7 @@ export class ValidationEngineWorker {
     }
   }
 
-  private validateConsistency(input: UserInput, warnings: ValidationWarning[], errors: ValidationError[]): void {
+  private validateConsistency(input: UserInput, warnings: ValidationWarning[], _errors: ValidationError[]): void {
     // Check consistency between age and AMH
     if (input.age && input.amh) {
       if (input.age < 30 && input.amh < 1.0) {

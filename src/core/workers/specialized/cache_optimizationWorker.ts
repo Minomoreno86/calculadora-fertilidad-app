@@ -8,9 +8,35 @@
 import type { MedicalWorkerTask, WorkerResult } from '../UnifiedParallelEngine_V12';
 import type { UserInput } from '../../domain/models';
 
+// 🎯 TYPE DEFINITIONS FOR CACHE SYSTEM
+type MedicalPriority = 'critical' | 'high' | 'medium' | 'low' | 'background';
+
+type CacheData = {
+  baseScore: number;
+  adjustments: {
+    hormonalFactors: number;
+    medicalConditions: number;
+    maleFactors: number;
+  };
+  recommendations: string[];
+  timestamp: number;
+};
+
+// Separate interface for compressed cache entries
+interface CompressedCacheEntry {
+  key: string;
+  data: string; // Compressed data as string
+  timestamp: number;
+  expiry: number;
+  hitCount: number;
+  lastAccessed: number;
+  size: number;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+}
+
 export interface CacheEntry {
   key: string;
-  data: any;
+  data: CacheData;
   timestamp: number;
   expiry: number;
   hitCount: number;
@@ -30,7 +56,7 @@ export interface CacheStats {
 
 export interface CacheOptimizationResult {
   cacheKey: string;
-  data: any;
+  data: CacheData;
   isCacheHit: boolean;
   responseTime: number;
   optimizations: CacheOptimization[];
@@ -44,14 +70,14 @@ export interface CacheOptimization {
 }
 
 export class CacheOptimizationWorker {
-  private l1Cache: Map<string, CacheEntry>; // In-memory fast cache
-  private l2Cache: Map<string, CacheEntry>; // Compressed cache
-  private l3Cache: Map<string, CacheEntry>; // Persistent cache
+  private readonly l1Cache: Map<string, CacheEntry>; // In-memory fast cache
+  private readonly l2Cache: Map<string, CompressedCacheEntry>; // Compressed cache
+  private readonly l3Cache: Map<string, CompressedCacheEntry>; // Persistent cache
   private readonly maxL1Size = 50; // MB
   private readonly maxL2Size = 200; // MB
   private readonly maxL3Size = 500; // MB
-  private stats: CacheStats;
-  private compressionEnabled = true;
+  private readonly stats: CacheStats;
+  private readonly compressionEnabled = true;
 
   constructor() {
     this.l1Cache = new Map();
@@ -96,7 +122,7 @@ export class CacheOptimizationWorker {
     // Try L1 cache first (fastest)
     let cacheEntry = this.l1Cache.get(cacheKey);
     let isCacheHit = false;
-    let data = null;
+    let data: CacheData | null = null;
 
     if (cacheEntry && !this.isExpired(cacheEntry)) {
       data = cacheEntry.data;
@@ -105,20 +131,20 @@ export class CacheOptimizationWorker {
       this.stats.hitRatio = this.calculateHitRatio();
     } else {
       // Try L2 cache (compressed)
-      cacheEntry = this.l2Cache.get(cacheKey);
-      if (cacheEntry && !this.isExpired(cacheEntry)) {
-        data = await this.decompress(cacheEntry.data);
+      const compressedEntry = this.l2Cache.get(cacheKey);
+      if (compressedEntry && !this.isExpiredCompressed(compressedEntry)) {
+        data = await this.decompress(compressedEntry.data);
         this.promoteToL1(cacheKey, data);
         isCacheHit = true;
-        this.updateAccessStats(cacheEntry);
+        this.updateAccessStatsCompressed(compressedEntry);
       } else {
         // Try L3 cache (persistent)
-        cacheEntry = this.l3Cache.get(cacheKey);
-        if (cacheEntry && !this.isExpired(cacheEntry)) {
-          data = await this.decompress(cacheEntry.data);
+        const l3Entry = this.l3Cache.get(cacheKey);
+        if (l3Entry && !this.isExpiredCompressed(l3Entry)) {
+          data = await this.decompress(l3Entry.data);
           this.promoteToL2(cacheKey, data);
           isCacheHit = true;
-          this.updateAccessStats(cacheEntry);
+          this.updateAccessStatsCompressed(l3Entry);
         } else {
           // Cache miss - generate data and store
           data = await this.generateFreshData(task);
@@ -126,6 +152,10 @@ export class CacheOptimizationWorker {
           this.stats.missCount++;
         }
       }
+    }
+
+    if (!data) {
+      throw new Error('Failed to generate or retrieve cache data');
     }
 
     const responseTime = performance.now() - startTime;
@@ -162,22 +192,32 @@ export class CacheOptimizationWorker {
     return Date.now() > entry.expiry;
   }
 
+  private isExpiredCompressed(entry: CompressedCacheEntry): boolean {
+    return Date.now() > entry.expiry;
+  }
+
   private updateAccessStats(entry: CacheEntry): void {
     entry.hitCount++;
     entry.lastAccessed = Date.now();
   }
 
+  private updateAccessStatsCompressed(entry: CompressedCacheEntry): void {
+    entry.hitCount++;
+    entry.lastAccessed = Date.now();
+  }
+
   private calculateHitRatio(): number {
-    const totalRequests = this.stats.missCount + 
-                         Array.from(this.l1Cache.values()).reduce((sum, entry) => sum + entry.hitCount, 0) +
-                         Array.from(this.l2Cache.values()).reduce((sum, entry) => sum + entry.hitCount, 0) +
-                         Array.from(this.l3Cache.values()).reduce((sum, entry) => sum + entry.hitCount, 0);
+    const l1Hits = Array.from(this.l1Cache.values()).reduce((sum, entry) => sum + entry.hitCount, 0);
+    const l2Hits = Array.from(this.l2Cache.values()).reduce((sum, entry) => sum + entry.hitCount, 0);
+    const l3Hits = Array.from(this.l3Cache.values()).reduce((sum, entry) => sum + entry.hitCount, 0);
     
-    const totalHits = totalRequests - this.stats.missCount;
+    const totalRequests = this.stats.missCount + l1Hits + l2Hits + l3Hits;
+    const totalHits = l1Hits + l2Hits + l3Hits;
+    
     return totalRequests > 0 ? totalHits / totalRequests : 0;
   }
 
-  private async promoteToL1(key: string, data: any): Promise<void> {
+  private async promoteToL1(key: string, data: CacheData): Promise<void> {
     if (this.getCurrentCacheSize(this.l1Cache) > this.maxL1Size) {
       await this.evictLeastUsed(this.l1Cache);
     }
@@ -196,20 +236,20 @@ export class CacheOptimizationWorker {
     this.l1Cache.set(key, entry);
   }
 
-  private async promoteToL2(key: string, data: any): Promise<void> {
-    if (this.getCurrentCacheSize(this.l2Cache) > this.maxL2Size) {
-      await this.evictLeastUsed(this.l2Cache);
+  private async promoteToL2(key: string, data: CacheData): Promise<void> {
+    if (this.getCurrentCompressedCacheSize(this.l2Cache) > this.maxL2Size) {
+      await this.evictLeastUsedCompressed(this.l2Cache);
     }
 
     const compressedData = await this.compress(data);
-    const entry: CacheEntry = {
+    const entry: CompressedCacheEntry = {
       key,
       data: compressedData,
       timestamp: Date.now(),
       expiry: Date.now() + (2 * 60 * 60 * 1000), // 2 hours
       hitCount: 1,
       lastAccessed: Date.now(),
-      size: this.estimateSize(compressedData),
+      size: this.estimateCompressedSize(compressedData),
       priority: 'medium'
     };
 
@@ -217,47 +257,58 @@ export class CacheOptimizationWorker {
     this.promoteToL1(key, data); // Also store in L1 for fast access
   }
 
-  private async storeInCache(key: string, data: any, priority: string): Promise<void> {
+  private async storeInCache(key: string, data: CacheData, priority: MedicalPriority): Promise<void> {
     // Store in all three levels with different retention times
     await this.promoteToL1(key, data);
     
     // L2 with compression
     const compressedData = await this.compress(data);
-    const l2Entry: CacheEntry = {
+    const l2Entry: CompressedCacheEntry = {
       key,
       data: compressedData,
       timestamp: Date.now(),
       expiry: Date.now() + (2 * 60 * 60 * 1000), // 2 hours
       hitCount: 0,
       lastAccessed: Date.now(),
-      size: this.estimateSize(compressedData),
-      priority: priority as any
+      size: this.estimateCompressedSize(compressedData),
+      priority: this.mapPriorityToCachePriority(priority)
     };
     
-    if (this.getCurrentCacheSize(this.l2Cache) > this.maxL2Size) {
-      await this.evictLeastUsed(this.l2Cache);
+    if (this.getCurrentCompressedCacheSize(this.l2Cache) > this.maxL2Size) {
+      await this.evictLeastUsedCompressed(this.l2Cache);
     }
     this.l2Cache.set(key, l2Entry);
 
     // L3 persistent
-    const l3Entry: CacheEntry = {
+    const l3Entry: CompressedCacheEntry = {
       key,
       data: compressedData,
       timestamp: Date.now(),
       expiry: Date.now() + (24 * 60 * 60 * 1000), // 24 hours
       hitCount: 0,
       lastAccessed: Date.now(),
-      size: this.estimateSize(compressedData),
-      priority: priority as any
+      size: this.estimateCompressedSize(compressedData),
+      priority: this.mapPriorityToCachePriority(priority)
     };
     
-    if (this.getCurrentCacheSize(this.l3Cache) > this.maxL3Size) {
-      await this.evictLeastUsed(this.l3Cache);
+    if (this.getCurrentCompressedCacheSize(this.l3Cache) > this.maxL3Size) {
+      await this.evictLeastUsedCompressed(this.l3Cache);
     }
     this.l3Cache.set(key, l3Entry);
   }
 
-  private async generateFreshData(task: MedicalWorkerTask): Promise<any> {
+  private mapPriorityToCachePriority(priority: MedicalPriority): CacheEntry['priority'] {
+    switch (priority) {
+      case 'critical': return 'critical';
+      case 'high': return 'high';
+      case 'medium': return 'medium';
+      case 'low': return 'low';
+      case 'background': return 'low';
+      default: return 'medium';
+    }
+  }
+
+  private async generateFreshData(task: MedicalWorkerTask): Promise<CacheData> {
     // This would typically call other workers to generate fresh data
     // For now, we'll simulate the calculation process
     
@@ -293,7 +344,7 @@ export class CacheOptimizationWorker {
     return Math.max(0, Math.min(1, score));
   }
 
-  private calculateAdjustments(input: UserInput): any {
+  private calculateAdjustments(input: UserInput): CacheData['adjustments'] {
     return {
       hormonalFactors: input.amh ? input.amh * 0.1 : 0,
       medicalConditions: input.hasPcos ? -0.1 : 0,
@@ -319,7 +370,7 @@ export class CacheOptimizationWorker {
     return recommendations;
   }
 
-  private async compress(data: any): Promise<string> {
+  private async compress(data: CacheData): Promise<string> {
     if (!this.compressionEnabled) return JSON.stringify(data);
     
     // Simulate compression - in real implementation, use actual compression library
@@ -327,24 +378,33 @@ export class CacheOptimizationWorker {
     return btoa(jsonString); // Base64 encoding as simple "compression"
   }
 
-  private async decompress(compressedData: string): Promise<any> {
+  private async decompress(compressedData: string): Promise<CacheData> {
     if (!this.compressionEnabled) return JSON.parse(compressedData);
     
     try {
       const decodedString = atob(compressedData);
       return JSON.parse(decodedString);
-    } catch (error) {
+    } catch {
       // Fallback for uncompressed data
       return JSON.parse(compressedData);
     }
   }
 
-  private estimateSize(data: any): number {
+  private estimateSize(data: CacheData): number {
     // Rough size estimation in bytes
     return JSON.stringify(data).length * 2; // UTF-16 encoding
   }
 
+  private estimateCompressedSize(data: string): number {
+    // Rough size estimation in bytes for compressed string
+    return data.length * 2; // UTF-16 encoding
+  }
+
   private getCurrentCacheSize(cache: Map<string, CacheEntry>): number {
+    return Array.from(cache.values()).reduce((total, entry) => total + entry.size, 0) / (1024 * 1024); // MB
+  }
+
+  private getCurrentCompressedCacheSize(cache: Map<string, CompressedCacheEntry>): number {
     return Array.from(cache.values()).reduce((total, entry) => total + entry.size, 0) / (1024 * 1024); // MB
   }
 
@@ -361,8 +421,32 @@ export class CacheOptimizationWorker {
     // Evict bottom 20% of entries
     const evictCount = Math.max(1, Math.floor(entries.length * 0.2));
     for (let i = 0; i < evictCount; i++) {
-      cache.delete(entries[i][0]);
-      this.stats.evictionCount++;
+      const entryToDelete = entries[i];
+      if (entryToDelete) {
+        cache.delete(entryToDelete[0]);
+        this.stats.evictionCount++;
+      }
+    }
+  }
+
+  private async evictLeastUsedCompressed(cache: Map<string, CompressedCacheEntry>): Promise<void> {
+    const entries = Array.from(cache.entries());
+    
+    // Sort by usage score (combination of hit count, recency, and priority)
+    entries.sort(([, a], [, b]) => {
+      const scoreA = this.calculateUsageScoreCompressed(a);
+      const scoreB = this.calculateUsageScoreCompressed(b);
+      return scoreA - scoreB;
+    });
+
+    // Evict bottom 20% of entries
+    const evictCount = Math.max(1, Math.floor(entries.length * 0.2));
+    for (let i = 0; i < evictCount; i++) {
+      const entryToDelete = entries[i];
+      if (entryToDelete) {
+        cache.delete(entryToDelete[0]);
+        this.stats.evictionCount++;
+      }
     }
   }
 
@@ -382,6 +466,29 @@ export class CacheOptimizationWorker {
       case 'medium': score += 20; break;
       case 'low': score += 0; break;
     }
+
+    return score;
+  }
+
+  private calculateUsageScoreCompressed(entry: CompressedCacheEntry): number {
+    const now = Date.now();
+    const ageHours = (now - entry.timestamp) / (1000 * 60 * 60);
+    const lastAccessHours = (now - entry.lastAccessed) / (1000 * 60 * 60);
+    
+    let score = entry.hitCount * 8; // Slightly different base score for compressed entries
+    score -= ageHours * 0.6; // Different penalty for age
+    score -= lastAccessHours * 0.7; // Different penalty for not being accessed recently
+    
+    // Priority bonus with compression factor
+    switch (entry.priority) {
+      case 'critical': score += 90; break;
+      case 'high': score += 45; break;
+      case 'medium': score += 18; break;
+      case 'low': score += 0; break;
+    }
+
+    // Bonus for compression efficiency
+    score += entry.size < 1000 ? 5 : 0;
 
     return score;
   }
@@ -472,34 +579,50 @@ export class CacheOptimizationWorker {
   }
 
   private cleanupExpiredEntries(): void {
-    [this.l1Cache, this.l2Cache, this.l3Cache].forEach(cache => {
-      for (const [key, entry] of cache.entries()) {
-        if (this.isExpired(entry)) {
-          cache.delete(key);
+    // Clean L1 cache
+    const l1EntriesToDelete: string[] = [];
+    this.l1Cache.forEach((entry, key) => {
+      if (this.isExpired(entry)) {
+        l1EntriesToDelete.push(key);
+        this.stats.evictionCount++;
+      }
+    });
+    l1EntriesToDelete.forEach(key => this.l1Cache.delete(key));
+
+    // Clean L2 and L3 compressed caches
+    [this.l2Cache, this.l3Cache].forEach(cache => {
+      const entriesToDelete: string[] = [];
+      
+      cache.forEach((entry, key) => {
+        if (this.isExpiredCompressed(entry)) {
+          entriesToDelete.push(key);
           this.stats.evictionCount++;
         }
-      }
+      });
+      
+      entriesToDelete.forEach(key => cache.delete(key));
     });
   }
 
   private updateStatistics(): void {
     this.stats.totalEntries = this.l1Cache.size + this.l2Cache.size + this.l3Cache.size;
     this.stats.totalSize = this.getCurrentCacheSize(this.l1Cache) + 
-                          this.getCurrentCacheSize(this.l2Cache) + 
-                          this.getCurrentCacheSize(this.l3Cache);
+                          this.getCurrentCompressedCacheSize(this.l2Cache) + 
+                          this.getCurrentCompressedCacheSize(this.l3Cache);
     this.stats.hitRatio = this.calculateHitRatio();
   }
 
   // Public methods for external cache management
-  public async preloadData(keys: string[], priority: string = 'medium'): Promise<void> {
+  public async preloadData(keys: string[], priority: MedicalPriority = 'medium'): Promise<void> {
     for (const key of keys) {
       if (!this.l1Cache.has(key) && !this.l2Cache.has(key) && !this.l3Cache.has(key)) {
         // Generate and cache data proactively
         const mockTask: MedicalWorkerTask = {
           id: `preload_${key}`,
-          type: 'calculation',
+          type: 'cache_optimization',
           input: this.parseKeyToInput(key),
-          priority: priority as any
+          priority: priority,
+          timestamp: Date.now()
         };
         
         const data = await this.generateFreshData(mockTask);
@@ -529,10 +652,10 @@ export class CacheOptimizationWorker {
     // Parse cache key back to UserInput (simplified)
     const parts = key.split('_');
     return {
-      age: parts[1] !== 'noage' ? parseInt(parts[1]) : undefined,
-      bmi: parts[2] !== 'nobmi' ? parseFloat(parts[2]) : null,
+      age: parts[1] && parts[1] !== 'noage' ? parseInt(parts[1], 10) : undefined,
+      bmi: parts[2] && parts[2] !== 'nobmi' ? parseFloat(parts[2]) : null,
       hasPcos: parts[3] === 'pcos',
-      endometriosisGrade: parts[4] !== 'noendo' ? parseInt(parts[4]) : undefined
+      endometriosisGrade: parts[4] && parts[4] !== 'noendo' ? parseInt(parts[4], 10) : undefined
     } as UserInput;
   }
 }

@@ -12,8 +12,7 @@
  * - Machine Learning lite para optimización
  */
 
-import { UserInput, EvaluationState } from '../../models';
-import { PerformanceMetric, getPerformanceMonitor } from './PerformanceMonitor';
+import { UserInput } from '../../models';
 
 // ===================================================================
 // 🎯 INTERFACES PARA ENGINE SELECTOR
@@ -119,7 +118,18 @@ export interface PerformanceFeedback {
   };
   userSatisfaction?: number; // 1-5
   context: SelectionContext;
-  timestamp: number;
+  timestamp?: number;
+}
+
+/**
+ * Patrón aprendido para selección de engine
+ */
+interface LearnedPattern {
+  pattern: string;
+  preferredEngine: EngineType;
+  confidence: number;
+  successRate: number;
+  avgPerformance: number;
 }
 
 /**
@@ -194,10 +204,10 @@ export class IntelligentEngineSelector {
   private feedbackHistory: PerformanceFeedback[] = [];
   
   // Cache de selecciones recientes
-  private selectionCache = new Map<string, { choice: EngineChoice; timestamp: number }>();
+  private readonly selectionCache = new Map<string, { choice: EngineChoice; timestamp: number }>();
   
   // Patrones aprendidos
-  private learnedPatterns = new Map<string, {
+  private readonly learnedPatterns = new Map<string, {
     pattern: string;
     preferredEngine: EngineType;
     confidence: number;
@@ -205,7 +215,7 @@ export class IntelligentEngineSelector {
     avgPerformance: number;
   }>();
   
-  constructor(private config: SelectorConfig = {
+  constructor(private readonly config: SelectorConfig = {
     enableAdaptiveLearning: true,
     enablePerformancePrediction: true,
     enableFallbackChain: true,
@@ -390,11 +400,9 @@ export class IntelligentEngineSelector {
     
     // Calcular estadísticas por engine
     for (const feedback of this.feedbackHistory) {
-      if (!engineStats[feedback.engineUsed]) {
-        engineStats[feedback.engineUsed] = { count: 0, successRate: 0, avgTime: 0 };
-      }
+      engineStats[feedback.engineUsed] ??= { count: 0, successRate: 0, avgTime: 0 };
       
-      const stats = engineStats[feedback.engineUsed];
+      const stats = engineStats[feedback.engineUsed]!; // Non-null assertion después de verificación
       stats.count++;
       
       // Calcular promedio móvil
@@ -454,9 +462,9 @@ export class IntelligentEngineSelector {
         const [min, max] = factor.normalRange;
         let deviation = 0;
         
-        if (factor.value < min) {
+        if (min !== undefined && factor.value < min) {
           deviation = (min - factor.value) / min;
-        } else if (factor.value > max) {
+        } else if (max !== undefined && factor.value > max) {
           deviation = (factor.value - max) / max;
         }
         
@@ -594,8 +602,17 @@ export class IntelligentEngineSelector {
     return critical;
   }
   
+  /**
+   * Calcula nivel de confianza basado en completitud de datos
+   */
   private calculateConfidenceLevel(input: UserInput): number {
-    // Confianza basada en completitud de datos
+    return this.calculateDataCompletenessScore(input) * this.calculateDataQualityScore(input);
+  }
+  
+  /**
+   * Calcula score de completitud de datos
+   */
+  private calculateDataCompletenessScore(input: UserInput): number {
     const totalFields = 20; // Número aproximado de campos relevantes
     let filledFields = 0;
     
@@ -612,18 +629,21 @@ export class IntelligentEngineSelector {
     if (input.prolactin) filledFields++;
     if (input.tsh) filledFields++;
     if (input.homaIr) filledFields++;
-    // ... más campos
     
-    const dataCompleteness = filledFields / totalFields;
-    
-    // Ajustar por calidad de datos
+    return filledFields / totalFields;
+  }
+  
+  /**
+   * Calcula score de calidad de datos
+   */
+  private calculateDataQualityScore(input: UserInput): number {
     let qualityAdjustment = 1.0;
     
     // Penalizar valores extremos o inconsistentes
     if (input.age && (input.age < 18 || input.age > 50)) qualityAdjustment -= 0.1;
     if (input.bmi && (input.bmi < 15 || input.bmi > 50)) qualityAdjustment -= 0.1;
     
-    return Math.max(0.3, Math.min(1.0, dataCompleteness * qualityAdjustment));
+    return Math.max(0.3, qualityAdjustment);
   }
   
   // ===================================================================
@@ -842,7 +862,8 @@ export class IntelligentEngineSelector {
   private generateSelectionCacheKey(complexity: ComplexityAnalysis, context: SelectionContext): string {
     // Generar key basado en características principales
     const complexityKey = Math.round(complexity.totalComplexity * 100);
-    const criticalKey = complexity.criticalFactors.sort().join('|');
+    const criticalFactorsSorted = [...complexity.criticalFactors].sort((a, b) => a.localeCompare(b));
+    const criticalKey = criticalFactorsSorted.join('|');
     const contextKey = [
       Math.round(context.systemLoad * 10),
       Math.round(context.availableMemory / 100),
@@ -872,7 +893,9 @@ export class IntelligentEngineSelector {
     // Limitar tamaño del cache
     if (this.selectionCache.size > 100) {
       const oldestKey = Array.from(this.selectionCache.keys())[0];
-      this.selectionCache.delete(oldestKey);
+      if (oldestKey) {
+        this.selectionCache.delete(oldestKey);
+      }
     }
   }
   
@@ -919,34 +942,56 @@ export class IntelligentEngineSelector {
     const existingPattern = this.learnedPatterns.get(patternKey);
     
     if (existingPattern) {
-      // Actualizar patrón existente
-      existingPattern.successRate = (existingPattern.successRate + (feedback.actualPerformance.success ? 1 : 0)) / 2;
-      existingPattern.avgPerformance = (existingPattern.avgPerformance + feedback.actualPerformance.executionTime) / 2;
-      
-      if (feedback.actualPerformance.success) {
-        existingPattern.confidence = Math.min(1, existingPattern.confidence + 0.1);
-      } else {
-        existingPattern.confidence = Math.max(0, existingPattern.confidence - 0.05);
-      }
+      this.updateExistingPattern(existingPattern, feedback);
     } else {
-      // Crear nuevo patrón
-      this.learnedPatterns.set(patternKey, {
-        pattern: patternKey,
-        preferredEngine: feedback.engineUsed,
-        confidence: feedback.actualPerformance.success ? 0.7 : 0.3,
-        successRate: feedback.actualPerformance.success ? 1 : 0,
-        avgPerformance: feedback.actualPerformance.executionTime
-      });
+      this.createNewPattern(patternKey, feedback);
     }
     
     // Limitar número de patrones
+    this.cleanupOldPatterns();
+  }
+  
+  /**
+   * Actualiza patrón existente
+   */
+  private updateExistingPattern(pattern: LearnedPattern, feedback: PerformanceFeedback): void {
+    pattern.successRate = (pattern.successRate + (feedback.actualPerformance.success ? 1 : 0)) / 2;
+    pattern.avgPerformance = (pattern.avgPerformance + feedback.actualPerformance.executionTime) / 2;
+    
+    if (feedback.actualPerformance.success) {
+      pattern.confidence = Math.min(1, pattern.confidence + 0.1);
+    } else {
+      pattern.confidence = Math.max(0, pattern.confidence - 0.05);
+    }
+  }
+  
+  /**
+   * Crea nuevo patrón
+   */
+  private createNewPattern(patternKey: string, feedback: PerformanceFeedback): void {
+    this.learnedPatterns.set(patternKey, {
+      pattern: patternKey,
+      preferredEngine: feedback.engineUsed,
+      confidence: feedback.actualPerformance.success ? 0.7 : 0.3,
+      successRate: feedback.actualPerformance.success ? 1 : 0,
+      avgPerformance: feedback.actualPerformance.executionTime
+    });
+  }
+  
+  /**
+   * Limpia patrones antiguos
+   */
+  private cleanupOldPatterns(): void {
     if (this.learnedPatterns.size > 500) {
       // Remover patrones con menor confianza
       const sortedPatterns = Array.from(this.learnedPatterns.entries())
         .sort(([,a], [,b]) => a.confidence - b.confidence);
       
       for (let i = 0; i < 100; i++) {
-        this.learnedPatterns.delete(sortedPatterns[i][0]);
+        const patternEntry = sortedPatterns[i];
+        if (patternEntry) {
+          this.learnedPatterns.delete(patternEntry[0]);
+        }
       }
     }
   }
@@ -980,9 +1025,7 @@ let engineSelectorInstance: IntelligentEngineSelector | null = null;
  * Obtiene la instancia del engine selector
  */
 export function getEngineSelector(config?: SelectorConfig): IntelligentEngineSelector {
-  if (!engineSelectorInstance) {
-    engineSelectorInstance = new IntelligentEngineSelector(config);
-  }
+  engineSelectorInstance ??= new IntelligentEngineSelector(config);
   return engineSelectorInstance;
 }
 

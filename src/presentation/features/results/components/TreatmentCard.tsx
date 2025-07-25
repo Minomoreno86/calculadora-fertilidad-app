@@ -1,10 +1,9 @@
 import React from 'react';
-import { View, StyleSheet, Linking } from 'react-native';
+import { View, StyleSheet, Linking, TouchableOpacity } from 'react-native';
 import Text from '../../../components/common/Text';
 import Box from '../../../components/common/Box';
 import { TreatmentSuggestion } from '../../../../core/domain/models';
 import { theme } from '../../../../config/theme';
-import { TouchableOpacity } from 'react-native-gesture-handler';
 
 type Props = { suggestions: TreatmentSuggestion[] };
 
@@ -16,7 +15,7 @@ export const TreatmentCard: React.FC<Props> = ({ suggestions }) => (
   <Box style={styles.card}>
     <Text style={styles.title}>Sugerencias de Siguientes Pasos</Text>
     {suggestions.map((sugg, index) => (
-      <View key={index} style={[styles.suggestionItem, index < suggestions.length - 1 && styles.divider]}>
+      <View key={`treatment-${index}-${sugg.category}`} style={[styles.suggestionItem, index < suggestions.length - 1 && styles.divider]}>
         <Text style={styles.suggCategory}>{sugg.category}</Text>
         <Text style={styles.suggTitle}>{sugg.title}</Text>
         <Text style={styles.suggDetails}>{sugg.details}</Text>

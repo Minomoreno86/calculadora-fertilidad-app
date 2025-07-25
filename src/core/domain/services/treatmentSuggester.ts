@@ -104,7 +104,7 @@ const getTreatmentSuggestion = (key: string, context?: TreatmentContext): Enhanc
  */
 function getStrategicDecisionSuggestions(input: UserInput, factors: Factors, context?: TreatmentContext): EnhancedTreatmentSuggestion[] {
   // 🧠 NEURAL SAFETY V13.0: Validar acceso a propiedades
-  if (!input || input.age === undefined) {
+  if (!input?.age) {
     return [];
   }
   
@@ -152,7 +152,7 @@ function shouldSuggestICSI(input: UserInput): boolean {
 
 function shouldSuggestOvodonacion(input: UserInput): boolean {
   // 🧠 NEURAL SAFETY V13.0: Validar input y age
-  if (!input || input.age === undefined) return false;
+  if (!input?.age) return false;
   
   return input.age >= 43 && (input.amh !== undefined && input.amh < 0.5);
 }
@@ -353,7 +353,7 @@ export function suggestTreatments(evaluation: EvaluationState): EnhancedTreatmen
   const { input, factors } = evaluation;
   
   // 🧠 NEURAL SAFETY V13.0: Validar que input y factors existan y sean objetos válidos
-  if (!input || !factors || input === false || factors === false || typeof input !== 'object' || typeof factors !== 'object') {
+  if (!input || !factors || typeof input !== 'object' || typeof factors !== 'object') {
     console.warn('⚠️ Treatment Suggester: input or factors are null/undefined/invalid', { 
       input: !!input, 
       factors: !!factors,
@@ -422,23 +422,52 @@ export function suggestTreatments(evaluation: EvaluationState): EnhancedTreatmen
  * 🎯 FUNCIONES AUXILIARES MEJORADAS
  */
 
+/**
+ * 🧠 NEURAL SCORE CALCULATION HELPERS V13.0
+ * Funciones auxiliares para reducir complejidad cognitiva
+ */
+function calculateAgeScore(age?: number): number {
+  if (!age) return 0;
+  if (age < 35) return 10;
+  if (age > 40) return -15;
+  return 0;
+}
+
+function calculateAmhScore(amh?: number): number {
+  if (!amh) return 0;
+  if (amh > 1.5) return 10;
+  if (amh < 1.0) return -10;
+  return 0;
+}
+
+function calculateMaleFactorScore(maleFactor?: number): number {
+  if (maleFactor === 1.0) return 5;
+  if (maleFactor !== undefined && maleFactor < 0.7) return -10;
+  return 0;
+}
+
+function calculateCycleScore(cycle?: number): number {
+  if (cycle !== undefined && cycle >= 0.8) return 5;
+  return 0;
+}
+
+function calculateEndometriosisScore(grade?: number): number {
+  if (grade !== undefined && grade >= 3) return -10;
+  return 0;
+}
+
 function calculateClinicalScore(input: UserInput, factors: Factors): number {
   // 🧠 NEURAL SAFETY V13.0: Validar input y factors
   if (!input || !factors) return 50; // Score neutro si no hay datos
   
   let score = 70; // Base score
   
-  // Factores que mejoran el score
-  if (input.age !== undefined && input.age < 35) score += 10;
-  if (input.amh !== undefined && input.amh > 1.5) score += 10;
-  if (factors.male === 1.0) score += 5;
-  if (factors.cycle !== undefined && factors.cycle >= 0.8) score += 5;
-  
-  // Factores que reducen el score
-  if (input.age !== undefined && input.age > 40) score -= 15;
-  if (input.amh !== undefined && input.amh < 1.0) score -= 10;
-  if (factors.male !== undefined && factors.male < 0.7) score -= 10;
-  if (input.endometriosisGrade !== undefined && input.endometriosisGrade >= 3) score -= 10;
+  // 🧠 NEURAL MODULAR SCORING V13.0: Cálculo modular para reducir complejidad
+  score += calculateAgeScore(input.age);
+  score += calculateAmhScore(input.amh);
+  score += calculateMaleFactorScore(factors.male);
+  score += calculateCycleScore(factors.cycle);
+  score += calculateEndometriosisScore(input.endometriosisGrade);
   
   return Math.max(0, Math.min(100, score));
 }

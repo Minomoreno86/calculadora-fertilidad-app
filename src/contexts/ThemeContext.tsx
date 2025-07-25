@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useMemo, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 
@@ -52,24 +52,25 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   };
 
   // 🔄 Alternar entre light y dark
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     const newMode: ThemeMode = themeMode === 'light' ? 'dark' : 'light';
     setThemeMode(newMode);
     saveTheme(newMode);
-  };
+  }, [themeMode]);
 
   // 🎨 Establecer tema específico
-  const setTheme = (mode: ThemeMode) => {
+  const setTheme = useCallback((mode: ThemeMode) => {
     setThemeMode(mode);
     saveTheme(mode);
-  };
+  }, []);
 
-  const contextValue: ThemeContextType = {
+  // 🎯 Valor del contexto memoizado para evitar re-renders
+  const contextValue: ThemeContextType = useMemo(() => ({
     themeMode,
     isDark: themeMode === 'dark',
     toggleTheme,
     setTheme,
-  };
+  }), [themeMode, toggleTheme, setTheme]);
 
   // 🔄 No renderizar hasta cargar el tema
   if (isLoading) {

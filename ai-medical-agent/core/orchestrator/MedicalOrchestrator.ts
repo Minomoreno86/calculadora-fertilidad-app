@@ -709,7 +709,7 @@ export class MedicalOrchestrator {
     
     // 1️⃣ VALIDACIÓN Y SANITIZACIÓN ROBUSTA
     console.log('🔍 Validando y sanitizando input con verificación neuronal...');
-    const validatedInput = await this.validator.validateAndSanitize(rawInput);
+    const validatedInput = await this.validator.validateAndSanitize(rawInput as unknown as Record<string, unknown>);
     
     // 2️⃣ VERIFICAR CACHE CON CONTEXTO NEURONAL
     const cacheKey = this.cache.generateKey(validatedInput, 'neural-enhanced');
@@ -1859,7 +1859,7 @@ export class MedicalOrchestrator {
   ): Promise<OperationResult<SuccessRate[]>> {
     
     const measuredResult = await this.monitor.measureOperation(async () => {
-      const validatedInput = await this.validator.validateAndSanitize(userInput);
+      const validatedInput = await this.validator.validateAndSanitize(userInput as unknown as Record<string, unknown>);
       
       // Verificar cache
       const cacheKey = this.cache.generateKey(validatedInput, 'predictions');

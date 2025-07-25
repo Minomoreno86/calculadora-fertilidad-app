@@ -8,7 +8,7 @@
  * - Consistencia temática absoluta
  * 
  * @author AEC-D (Arquitecto Experto Clínico-Digital)
- * @version 2.0 - Armonía total con ecosistema
+ * @version 2.1 - Optimización de conversión de valores
  */
 
 import React from 'react';
@@ -24,6 +24,27 @@ interface ClinicalAlertProps {
   showRecommendations?: boolean;
   showPercentile?: boolean;
 }
+
+// 🔧 Helper function para conversión segura de valores
+const formatValidationValue = (value: unknown): string => {
+  if (value === null || value === undefined) {
+    return 'N/A';
+  }
+  
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+  
+  if (typeof value === 'object') {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return '[Objeto complejo]';
+    }
+  }
+  
+  return '[Valor no válido]';
+};
 
 export const ClinicalAlert: React.FC<ClinicalAlertProps> = ({ 
   validation, 
@@ -56,9 +77,7 @@ export const ClinicalAlert: React.FC<ClinicalAlertProps> = ({
     
     if (validation.interpretedValue) {
       const { category = 'Valor', normalRange } = validation.interpretedValue;
-      const valueStr = validation.value !== null && validation.value !== undefined 
-        ? String(validation.value) 
-        : 'N/A';
+      const valueStr = formatValidationValue(validation.value);
       const normalRangeStr = normalRange ? ` (Normal: ${normalRange})` : '';
       const message = `${category}: ${valueStr}${normalRangeStr}`;
       

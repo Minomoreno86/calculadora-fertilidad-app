@@ -35,11 +35,6 @@ export interface PerformanceMetric {
 }
 
 /**
- * ID único para medición
- */
-export type MeasurementId = string;
-
-/**
  * Métricas del sistema completo
  */
 export interface SystemMetrics {
@@ -154,7 +149,7 @@ export interface OperationContext {
 export class PerformanceMonitor {
   // Almacenamiento de métricas
   private metrics: PerformanceMetric[] = [];
-  private activeOperations = new Map<MeasurementId, PerformanceMetric>();
+  private readonly activeOperations = new Map<string, PerformanceMetric>();
   
   // Alertas activas
   private alerts: PerformanceAlert[] = [];
@@ -168,7 +163,7 @@ export class PerformanceMonitor {
   private lastMetricsUpdate = 0;
   private readonly METRICS_CACHE_TTL = 5000; // 5 segundos
   
-  constructor(private config: PerformanceConfig = {
+  constructor(private readonly config: PerformanceConfig = {
     maxMetricsHistory: 1000,
     alertThresholds: {
       slowOperationMs: 1000,
@@ -192,7 +187,7 @@ export class PerformanceMonitor {
   /**
    * Inicia medición de una operación
    */
-  startMeasurement(operationType: string, context?: OperationContext): MeasurementId {
+  startMeasurement(operationType: string, context?: OperationContext): string {
     const id = this.generateMeasurementId();
     const now = performance.now();
     
@@ -219,7 +214,7 @@ export class PerformanceMonitor {
   /**
    * Finaliza medición de una operación
    */
-  endMeasurement(id: MeasurementId, success: boolean = true, error?: string): PerformanceMetric {
+  endMeasurement(id: string, success: boolean = true, error?: string): PerformanceMetric {
     const metric = this.activeOperations.get(id);
     if (!metric) {
       throw new Error(`Medición ${id} no encontrada`);
@@ -499,6 +494,12 @@ export class PerformanceMonitor {
     const totalMemory = memoryMetrics.reduce((sum, m) => sum + m, 0);
     const peakMemory = Math.max(...memoryMetrics, 0);
     
+    // Métricas de CPU (estimación basada en duración vs disponibilidad)
+    const cpuMetrics = metrics.filter(m => m.cpuUsage).map(m => m.cpuUsage!);
+    const avgCpuUsage = cpuMetrics.length > 0 ? 
+      cpuMetrics.reduce((sum, cpu) => sum + cpu, 0) / cpuMetrics.length : 
+      this.estimateCpuUsageFromDuration(avgTime);
+    
     // Métricas por operación
     const operationMetrics: Record<string, {
       count: number;
@@ -537,7 +538,7 @@ export class PerformanceMonitor {
       p99ExecutionTime: p99Time,
       totalMemoryUsage: totalMemory,
       peakMemoryUsage: peakMemory,
-      averageCpuUsage: 0, // TODO: Implementar CPU monitoring
+      averageCpuUsage: avgCpuUsage,
       operationMetrics,
       trends
     };
@@ -584,8 +585,20 @@ export class PerformanceMonitor {
   // 🛠️ FUNCIONES AUXILIARES
   // ===================================================================
   
-  private generateMeasurementId(): MeasurementId {
-    return `perf_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  private generateMeasurementId(): string {
+    return `perf_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+  }
+  
+  /**
+   * Estima uso de CPU basado en duración de operaciones
+   */
+  private estimateCpuUsageFromDuration(avgDuration: number): number {
+    // Estimación simple: operaciones más lentas indican mayor uso de CPU
+    // Normalizar a porcentaje (0-100)
+    if (avgDuration < 50) return Math.min(20, avgDuration * 0.4);
+    if (avgDuration < 200) return Math.min(40, 20 + (avgDuration - 50) * 0.13);
+    if (avgDuration < 500) return Math.min(70, 40 + (avgDuration - 200) * 0.1);
+    return Math.min(100, 70 + (avgDuration - 500) * 0.06);
   }
   
   private addMetric(metric: PerformanceMetric): void {
@@ -622,10 +635,9 @@ export class PerformanceMonitor {
     const groups: Record<string, PerformanceMetric[]> = {};
     
     for (const metric of this.metrics) {
-      if (!groups[metric.operationType]) {
-        groups[metric.operationType] = [];
-      }
-      groups[metric.operationType].push(metric);
+      const operationType = metric.operationType;
+      const group = groups[operationType] ?? (groups[operationType] = []);
+      group.push(metric);
     }
     
     return groups;
@@ -667,13 +679,12 @@ export class PerformanceMonitor {
   
   private getErrorProneOperations(metrics: PerformanceMetric[]): { operation: string; errorRate: number; lastError: string }[] {
     const groups = metrics.reduce((acc, metric) => {
-      if (!acc[metric.operationType]) {
-        acc[metric.operationType] = { total: 0, errors: 0, lastError: '' };
-      }
-      acc[metric.operationType].total++;
+      const operationType = metric.operationType;
+      const group = acc[operationType] ?? (acc[operationType] = { total: 0, errors: 0, lastError: '' });
+      group.total++;
       if (!metric.success) {
-        acc[metric.operationType].errors++;
-        acc[metric.operationType].lastError = metric.error || 'Unknown error';
+        group.errors++;
+        group.lastError = metric.error || 'Unknown error';
       }
       return acc;
     }, {} as Record<string, { total: number; errors: number; lastError: string }>);
@@ -781,9 +792,7 @@ let performanceMonitorInstance: PerformanceMonitor | null = null;
  * Obtiene la instancia del performance monitor
  */
 export function getPerformanceMonitor(config?: PerformanceConfig): PerformanceMonitor {
-  if (!performanceMonitorInstance) {
-    performanceMonitorInstance = new PerformanceMonitor(config);
-  }
+  performanceMonitorInstance ??= new PerformanceMonitor(config);
   return performanceMonitorInstance;
 }
 

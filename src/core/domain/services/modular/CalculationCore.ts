@@ -63,11 +63,17 @@ export interface FactorEvaluationResult {
   };
 }
 
+// ===================================================================
+// 🎯 TIPOS PARA EVALUADORES
+// ===================================================================
+
+type FactorEvaluatorFunction = (...args: readonly unknown[]) => PartialEvaluation;
+
 /**
  * Configuración de factor con prioridades
  */
 export interface PriorityFactorConfig {
-  evaluator: (...args: any[]) => PartialEvaluation;
+  evaluator: FactorEvaluatorFunction;
   args: unknown[];
   factorKey: keyof Factors;
   diagnosticKey?: keyof Diagnostics;
@@ -134,9 +140,17 @@ export class CalculationCore {
       warnings.push('PCOS usualmente causa ciclos >35 días');
     }
     
-    const severity = errors.length > 0 ? 'CRITICAL' : 
-                     warnings.length > 2 ? 'HIGH' :
-                     warnings.length > 0 ? 'MEDIUM' : 'LOW';
+    // Determinar severidad de manera explícita
+    let severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    if (errors.length > 0) {
+      severity = 'CRITICAL';
+    } else if (warnings.length > 2) {
+      severity = 'HIGH';
+    } else if (warnings.length > 0) {
+      severity = 'MEDIUM';
+    } else {
+      severity = 'LOW';
+    }
     
     return {
       isValid: errors.length === 0,
@@ -317,7 +331,7 @@ export class CalculationCore {
     return [
       // FACTORES CRÍTICOS
       {
-        evaluator: factorEvaluators.evaluateAgeBaseline,
+        evaluator: factorEvaluators.evaluateAgeBaseline as FactorEvaluatorFunction,
         args: [userInput.age],
         factorKey: 'baseAgeProbability',
         required: true,
@@ -326,7 +340,7 @@ export class CalculationCore {
         defaultFactor: 0.5
       },
       {
-        evaluator: factorEvaluators.evaluateInfertilityDuration,
+        evaluator: factorEvaluators.evaluateInfertilityDuration as FactorEvaluatorFunction,
         args: [userInput.infertilityDuration],
         factorKey: 'infertilityDuration',
         required: true,
@@ -337,7 +351,7 @@ export class CalculationCore {
       
       // FACTORES IMPORTANTES
       {
-        evaluator: factorEvaluators.evaluateBmi,
+        evaluator: factorEvaluators.evaluateBmi as FactorEvaluatorFunction,
         args: [userInput.bmi],
         factorKey: 'bmi',
         required: false,
@@ -346,7 +360,7 @@ export class CalculationCore {
         defaultFactor: 0.6
       },
       {
-        evaluator: factorEvaluators.evaluateCycle,
+        evaluator: factorEvaluators.evaluateCycle as FactorEvaluatorFunction,
         args: [userInput.cycleDuration],
         factorKey: 'cycle',
         required: false,
@@ -355,7 +369,7 @@ export class CalculationCore {
         defaultFactor: 0.7
       },
       {
-        evaluator: factorEvaluators.evaluateEndometriosis,
+        evaluator: factorEvaluators.evaluateEndometriosis as FactorEvaluatorFunction,
         args: [userInput.endometriosisGrade],
         factorKey: 'endometriosis',
         required: false,
@@ -364,7 +378,7 @@ export class CalculationCore {
         defaultFactor: 0.7
       },
       {
-        evaluator: factorEvaluators.evaluatePcos,
+        evaluator: factorEvaluators.evaluatePcos as FactorEvaluatorFunction,
         args: [userInput.hasPcos, userInput.bmi, userInput.cycleDuration, userInput.amh, userInput.homaIr],
         factorKey: 'pcos',
         required: false,
@@ -373,7 +387,7 @@ export class CalculationCore {
         defaultFactor: 0.6
       },
       {
-        evaluator: factorEvaluators.evaluateMyomas,
+        evaluator: factorEvaluators.evaluateMyomas as FactorEvaluatorFunction,
         args: [userInput.myomaType],
         factorKey: 'myoma',
         required: false,
@@ -382,7 +396,7 @@ export class CalculationCore {
         defaultFactor: 0.8
       },
       {
-        evaluator: factorEvaluators.evaluateAdenomyosis,
+        evaluator: factorEvaluators.evaluateAdenomyosis as FactorEvaluatorFunction,
         args: [userInput.adenomyosisType],
         factorKey: 'adenomyosis',
         required: false,
@@ -391,7 +405,7 @@ export class CalculationCore {
         defaultFactor: 0.8
       },
       {
-        evaluator: factorEvaluators.evaluatePolyps,
+        evaluator: factorEvaluators.evaluatePolyps as FactorEvaluatorFunction,
         args: [userInput.polypType],
         factorKey: 'polyp',
         required: false,
@@ -400,7 +414,7 @@ export class CalculationCore {
         defaultFactor: 0.8
       },
       {
-        evaluator: factorEvaluators.evaluateHsg,
+        evaluator: factorEvaluators.evaluateHsg as FactorEvaluatorFunction,
         args: [userInput.hsgResult],
         factorKey: 'hsg',
         required: false,
@@ -409,7 +423,7 @@ export class CalculationCore {
         defaultFactor: 0.7
       },
       {
-        evaluator: factorEvaluators.evaluateOtb,
+        evaluator: factorEvaluators.evaluateOtb as FactorEvaluatorFunction,
         args: [userInput.hasOtb, userInput.age, userInput.otbMethod, userInput.remainingTubalLength, userInput.hasOtherInfertilityFactors, userInput.desireForMultiplePregnancies],
         factorKey: 'otb',
         required: false,
@@ -418,7 +432,7 @@ export class CalculationCore {
         defaultFactor: 0.5
       },
       {
-        evaluator: factorEvaluators.evaluatePelvicSurgeries,
+        evaluator: factorEvaluators.evaluatePelvicSurgeries as FactorEvaluatorFunction,
         args: [userInput.pelvicSurgeriesNumber],
         factorKey: 'pelvicSurgery',
         required: false,
@@ -429,7 +443,7 @@ export class CalculationCore {
       
       // FACTORES OPCIONALES - Laboratorio y Male Factor
       {
-        evaluator: factorEvaluators.evaluateAmh,
+        evaluator: factorEvaluators.evaluateAmh as FactorEvaluatorFunction,
         args: [userInput.amh],
         factorKey: 'amh',
         required: false,
@@ -437,7 +451,7 @@ export class CalculationCore {
         group: 'OPCIONALES'
       },
       {
-        evaluator: factorEvaluators.evaluateProlactin,
+        evaluator: factorEvaluators.evaluateProlactin as FactorEvaluatorFunction,
         args: [userInput.prolactin],
         factorKey: 'prolactin',
         required: false,
@@ -445,7 +459,7 @@ export class CalculationCore {
         group: 'OPCIONALES'
       },
       {
-        evaluator: factorEvaluators.evaluateTsh,
+        evaluator: factorEvaluators.evaluateTsh as FactorEvaluatorFunction,
         args: [userInput.tsh],
         factorKey: 'tsh',
         required: false,
@@ -453,7 +467,7 @@ export class CalculationCore {
         group: 'OPCIONALES'
       },
       {
-        evaluator: factorEvaluators.evaluateHoma,
+        evaluator: factorEvaluators.evaluateHoma as FactorEvaluatorFunction,
         args: [userInput.homaIr],
         factorKey: 'homa',
         required: false,
@@ -461,7 +475,7 @@ export class CalculationCore {
         group: 'OPCIONALES'
       },
       {
-        evaluator: factorEvaluators.evaluateMaleFactor,
+        evaluator: factorEvaluators.evaluateMaleFactor as FactorEvaluatorFunction,
         args: [userInput],
         factorKey: 'male',
         required: false,
@@ -548,7 +562,7 @@ export class CalculationCore {
    * Evalúa factor de manera segura
    */
   private safeEvaluateFactor(
-    evaluator: (...args: any[]) => PartialEvaluation,
+    evaluator: FactorEvaluatorFunction,
     args: unknown[],
     factorKey: keyof Factors
   ): FactorEvaluationResult {
@@ -633,7 +647,7 @@ export function calculatePureFertilityFactors(input: UserInput): EvaluationState
   }
   
   // 2. Calcular factores
-  const { factors, metrics } = core.calculateFactors(validation.validatedInput!);
+  const { factors } = core.calculateFactors(validation.validatedInput!);
   
   // 3. Generar diagnósticos
   const diagnostics = core.generateDiagnostics(factors, validation.validatedInput!);

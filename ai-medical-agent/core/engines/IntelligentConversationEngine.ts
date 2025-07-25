@@ -12,12 +12,14 @@ import {
 } from '../types/UnifiedTypes';
 
 // Type aliases para mejor legibilidad
+type EvidenceLevel = 'A' | 'B' | 'C' | 'D';
+
 interface DiagnosticAnalysis {
   primaryDiagnosis: {
     pathology: string;
     pathologyES: string;
     confidence: number;
-    evidenceLevel: 'A' | 'B' | 'C' | 'D';
+    evidenceLevel: EvidenceLevel;
     clinicalJustification: string;
   };
   relatedConditions: string[];
@@ -41,13 +43,8 @@ interface PatientContext {
   currentSymptoms?: string[];
 }
 
-interface EducationalResource {
-  title: string;
-  type: ResourceType;
-  description: string;
-  url?: string;
-  level?: 'basic' | 'intermediate' | 'advanced';
-}
+// EducationalResource interface was unused - functionality handled by EducationalResourceType
+
 type ResourceType = 'guideline' | 'article' | 'video' | 'support_group';
 type CommunicationStyle = 'technical' | 'simple' | 'empathetic';
 type InformationDepth = 'basic' | 'detailed' | 'comprehensive';
@@ -194,11 +191,21 @@ export class IntelligentConversationEngine {
     // Detectar si es seguimiento
     const isFollowUp = this.isFollowUpQuery(query, context);
     
+    // Determinar complejidad de forma clara
+    let complexity: 'simple' | 'moderate' | 'complex';
+    if (medicalTerms.length > 2) {
+      complexity = 'complex';
+    } else if (query.length > 100) {
+      complexity = 'moderate';
+    } else {
+      complexity = 'simple';
+    }
+    
     return {
       intent,
       entities: medicalTerms,
       emotion,
-      complexity: medicalTerms.length > 2 ? 'complex' : query.length > 100 ? 'moderate' : 'simple',
+      complexity,
       isFollowUp,
       needsClarification: query.includes('?') && query.split(' ').length < 5,
       medicalTerms
@@ -612,7 +619,7 @@ export class IntelligentConversationEngine {
           ]
         }
       ],
-      evidenceLevel: bestOption.evidenceLevel as 'A' | 'B' | 'C' | 'D',
+      evidenceLevel: bestOption.evidenceLevel as EvidenceLevel,
       confidenceLevel: bestOption.confidence,
       followUpQuestions: [
         '¿Te gustaría discutir estrategias específicas para optimizar estas probabilidades?',
@@ -981,7 +988,7 @@ export class IntelligentConversationEngine {
       },
       relatedConditions: clinicalAnalysis.relatedConditions,
       treatmentOptions: [],
-      evidenceLevel: diagnosis.evidenceLevel as 'A' | 'B' | 'C' | 'D',
+      evidenceLevel: diagnosis.evidenceLevel,
       confidenceLevel: diagnosis.confidence,
       followUpQuestions: this.generatePersonalizedQuestions(analyzedQuery, 'diagnostic'),
       redFlags: clinicalAnalysis.riskStratification.urgencyIndicators,
@@ -1140,7 +1147,7 @@ export class IntelligentConversationEngine {
           ]
         }
       ],
-      evidenceLevel: bestOption.evidenceLevel as 'A' | 'B' | 'C' | 'D',
+      evidenceLevel: bestOption.evidenceLevel as EvidenceLevel,
       confidenceLevel: bestOption.confidence,
       followUpQuestions: [
         '¿Qué factores específicos sobre el pronóstico te preocupan más?',

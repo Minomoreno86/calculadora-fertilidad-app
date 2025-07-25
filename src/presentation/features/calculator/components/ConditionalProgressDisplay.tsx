@@ -4,9 +4,8 @@
 
 import React from 'react';
 import { EnhancedProgressDisplay } from './EnhancedProgressDisplay';
-import { EnhancedProgressStepper } from '@/presentation/components/common/EnhancedProgressStepper';
-import { useFeatureConfig } from '@/config/featureFlags';
 import { useUXEnhancements } from '../hooks/useUXEnhancements';
+import { useFeatureConfig } from '@/config/featureFlags';
 
 interface Props {
   formData: Record<string, unknown>;
@@ -35,17 +34,15 @@ export const ConditionalProgressDisplay: React.FC<Props> = ({
   const uxEnhancements = useUXEnhancements(formData);
   
   // Si las mejoras están deshabilitadas, usar componente básico
+  // Si las mejoras están deshabilitadas, usar componente básico
   if (!featureConfig.enableEnhancedProgress) {
     return (
-      <EnhancedProgressStepper
-        currentStep={currentStep}
-        totalSteps={stepLabels.length}
-        stepLabels={stepLabels}
-        completionPercentage={completionPercentage}
-      />
+      <div className="basic-progress">
+        <div>Step {currentStep} of {stepLabels.length}</div>
+        <div>Progress: {completionPercentage}%</div>
+      </div>
     );
   }
-  
   // Si están habilitadas, usar el componente mejorado
   return (
     <EnhancedProgressDisplay

@@ -55,7 +55,7 @@ export const useDynamicTheme = () => {
       // 📝 TEXTOS DINÁMICOS
       text: currentPalette.textPrimary,
       textSecondary: currentPalette.textSecondary,
-      textTertiary: isDark ? '#9E9E9E' : '#9E9E9E',
+      textTertiary: '#9E9E9E',
       placeholder: isDark ? '#757575' : '#BDBDBD',
       
       // 🎯 ESTADOS DE FERTILIDAD DINÁMICOS

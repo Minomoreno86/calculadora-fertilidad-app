@@ -1,23 +1,44 @@
 /**
- * 🚀 SIMULADOR DASHBOARD PROFESIONAL - VERSIÓN MEJORADA
+ * 🚀 SIMULADOR DASHBOARD PROFESIONAL - V  // 🎨 Tipografía escalable
+  typography: {
+    h3: { fontSize: 20, lineHeight: 28, fontWeight: '600' as const },
+    body1: { fontSize: 16, lineHeight: 24, fontWeight: 'normal' as const },
+    body2: { fontSize: 14, lineHeight: 20, fontWeight: 'normal' as const },
+    caption: { fontSize: 12, lineHeight: 16, fontWeight: 'normal' as const },
+    button: { fontSize: 14, lineHeight: 20, fontWeight: '600' as const },
+  },EJORADA
  * 
  * Soluciones implementadas:
- * 1. ✅ Proporciones visuales correctas y responsivas
- * 2. ✅ Cálculos de mejora precisos basados en evidencia médica
+ * 1. ✅ Proporciones visuales correctas y respons  // 🏷️ MAPEO DE NOMBRES DE FACTORES 
+  const getFactorDisplayName = useCallback((key: string): string => {
+    const nameMap: Record<string, string> = {
+      bmi: 'Índice de Masa Corporal',
+      tsh: 'Función Tiroidea',
+      prolactin: 'Prolactina',
+      homa: 'Resistencia Insulina',
+      pcos: 'Ovarios Poliquísticos',
+      male: 'Factor Masculino',
+      cycle: 'Regularidad Menstrual',
+      endometriosis: 'Endometriosis',
+      myoma: 'Miomas Uterinos',
+      amh: 'Reserva Ovárica'
+    };
+    return nameMap[key] || key;
+  }, []);lculos de mejora precisos basados en evidencia médica
  * 3. ✅ Sistema de diseño profesional 4-point grid
  * 4. ✅ Touch targets ≥ 48px (accesibilidad)
  * 5. ✅ Tipografía escalable y legible
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { View, ScrollView, TouchableOpacity, TextStyle, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Text from '../../../components/common/Text';
 import Box from '../../../components/common/Box';
 import { EvaluationState, SimulatableFactor } from '../../../../core/domain/models';
 import { useFertilitySimulator } from '../useFertilitySimulator';
 
-const { width: screenWidth } = Dimensions.get('window');
+
 
 // 🎨 SISTEMA DE DISEÑO PROFESIONAL
 const DESIGN_SYSTEM = {
@@ -146,7 +167,8 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
   onModeChange 
 }) => {
   // 🏷️ NOMBRES AMIGABLES DE FACTORES
-  const getFactorDisplayName = (key: string): string => {
+  // 🧠 NEURAL: Factor display names mapping optimized with useCallback
+  const getFactorDisplayName = useCallback((key: string): string => {
     const nameMap: Record<string, string> = {
       bmi: 'Índice de Masa Corporal',
       tsh: 'Función Tiroidea',
@@ -160,12 +182,11 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
       amh: 'Reserva Ovárica'
     };
     return nameMap[key] || key;
-  };
+  }, []);
 
   const { 
     simulationResult, 
-    simulateFactor, 
-    simulateAllImprovements
+    simulateFactor
   } = useFertilitySimulator(evaluation);
 
   const [selectedMode, setSelectedMode] = useState<SimulationMode>('single');
@@ -253,15 +274,17 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
   }, [evaluation.factors, getFactorDisplayName]);
 
   // 🎯 MANEJAR SIMULACIÓN CON FEEDBACK VISUAL
-  const handleFactorSimulation = useCallback(async (factor: SimulatableFactor) => {
+  const handleFactorSimulation = useCallback((factor: SimulatableFactor) => {
     setSimulatingFactor(factor);
     try {
-      await simulateFactor(factor);
+      // 🧠 NEURAL FIX: simulateFactor requiere 2 argumentos (factor, explanation)
+      const factorName = getFactorDisplayName(factor);
+      simulateFactor(factor, `Optimización de ${factorName}`);
     } finally {
       // Delay para mostrar el feedback visual
       setTimeout(() => setSimulatingFactor(null), 500);
     }
-  }, [simulateFactor]);
+  }, [simulateFactor, getFactorDisplayName]);
 
   // 🎯 OBTENER COLOR POR DIFICULTAD
   const getDifficultyColor = (difficulty: number): string => {
@@ -367,7 +390,7 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
           </Text>
         </View>
       ) : (
-        optimizedFactors.map((factor, index) => (
+        optimizedFactors.map((factor) => (
           <TouchableOpacity
             key={factor.factor}
             style={[
@@ -458,7 +481,7 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
             <View style={styles.recommendationsSection}>
               <Text style={styles.recommendationsTitle}>💡 Recomendaciones:</Text>
               {simulationResult.recommendations.map((rec, idx) => (
-                <Text key={idx} style={styles.recommendationItem}>• {rec}</Text>
+                <Text key={`rec-${idx}-${rec.substring(0, 10)}`} style={styles.recommendationItem}>• {rec}</Text>
               ))}
             </View>
           )}
@@ -478,8 +501,95 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
   );
 };
 
+// 🧠 NEURAL THEME INTERFACE
+interface ThemeInterface {
+  colors: {
+    primary: string;
+    secondary: string;
+    success: string;
+    warning: string;
+    error: string;
+    background: string;
+    surface: string;
+    surfaceVariant: string;
+    text: string;
+    textSecondary: string;
+    border: string;
+    shadow: string;
+    cardShadow: string;
+  };
+}
+
+// 🧠 NEURAL STYLE INTERFACES
+interface StylesInterface {
+  container: ViewStyle;
+  headerCard: ViewStyle;
+  headerContent: ViewStyle;
+  headerTitle: TextStyle;
+  headerSubtitle: TextStyle;
+  prognosisComparison: ViewStyle;
+  prognosisBox: ViewStyle;
+  prognosisLabel: TextStyle;
+  currentPrognosis: TextStyle;
+  potentialPrognosis: TextStyle;
+  arrowContainer: ViewStyle;
+  improvementSummary: ViewStyle;
+  summaryItem: ViewStyle;
+  summaryValue: TextStyle;
+  summaryLabel: TextStyle;
+  modeSelector: ViewStyle;
+  sectionTitle: TextStyle;
+  modeButtonsContainer: ViewStyle;
+  modeButton: ViewStyle;
+  modeButtonActive: ViewStyle;
+  modeButtonText: TextStyle;
+  modeButtonTextActive: TextStyle;
+  factorsContainer: ViewStyle;
+  noFactorsContainer: ViewStyle;
+  noFactorsTitle: TextStyle;
+  noFactorsText: TextStyle;
+  factorCard: ViewStyle;
+  factorCardSimulating: ViewStyle;
+  factorHeader: ViewStyle;
+  factorTitleSection: ViewStyle;
+  factorName: TextStyle;
+  factorCurrentValue: TextStyle;
+  factorBadges: ViewStyle;
+  difficultyBadge: ViewStyle;
+  badgeText: TextStyle;
+  factorMetrics: ViewStyle;
+  metricRow: ViewStyle;
+  metric: ViewStyle;
+  metricText: TextStyle;
+  factorEvidence: TextStyle;
+  simulatingIndicator: ViewStyle;
+  simulatingText: TextStyle;
+  resultsContainer: ViewStyle;
+  resultsHeader: ViewStyle;
+  resultsTitle: TextStyle;
+  resultsMetrics: ViewStyle;
+  resultMetric: ViewStyle;
+  metricLabel: TextStyle;
+  metricValue: TextStyle;
+  improvementChart: ViewStyle;
+  chartBar: ViewStyle;
+  chartLabel: TextStyle;
+  recommendationsSection: ViewStyle;
+  recommendationsTitle: TextStyle;
+  recommendationItem: TextStyle;
+  // 🧠 NEURAL: Missing styles added
+  resultCard: ViewStyle;
+  resultHeader: ViewStyle;
+  resultTitle: TextStyle;
+  improvementBadge: ViewStyle;
+  improvementText: TextStyle;
+  prognosisChange: ViewStyle;
+  prognosisChangeText: TextStyle;
+  resultExplanation: TextStyle;
+}
+
 // 🎨 ESTILOS PROFESIONALES CON PROPORCIONES CORRECTAS
-const createStyles = (theme: any) => StyleSheet.create({
+const createStyles = (theme: ThemeInterface): StylesInterface => ({
   // 📦 CONTENEDORES PRINCIPALES
   container: {
     flex: 1,
@@ -506,12 +616,14 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.text,
     textAlign: 'center',
     marginBottom: DESIGN_SYSTEM.spacing.xs,
+    fontWeight: '600' as const,
   },
   headerSubtitle: {
     ...DESIGN_SYSTEM.typography.body2,
     color: theme.colors.textSecondary,
     textAlign: 'center',
     marginBottom: DESIGN_SYSTEM.spacing.lg,
+    fontWeight: 'normal' as const,
   },
 
   // 📊 PRONÓSTICO COMPARATIVO
@@ -535,6 +647,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: DESIGN_SYSTEM.spacing.xs,
+    fontWeight: 'normal' as const,
   },
   currentPrognosis: {
     fontSize: 24,
@@ -564,7 +677,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   summaryValue: {
     ...DESIGN_SYSTEM.typography.body1,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
     marginTop: DESIGN_SYSTEM.spacing.xs,
   },
@@ -573,6 +686,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.textSecondary,
     textAlign: 'center',
     marginTop: DESIGN_SYSTEM.spacing.xs,
+    fontWeight: 'normal' as const,
   },
 
   // 🎛️ SELECTOR DE MODO
@@ -607,6 +721,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.text,
     marginTop: DESIGN_SYSTEM.spacing.xs,
     textAlign: 'center',
+    fontWeight: '600' as const,
   },
   modeButtonTextActive: {
     color: theme.colors.background,
@@ -624,6 +739,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     ...DESIGN_SYSTEM.typography.h3,
     color: theme.colors.text,
     marginBottom: DESIGN_SYSTEM.spacing.md,
+    fontWeight: '600' as const,
   },
 
   // 🎯 TARJETAS DE FACTORES
@@ -655,13 +771,14 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   factorName: {
     ...DESIGN_SYSTEM.typography.body1,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
     marginBottom: DESIGN_SYSTEM.spacing.xs,
   },
   factorCurrentValue: {
     ...DESIGN_SYSTEM.typography.body2,
     color: theme.colors.textSecondary,
+    fontWeight: 'normal' as const,
   },
   factorBadges: {
     alignItems: 'flex-end',
@@ -697,11 +814,13 @@ const createStyles = (theme: any) => StyleSheet.create({
     ...DESIGN_SYSTEM.typography.body2,
     color: theme.colors.textSecondary,
     marginLeft: DESIGN_SYSTEM.spacing.xs,
+    fontWeight: 'normal' as const,
   },
   factorEvidence: {
     ...DESIGN_SYSTEM.typography.caption,
     color: theme.colors.textSecondary,
     fontStyle: 'italic',
+    fontWeight: 'normal' as const,
     backgroundColor: theme.colors.surfaceVariant,
     padding: DESIGN_SYSTEM.spacing.sm,
     borderRadius: 8,
@@ -729,12 +848,14 @@ const createStyles = (theme: any) => StyleSheet.create({
   noFactorsTitle: {
     ...DESIGN_SYSTEM.typography.h3,
     color: theme.colors.success,
+    fontWeight: '600' as const,
     marginTop: DESIGN_SYSTEM.spacing.md,
     marginBottom: DESIGN_SYSTEM.spacing.sm,
   },
   noFactorsText: {
     ...DESIGN_SYSTEM.typography.body1,
     color: theme.colors.textSecondary,
+    fontWeight: 'normal' as const,
     textAlign: 'center',
   },
 
@@ -791,6 +912,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   resultExplanation: {
     ...DESIGN_SYSTEM.typography.body2,
     color: theme.colors.textSecondary,
+    fontWeight: 'normal' as const,
     lineHeight: 20,
     marginBottom: DESIGN_SYSTEM.spacing.md,
   },
@@ -801,7 +923,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   recommendationsTitle: {
     ...DESIGN_SYSTEM.typography.body1,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
     marginBottom: DESIGN_SYSTEM.spacing.sm,
   },
@@ -810,5 +932,59 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.textSecondary,
     marginBottom: DESIGN_SYSTEM.spacing.xs,
     lineHeight: 18,
+    fontWeight: 'normal' as const,
+  },
+
+  // 📊 MÉTRICAS DE RESULTADOS - Properties added for StylesInterface completeness
+  resultsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: DESIGN_SYSTEM.spacing.md,
+  },
+  resultsTitle: {
+    ...DESIGN_SYSTEM.typography.h3,
+    color: theme.colors.text,
+    fontWeight: 'bold' as const,
+  },
+  resultsMetrics: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: theme.colors.surfaceVariant,
+    padding: DESIGN_SYSTEM.spacing.md,
+    borderRadius: 8,
+  },
+  resultMetric: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  metricLabel: {
+    ...DESIGN_SYSTEM.typography.caption,
+    color: theme.colors.textSecondary,
+    fontWeight: 'normal' as const,
+    textAlign: 'center',
+  },
+  metricValue: {
+    ...DESIGN_SYSTEM.typography.h3,
+    color: theme.colors.primary,
+    fontWeight: 'bold' as const,
+    textAlign: 'center',
+  },
+  improvementChart: {
+    backgroundColor: theme.colors.background,
+    padding: DESIGN_SYSTEM.spacing.md,
+    borderRadius: 8,
+    marginVertical: DESIGN_SYSTEM.spacing.sm,
+  },
+  chartBar: {
+    backgroundColor: theme.colors.primary,
+    height: 8,
+    borderRadius: 4,
+    marginVertical: DESIGN_SYSTEM.spacing.xs,
+  },
+  chartLabel: {
+    ...DESIGN_SYSTEM.typography.caption,
+    color: theme.colors.textSecondary,
+    fontWeight: 'normal' as const,
   },
 });

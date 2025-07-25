@@ -8,9 +8,12 @@
 import type { MedicalWorkerTask, WorkerResult, MedicalContext } from '../UnifiedParallelEngine_V12';
 import type { UserInput } from '../../domain/models';
 
+// 🎯 TYPE DEFINITIONS FOR RISK ASSESSMENT
+type RiskSeverity = 'low' | 'moderate' | 'high' | 'critical';
+
 export interface RiskFactor {
   name: string;
-  severity: 'low' | 'moderate' | 'high' | 'critical';
+  severity: RiskSeverity;
   impact: number;
   modifiable: boolean;
   recommendations: string[];
@@ -18,14 +21,20 @@ export interface RiskFactor {
 
 export interface RiskAssessmentResult {
   overallRiskScore: number;
-  riskCategory: 'low' | 'moderate' | 'high' | 'critical';
+  riskCategory: RiskSeverity;
   riskFactors: RiskFactor[];
   predictiveInsights: string[];
   mitigationStrategies: string[];
 }
 
+// Risk prediction model interface
+interface RiskModel {
+  predict: (profile: UserInput) => number;
+  confidence: number;
+}
+
 export class RiskAssessmentWorker {
-  private riskModels: Map<string, any>;
+  private readonly riskModels: Map<string, RiskModel>;
 
   constructor() {
     this.riskModels = new Map();
@@ -62,7 +71,7 @@ export class RiskAssessmentWorker {
 
   private async performRiskAssessment(
     input: UserInput,
-    context?: MedicalContext
+    _context?: MedicalContext
   ): Promise<RiskAssessmentResult> {
     const riskFactors: RiskFactor[] = [];
 
@@ -172,7 +181,7 @@ export class RiskAssessmentWorker {
     }
   }
 
-  private assessPCOSRisk(input: UserInput): RiskFactor {
+  private assessPCOSRisk(_input: UserInput): RiskFactor {
     return {
       name: 'Síndrome de Ovarios Poliquísticos',
       severity: 'moderate',
@@ -195,7 +204,7 @@ export class RiskAssessmentWorker {
     };
   }
 
-  private assessOvarianReserveRisk(amh: number, age: number): RiskFactor {
+  private assessOvarianReserveRisk(amh: number, _age: number): RiskFactor {
     if (amh >= 2.5) {
       return {
         name: 'Reserva ovárica normal',
@@ -261,7 +270,7 @@ export class RiskAssessmentWorker {
     return Math.min(totalImpact / riskFactors.length, 1.0);
   }
 
-  private categorizeRisk(overallRisk: number): 'low' | 'moderate' | 'high' | 'critical' {
+  private categorizeRisk(overallRisk: number): RiskSeverity {
     if (overallRisk < 0.25) return 'low';
     if (overallRisk < 0.5) return 'moderate';
     if (overallRisk < 0.75) return 'high';
@@ -312,7 +321,7 @@ export class RiskAssessmentWorker {
   private initializeRiskModels(): void {
     // Mock risk prediction models
     this.riskModels.set('fertility_risk_predictor', {
-      predict: (profile: any) => Math.random() * 0.8,
+      predict: (_profile: UserInput) => Math.random() * 0.8,
       confidence: 0.85
     });
   }

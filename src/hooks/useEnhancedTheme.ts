@@ -92,6 +92,99 @@ const ANIMATION_CONFIGS = {
   },
 };
 
+// 🛠️ UTILIDADES PARA REDUCIR COMPLEJIDAD COGNITIVA
+
+/**
+ * Calcula el borderRadius según configuración
+ */
+const getBorderRadius = (enhancedProgress: boolean, variant: 'default' | 'elevated' = 'default'): number => {
+  if (enhancedProgress) {
+    return variant === 'elevated' ? 20 : 16;
+  }
+  return variant === 'elevated' ? 16 : 12;
+};
+
+/**
+ * Calcula la opacidad de sombra según configuración
+ */
+const getShadowOpacity = (isDarkMode: boolean, animationsEnabled: boolean, baseOpacity = 0.1): number => {
+  if (isDarkMode) return 0.3;
+  return animationsEnabled ? 0.15 : baseOpacity;
+};
+
+/**
+ * Obtiene el color de borde según configuración
+ */
+const getBorderColor = (
+  isFocused: boolean, 
+  smartHints: boolean, 
+  accentColors: typeof ACCENT_COLORS.coral, 
+  baseColors: { border: string }
+): string => {
+  if (isFocused) return accentColors.primary;
+  return smartHints ? accentColors.light : baseColors.border;
+};
+
+/**
+ * Genera configuración de componentes optimizada
+ */
+const generateComponentsConfig = (
+  baseTheme: ReturnType<typeof useDynamicTheme>,
+  accentColors: typeof ACCENT_COLORS.coral,
+  enhancedProgress: boolean,
+  animationsEnabled: boolean,
+  smartHints: boolean,
+  isDarkMode: boolean
+) => ({
+  ...baseTheme.components,
+  
+  card: {
+    ...baseTheme.components.card,
+    default: {
+      ...baseTheme.components.card.default,
+      borderRadius: getBorderRadius(enhancedProgress, 'default'),
+      shadowOpacity: getShadowOpacity(isDarkMode, animationsEnabled, 0.1),
+    },
+    elevated: {
+      ...baseTheme.components.card.elevated,
+      borderRadius: getBorderRadius(enhancedProgress, 'elevated'),
+      shadowOpacity: getShadowOpacity(isDarkMode, animationsEnabled, 0.15),
+    },
+  },
+
+  button: {
+    primary: {
+      backgroundColor: accentColors.primary,
+      borderRadius: enhancedProgress ? 24 : 20,
+      paddingVertical: enhancedProgress ? 16 : 14,
+      shadowOpacity: animationsEnabled ? 0.3 : 0.2,
+    },
+    secondary: {
+      backgroundColor: accentColors.secondary,
+      borderRadius: enhancedProgress ? 20 : 16,
+      paddingVertical: enhancedProgress ? 14 : 12,
+      shadowOpacity: animationsEnabled ? 0.2 : 0.15,
+    },
+  },
+
+  input: {
+    default: {
+      borderRadius: enhancedProgress ? 12 : 8,
+      borderWidth: enhancedProgress ? 2 : 1,
+      borderColor: getBorderColor(false, smartHints, accentColors, baseTheme.colors),
+      backgroundColor: baseTheme.colors.surface,
+      paddingHorizontal: enhancedProgress ? 20 : 16,
+      paddingVertical: enhancedProgress ? 16 : 14,
+    },
+    focused: {
+      borderColor: accentColors.primary,
+      shadowColor: accentColors.primary,
+      shadowOpacity: animationsEnabled ? 0.3 : 0.1,
+      shadowRadius: animationsEnabled ? 8 : 4,
+    },
+  },
+});
+
 /**
  * Hook que combina configuración avanzada con tema dinámico
  */
@@ -167,7 +260,7 @@ export const useEnhancedTheme = () => {
           fontSize: fontConfig.bodyLarge,
         },
         bodySmall: { 
-          ...baseTheme.typography.bodySmall, 
+          ...baseTheme.typography.body, 
           fontSize: fontConfig.bodySmall,
         },
         caption: { 
@@ -180,55 +273,14 @@ export const useEnhancedTheme = () => {
       animations: animationConfig,
 
       // 🎯 Componentes mejorados con configuración
-      components: {
-        ...baseTheme.components,
-        
-        card: {
-          ...baseTheme.components.card,
-          default: {
-            ...baseTheme.components.card.default,
-            borderRadius: enhancedProgress ? 16 : 12,
-            shadowOpacity: animationsEnabled ? 0.15 : 0.1,
-          },
-          elevated: {
-            ...baseTheme.components.card.elevated,
-            borderRadius: enhancedProgress ? 20 : 16,
-            shadowOpacity: animationsEnabled ? 0.2 : 0.15,
-          },
-        },
-
-        button: {
-          primary: {
-            backgroundColor: accentColors.primary,
-            borderRadius: enhancedProgress ? 24 : 20,
-            paddingVertical: enhancedProgress ? 16 : 14,
-            shadowOpacity: animationsEnabled ? 0.3 : 0.2,
-          },
-          secondary: {
-            backgroundColor: accentColors.secondary,
-            borderRadius: enhancedProgress ? 20 : 16,
-            paddingVertical: enhancedProgress ? 14 : 12,
-            shadowOpacity: animationsEnabled ? 0.2 : 0.15,
-          },
-        },
-
-        input: {
-          default: {
-            borderRadius: enhancedProgress ? 12 : 8,
-            borderWidth: enhancedProgress ? 2 : 1,
-            borderColor: smartHints ? accentColors.light : baseTheme.colors.border,
-            backgroundColor: baseTheme.colors.surface,
-            paddingHorizontal: enhancedProgress ? 20 : 16,
-            paddingVertical: enhancedProgress ? 16 : 14,
-          },
-          focused: {
-            borderColor: accentColors.primary,
-            shadowColor: accentColors.primary,
-            shadowOpacity: animationsEnabled ? 0.3 : 0.1,
-            shadowRadius: animationsEnabled ? 8 : 4,
-          },
-        },
-      },
+      components: generateComponentsConfig(
+        baseTheme,
+        accentColors,
+        enhancedProgress,
+        animationsEnabled,
+        smartHints,
+        isDarkMode
+      ),
 
       // 🎯 Configuraciones específicas
       config: {
@@ -250,11 +302,11 @@ export const useEnhancedTheme = () => {
         // 🎨 Generadores de estilos dinámicos
         generateCardStyle: (variant: 'default' | 'elevated' = 'default') => ({
           backgroundColor: baseTheme.colors.surface,
-          borderRadius: enhancedProgress ? (variant === 'elevated' ? 20 : 16) : (variant === 'elevated' ? 16 : 12),
+          borderRadius: getBorderRadius(enhancedProgress, variant),
           padding: baseTheme.spacing.card,
           shadowColor: isDarkMode ? baseTheme.colors.black : '#000000',
           shadowOffset: { width: 0, height: variant === 'elevated' ? 4 : 2 },
-          shadowOpacity: isDarkMode ? 0.3 : (animationsEnabled ? 0.15 : 0.1),
+          shadowOpacity: getShadowOpacity(isDarkMode, animationsEnabled, variant === 'elevated' ? 0.15 : 0.1),
           shadowRadius: variant === 'elevated' ? 8 : 4,
           elevation: variant === 'elevated' ? 8 : 3,
         }),
@@ -274,9 +326,7 @@ export const useEnhancedTheme = () => {
         generateInputStyle: (isFocused = false) => ({
           backgroundColor: baseTheme.colors.surface,
           borderWidth: enhancedProgress ? 2 : 1,
-          borderColor: isFocused 
-            ? accentColors.primary 
-            : (smartHints ? accentColors.light : baseTheme.colors.border),
+          borderColor: getBorderColor(isFocused, smartHints, accentColors, baseTheme.colors),
           borderRadius: enhancedProgress ? 12 : 8,
           paddingHorizontal: enhancedProgress ? 20 : 16,
           paddingVertical: enhancedProgress ? 16 : 14,

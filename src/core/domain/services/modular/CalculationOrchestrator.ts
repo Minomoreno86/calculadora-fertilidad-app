@@ -26,8 +26,13 @@ import {
 } from './EngineSelector';
 
 // ===================================================================
-// 🎯 INTERFACES PARA CALCULATION ORCHESTRATOR
+// 🎯 TIPOS PARA CALCULATION ORCHESTRATOR
 // ===================================================================
+
+/**
+ * Estados de módulo
+ */
+type ModuleStatus = 'READY' | 'RUNNING' | 'COMPLETE' | 'ERROR';
 
 /**
  * Opciones para el cálculo
@@ -138,10 +143,10 @@ export interface OrchestratorConfig {
  */
 export interface ModuleCoordination {
   modules: {
-    core: { status: 'READY' | 'RUNNING' | 'COMPLETE' | 'ERROR'; timing: number };
-    cache: { status: 'READY' | 'RUNNING' | 'COMPLETE' | 'ERROR'; timing: number };
-    monitor: { status: 'READY' | 'RUNNING' | 'COMPLETE' | 'ERROR'; timing: number };
-    selector: { status: 'READY' | 'RUNNING' | 'COMPLETE' | 'ERROR'; timing: number };
+    core: { status: ModuleStatus; timing: number };
+    cache: { status: ModuleStatus; timing: number };
+    monitor: { status: ModuleStatus; timing: number };
+    selector: { status: ModuleStatus; timing: number };
   };
   
   totalCoordinationTime: number;
@@ -165,16 +170,16 @@ export interface CalculationRequest {
 // ===================================================================
 
 export class CalculationOrchestrator {
-  private core: CalculationCore;
-  private cache: UnifiedCacheManager;
-  private monitor: PerformanceMonitor;
-  private selector: IntelligentEngineSelector;
+  private readonly core: CalculationCore;
+  private readonly cache: UnifiedCacheManager;
+  private readonly monitor: PerformanceMonitor;
+  private readonly selector: IntelligentEngineSelector;
   
   // Contadores para debugging
   private requestCounter = 0;
-  private activeRequests = new Map<string, CalculationRequest>();
+  private readonly activeRequests = new Map<string, CalculationRequest>();
   
-  constructor(private config: OrchestratorConfig = {
+  constructor(private readonly config: OrchestratorConfig = {
     defaultTimeoutMs: 5000,
     validationTimeoutMs: 1000,
     calculationTimeoutMs: 3000,
@@ -846,9 +851,26 @@ export class CalculationOrchestrator {
   private findSimilarCacheKeys(baseKey: string): string[] {
     // Implementación simplificada - buscar keys con prefijo similar
     const prefix = baseKey.substring(0, 6);
-    const allKeys: string[] = []; // En implementación real, obtener del cache
     
-    return allKeys.filter(key => key.startsWith(prefix) && key !== baseKey);
+    // Buscar keys similares en cache (implementación funcional)
+    try {
+      // Intentar obtener métricas detalladas que pueden contener información de keys
+      const cacheStats = this.cache.getDetailedStats();
+      
+      // Buscar patterns similares basados en el prefijo
+      if (cacheStats.patterns?.topPatterns) {
+        const similarPatterns = cacheStats.patterns.topPatterns
+          .map((pattern: { hash: string }) => pattern.hash)
+          .filter((hash: string) => hash.startsWith(prefix) && hash !== baseKey);
+        
+        return similarPatterns.slice(0, 5); // Máximo 5 similares
+      }
+    } catch (error) {
+      this.log('DEBUG', `Error buscando keys similares: ${error}`);
+    }
+    
+    // Fallback: retornar array vacío si no se pueden obtener keys
+    return [];
   }
   
   private isCacheSimilarEnough(cached: EvaluationState, _input: UserInput): boolean {
@@ -1278,9 +1300,7 @@ let orchestratorInstance: CalculationOrchestrator | null = null;
  * Obtiene la instancia del orchestrator
  */
 export function getCalculationOrchestrator(config?: OrchestratorConfig): CalculationOrchestrator {
-  if (!orchestratorInstance) {
-    orchestratorInstance = new CalculationOrchestrator(config);
-  }
+  orchestratorInstance ??= new CalculationOrchestrator(config);
   return orchestratorInstance;
 }
 

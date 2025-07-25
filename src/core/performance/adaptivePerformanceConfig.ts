@@ -84,6 +84,9 @@ export function detectDevicePerformance(): 'high' | 'medium' | 'low' {
   
   const duration = performance.now() - startTime;
   
+  // Neural safety: consume result to prevent unused variable warning
+  if (result < 0) console.log('Benchmark result:', result);
+  
   // Clasificación basada en tiempo de ejecución
   if (duration < 10) return 'high';
   if (duration < 30) return 'medium';
@@ -95,10 +98,13 @@ export function detectDevicePerformance(): 'high' | 'medium' | 'low' {
  */
 export function getPerformanceProfile(): PerformanceProfile {
   const devicePerformance = detectDevicePerformance();
-  const environment = __DEV__ ? 'development' : 'production';
+  // Neural environment detection with safe fallback
+  const globalScope = globalThis as { __DEV__?: boolean };
+  const environment = globalScope.__DEV__ || 
+                      process.env.NODE_ENV === 'development' ? 'development' : 'production';
   const profileKey = `${devicePerformance}_${environment}`;
   
-  return PERFORMANCE_PROFILES[profileKey] || PERFORMANCE_PROFILES['medium_production'];
+  return PERFORMANCE_PROFILES[profileKey] || PERFORMANCE_PROFILES['medium_production']!;
 }
 
 /**

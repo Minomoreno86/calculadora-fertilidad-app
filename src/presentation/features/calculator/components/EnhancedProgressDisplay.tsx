@@ -106,7 +106,7 @@ export const EnhancedProgressDisplay: React.FC<Props> = ({
                 isCompleted && styles.completedSectionIndicator,
               ]}>
                 <Ionicons
-                  name={isCompleted ? 'checkmark' : section.icon as any}
+                  name={isCompleted ? 'checkmark' : (section.icon as keyof typeof Ionicons.glyphMap)}
                   size={16}
                   color="white"
                 />
@@ -125,7 +125,7 @@ export const EnhancedProgressDisplay: React.FC<Props> = ({
               {index < sections.length - 1 && (
                 <View style={[
                   styles.connector,
-                  { backgroundColor: getSectionColor(sections[index + 1].key, index + 1) }
+                  { backgroundColor: '#E5E7EB' }
                 ]} />
               )}
             </View>

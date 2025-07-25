@@ -1,26 +1,18 @@
 // ===================================================================
-// 🚀 ÍNDICE DE EXPORTACIONES - SISTEMA DE VALIDACIÓN INTELIGENTE
+// 🧠 NEURAL MEDICAL VALIDATION SYSTEM V13.0 - CLEAN ARCHITECTURE
 // ===================================================================
 
-// Sistema de validación clínica base
+// 🏥 Sistema de validación clínica profesional (ASRM, ESHRE, WHO 2021)
 export * from './clinicalValidators';
 export * from './validationMessages';
+export * from './referenceRanges';
 
-// Sistema inteligente de validación - NUEVO
-export * from './useIntelligentClinicalValidation';
-
-// Tipos principales para validación
+// 🎯 Tipos principales para validación médica
 export type {
   ValidationResult,
   FieldValidationResult
 } from './clinicalValidators';
 
-// Re-exportar ValidationMessage desde su fuente correcta
-export type { ValidationMessage } from './validationMessages';
-
-// Tipos del sistema inteligente - NUEVO
 export type {
-  ClinicalInsight,
-  SmartValidationResult,
-  IntelligentValidationOptions
-} from './useIntelligentClinicalValidation';
+  ValidationMessage
+} from './validationMessages';

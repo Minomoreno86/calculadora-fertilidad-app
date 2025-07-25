@@ -173,81 +173,99 @@ export const evaluateOtb = (
   }
 
   const diagnostics: string[] = [];
-  let otbFactor = 1.0; // Inicializar en 1.0 para multiplicar factores
+  let otbFactor = 1.0;
 
-  // 🎯 Evaluación de edad materna
-  if (age !== undefined) {
-    if (age >= 40) {
-      otbFactor *= 0.2;
-      diagnostics.push('Edad materna ≥ 40 años: Baja probabilidad de éxito en recanalización.');
-    } else if (age >= 35) {
-      otbFactor *= 0.5;
-      diagnostics.push('Edad materna 35-39 años: Tasas de éxito moderadas en recanalización.');
-    } else {
-      diagnostics.push('Edad materna < 35 años: Ideal para recanalización tubárica.');
-    }
-  } else {
-    diagnostics.push('Edad materna no especificada para evaluación de recanalización.');
-  }
-
-  // 🔧 Evaluación del método de OTB
-  if (otbMethod !== undefined) {
-    switch (otbMethod) {
-      case OtbMethod.ExtensiveCauterization:
-      case OtbMethod.PartialSalpingectomy:
-        otbFactor *= 0.1;
-        diagnostics.push('Método de OTB: Cauterización extensa o salpingectomía parcial. Pronóstico muy pobre para recanalización.');
-        break;
-      case OtbMethod.Clips:
-      case OtbMethod.Rings:
-      case OtbMethod.Ligation:
-        otbFactor *= 0.8;
-        diagnostics.push('Método de OTB: Clips, anillos o ligaduras. Mejor pronóstico para recanalización.');
-        break;
-      case OtbMethod.Unknown:
-        diagnostics.push('Método de OTB no especificado para evaluación de recanalización.');
-        break;
-    }
-  } else {
-    diagnostics.push('Método de OTB no especificado para evaluación de recanalización.');
-  }
-
-  // 📏 Evaluación de longitud tubárica remanente
-  if (remainingTubalLength !== undefined) {
-    if (remainingTubalLength < 4) {
-      otbFactor *= 0.3;
-      diagnostics.push('Longitud tubárica remanente < 4 cm. Reduce tasas de embarazo.');
-    } else {
-      diagnostics.push('Longitud tubárica remanente ≥ 4 cm. Favorable para recanalización.');
-    }
-  } else {
-    diagnostics.push('Longitud tubárica remanente no especificada para evaluación de recanalización.');
-  }
-
-  // 🔍 Evaluación de otros factores de infertilidad
-  if (hasOtherInfertilityFactors !== undefined) {
-    if (hasOtherInfertilityFactors) {
-      otbFactor *= 0.5;
-      diagnostics.push('Presencia de otros factores de infertilidad. Considerar antes de recanalización.');
-    } else {
-      diagnostics.push('Ausencia de otros factores de infertilidad. Favorable para recanalización.');
-    }
-  } else {
-    diagnostics.push('Información sobre otros factores de infertilidad no especificada.');
-  }
-
-  // 👶 Evaluación del deseo de múltiples embarazos
+  // 🎯 Evaluaciones individuales para reducir complejidad
+  otbFactor *= evaluateOtbAge(diagnostics, age);
+  otbFactor *= evaluateOtbMethod(diagnostics, otbMethod);
+  otbFactor *= evaluateOtbTubalLength(diagnostics, remainingTubalLength);
+  otbFactor *= evaluateOtbOtherFactors(diagnostics, hasOtherInfertilityFactors);
+  
   if (desireForMultiplePregnancies !== undefined) {
     diagnostics.push('Deseo de múltiples embarazos. Recanalización puede ser más costo-efectiva que FIV.');
   } else {
     diagnostics.push('Deseo de múltiples embarazos no especificado.');
   }
 
-  // ✅ Retornar el factor calculado correctamente
   return { 
-    factors: { otb: Math.max(0.0, otbFactor) }, // Asegurar que no sea negativo
+    factors: { otb: Math.max(0.0, otbFactor) },
     diagnostics: { hsgComment: diagnostics.join(' ') } 
   };
+};
+
+// 🧠 NEURAL HELPER FUNCTIONS para reducir complejidad cognitiva
+const evaluateOtbAge = (diagnostics: string[], age?: number): number => {
+  if (age === undefined) {
+    diagnostics.push('Edad materna no especificada para evaluación de recanalización.');
+    return 1.0;
+  }
+  
+  if (age >= 40) {
+    diagnostics.push('Edad materna ≥ 40 años: Baja probabilidad de éxito en recanalización.');
+    return 0.2;
+  }
+  
+  if (age >= 35) {
+    diagnostics.push('Edad materna 35-39 años: Tasas de éxito moderadas en recanalización.');
+    return 0.5;
+  }
+  
+  diagnostics.push('Edad materna < 35 años: Ideal para recanalización tubárica.');
+  return 1.0;
+};
+
+const evaluateOtbMethod = (diagnostics: string[], otbMethod?: OtbMethod): number => {
+  if (otbMethod === undefined) {
+    diagnostics.push('Método de OTB no especificado para evaluación de recanalización.');
+    return 1.0;
+  }
+
+  switch (otbMethod) {
+    case OtbMethod.ExtensiveCauterization:
+    case OtbMethod.PartialSalpingectomy:
+      diagnostics.push('Método de OTB: Cauterización extensa o salpingectomía parcial. Pronóstico muy pobre para recanalización.');
+      return 0.1;
+    case OtbMethod.Clips:
+    case OtbMethod.Rings:
+    case OtbMethod.Ligation:
+      diagnostics.push('Método de OTB: Clips, anillos o ligaduras. Mejor pronóstico para recanalización.');
+      return 0.8;
+    case OtbMethod.Unknown:
+      diagnostics.push('Método de OTB no especificado para evaluación de recanalización.');
+      return 1.0;
+    default:
+      return 1.0;
+  }
+};
+
+const evaluateOtbTubalLength = (diagnostics: string[], remainingTubalLength?: number): number => {
+  if (remainingTubalLength === undefined) {
+    diagnostics.push('Longitud tubárica remanente no especificada para evaluación de recanalización.');
+    return 1.0;
+  }
+  
+  if (remainingTubalLength < 4) {
+    diagnostics.push('Longitud tubárica remanente < 4 cm. Reduce tasas de embarazo.');
+    return 0.3;
+  }
+  
+  diagnostics.push('Longitud tubárica remanente ≥ 4 cm. Favorable para recanalización.');
+  return 1.0;
+};
+
+const evaluateOtbOtherFactors = (diagnostics: string[], hasOtherInfertilityFactors?: boolean): number => {
+  if (hasOtherInfertilityFactors === undefined) {
+    diagnostics.push('Información sobre otros factores de infertilidad no especificada.');
+    return 1.0;
+  }
+  
+  if (hasOtherInfertilityFactors) {
+    diagnostics.push('Presencia de otros factores de infertilidad. Considerar antes de recanalización.');
+    return 0.5;
+  }
+  
+  diagnostics.push('Ausencia de otros factores de infertilidad. Favorable para recanalización.');
+  return 1.0;
 };
 
 export const evaluateAmh = (amh?: number): PartialEvaluation => {
@@ -389,40 +407,10 @@ export const evaluateMaleFactor = (input: UserInput): PartialEvaluation => {
 
   const alterations: { factor: number; diagnosis: string }[] = [];
 
-  // 🧬 Evaluación de concentración espermática
-  if (spermConcentration !== undefined) {
-    if (spermConcentration < 0) {
-      alterations.push({ factor: 0.1, diagnosis: 'Concentración espermática inválida' });
-    } else if (spermConcentration === 0) {
-      alterations.push({ factor: 0.05, diagnosis: 'Azoospermia' });
-    } else if (spermConcentration < 5) {
-      alterations.push({ factor: 0.25, diagnosis: 'Oligozoospermia severa (<5 mill/ml)' });
-    } else if (spermConcentration < 16) {
-      alterations.push({ factor: 0.7, diagnosis: 'Oligozoospermia leve-moderada (5-15 mill/ml)' });
-    }
-  }
-
-  // 🏃‍♂️ Evaluación de motilidad progresiva
-  if (spermProgressiveMotility !== undefined) {
-    if (spermProgressiveMotility < 0 || spermProgressiveMotility > 100) {
-      alterations.push({ factor: 0.1, diagnosis: 'Motilidad progresiva inválida' });
-    } else if (spermProgressiveMotility === 0) {
-      alterations.push({ factor: 0.1, diagnosis: 'Astenozoospermia total (0% motilidad)' });
-    } else if (spermProgressiveMotility < 20) {
-      alterations.push({ factor: 0.4, diagnosis: 'Astenozoospermia severa (<20%)' });
-    } else if (spermProgressiveMotility < 30) {
-      alterations.push({ factor: 0.85, diagnosis: 'Astenozoospermia leve (20-29%)' });
-    }
-  }
-
-  // 🎭 Evaluación de morfología normal
-  if (spermNormalMorphology !== undefined) {
-    if (spermNormalMorphology < 0 || spermNormalMorphology > 100) {
-      alterations.push({ factor: 0.1, diagnosis: 'Morfología espermática inválida' });
-    } else if (spermNormalMorphology < 4) {
-      alterations.push({ factor: 0.5, diagnosis: 'Teratozoospermia (<4% formas normales)' });
-    }
-  }
+  // 🧬 Evaluaciones separadas para reducir complejidad
+  evaluateSpermConcentration(spermConcentration, alterations);
+  evaluateSpermMotility(spermProgressiveMotility, alterations);
+  evaluateSpermMorphology(spermNormalMorphology, alterations);
 
   // ✅ Si no hay alteraciones
   if (alterations.length === 0) {
@@ -433,10 +421,16 @@ export const evaluateMaleFactor = (input: UserInput): PartialEvaluation => {
   }
 
   // 🎯 Determinar el factor más restrictivo
-  const worstAlteration = alterations.reduce(
-    (min, current) => (current.factor < min.factor ? current : min),
-    alterations[0],
-  );
+  const worstAlteration = alterations.length > 0 
+    ? alterations.reduce((min, current) => (!min || current.factor < min.factor ? current : min), alterations[0])
+    : null;
+
+  if (!worstAlteration) {
+    return { 
+      factors: { male: 1.0 }, 
+      diagnostics: { maleFactorDetailed: 'Error en evaluación de factor masculino' } 
+    };
+  }
 
   const allDiagnoses = alterations.map((a) => a.diagnosis).join(', ');
   
@@ -444,4 +438,52 @@ export const evaluateMaleFactor = (input: UserInput): PartialEvaluation => {
     factors: { male: worstAlteration.factor }, 
     diagnostics: { maleFactorDetailed: allDiagnoses } 
   };
+};
+
+// 🧠 NEURAL HELPER FUNCTIONS para reducir complejidad cognitiva
+const evaluateSpermConcentration = (
+  spermConcentration: number | undefined, 
+  alterations: { factor: number; diagnosis: string }[]
+): void => {
+  if (spermConcentration === undefined) return;
+
+  if (spermConcentration < 0) {
+    alterations.push({ factor: 0.1, diagnosis: 'Concentración espermática inválida' });
+  } else if (spermConcentration === 0) {
+    alterations.push({ factor: 0.05, diagnosis: 'Azoospermia' });
+  } else if (spermConcentration < 5) {
+    alterations.push({ factor: 0.25, diagnosis: 'Oligozoospermia severa (<5 mill/ml)' });
+  } else if (spermConcentration < 16) {
+    alterations.push({ factor: 0.7, diagnosis: 'Oligozoospermia leve-moderada (5-15 mill/ml)' });
+  }
+};
+
+const evaluateSpermMotility = (
+  spermProgressiveMotility: number | undefined,
+  alterations: { factor: number; diagnosis: string }[]
+): void => {
+  if (spermProgressiveMotility === undefined) return;
+
+  if (spermProgressiveMotility < 0 || spermProgressiveMotility > 100) {
+    alterations.push({ factor: 0.1, diagnosis: 'Motilidad progresiva inválida' });
+  } else if (spermProgressiveMotility === 0) {
+    alterations.push({ factor: 0.1, diagnosis: 'Astenozoospermia total (0% motilidad)' });
+  } else if (spermProgressiveMotility < 20) {
+    alterations.push({ factor: 0.4, diagnosis: 'Astenozoospermia severa (<20%)' });
+  } else if (spermProgressiveMotility < 30) {
+    alterations.push({ factor: 0.85, diagnosis: 'Astenozoospermia leve (20-29%)' });
+  }
+};
+
+const evaluateSpermMorphology = (
+  spermNormalMorphology: number | undefined,
+  alterations: { factor: number; diagnosis: string }[]
+): void => {
+  if (spermNormalMorphology === undefined) return;
+
+  if (spermNormalMorphology < 0 || spermNormalMorphology > 100) {
+    alterations.push({ factor: 0.1, diagnosis: 'Morfología espermática inválida' });
+  } else if (spermNormalMorphology < 4) {
+    alterations.push({ factor: 0.5, diagnosis: 'Teratozoospermia (<4% formas normales)' });
+  }
 };

@@ -72,6 +72,11 @@ import {
 // ===================================================================
 
 /**
+ * Estado de un módulo del sistema
+ */
+type ModuleStatus = 'OK' | 'WARNING' | 'ERROR';
+
+/**
  * Configuración completa del sistema modular
  */
 export interface ModularEngineConfig {
@@ -143,11 +148,11 @@ export interface SystemHealth {
   overall: 'HEALTHY' | 'DEGRADED' | 'CRITICAL' | 'OFFLINE';
   
   modules: {
-    core: { status: 'OK' | 'WARNING' | 'ERROR'; message?: string };
-    cache: { status: 'OK' | 'WARNING' | 'ERROR'; message?: string; hitRate?: number };
-    performance: { status: 'OK' | 'WARNING' | 'ERROR'; message?: string; avgTime?: number };
-    selector: { status: 'OK' | 'WARNING' | 'ERROR'; message?: string; accuracy?: number };
-    orchestrator: { status: 'OK' | 'WARNING' | 'ERROR'; message?: string; activeRequests?: number };
+    core: { status: ModuleStatus; message?: string };
+    cache: { status: ModuleStatus; message?: string; hitRate?: number };
+    performance: { status: ModuleStatus; message?: string; avgTime?: number };
+    selector: { status: ModuleStatus; message?: string; accuracy?: number };
+    orchestrator: { status: ModuleStatus; message?: string; activeRequests?: number };
   };
   
   metrics: {
@@ -174,7 +179,7 @@ export class ModularFertilityEngine {
   private orchestrator!: CalculationOrchestrator;
   
   private initialized = false;
-  private config: ModularEngineConfig;
+  private readonly config: ModularEngineConfig;
   
   constructor(config: ModularEngineConfig = {}) {
     this.config = {
@@ -198,10 +203,10 @@ export class ModularFertilityEngine {
     try {
       // Inicializar módulos
       this.core = new CalculationCore();
-      this.cache = getCacheManager(undefined);
-      this.monitor = getPerformanceMonitor(undefined);
-      this.selector = getEngineSelector(undefined);
-      this.orchestrator = getCalculationOrchestrator(undefined);
+      this.cache = getCacheManager();
+      this.monitor = getPerformanceMonitor();
+      this.selector = getEngineSelector();
+      this.orchestrator = getCalculationOrchestrator();
       
       this.initialized = true;
       
@@ -543,6 +548,7 @@ export class ModularFertilityEngine {
     this.ensureInitialized();
     
     const beforeMetrics = this.getPerformanceMetrics();
+    const beforeMemory = process.memoryUsage().heapUsed;
     const optimizationsApplied: string[] = [];
     
     try {
@@ -552,32 +558,30 @@ export class ModularFertilityEngine {
       
       // Forzar garbage collection si está disponible
       if (global.gc) {
-        const beforeMemory = process.memoryUsage().heapUsed;
         global.gc();
-        const afterMemory = process.memoryUsage().heapUsed;
-        const memoryFreed = beforeMemory - afterMemory;
-        
-        if (memoryFreed > 0) {
-          optimizationsApplied.push(`Liberados ${Math.round(memoryFreed / 1024 / 1024)}MB de memoria`);
-        }
+        optimizationsApplied.push('Garbage collection ejecutado');
       }
       
       // Esperar un momento para que se reflejen las optimizaciones
       await new Promise(resolve => setTimeout(resolve, 100));
       
       const afterMetrics = this.getPerformanceMetrics();
+      const afterMemory = process.memoryUsage().heapUsed;
+      const memoryFreed = Math.max(0, beforeMemory - afterMemory);
+      
       const performanceImprovement = afterMetrics.averageExecutionTime > 0 && beforeMetrics.averageExecutionTime > 0 ?
         ((beforeMetrics.averageExecutionTime - afterMetrics.averageExecutionTime) / beforeMetrics.averageExecutionTime) * 100 : 0;
       
       console.log('🔧 Optimización del sistema completada:', {
         optimizaciones: optimizationsApplied.length,
-        mejora: `${performanceImprovement.toFixed(1)}%`
+        mejora: `${performanceImprovement.toFixed(1)}%`,
+        memoriaLiberada: `${Math.round(memoryFreed / 1024 / 1024)}MB`
       });
       
       return {
         optimizationsApplied,
         performanceImprovement,
-        memoryFreed: 0 // TODO: implementar medición real
+        memoryFreed
       };
       
     } catch (error) {
@@ -601,15 +605,25 @@ export class ModularFertilityEngine {
     this.ensureInitialized();
     
     try {
+      const beforeMemory = process.memoryUsage().heapUsed;
+      
       // Limpiar cache
       this.cache.clear();
+      
+      // Forzar garbage collection si está disponible
+      if (global.gc) {
+        global.gc();
+      }
+      
+      const afterMemory = process.memoryUsage().heapUsed;
+      const memoryFreed = Math.max(0, beforeMemory - afterMemory);
       
       console.log('🧹 Sistema limpiado correctamente');
       
       return {
         cacheCleared: true,
         metricsReset: true,
-        memoryFreed: 0 // TODO: medir memoria liberada
+        memoryFreed
       };
       
     } catch (error) {
@@ -636,8 +650,24 @@ export class ModularFertilityEngine {
       this.initialized = false;
       this.initialize();
       
-      // Verificar que todo funciona
+      // Verificar funcionamiento completo: health check + test calculation
       const health = this.checkSystemHealth();
+      
+      // Test adicional: realizar un cálculo de prueba
+      const testInput: UserInput = {
+        age: 30,
+        bmi: null,
+        hasPcos: false,
+        endometriosisGrade: 0,
+        myomaType: MyomaType.None,
+        adenomyosisType: AdenomyosisType.None,
+        polypType: PolypType.None,
+        hsgResult: HsgResult.Unknown,
+        hasOtb: false,
+        tpoAbPositive: false
+      };
+      
+      await this.calculateFast(testInput);
       
       if (health.overall === 'HEALTHY' || health.overall === 'DEGRADED') {
         console.log('✅ Sistema reiniciado correctamente');
@@ -810,9 +840,7 @@ let modularEngineInstance: ModularFertilityEngine | null = null;
  * Obtiene la instancia del engine modular
  */
 export function getModularEngine(config?: ModularEngineConfig): ModularFertilityEngine {
-  if (!modularEngineInstance) {
-    modularEngineInstance = new ModularFertilityEngine(config);
-  }
+  modularEngineInstance ??= new ModularFertilityEngine(config);
   return modularEngineInstance;
 }
 

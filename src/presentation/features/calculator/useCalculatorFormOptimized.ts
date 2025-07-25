@@ -387,8 +387,18 @@ export const useCalculatorFormOptimized = (): UseCalculatorFormOptimizedReturn =
     getRangeValidation: (fieldName: string) => {
       // ✨ NEURAL FIX V13.0: Acceso seguro a fieldValue desde safeWatchedFields
       const fieldValue = (safeWatchedFields as Record<string, unknown>)[fieldName];
-      const safeValue = fieldValue === null || fieldValue === undefined ? '0' : 
-                       (typeof fieldValue === 'object' ? JSON.stringify(fieldValue) : String(fieldValue));
+      
+      // 🔧 Función auxiliar para stringificar de forma segura
+      const safeStringify = (value: unknown): string => {
+        if (value === null || value === undefined) return '0';
+        if (typeof value === 'string') return value;
+        if (typeof value === 'number') return value.toString();
+        if (typeof value === 'boolean') return value.toString();
+        if (typeof value === 'object') return JSON.stringify(value);
+        return '0'; // Fallback para tipos desconocidos
+      };
+      
+      const safeValue = safeStringify(fieldValue);
       const numericValue = parseFloat(safeValue);
       
       if (fieldName === 'age' || fieldName === 'weight' || fieldName === 'height') {

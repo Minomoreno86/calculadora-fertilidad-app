@@ -12,12 +12,12 @@
  */
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { View, TextInput, StyleSheet, TextInputProps, Platform, Keyboard } from 'react-native';
+import { View, TextInput, StyleSheet, Platform, Keyboard } from 'react-native';
 import { Control, Controller, FieldError } from 'react-hook-form';
 import { Ionicons } from '@expo/vector-icons';
 import Text from './Text';
-import { useDynamicTheme } from '@/hooks/useDynamicTheme';
-import { RangeValidation } from '@/presentation/features/calculator/utils/rangeValidation';
+import { useDynamicTheme } from '../../../hooks/useDynamicTheme';
+import { RangeValidation } from '../../features/calculator/utils/rangeValidation';
 
 interface OptimizedNumericInputProps<T extends Record<string, unknown> = Record<string, unknown>> {
   control: Control<T>;
@@ -60,7 +60,7 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
   const [isValidating, setIsValidating] = useState(false);
   
   // 🚀 Referencias para debounce y cleanup
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<TextInput>(null);
   const isMountedRef = useRef(true);
   
@@ -69,7 +69,7 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
-      if (debounceTimeoutRef.current) {
+      if (debounceTimeoutRef?.current) {
         clearTimeout(debounceTimeoutRef.current);
       }
     };
@@ -79,44 +79,44 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
   const getValidationColors = useCallback(() => {
     if (error) {
       return {
-        borderColor: theme.colors.error,
+        borderColor: theme?.colors?.error,
         backgroundColor: theme.isDark ? '#4E0D0D' : '#FFEBEE',
-        iconColor: theme.colors.error,
+        iconColor: theme?.colors?.error,
       };
     }
     
     if (!rangeValidation) {
       return {
-        borderColor: isFocused ? theme.colors.primary : theme.colors.border,
-        backgroundColor: theme.colors.surface,
-        iconColor: isFocused ? theme.colors.primary : theme.colors.textSecondary,
+        borderColor: isFocused ? theme?.colors?.primary : theme?.colors?.border,
+        backgroundColor: theme?.colors?.surface,
+        iconColor: isFocused ? theme?.colors?.primary : theme?.colors?.textSecondary,
       };
     }
 
-    if (rangeValidation.isNormal) {
+    if (rangeValidation?.isNormal) {
       return {
-        borderColor: theme.colors.success,
+        borderColor: theme?.colors?.success,
         backgroundColor: theme.isDark ? '#0D4E1A' : '#E8F5E8',
-        iconColor: theme.colors.success,
+        iconColor: theme?.colors?.success,
       };
-    } else if (rangeValidation.isWarning) {
+    } else if (rangeValidation?.isWarning) {
       return {
-        borderColor: theme.colors.warning,
+        borderColor: theme?.colors?.warning,
         backgroundColor: theme.isDark ? '#4E3A0D' : '#FFF3E0',
-        iconColor: theme.colors.warning,
+        iconColor: theme?.colors?.warning,
       };
-    } else if (rangeValidation.isError) {
+    } else if (rangeValidation?.isError) {
       return {
-        borderColor: theme.colors.error,
+        borderColor: theme?.colors?.error,
         backgroundColor: theme.isDark ? '#4E0D0D' : '#FFEBEE',
-        iconColor: theme.colors.error,
+        iconColor: theme?.colors?.error,
       };
     }
     
     return {
-      borderColor: isFocused ? theme.colors.primary : theme.colors.border,
-      backgroundColor: theme.colors.surface,
-      iconColor: isFocused ? theme.colors.primary : theme.colors.textSecondary,
+      borderColor: isFocused ? theme?.colors?.primary : theme?.colors?.border,
+      backgroundColor: theme?.colors?.surface,
+      iconColor: isFocused ? theme?.colors?.primary : theme?.colors?.textSecondary,
     };
   }, [rangeValidation, error, isFocused, theme]);
 
@@ -125,13 +125,13 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
   // 🚀 Función de debounce optimizada
   const debouncedOnChange = useCallback((value: string, onChange: (value: string) => void) => {
     // Limpiar timeout anterior
-    if (debounceTimeoutRef.current) {
+    if (debounceTimeoutRef?.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
     
     // Programar nueva actualización
     debounceTimeoutRef.current = setTimeout(() => {
-      if (isMountedRef.current) {
+      if (isMountedRef?.current) {
         onChange(value);
         if (enableRealTimeValidation) {
           setIsValidating(false);
@@ -172,7 +172,7 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
     // Evitar múltiples puntos decimales
     const parts = normalizedText.split('.');
     const formattedText = parts.length > 2 
-      ? `${parts[0]}.${parts.slice(1).join('')}` 
+      ? `${parts?.[0]}.${parts.slice(1).join('')}` 
       : normalizedText;
     
     // Actualizar valor local inmediatamente para UX responsiva
@@ -221,14 +221,14 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
                 iconName && styles.inputWithIcon,
               ]}
               onFocus={handleFocus}
-              onBlur={(e) => {
+              onBlur={() => {
                 handleBlur();
-                onBlur(e);
+                onBlur();
               }}
               onChangeText={(text) => handleTextChange(text, onChange)}
               value={localValue || value?.toString() || ''}
               placeholder={placeholder}
-              placeholderTextColor={theme.colors.textSecondary}
+              placeholderTextColor={theme?.colors?.textSecondary}
               keyboardType="numeric"
               returnKeyType="done"
               blurOnSubmit={true}
@@ -262,15 +262,15 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
 // 🎨 Función para crear estilos dinámicos
 const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
   container: {
-    marginBottom: theme.spacing.m,
+    marginBottom: theme?.spacing?.m,
   },
   label: {
-    marginBottom: theme.spacing.xs,
-    color: theme.colors.text,
+    marginBottom: theme?.spacing?.xs,
+    color: theme?.colors?.text,
     fontWeight: '600',
   },
   validatingText: {
-    color: theme.colors.textSecondary,
+    color: theme?.colors?.textSecondary,
     fontSize: 12,
     fontStyle: 'italic',
   },
@@ -279,22 +279,22 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     alignItems: 'center',
     borderWidth: 1,
     borderRadius: 12,
-    paddingHorizontal: theme.spacing.m,
-    paddingVertical: theme.spacing.s,
+    paddingHorizontal: theme?.spacing?.m,
+    paddingVertical: theme?.spacing?.s,
     minHeight: 48,
-    shadowColor: theme.isDark ? theme.colors.black : '#000000',
+    shadowColor: theme.isDark ? theme?.colors?.black : '#000000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: theme.isDark ? 0.3 : 0.1,
     shadowRadius: 2,
     elevation: 2,
   },
   icon: {
-    marginRight: theme.spacing.s,
+    marginRight: theme?.spacing?.s,
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: theme.colors.text,
+    color: theme?.colors?.text,
     textAlign: 'left',
     padding: 0,
   },
@@ -302,14 +302,14 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     marginLeft: 0,
   },
   validationMessage: {
-    marginTop: theme.spacing.xs,
+    marginTop: theme?.spacing?.xs,
     fontSize: 12,
     lineHeight: 16,
   },
   errorText: {
-    marginTop: theme.spacing.xs,
+    marginTop: theme?.spacing?.xs,
     fontSize: 12,
-    color: theme.colors.error,
+    color: theme?.colors?.error,
     lineHeight: 16,
   },
 });

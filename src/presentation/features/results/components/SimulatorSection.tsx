@@ -5,7 +5,7 @@ import Box from '../../../components/common/Box';
 import { EvaluationState, SimulatableFactor, Diagnostics } from '../../../../core/domain/models';
 import { useFertilitySimulator } from '../../../features/simulator/useFertilitySimulator';
 import { theme } from '../../../../config/theme';
-import SimulatorDashboard from '../../../features/simulator/components/SimulatorDashboard';
+import { SimulatorDashboard } from '../../../features/simulator/components/SimulatorDashboard';
 
 type SimulationInsightProps = {
   label: string;
@@ -52,6 +52,10 @@ export const SimulatorSection: React.FC<Props> = ({ evaluation }) => {
 
   if (suboptimalFactors.length === 0) return null;
 
+  const toggleSimulator = () => {
+    setUseAdvancedSimulator(prev => !prev);
+  };
+
   // 🚀 Usar el nuevo SimulatorDashboard si está activado
   if (useAdvancedSimulator) {
     return (
@@ -59,7 +63,7 @@ export const SimulatorSection: React.FC<Props> = ({ evaluation }) => {
         <View style={styles.toggleContainer}>
           <TouchableOpacity
             style={styles.toggleButton}
-            onPress={() => setUseAdvancedSimulator(!useAdvancedSimulator)}
+            onPress={toggleSimulator}
           >
             <Text style={styles.toggleText}>
               {useAdvancedSimulator ? '📊 Vista Avanzada' : '📋 Vista Básica'}
@@ -68,7 +72,7 @@ export const SimulatorSection: React.FC<Props> = ({ evaluation }) => {
         </View>
         <SimulatorDashboard 
           evaluation={evaluation} 
-          onModeChange={(mode) => console.log('Mode changed:', mode)}
+          onModeChange={(mode: string) => console.log('Mode changed:', mode)}
         />
       </View>
     );
@@ -80,7 +84,7 @@ export const SimulatorSection: React.FC<Props> = ({ evaluation }) => {
       <View style={styles.toggleContainer}>
         <TouchableOpacity
           style={styles.toggleButton}
-          onPress={() => setUseAdvancedSimulator(!useAdvancedSimulator)}
+          onPress={toggleSimulator}
         >
           <Text style={styles.toggleText}>
             {useAdvancedSimulator ? '📊 Vista Avanzada' : '📋 Vista Básica'}
@@ -105,7 +109,7 @@ export const SimulatorSection: React.FC<Props> = ({ evaluation }) => {
         {suboptimalFactors.map(([factorName]) => {
           const diagnosticKey = `${factorName}Comment` as keyof Diagnostics;
           const diagnosticValue =
-            evaluation.diagnostics[diagnosticKey as keyof Diagnostics] ||
+            evaluation.diagnostics[diagnosticKey] ||
             evaluation.diagnostics[factorName as keyof Diagnostics];
 
           if (typeof diagnosticValue !== 'string' || !diagnosticValue) return null;
@@ -114,14 +118,14 @@ export const SimulatorSection: React.FC<Props> = ({ evaluation }) => {
             <SimulationInsight
               key={factorName}
               label={
-                factorLabels[diagnosticKey as keyof Diagnostics] ||
+                factorLabels[diagnosticKey] ||
                 factorLabels[factorName as keyof Diagnostics] ||
                 factorName
               }
               value={diagnosticValue}
               factorName={factorName as SimulatableFactor}
               explanation={
-                factorLabels[diagnosticKey as keyof Diagnostics] ||
+                factorLabels[diagnosticKey] ||
                 factorLabels[factorName as keyof Diagnostics] ||
                 factorName
               }

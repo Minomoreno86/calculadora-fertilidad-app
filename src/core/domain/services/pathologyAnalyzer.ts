@@ -18,17 +18,25 @@ import { UserInput } from '../models';
 // 🎯 INTERFACES PARA ANÁLISIS DE PATOLOGÍAS
 // ===================================================================
 
+export type SeverityLevel = 'mild' | 'moderate' | 'severe' | 'unknown';
+export type InterpretationLevel = 'normal' | 'elevated' | 'decreased' | 'critical';
+export type UrgencyLevel = 'low' | 'medium' | 'high' | 'urgent';
+export type CostLevel = 'low' | 'medium' | 'high';
+export type EvidenceLevel = 'A' | 'B' | 'C' | 'D';
+export type TestCategory = 'laboratory' | 'imaging' | 'biopsy' | 'functional';
+export type AnalysisType = 'diagnostic' | 'prognostic' | 'therapeutic';
+
 export interface PathologyAnalysisResult {
   pathologyId: string;
   name: string;
   probability: number; // 0-1
   confidence: number; // 0-1
-  severity: 'mild' | 'moderate' | 'severe' | 'unknown';
+  severity: SeverityLevel;
   supportingCriteria: DiagnosticCriterion[];
   missingSriteria: DiagnosticCriterion[];
   recommendedTests: RecommendedTest[];
   clinicalSignificance: string;
-  treatmentUrgency: 'low' | 'medium' | 'high' | 'urgent';
+  treatmentUrgency: UrgencyLevel;
 }
 
 export interface DiagnosticCriterion {
@@ -46,9 +54,9 @@ export interface RecommendedTest {
   name: string;
   priority: number; // 1-5
   rationale: string;
-  expectedCost: 'low' | 'medium' | 'high';
+  expectedCost: CostLevel;
   timeframe: string;
-  category: 'laboratory' | 'imaging' | 'biopsy' | 'functional';
+  category: TestCategory;
 }
 
 export interface PathologyPattern {
@@ -65,7 +73,7 @@ export interface BiomarkerAnalysis {
   name: string;
   value: number;
   normalRange: { min: number; max: number };
-  interpretation: 'normal' | 'elevated' | 'decreased' | 'critical';
+  interpretation: InterpretationLevel;
   clinicalRelevance: string;
   associatedPathologies: string[];
 }
@@ -75,9 +83,9 @@ export interface BiomarkerAnalysis {
 // ===================================================================
 
 export class PathologyAnalyzer {
-  private pathologyPatterns: Map<string, PathologyPattern> = new Map();
-  private diagnosticCriteria: Map<string, DiagnosticCriterion[]> = new Map();
-  private biomarkerRanges: Map<string, { min: number; max: number }> = new Map();
+  private readonly pathologyPatterns: Map<string, PathologyPattern> = new Map();
+  private readonly diagnosticCriteria: Map<string, DiagnosticCriterion[]> = new Map();
+  private readonly biomarkerRanges: Map<string, { min: number; max: number }> = new Map();
 
   constructor() {
     this.initializePathologyPatterns();
@@ -163,15 +171,8 @@ export class PathologyAnalyzer {
   // 🔬 ANÁLISIS ESPECÍFICOS POR PATOLOGÍA
   // ===================================================================
 
-  private analyzePCOS(userInput: UserInput): PathologyAnalysisResult {
-    const supportingCriteria: DiagnosticCriterion[] = [];
-    const missingSriteria: DiagnosticCriterion[] = [];
-    let probabilityScore = 0;
-
-    // Rotterdam Criteria Assessment
-    
-    // 1. Oligo/anovulación
-    const oligoovulation: DiagnosticCriterion = {
+  private assessOligoovulation(userInput: UserInput): { criterion: DiagnosticCriterion | null } {
+    const criterion: DiagnosticCriterion = {
       criterionId: 'PCOS_OLIGOOVULATION',
       name: 'Oligo/anovulación',
       met: false,
@@ -180,43 +181,31 @@ export class PathologyAnalyzer {
     };
 
     if (userInput.cycleDuration && userInput.cycleDuration > 35) {
-      oligoovulation.met = true;
-      oligoovulation.value = userInput.cycleDuration;
-      oligoovulation.normalRange = '24-32 días';
-      supportingCriteria.push(oligoovulation);
-      probabilityScore += 0.35;
-    } else {
-      missingSriteria.push(oligoovulation);
+      criterion.met = true;
+      criterion.value = userInput.cycleDuration;
+      criterion.normalRange = '24-32 días';
+      return { criterion };
     }
 
-    // 2. Hiperandrogenismo clínico/bioquímico
-    const hyperandrogenism: DiagnosticCriterion = {
+    return { criterion: null };
+  }
+
+  private assessHyperandrogenism(userInput: UserInput): { criterion: DiagnosticCriterion | null } {
+    const criterion: DiagnosticCriterion = {
       criterionId: 'PCOS_HYPERANDROGENISM',
       name: 'Hiperandrogenismo (clínico o bioquímico)',
-      met: userInput.hasPcos, // Aproximación basada en diagnóstico previo
+      met: userInput.hasPcos,
       weight: 0.35,
       source: 'Rotterdam Consensus 2003'
     };
 
-    if (hyperandrogenism.met) {
-      supportingCriteria.push(hyperandrogenism);
-      probabilityScore += 0.35;
-    } else {
-      missingSriteria.push(hyperandrogenism);
-    }
+    return criterion.met ? { criterion } : { criterion: null };
+  }
 
-    // 3. Morfología ovárica poliquística
-    // Nota: No disponible en UserInput básico
-    const morphology: DiagnosticCriterion = {
-      criterionId: 'PCOS_MORPHOLOGY',
-      name: 'Morfología ovárica poliquística (≥12 folículos 2-9mm)',
-      met: false,
-      weight: 0.30,
-      source: 'Rotterdam Consensus 2003'
-    };
-    missingSriteria.push(morphology);
+  private assessPCOSAdditionalFactors(userInput: UserInput): { supportingCriteria: DiagnosticCriterion[]; additionalScore: number } {
+    const supportingCriteria: DiagnosticCriterion[] = [];
+    let additionalScore = 0;
 
-    // Factores de soporte adicionales
     if (userInput.bmi && userInput.bmi > 25) {
       supportingCriteria.push({
         criterionId: 'PCOS_BMI',
@@ -227,7 +216,7 @@ export class PathologyAnalyzer {
         weight: 0.15,
         source: 'Clinical correlation'
       });
-      probabilityScore += 0.10;
+      additionalScore += 0.10;
     }
 
     if (userInput.homaIr && userInput.homaIr > 2.5) {
@@ -240,43 +229,30 @@ export class PathologyAnalyzer {
         weight: 0.20,
         source: 'Endocrine Society'
       });
-      probabilityScore += 0.15;
+      additionalScore += 0.15;
     }
 
-    // Determinar severidad
-    let severity: 'mild' | 'moderate' | 'severe' | 'unknown' = 'unknown';
-    if (userInput.hasPcos) {
-      const complexityFactors = [
-        userInput.bmi && userInput.bmi > 30,
-        userInput.homaIr && userInput.homaIr > 3.5,
-        userInput.cycleDuration && userInput.cycleDuration > 60
-      ].filter(Boolean).length;
-
-      if (complexityFactors >= 2) severity = 'severe';
-      else if (complexityFactors === 1) severity = 'moderate';
-      else severity = 'mild';
-    }
-
-    return {
-      pathologyId: 'PCOS',
-      name: 'Síndrome de Ovario Poliquístico',
-      probability: Math.min(probabilityScore, 0.95),
-      confidence: supportingCriteria.length / (supportingCriteria.length + missingSriteria.length),
-      severity,
-      supportingCriteria,
-      missingSriteria,
-      recommendedTests: this.getPCOSRecommendedTests(userInput),
-      clinicalSignificance: 'Causa principal de anovulación crónica e infertilidad',
-      treatmentUrgency: severity === 'severe' ? 'high' : 'medium'
-    };
+    return { supportingCriteria, additionalScore };
   }
 
-  private analyzeEndometriosis(userInput: UserInput): PathologyAnalysisResult {
-    const supportingCriteria: DiagnosticCriterion[] = [];
-    const missingSriteria: DiagnosticCriterion[] = [];
-    let probabilityScore = 0.06; // Prevalencia basal
+  private calculatePCOSSeverity(userInput: UserInput): SeverityLevel {
+    if (!userInput.hasPcos) return 'unknown';
 
-    // Grado conocido de endometriosis
+    const complexityFactors = [
+      userInput.bmi && userInput.bmi > 30,
+      userInput.homaIr && userInput.homaIr > 3.5,
+      userInput.cycleDuration && userInput.cycleDuration > 60
+    ].filter(Boolean).length;
+
+    if (complexityFactors >= 2) return 'severe';
+    if (complexityFactors === 1) return 'moderate';
+    return 'mild';
+  }
+
+  private assessEndometriosisFactors(userInput: UserInput): { supportingCriteria: DiagnosticCriterion[]; additionalScore: number } {
+    const supportingCriteria: DiagnosticCriterion[] = [];
+    let additionalScore = 0;
+
     if (userInput.endometriosisGrade > 0) {
       supportingCriteria.push({
         criterionId: 'ENDO_GRADE',
@@ -287,10 +263,9 @@ export class PathologyAnalyzer {
         weight: 1.0,
         source: 'ASRM Classification'
       });
-      probabilityScore = 0.2 + (userInput.endometriosisGrade * 0.2);
+      additionalScore = 0.2 + (userInput.endometriosisGrade * 0.2);
     }
 
-    // Factores de riesgo indirectos
     if (userInput.infertilityDuration && userInput.infertilityDuration > 24) {
       supportingCriteria.push({
         criterionId: 'ENDO_INFERTILITY',
@@ -301,10 +276,9 @@ export class PathologyAnalyzer {
         weight: 0.25,
         source: 'Clinical correlation'
       });
-      probabilityScore += 0.15;
+      additionalScore += 0.15;
     }
 
-    // Edad típica
     if (userInput.age >= 25 && userInput.age <= 40) {
       supportingCriteria.push({
         criterionId: 'ENDO_AGE',
@@ -314,16 +288,350 @@ export class PathologyAnalyzer {
         weight: 0.15,
         source: 'Epidemiological data'
       });
-      probabilityScore += 0.08;
+      additionalScore += 0.08;
     }
 
-    // Determinar severidad
-    let severity: 'mild' | 'moderate' | 'severe' | 'unknown' = 'unknown';
+    return { supportingCriteria, additionalScore };
+  }
+
+  private calculateEndometriosisSeverity(userInput: UserInput): SeverityLevel {
     if (userInput.endometriosisGrade > 0) {
-      if (userInput.endometriosisGrade >= 3) severity = 'severe';
-      else if (userInput.endometriosisGrade === 2) severity = 'moderate';
-      else severity = 'mild';
+      if (userInput.endometriosisGrade >= 3) return 'severe';
+      if (userInput.endometriosisGrade === 2) return 'moderate';
+      return 'mild';
     }
+    return 'unknown';
+  }
+
+  private assessSpermConcentration(userInput: UserInput): { criterion: DiagnosticCriterion | null; score: number } {
+    if (userInput.spermConcentration === undefined) {
+      return { criterion: null, score: 0 };
+    }
+
+    const criterion: DiagnosticCriterion = {
+      criterionId: 'MALE_CONCENTRATION',
+      name: 'Concentración espermática',
+      met: userInput.spermConcentration < 15,
+      value: userInput.spermConcentration,
+      normalRange: '≥15 millones/mL',
+      weight: 0.35,
+      source: 'WHO Manual 2021'
+    };
+
+    if (!criterion.met) {
+      return { criterion: null, score: 0 };
+    }
+
+    let score = 0.20; // Default score
+    if (userInput.spermConcentration < 5) score = 0.40;
+    else if (userInput.spermConcentration < 10) score = 0.30;
+
+    return { criterion, score };
+  }
+
+  private assessSpermMotility(userInput: UserInput): { criterion: DiagnosticCriterion | null; score: number } {
+    if (userInput.spermProgressiveMotility === undefined) {
+      return { criterion: null, score: 0 };
+    }
+
+    const criterion: DiagnosticCriterion = {
+      criterionId: 'MALE_MOTILITY',
+      name: 'Motilidad progresiva',
+      met: userInput.spermProgressiveMotility < 32,
+      value: userInput.spermProgressiveMotility,
+      normalRange: '≥32%',
+      weight: 0.30,
+      source: 'WHO Manual 2021'
+    };
+
+    if (!criterion.met) {
+      return { criterion: null, score: 0 };
+    }
+
+    const score = userInput.spermProgressiveMotility < 20 ? 0.25 : 0.15;
+    return { criterion, score };
+  }
+
+  private assessSpermMorphology(userInput: UserInput): { criterion: DiagnosticCriterion | null; score: number } {
+    if (userInput.spermNormalMorphology === undefined) {
+      return { criterion: null, score: 0 };
+    }
+
+    const criterion: DiagnosticCriterion = {
+      criterionId: 'MALE_MORPHOLOGY',
+      name: 'Morfología normal',
+      met: userInput.spermNormalMorphology < 4,
+      value: userInput.spermNormalMorphology,
+      normalRange: '≥4%',
+      weight: 0.25,
+      source: 'WHO Manual 2021'
+    };
+
+    return criterion.met ? { criterion, score: 0.10 } : { criterion: null, score: 0 };
+  }
+
+  private calculateMaleFactorSeverity(abnormalParameters: number): SeverityLevel {
+    if (abnormalParameters >= 3) return 'severe';
+    if (abnormalParameters === 2) return 'moderate';
+    if (abnormalParameters === 1) return 'mild';
+    return 'unknown';
+  }
+
+  private getMaleFactorMissingCriteria(userInput: UserInput): DiagnosticCriterion[] {
+    const missing: DiagnosticCriterion[] = [];
+
+    if (userInput.spermConcentration === undefined) {
+      missing.push({
+        criterionId: 'MALE_CONCENTRATION',
+        name: 'Concentración espermática',
+        met: false,
+        normalRange: '≥15 millones/mL',
+        weight: 0.35,
+        source: 'WHO Manual 2021'
+      });
+    }
+
+    if (userInput.spermProgressiveMotility === undefined) {
+      missing.push({
+        criterionId: 'MALE_MOTILITY',
+        name: 'Motilidad progresiva',
+        met: false,
+        normalRange: '≥32%',
+        weight: 0.30,
+        source: 'WHO Manual 2021'
+      });
+    }
+
+    return missing;
+  }
+
+  private assessOvarianReserveAge(userInput: UserInput): { criterion: DiagnosticCriterion | null; score: number } {
+    if (userInput.age >= 40) {
+      const criterion: DiagnosticCriterion = {
+        criterionId: 'DOR_AGE_40',
+        name: 'Edad ≥40 años',
+        met: true,
+        value: userInput.age,
+        weight: 0.40,
+        source: 'ASRM Guidelines'
+      };
+      return { criterion, score: 0.60 };
+    }
+
+    if (userInput.age >= 35) {
+      const criterion: DiagnosticCriterion = {
+        criterionId: 'DOR_AGE_35',
+        name: 'Edad ≥35 años',
+        met: true,
+        value: userInput.age,
+        weight: 0.25,
+        source: 'ASRM Guidelines'
+      };
+      return { criterion, score: 0.25 };
+    }
+
+    return { criterion: null, score: 0 };
+  }
+
+  private assessOvarianReserveAMH(userInput: UserInput): { criterion: DiagnosticCriterion | null; score: number } {
+    if (userInput.amh === undefined) {
+      return { criterion: null, score: 0 };
+    }
+
+    if (userInput.amh < 0.5) {
+      const criterion: DiagnosticCriterion = {
+        criterionId: 'DOR_AMH_SEVERE',
+        name: 'AMH muy baja (<0.5 ng/mL)',
+        met: true,
+        value: userInput.amh,
+        normalRange: '1-4 ng/mL',
+        weight: 0.50,
+        source: 'ESHRE Guidelines'
+      };
+      return { criterion, score: 0.70 };
+    }
+
+    if (userInput.amh < 1.0) {
+      const criterion: DiagnosticCriterion = {
+        criterionId: 'DOR_AMH_LOW',
+        name: 'AMH baja (<1.0 ng/mL)',
+        met: true,
+        value: userInput.amh,
+        normalRange: '1-4 ng/mL',
+        weight: 0.40,
+        source: 'ESHRE Guidelines'
+      };
+      return { criterion, score: 0.45 };
+    }
+
+    return { criterion: null, score: 0 };
+  }
+
+  private calculateOvarianReserveSeverity(userInput: UserInput): SeverityLevel {
+    if (userInput.amh !== undefined) {
+      if (userInput.amh < 0.5) return 'severe';
+      if (userInput.amh < 1.0) return 'moderate';
+      if (userInput.amh < 1.5) return 'mild';
+    } else if (userInput.age >= 42) {
+      return 'severe';
+    } else if (userInput.age >= 40) {
+      return 'moderate';
+    }
+    return 'unknown';
+  }
+
+  private getOvarianReserveMissingCriteria(userInput: UserInput): DiagnosticCriterion[] {
+    const missing: DiagnosticCriterion[] = [];
+
+    if (userInput.amh === undefined) {
+      missing.push({
+        criterionId: 'DOR_AMH',
+        name: 'Hormona Antimülleriana (AMH)',
+        met: false,
+        normalRange: '1-4 ng/mL',
+        weight: 0.50,
+        source: 'Laboratory test'
+      });
+    }
+
+    return missing;
+  }
+
+  private assessMetabolicBMI(userInput: UserInput): { criterion: DiagnosticCriterion | null; score: number } {
+    if (!userInput.bmi) {
+      return { criterion: null, score: 0 };
+    }
+
+    if (userInput.bmi >= 30) {
+      const criterion: DiagnosticCriterion = {
+        criterionId: 'METABOLIC_OBESITY',
+        name: 'Obesidad (BMI ≥30)',
+        met: true,
+        value: userInput.bmi,
+        normalRange: '18.5-25',
+        weight: 0.40,
+        source: 'WHO Classification'
+      };
+      return { criterion, score: 0.35 };
+    }
+
+    if (userInput.bmi >= 25) {
+      const criterion: DiagnosticCriterion = {
+        criterionId: 'METABOLIC_OVERWEIGHT',
+        name: 'Sobrepeso (BMI 25-30)',
+        met: true,
+        value: userInput.bmi,
+        normalRange: '18.5-25',
+        weight: 0.25,
+        source: 'WHO Classification'
+      };
+      return { criterion, score: 0.20 };
+    }
+
+    return { criterion: null, score: 0 };
+  }
+
+  private assessInsulinResistance(userInput: UserInput): { criterion: DiagnosticCriterion | null; score: number } {
+    if (!userInput.homaIr || userInput.homaIr <= 2.5) {
+      return { criterion: null, score: 0 };
+    }
+
+    const criterion: DiagnosticCriterion = {
+      criterionId: 'METABOLIC_IR',
+      name: 'Resistencia insulínica',
+      met: true,
+      value: userInput.homaIr,
+      normalRange: '<2.5',
+      weight: 0.35,
+      source: 'Endocrine Society'
+    };
+
+    const score = userInput.homaIr > 3.5 ? 0.40 : 0.25;
+    return { criterion, score };
+  }
+
+  private calculateMetabolicSeverity(userInput: UserInput): SeverityLevel {
+    if (!userInput.bmi || !userInput.homaIr) return 'unknown';
+
+    const bmiBurden = this.calculateBMIBurden(userInput.bmi);
+    const insulinBurden = this.calculateInsulinBurden(userInput.homaIr);
+    const totalBurden = bmiBurden + insulinBurden;
+
+    if (totalBurden >= 3) return 'severe';
+    if (totalBurden >= 2) return 'moderate';
+    if (totalBurden >= 1) return 'mild';
+    return 'unknown';
+  }
+
+  private calculateBMIBurden(bmi: number): number {
+    if (bmi > 35) return 2;
+    if (bmi > 30) return 1;
+    return 0;
+  }
+
+  private calculateInsulinBurden(homaIr: number): number {
+    if (homaIr > 3.5) return 2;
+    if (homaIr > 2.5) return 1;
+    return 0;
+  }
+
+  private analyzePCOS(userInput: UserInput): PathologyAnalysisResult {
+    const supportingCriteria: DiagnosticCriterion[] = [];
+    let probabilityScore = 0;
+
+    // Rotterdam Criteria Assessment
+    const oligoovulationResult = this.assessOligoovulation(userInput);
+    if (oligoovulationResult.criterion) {
+      if (oligoovulationResult.criterion.met) {
+        supportingCriteria.push(oligoovulationResult.criterion);
+        probabilityScore += 0.35;
+      }
+    }
+
+    const hyperandrogenismResult = this.assessHyperandrogenism(userInput);
+    if (hyperandrogenismResult.criterion) {
+      if (hyperandrogenismResult.criterion.met) {
+        supportingCriteria.push(hyperandrogenismResult.criterion);
+        probabilityScore += 0.35;
+      }
+    }
+
+    // Additional supporting factors
+    const additionalFactors = this.assessPCOSAdditionalFactors(userInput);
+    supportingCriteria.push(...additionalFactors.supportingCriteria);
+    probabilityScore += additionalFactors.additionalScore;
+
+    const severity = this.calculatePCOSSeverity(userInput);
+
+    return {
+      pathologyId: 'PCOS',
+      name: 'Síndrome de Ovario Poliquístico',
+      probability: Math.min(probabilityScore, 0.95),
+      confidence: supportingCriteria.length / (supportingCriteria.length + 1), // +1 for morphology
+      severity,
+      supportingCriteria,
+      missingSriteria: [{
+        criterionId: 'PCOS_MORPHOLOGY',
+        name: 'Morfología ovárica poliquística (≥12 folículos 2-9mm)',
+        met: false,
+        weight: 0.30,
+        source: 'Rotterdam Consensus 2003'
+      }],
+      recommendedTests: this.getPCOSRecommendedTests(userInput),
+      clinicalSignificance: 'Causa principal de anovulación crónica e infertilidad',
+      treatmentUrgency: severity === 'severe' ? 'high' : 'medium'
+    };
+  }
+
+  private analyzeEndometriosis(userInput: UserInput): PathologyAnalysisResult {
+    const supportingCriteria: DiagnosticCriterion[] = [];
+    let probabilityScore = 0.06; // Prevalencia basal
+
+    const endometriosisFactors = this.assessEndometriosisFactors(userInput);
+    supportingCriteria.push(...endometriosisFactors.supportingCriteria);
+    probabilityScore += endometriosisFactors.additionalScore;
+
+    const severity = this.calculateEndometriosisSeverity(userInput);
 
     return {
       pathologyId: 'ENDOMETRIOSIS',
@@ -348,7 +656,7 @@ export class PathologyAnalyzer {
           source: 'Imaging studies'
         }
       ],
-      recommendedTests: this.getEndometriosisRecommendedTests(userInput),
+      recommendedTests: this.getEndometriosisRecommendedTests(),
       clinicalSignificance: 'Causa importante de infertilidad y dolor pélvico',
       treatmentUrgency: severity === 'severe' ? 'high' : 'medium'
     };
@@ -356,93 +664,29 @@ export class PathologyAnalyzer {
 
   private analyzeMaleFactor(userInput: UserInput): PathologyAnalysisResult {
     const supportingCriteria: DiagnosticCriterion[] = [];
-    const missingSriteria: DiagnosticCriterion[] = [];
     let probabilityScore = 0;
 
     // WHO 2021 Reference Values Assessment
-    
-    // Concentración espermática
-    if (userInput.spermConcentration !== undefined) {
-      const concCriterion: DiagnosticCriterion = {
-        criterionId: 'MALE_CONCENTRATION',
-        name: 'Concentración espermática',
-        met: userInput.spermConcentration < 15,
-        value: userInput.spermConcentration,
-        normalRange: '≥15 millones/mL',
-        weight: 0.35,
-        source: 'WHO Manual 2021'
-      };
-
-      if (concCriterion.met) {
-        supportingCriteria.push(concCriterion);
-        if (userInput.spermConcentration < 5) probabilityScore += 0.40;
-        else if (userInput.spermConcentration < 10) probabilityScore += 0.30;
-        else probabilityScore += 0.20;
-      }
-    } else {
-      missingSriteria.push({
-        criterionId: 'MALE_CONCENTRATION',
-        name: 'Concentración espermática',
-        met: false,
-        normalRange: '≥15 millones/mL',
-        weight: 0.35,
-        source: 'WHO Manual 2021'
-      });
+    const concentrationResult = this.assessSpermConcentration(userInput);
+    if (concentrationResult.criterion) {
+      supportingCriteria.push(concentrationResult.criterion);
+      probabilityScore += concentrationResult.score;
     }
 
-    // Motilidad progresiva
-    if (userInput.spermProgressiveMotility !== undefined) {
-      const motilityCriterion: DiagnosticCriterion = {
-        criterionId: 'MALE_MOTILITY',
-        name: 'Motilidad progresiva',
-        met: userInput.spermProgressiveMotility < 32,
-        value: userInput.spermProgressiveMotility,
-        normalRange: '≥32%',
-        weight: 0.30,
-        source: 'WHO Manual 2021'
-      };
-
-      if (motilityCriterion.met) {
-        supportingCriteria.push(motilityCriterion);
-        if (userInput.spermProgressiveMotility < 20) probabilityScore += 0.25;
-        else probabilityScore += 0.15;
-      }
-    } else {
-      missingSriteria.push({
-        criterionId: 'MALE_MOTILITY',
-        name: 'Motilidad progresiva',
-        met: false,
-        normalRange: '≥32%',
-        weight: 0.30,
-        source: 'WHO Manual 2021'
-      });
+    const motilityResult = this.assessSpermMotility(userInput);
+    if (motilityResult.criterion) {
+      supportingCriteria.push(motilityResult.criterion);
+      probabilityScore += motilityResult.score;
     }
 
-    // Morfología normal
-    if (userInput.spermNormalMorphology !== undefined) {
-      const morphCriterion: DiagnosticCriterion = {
-        criterionId: 'MALE_MORPHOLOGY',
-        name: 'Morfología normal',
-        met: userInput.spermNormalMorphology < 4,
-        value: userInput.spermNormalMorphology,
-        normalRange: '≥4%',
-        weight: 0.25,
-        source: 'WHO Manual 2021'
-      };
-
-      if (morphCriterion.met) {
-        supportingCriteria.push(morphCriterion);
-        probabilityScore += 0.10;
-      }
+    const morphologyResult = this.assessSpermMorphology(userInput);
+    if (morphologyResult.criterion) {
+      supportingCriteria.push(morphologyResult.criterion);
+      probabilityScore += morphologyResult.score;
     }
 
-    // Determinar severidad
-    let severity: 'mild' | 'moderate' | 'severe' | 'unknown' = 'unknown';
-    const abnormalParameters = supportingCriteria.length;
-    
-    if (abnormalParameters >= 3) severity = 'severe';
-    else if (abnormalParameters === 2) severity = 'moderate';
-    else if (abnormalParameters === 1) severity = 'mild';
+    const severity = this.calculateMaleFactorSeverity(supportingCriteria.length);
+    const missingCriteria = this.getMaleFactorMissingCriteria(userInput);
 
     return {
       pathologyId: 'MALE_FACTOR',
@@ -451,7 +695,7 @@ export class PathologyAnalyzer {
       confidence: supportingCriteria.length > 0 ? 0.90 : 0.20,
       severity,
       supportingCriteria,
-      missingSriteria,
+      missingSriteria: missingCriteria,
       recommendedTests: this.getMaleFactorRecommendedTests(userInput),
       clinicalSignificance: 'Factor contribuyente en 30-40% de casos de infertilidad',
       treatmentUrgency: severity === 'severe' ? 'high' : 'medium'
@@ -460,79 +704,24 @@ export class PathologyAnalyzer {
 
   private analyzeOvarianReserve(userInput: UserInput): PathologyAnalysisResult {
     const supportingCriteria: DiagnosticCriterion[] = [];
-    const missingSriteria: DiagnosticCriterion[] = [];
     let probabilityScore = 0;
 
-    // Edad como factor principal
-    if (userInput.age >= 40) {
-      supportingCriteria.push({
-        criterionId: 'DOR_AGE_40',
-        name: 'Edad ≥40 años',
-        met: true,
-        value: userInput.age,
-        weight: 0.40,
-        source: 'ASRM Guidelines'
-      });
-      probabilityScore += 0.60;
-    } else if (userInput.age >= 35) {
-      supportingCriteria.push({
-        criterionId: 'DOR_AGE_35',
-        name: 'Edad ≥35 años',
-        met: true,
-        value: userInput.age,
-        weight: 0.25,
-        source: 'ASRM Guidelines'
-      });
-      probabilityScore += 0.25;
+    // Age assessment
+    const ageResult = this.assessOvarianReserveAge(userInput);
+    if (ageResult.criterion) {
+      supportingCriteria.push(ageResult.criterion);
+      probabilityScore += ageResult.score;
     }
 
-    // AMH como marcador principal
-    if (userInput.amh !== undefined) {
-      if (userInput.amh < 0.5) {
-        supportingCriteria.push({
-          criterionId: 'DOR_AMH_SEVERE',
-          name: 'AMH muy baja (<0.5 ng/mL)',
-          met: true,
-          value: userInput.amh,
-          normalRange: '1-4 ng/mL',
-          weight: 0.50,
-          source: 'ESHRE Guidelines'
-        });
-        probabilityScore += 0.70;
-      } else if (userInput.amh < 1.0) {
-        supportingCriteria.push({
-          criterionId: 'DOR_AMH_LOW',
-          name: 'AMH baja (<1.0 ng/mL)',
-          met: true,
-          value: userInput.amh,
-          normalRange: '1-4 ng/mL',
-          weight: 0.40,
-          source: 'ESHRE Guidelines'
-        });
-        probabilityScore += 0.45;
-      }
-    } else {
-      missingSriteria.push({
-        criterionId: 'DOR_AMH',
-        name: 'Hormona Antimülleriana (AMH)',
-        met: false,
-        normalRange: '1-4 ng/mL',
-        weight: 0.50,
-        source: 'Laboratory test'
-      });
+    // AMH assessment
+    const amhResult = this.assessOvarianReserveAMH(userInput);
+    if (amhResult.criterion) {
+      supportingCriteria.push(amhResult.criterion);
+      probabilityScore += amhResult.score;
     }
 
-    // Determinar severidad
-    let severity: 'mild' | 'moderate' | 'severe' | 'unknown' = 'unknown';
-    if (userInput.amh !== undefined) {
-      if (userInput.amh < 0.5) severity = 'severe';
-      else if (userInput.amh < 1.0) severity = 'moderate';
-      else if (userInput.amh < 1.5) severity = 'mild';
-    } else if (userInput.age >= 42) {
-      severity = 'severe';
-    } else if (userInput.age >= 40) {
-      severity = 'moderate';
-    }
+    const severity = this.calculateOvarianReserveSeverity(userInput);
+    const missingCriteria = this.getOvarianReserveMissingCriteria(userInput);
 
     return {
       pathologyId: 'DIMINISHED_OVARIAN_RESERVE',
@@ -541,7 +730,7 @@ export class PathologyAnalyzer {
       confidence: supportingCriteria.length > 0 ? 0.85 : 0.30,
       severity,
       supportingCriteria,
-      missingSriteria,
+      missingSriteria: missingCriteria,
       recommendedTests: this.getOvarianReserveRecommendedTests(userInput),
       clinicalSignificance: 'Factor limitante principal para éxito reproductivo',
       treatmentUrgency: severity === 'severe' ? 'urgent' : 'high'
@@ -550,58 +739,23 @@ export class PathologyAnalyzer {
 
   private analyzeMetabolicFactors(userInput: UserInput): PathologyAnalysisResult {
     const supportingCriteria: DiagnosticCriterion[] = [];
-    const missingSriteria: DiagnosticCriterion[] = [];
     let probabilityScore = 0;
 
     // BMI assessment
-    if (userInput.bmi && userInput.bmi >= 30) {
-      supportingCriteria.push({
-        criterionId: 'METABOLIC_OBESITY',
-        name: 'Obesidad (BMI ≥30)',
-        met: true,
-        value: userInput.bmi,
-        normalRange: '18.5-25',
-        weight: 0.40,
-        source: 'WHO Classification'
-      });
-      probabilityScore += 0.35;
-    } else if (userInput.bmi && userInput.bmi >= 25) {
-      supportingCriteria.push({
-        criterionId: 'METABOLIC_OVERWEIGHT',
-        name: 'Sobrepeso (BMI 25-30)',
-        met: true,
-        value: userInput.bmi,
-        normalRange: '18.5-25',
-        weight: 0.25,
-        source: 'WHO Classification'
-      });
-      probabilityScore += 0.20;
+    const bmiResult = this.assessMetabolicBMI(userInput);
+    if (bmiResult.criterion) {
+      supportingCriteria.push(bmiResult.criterion);
+      probabilityScore += bmiResult.score;
     }
 
-    // Insulin resistance
-    if (userInput.homaIr && userInput.homaIr > 2.5) {
-      supportingCriteria.push({
-        criterionId: 'METABOLIC_IR',
-        name: 'Resistencia insulínica',
-        met: true,
-        value: userInput.homaIr,
-        normalRange: '<2.5',
-        weight: 0.35,
-        source: 'Endocrine Society'
-      });
-      if (userInput.homaIr > 3.5) probabilityScore += 0.40;
-      else probabilityScore += 0.25;
+    // Insulin resistance assessment
+    const insulinResult = this.assessInsulinResistance(userInput);
+    if (insulinResult.criterion) {
+      supportingCriteria.push(insulinResult.criterion);
+      probabilityScore += insulinResult.score;
     }
 
-    let severity: 'mild' | 'moderate' | 'severe' | 'unknown' = 'unknown';
-    if (userInput.bmi && userInput.homaIr) {
-      const metabolicBurden = (userInput.bmi > 35 ? 2 : userInput.bmi > 30 ? 1 : 0) + 
-                             (userInput.homaIr > 3.5 ? 2 : userInput.homaIr > 2.5 ? 1 : 0);
-      
-      if (metabolicBurden >= 3) severity = 'severe';
-      else if (metabolicBurden >= 2) severity = 'moderate';
-      else if (metabolicBurden >= 1) severity = 'mild';
-    }
+    const severity = this.calculateMetabolicSeverity(userInput);
 
     return {
       pathologyId: 'METABOLIC_FACTOR',
@@ -610,7 +764,7 @@ export class PathologyAnalyzer {
       confidence: supportingCriteria.length > 0 ? 0.80 : 0.25,
       severity,
       supportingCriteria,
-      missingSriteria,
+      missingSriteria: [],
       recommendedTests: this.getMetabolicRecommendedTests(userInput),
       clinicalSignificance: 'Factor modificable que impacta significativamente la fertilidad',
       treatmentUrgency: severity === 'severe' ? 'high' : 'medium'
@@ -619,7 +773,6 @@ export class PathologyAnalyzer {
 
   private analyzeTubalFactor(userInput: UserInput): PathologyAnalysisResult {
     const supportingCriteria: DiagnosticCriterion[] = [];
-    const missingSriteria: DiagnosticCriterion[] = [];
     let probabilityScore = 0.08; // Prevalencia basal
 
     // Factor tubárico conocido
@@ -660,7 +813,7 @@ export class PathologyAnalyzer {
       probabilityScore += 0.15;
     }
 
-    let severity: 'mild' | 'moderate' | 'severe' | 'unknown' = 'unknown';
+    let severity: SeverityLevel = 'unknown';
     if (userInput.hasOtb) {
       severity = 'severe';
     } else if (userInput.endometriosisGrade >= 3 && userInput.hasPelvicSurgery) {
@@ -685,7 +838,7 @@ export class PathologyAnalyzer {
           source: 'Imaging study'
         }
       ],
-      recommendedTests: this.getTubalRecommendedTests(userInput),
+      recommendedTests: this.getTubalRecommendedTests(),
       clinicalSignificance: 'Factor tubárico requiere técnicas de reproducción asistida',
       treatmentUrgency: severity === 'severe' ? 'high' : 'medium'
     };
@@ -696,21 +849,26 @@ export class PathologyAnalyzer {
   // ===================================================================
 
   private analyzeAMH(amhValue: number): BiomarkerAnalysis {
-    let interpretation: 'normal' | 'elevated' | 'decreased' | 'critical';
+    let interpretation: InterpretationLevel;
     let clinicalRelevance: string;
+    let associatedPathologies: string[];
 
     if (amhValue < 0.5) {
       interpretation = 'critical';
       clinicalRelevance = 'Reserva ovárica severamente disminuida';
+      associatedPathologies = ['Reserva ovárica disminuida', 'Falla ovárica precoz'];
     } else if (amhValue < 1.0) {
       interpretation = 'decreased';
       clinicalRelevance = 'Reserva ovárica baja';
+      associatedPathologies = ['Reserva ovárica disminuida', 'Falla ovárica precoz'];
     } else if (amhValue <= 4.0) {
       interpretation = 'normal';
       clinicalRelevance = 'Reserva ovárica normal';
+      associatedPathologies = [];
     } else {
       interpretation = 'elevated';
       clinicalRelevance = 'Posible PCOS o reserva ovárica alta';
+      associatedPathologies = ['PCOS', 'Tumor células granulosa'];
     }
 
     return {
@@ -720,24 +878,27 @@ export class PathologyAnalyzer {
       normalRange: { min: 1.0, max: 4.0 },
       interpretation,
       clinicalRelevance,
-      associatedPathologies: interpretation === 'decreased' ? ['Reserva ovárica disminuida', 'Falla ovárica precoz'] :
-                             interpretation === 'elevated' ? ['PCOS', 'Tumor células granulosa'] : []
+      associatedPathologies
     };
   }
 
   private analyzeHOMAIR(homaValue: number): BiomarkerAnalysis {
-    let interpretation: 'normal' | 'elevated' | 'decreased' | 'critical';
+    let interpretation: InterpretationLevel;
     let clinicalRelevance: string;
+    let associatedPathologies: string[];
 
     if (homaValue <= 2.5) {
       interpretation = 'normal';
       clinicalRelevance = 'Sensibilidad normal a la insulina';
+      associatedPathologies = [];
     } else if (homaValue <= 3.8) {
       interpretation = 'elevated';
       clinicalRelevance = 'Resistencia insulínica leve a moderada';
+      associatedPathologies = ['PCOS', 'Diabetes tipo 2', 'Síndrome metabólico', 'Obesidad'];
     } else {
       interpretation = 'critical';
       clinicalRelevance = 'Resistencia insulínica significativa';
+      associatedPathologies = ['PCOS', 'Diabetes tipo 2', 'Síndrome metabólico', 'Obesidad'];
     }
 
     return {
@@ -747,27 +908,31 @@ export class PathologyAnalyzer {
       normalRange: { min: 0, max: 2.5 },
       interpretation,
       clinicalRelevance,
-      associatedPathologies: interpretation !== 'normal' ? 
-        ['PCOS', 'Diabetes tipo 2', 'Síndrome metabólico', 'Obesidad'] : []
+      associatedPathologies
     };
   }
 
   private analyzeTSH(tshValue: number): BiomarkerAnalysis {
-    let interpretation: 'normal' | 'elevated' | 'decreased' | 'critical';
+    let interpretation: InterpretationLevel;
     let clinicalRelevance: string;
+    let associatedPathologies: string[];
 
     if (tshValue < 0.5) {
       interpretation = 'decreased';
       clinicalRelevance = 'Posible hipertiroidismo';
+      associatedPathologies = ['Hipotiroidismo', 'Hipertiroidismo', 'Enfermedad tiroidea'];
     } else if (tshValue <= 2.5) {
       interpretation = 'normal';
       clinicalRelevance = 'Función tiroidea normal para fertilidad';
+      associatedPathologies = [];
     } else if (tshValue <= 4.0) {
       interpretation = 'elevated';
       clinicalRelevance = 'Hipotiroidismo subclínico';
+      associatedPathologies = ['Hipotiroidismo', 'Hipertiroidismo', 'Enfermedad tiroidea'];
     } else {
       interpretation = 'critical';
       clinicalRelevance = 'Hipotiroidismo clínico';
+      associatedPathologies = ['Hipotiroidismo', 'Hipertiroidismo', 'Enfermedad tiroidea'];
     }
 
     return {
@@ -777,24 +942,27 @@ export class PathologyAnalyzer {
       normalRange: { min: 0.5, max: 2.5 },
       interpretation,
       clinicalRelevance,
-      associatedPathologies: interpretation !== 'normal' ? 
-        ['Hipotiroidismo', 'Hipertiroidismo', 'Enfermedad tiroidea'] : []
+      associatedPathologies
     };
   }
 
   private analyzeProlactin(prolactinValue: number): BiomarkerAnalysis {
-    let interpretation: 'normal' | 'elevated' | 'decreased' | 'critical';
+    let interpretation: InterpretationLevel;
     let clinicalRelevance: string;
+    let associatedPathologies: string[];
 
     if (prolactinValue <= 25) {
       interpretation = 'normal';
       clinicalRelevance = 'Niveles normales de prolactina';
+      associatedPathologies = [];
     } else if (prolactinValue <= 50) {
       interpretation = 'elevated';
       clinicalRelevance = 'Hiperprolactinemia leve';
+      associatedPathologies = ['Prolactinoma', 'Hiperprolactinemia', 'Trastorno hipotálamo-hipofisario'];
     } else {
       interpretation = 'critical';
       clinicalRelevance = 'Hiperprolactinemia significativa';
+      associatedPathologies = ['Prolactinoma', 'Hiperprolactinemia', 'Trastorno hipotálamo-hipofisario'];
     }
 
     return {
@@ -804,8 +972,7 @@ export class PathologyAnalyzer {
       normalRange: { min: 2, max: 25 },
       interpretation,
       clinicalRelevance,
-      associatedPathologies: interpretation !== 'normal' ? 
-        ['Prolactinoma', 'Hiperprolactinemia', 'Trastorno hipotálamo-hipofisario'] : []
+      associatedPathologies
     };
   }
 
@@ -851,7 +1018,7 @@ export class PathologyAnalyzer {
     return tests;
   }
 
-  private getEndometriosisRecommendedTests(userInput: UserInput): RecommendedTest[] {
+  private getEndometriosisRecommendedTests(): RecommendedTest[] {
     return [
       {
         testId: 'PELVIC_USS',
@@ -958,7 +1125,7 @@ export class PathologyAnalyzer {
     return tests;
   }
 
-  private getTubalRecommendedTests(userInput: UserInput): RecommendedTest[] {
+  private getTubalRecommendedTests(): RecommendedTest[] {
     return [
       {
         testId: 'HSG',
@@ -1031,8 +1198,6 @@ export class PathologyAnalyzer {
 let pathologyAnalyzerInstance: PathologyAnalyzer | null = null;
 
 export function getPathologyAnalyzer(): PathologyAnalyzer {
-  if (!pathologyAnalyzerInstance) {
-    pathologyAnalyzerInstance = new PathologyAnalyzer();
-  }
+  pathologyAnalyzerInstance ??= new PathologyAnalyzer();
   return pathologyAnalyzerInstance;
 }

@@ -762,20 +762,50 @@ export class TreatmentRecommender {
     if (!treatment) return { perCycle: 0, cumulative: 0 };
 
     // Ajustes por edad (factores simplificados)
-    let ageMultiplier = 1.0;
-    if (age > 35) ageMultiplier = 0.8;
-    if (age > 40) ageMultiplier = 0.5;
-    if (age > 42) ageMultiplier = 0.3;
+    const ageMultiplier = this.calculateAgeMultiplier(age);
 
-    // Extractar tasas base del string (simplificado)
-    const baseRate = treatmentId === 'IVF' ? (age < 35 ? 40 : age < 40 ? 30 : 12) :
-                    treatmentId === 'IUI' ? 15 :
-                    treatmentId === 'ovulationInduction' ? 20 : 10;
+    // Extractar tasas base según tratamiento
+    const baseRate = this.getBaseRateByTreatment(treatmentId, age);
 
     return {
       perCycle: Math.round(baseRate * ageMultiplier),
       cumulative: Math.round(baseRate * ageMultiplier * 3) // Aproximación 3 ciclos
     };
+  }
+
+  /**
+   * Calcula multiplicador de éxito basado en edad
+   */
+  private static calculateAgeMultiplier(age: number): number {
+    if (age > 42) return 0.3;
+    if (age > 40) return 0.5;
+    if (age > 35) return 0.8;
+    return 1.0;
+  }
+
+  /**
+   * Obtiene tasa base según tipo de tratamiento y edad
+   */
+  private static getBaseRateByTreatment(treatmentId: string, age: number): number {
+    switch (treatmentId) {
+      case 'IVF':
+        return this.getIVFBaseRate(age);
+      case 'IUI':
+        return 15;
+      case 'ovulationInduction':
+        return 20;
+      default:
+        return 10;
+    }
+  }
+
+  /**
+   * Calcula tasa base específica para FIV según edad
+   */
+  private static getIVFBaseRate(age: number): number {
+    if (age < 35) return 40;
+    if (age < 40) return 30;
+    return 12;
   }
 
   /**

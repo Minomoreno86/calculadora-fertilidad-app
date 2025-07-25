@@ -132,16 +132,22 @@ export const CalculatorPerformanceMonitor = memo<CalculatorPerformanceProps>(({
     return { text: 'Validación exitosa', color: theme.colors.success };
   }, [isValidating, safeMetrics.validation]);
 
-  // 🎨 Determinar color de eficiencia
   const efficiencyColor = useMemo(() => {
     if (formattedMetrics.efficiency === 'Excelente') return theme.colors.success;
     if (formattedMetrics.efficiency === 'Buena') return theme.colors.warning;
     return theme.colors.error;
   }, [formattedMetrics.efficiency]);
 
-  // Control de visibilidad: oculta automáticamente en producción cuando todo está correcto
-  if (!showDevInfo && !isValidating && safeMetrics.validation.isFormValid && 
-      safeMetrics.validation.errorCount === 0 && safeMetrics.validation.warningCount === 0) {
+  // Optimización de visibilidad: componente se auto-oculta en producción cuando la validación es exitosa
+  const shouldHideMonitor = useMemo(() => {
+    return !showDevInfo && 
+           !isValidating && 
+           safeMetrics.validation.isFormValid && 
+           safeMetrics.validation.errorCount === 0 && 
+           safeMetrics.validation.warningCount === 0;
+  }, [showDevInfo, isValidating, safeMetrics.validation]);
+
+  if (shouldHideMonitor) {
     return null;
   }
 

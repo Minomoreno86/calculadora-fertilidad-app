@@ -13,7 +13,7 @@ interface Props {
   message: string;
   onPress?: () => void;
   showIcon?: boolean;
-  animated?: boolean;
+  animation?: 'slide' | 'fade' | 'none';
 }
 
 const EnhancedInfoCard: React.FC<Props> = ({
@@ -22,7 +22,7 @@ const EnhancedInfoCard: React.FC<Props> = ({
   message,
   onPress,
   showIcon = true,
-  animated = true
+  animation = 'slide'
 }) => {
   // 🎨 TEMA DINÁMICO
   const theme = useDynamicTheme();
@@ -30,8 +30,8 @@ const EnhancedInfoCard: React.FC<Props> = ({
   const [scaleAnimation] = React.useState(new Animated.Value(0.95));
   const [opacityAnimation] = React.useState(new Animated.Value(0));
 
-  // 🎯 ANIMACIONES CONTROLADAS
-  const initializeAnimations = React.useCallback(() => {
+  // 🎯 MÉTODOS DE ANIMACIÓN ESPECÍFICOS
+  const executeSlideAnimation = React.useCallback(() => {
     Animated.parallel([
       Animated.timing(scaleAnimation, {
         toValue: 1,
@@ -46,18 +46,34 @@ const EnhancedInfoCard: React.FC<Props> = ({
     ]).start();
   }, [scaleAnimation, opacityAnimation]);
 
-  const resetAnimations = React.useCallback(() => {
+  const executeFadeAnimation = React.useCallback(() => {
+    Animated.timing(opacityAnimation, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  }, [opacityAnimation]);
+
+  const setStaticDisplay = React.useCallback(() => {
     scaleAnimation.setValue(1);
     opacityAnimation.setValue(1);
   }, [scaleAnimation, opacityAnimation]);
 
   React.useEffect(() => {
-    if (animated) {
-      initializeAnimations();
-    } else {
-      resetAnimations();
+    switch (animation) {
+      case 'slide':
+        executeSlideAnimation();
+        break;
+      case 'fade':
+        executeFadeAnimation();
+        break;
+      case 'none':
+        setStaticDisplay();
+        break;
+      default:
+        setStaticDisplay();
     }
-  }, [animated, initializeAnimations, resetAnimations]);
+  }, [animation, executeSlideAnimation, executeFadeAnimation, setStaticDisplay]);
 
   // 🎨 CONFIGURACIÓN DE TIPOS
   const getCardConfig = () => {
@@ -115,10 +131,22 @@ const EnhancedInfoCard: React.FC<Props> = ({
 
   const config = getCardConfig();
 
-  const animatedStyle = animated ? {
-    transform: [{ scale: scaleAnimation }],
-    opacity: opacityAnimation,
-  } : {};
+  const getAnimatedStyle = () => {
+    switch (animation) {
+      case 'slide':
+        return {
+          transform: [{ scale: scaleAnimation }],
+          opacity: opacityAnimation,
+        };
+      case 'fade':
+        return {
+          opacity: opacityAnimation,
+        };
+      case 'none':
+      default:
+        return {};
+    }
+  };
 
   const CardComponent = onPress ? TouchableOpacity : View;
 
@@ -135,7 +163,7 @@ const EnhancedInfoCard: React.FC<Props> = ({
             backgroundColor: config.backgroundColor,
             borderColor: config.borderColor,
           },
-          animatedStyle,
+          getAnimatedStyle(),
         ]}
       >
         {showIcon && (

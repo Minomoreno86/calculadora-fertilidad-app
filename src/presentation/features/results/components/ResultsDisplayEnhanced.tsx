@@ -211,6 +211,13 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     const improvement = simulationResult?.improvement || 0;
     const confidence = Math.min(95, score + (optimalCount * 5));
     
+    // 🎨 Helper para obtener categoría de éxito
+    const getSuccessRateCategory = (currentScore: number): string => {
+      if (currentScore >= 70) return 'Alta';
+      if (currentScore >= 40) return 'Moderada';
+      return 'Baja';
+    };
+    
     return {
       score,
       category,
@@ -220,9 +227,16 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       totalFactors: factorAnalysis.length,
       improvement,
       confidence,
-      successRate: score >= 70 ? 'Alta' : score >= 40 ? 'Moderada' : 'Baja',
+      successRate: getSuccessRateCategory(score),
     };
   }, [factorAnalysis, report, simulationResult]);
+
+  // 🎨 Helper para obtener color de progreso
+  const getProgressColor = (score: number): string => {
+    if (score >= 70) return theme.colors.success;
+    if (score >= 40) return theme.colors.warning;
+    return theme.colors.error;
+  };
 
   // 🎨 COLORES Y GRADIENTES DINÁMICOS
   const getCategoryGradient = () => {
@@ -417,11 +431,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 styles.progressBar,
                 {
                   width: `${processedMetrics.score}%`,
-                  backgroundColor: processedMetrics.score >= 70 
-                    ? theme.colors.success 
-                    : processedMetrics.score >= 40 
-                    ? theme.colors.warning 
-                    : theme.colors.error,
+                  backgroundColor: getProgressColor(processedMetrics.score),
                 },
               ]}
             />
@@ -444,7 +454,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       </View>
 
       {/* Key Messages */}
-      {report?.prognosisPhrase && (
+      {Boolean(report?.prognosisPhrase) && (
         <View style={styles.messageCard}>
           <LinearGradient
             colors={['rgba(102, 126, 234, 0.1)', 'rgba(118, 75, 162, 0.1)']}
@@ -630,9 +640,9 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         <>
           <Text style={styles.subsectionTitle}>Opciones de Tratamiento</Text>
           {treatmentSuggestions
-            .sort((a, b) => b.priority - a.priority)
+            .toSorted((a, b) => b.priority - a.priority)
             .map((suggestion, index) => (
-              <View key={index} style={styles.treatmentCard}>
+              <View key={`treatment-${suggestion.type}-${index}`} style={styles.treatmentCard}>
                 <View style={styles.treatmentHeader}>
                   <Ionicons 
                     name="medical" 
@@ -682,7 +692,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
             color: '#667eea',
           },
         ].map((phase, index) => (
-          <View key={index} style={styles.timelineItem}>
+          <View key={`timeline-${phase.title}-${index}`} style={styles.timelineItem}>
             <View style={[styles.timelineNode, { backgroundColor: phase.color }]}>
               <Ionicons name={phase.icon as keyof typeof Ionicons.glyphMap} size={20} color="white" />
             </View>
@@ -691,7 +701,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
             <View style={styles.timelineContent}>
               <Text style={styles.timelineTitle}>{phase.title}</Text>
               {phase.actions.map((action, idx) => (
-                <View key={idx} style={styles.actionItem}>
+                <View key={`action-${index}-${idx}`} style={styles.actionItem}>
                   <View style={styles.actionBullet} />
                   <Text style={styles.actionText}>{action}</Text>
                 </View>

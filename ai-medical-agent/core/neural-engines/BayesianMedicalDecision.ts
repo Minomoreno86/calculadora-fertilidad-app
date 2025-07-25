@@ -127,9 +127,10 @@ export class BayesianMedicalDecision {
     ].filter(option => option.probability > 0.1);
 
     // Ordenar por probabilidad bayesiana
-    treatmentOptions.sort((a, b) => b.probability - a.probability);
+    const sortedOptions = [...treatmentOptions];
+    sortedOptions.sort((a: BayesianDecision, b: BayesianDecision) => b.probability - a.probability);
     
-    return treatmentOptions[0] || this.getDefaultRecommendation();
+    return sortedOptions[0] || this.getDefaultRecommendation();
   }
 
   /**
@@ -352,9 +353,10 @@ export class BayesianMedicalDecision {
       this.evaluateSurgicalOption(factors, patterns)
     ];
 
-    return allOptions
-      .sort((a, b) => b.probability - a.probability)
-      .slice(1, 3); // Top 2 alternativas
+    const sortedOptions = [...allOptions];
+    sortedOptions.sort((a: BayesianDecision, b: BayesianDecision) => b.probability - a.probability);
+    
+    return sortedOptions.slice(1, 3); // Top 2 alternativas
   }
 
   /**

@@ -7,6 +7,7 @@
 
 import type { MedicalWorkerTask, WorkerResult } from '../UnifiedParallelEngine_V12';
 import type { UserInput, Factors } from '../../domain/models';
+import { MyomaType, AdenomyosisType, PolypType, HsgResult, OtbMethod } from '../../domain/models';
 
 export interface CalculationResult {
   factors: Factors;
@@ -142,67 +143,67 @@ export class CalculationEngineWorker {
     if (grade === 0) return 1.0;
     
     const factors = [1.0, 0.85, 0.75, 0.60, 0.40];
-    const factor = factors[Math.min(grade, 4)];
+    const factor = factors[Math.min(grade, 4)] ?? 0.40; // Use nullish coalescing for safety
     intermediates[`endometriosis_grade${grade}`] = factor;
     return factor;
   }
 
-  private calculateMyomaFactor(myomaType: any, intermediates: Record<string, number>): number {
-    if (myomaType === 'none') return 1.0;
+  private calculateMyomaFactor(myomaType: MyomaType, intermediates: Record<string, number>): number {
+    if (myomaType === MyomaType.None) return 1.0;
     
     const factors: Record<string, number> = {
-      'submucosal': 0.6,
-      'intramural_large': 0.8,
-      'subserosal': 0.95
+      [MyomaType.Submucosal]: 0.6,
+      [MyomaType.IntramuralLarge]: 0.8,
+      [MyomaType.Subserosal]: 0.95
     };
     
-    const factor = factors[myomaType as string] || 0.9;
+    const factor = factors[myomaType] ?? 0.9;
     intermediates[`myoma_${myomaType}`] = factor;
     return factor;
   }
 
-  private calculateAdenomyosisFactor(adenomyosisType: any, intermediates: Record<string, number>): number {
-    if (adenomyosisType === 'none') return 1.0;
+  private calculateAdenomyosisFactor(adenomyosisType: AdenomyosisType, intermediates: Record<string, number>): number {
+    if (adenomyosisType === AdenomyosisType.None) return 1.0;
     
     const factors: Record<string, number> = {
-      'focal': 0.9,
-      'diffuse': 0.7
+      [AdenomyosisType.Focal]: 0.9,
+      [AdenomyosisType.Diffuse]: 0.7
     };
     
-    const factor = factors[adenomyosisType as string] || 0.85;
+    const factor = factors[adenomyosisType] ?? 0.85;
     intermediates[`adenomyosis_${adenomyosisType}`] = factor;
     return factor;
   }
 
-  private calculatePolypFactor(polypType: any, intermediates: Record<string, number>): number {
-    if (polypType === 'none') return 1.0;
+  private calculatePolypFactor(polypType: PolypType, intermediates: Record<string, number>): number {
+    if (polypType === PolypType.None) return 1.0;
     
     const factors: Record<string, number> = {
-      'small': 0.95,
-      'large': 0.8,
-      'ostium': 0.6
+      [PolypType.Small]: 0.95,
+      [PolypType.Large]: 0.8,
+      [PolypType.Ostium]: 0.6
     };
     
-    const factor = factors[polypType as string] || 0.9;
+    const factor = factors[polypType] ?? 0.9;
     intermediates[`polyp_${polypType}`] = factor;
     return factor;
   }
 
-  private calculateHSGFactor(hsgResult: any, intermediates: Record<string, number>): number {
+  private calculateHSGFactor(hsgResult: HsgResult, intermediates: Record<string, number>): number {
     const factors: Record<string, number> = {
-      'unknown': 0.9,
-      'normal': 1.0,
-      'unilateral': 0.7,
-      'bilateral': 0.3,
-      'malformacion': 0.5
+      [HsgResult.Unknown]: 0.9,
+      [HsgResult.Normal]: 1.0,
+      [HsgResult.Unilateral]: 0.7,
+      [HsgResult.Bilateral]: 0.3,
+      [HsgResult.Malformation]: 0.5
     };
     
-    const factor = factors[hsgResult as string] || 0.8;
+    const factor = factors[hsgResult] ?? 0.8;
     intermediates[`hsg_${hsgResult}`] = factor;
     return factor;
   }
 
-  private calculateOTBFactor(hasOtb: boolean, otbMethod: any, remainingLength: number | undefined, intermediates: Record<string, number>): number {
+  private calculateOTBFactor(hasOtb: boolean, otbMethod: OtbMethod | undefined, remainingLength: number | undefined, intermediates: Record<string, number>): number {
     if (!hasOtb) return 1.0;
     
     let baseFactor = 0.4; // Base factor for tubal ligation

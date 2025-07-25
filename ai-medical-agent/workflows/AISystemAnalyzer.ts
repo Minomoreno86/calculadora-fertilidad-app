@@ -4,7 +4,11 @@
  * ✨ Reporte técnico detallado
  */
 
-import { ComponentStatus, SystemStatus, UnifiedOperationResult } from './core/types/UnifiedTypes';
+import { ComponentStatus, SystemStatus, UnifiedOperationResult } from '../core/types/UnifiedTypes';
+
+// 🧠 Neural Type Aliases for Architecture Analysis
+// Type aliases for medical system analysis
+type ArchitectureQuality = 'low' | 'medium' | 'high';
 
 export interface AISystemAnalysisResult {
   systemStatus: SystemStatus;
@@ -27,9 +31,9 @@ export interface AISystemAnalysisResult {
   };
   architectureAnalysis: {
     pattern: string;
-    scalability: 'low' | 'medium' | 'high';
-    maintainability: 'low' | 'medium' | 'high';
-    testability: 'low' | 'medium' | 'high';
+    scalability: ArchitectureQuality;
+    maintainability: ArchitectureQuality;
+    testability: ArchitectureQuality;
   };
   recommendations: string[];
 }
@@ -377,7 +381,16 @@ export class AISystemAnalyzer {
   ): number {
     // Análisis de componentes
     const componentScores = Object.values(components).map(comp => {
-      return comp.status === 'OK' ? 100 : comp.status === 'WARNING' ? 60 : 20;
+      // Calculate component score based on status
+      let componentScore: number;
+      if (comp.status === 'OK') {
+        componentScore = 100;
+      } else if (comp.status === 'WARNING') {
+        componentScore = 60;
+      } else {
+        componentScore = 20;
+      }
+      return componentScore;
     });
     
     const avgComponentScore = componentScores.reduce((a, b) => a + b, 0) / componentScores.length;
@@ -439,8 +452,15 @@ export class AISystemAnalyzer {
    * 📋 GENERAR REPORTE COMPLETO
    */
   public generateComprehensiveReport(result: AISystemAnalysisResult): string {
-    const statusIcon = result.systemStatus === 'HEALTHY' ? '✅' : 
-                      result.systemStatus === 'DEGRADED' ? '⚠️' : '❌';
+    // Determine status icon based on system status
+    let statusIcon: string;
+    if (result.systemStatus === 'HEALTHY') {
+      statusIcon = '✅';
+    } else if (result.systemStatus === 'DEGRADED') {
+      statusIcon = '⚠️';
+    } else {
+      statusIcon = '❌';
+    }
 
     return `
 🎯 ANÁLISIS COMPLETO: AI MEDICAL AGENT SYSTEM
@@ -463,8 +483,15 @@ ${Object.entries(result.components)
 🎯 FUNCIONALIDADES (${Object.keys(result.functionalityMatrix).length} total):
 ${Object.entries(result.functionalityMatrix)
   .map(([name, func]) => {
-    const status = func.implemented && func.tested && func.production_ready ? '✅' : 
-                  func.implemented && func.production_ready ? '🚧' : '❌';
+    // Determine functionality status
+    let status: string;
+    if (func.implemented && func.tested && func.production_ready) {
+      status = '✅';
+    } else if (func.implemented && func.production_ready) {
+      status = '🚧';
+    } else {
+      status = '❌';
+    }
     return `   ${status} ${name.replace('_', ' ')}`;
   })
   .join('\n')}

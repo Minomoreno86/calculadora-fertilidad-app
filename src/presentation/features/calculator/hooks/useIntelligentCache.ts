@@ -94,10 +94,13 @@ export function useIntelligentCache<T>(config: Partial<CacheConfig> = {}) {
     // Remover las primeras entradas (menos útiles)
     const entriesToRemove = Math.ceil(entries.length * 0.1); // 10% de las entradas
     for (let i = 0; i < entriesToRemove && entries.length > 0; i++) {
-      const [key, entry] = entries[i];
-      cache.delete(key);
-      statsRef.current.totalEntries--;
-      statsRef.current.totalSize -= entry.size;
+      const entryData = entries[i];
+      if (entryData) {
+        const [key, entry] = entryData;
+        cache.delete(key);
+        statsRef.current.totalEntries--;
+        statsRef.current.totalSize -= entry.size;
+      }
     }
   }, [finalConfig.evictionStrategy]);
 

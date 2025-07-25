@@ -147,7 +147,7 @@ export class UnifiedCacheManager {
   // Timer para cleanup automático
   private cleanupTimer?: ReturnType<typeof setInterval>;
   
-  constructor(private config: CacheConfig = {
+  constructor(private readonly config: CacheConfig = {
     maxSize: 150,
     defaultTtl: 30000, // 30 segundos
     compressionThreshold: 1024, // 1KB
@@ -345,14 +345,14 @@ export class UnifiedCacheManager {
     }
   }
   
+  // ===================================================================
+  // 🛠️ NEURAL OPTIMIZATION HELPER FUNCTIONS
+  // ===================================================================
+  
   /**
-   * Optimización automática del cache
+   * Limpia patrones de uso antiguos
    */
-  optimize(): { optimizationsApplied: string[]; metricsImproved: Record<string, number> } {
-    const optimizations: string[] = [];
-    const beforeMetrics = { ...this.metrics };
-    
-    // 1. Limpiar patrones antiguos
+  private cleanupOldPatterns(): number {
     const dayAgo = Date.now() - (24 * 60 * 60 * 1000);
     let patternsRemoved = 0;
     
@@ -363,36 +363,95 @@ export class UnifiedCacheManager {
       }
     }
     
-    if (patternsRemoved > 0) {
-      optimizations.push(`Removed ${patternsRemoved} old patterns`);
-    }
-    
-    // 2. Comprimir entradas grandes no comprimidas
+    return patternsRemoved;
+  }
+  
+  /**
+   * Aplica compresión a entradas grandes no comprimidas
+   */
+  private applyCompressionOptimization(): number {
     let compressionApplied = 0;
     
     for (const [, cache] of this.caches) {
       for (const [key, entry] of cache.entries()) {
         if (!entry.compressed && entry.size > this.config.compressionThreshold) {
-          try {
-            const compressedData = this.compress(entry.data);
-            const newSize = this.estimateSize(compressedData);
-            
-            if (newSize < entry.size * 0.8) { // Solo si hay mejora significativa
-              entry.data = compressedData;
-              entry.compressed = true;
-              entry.compressionRatio = entry.size / newSize;
-              entry.size = newSize;
-              
-              this.metrics.compressionSavings += entry.size - newSize;
-              compressionApplied++;
-            }
-          } catch (error) {
-            console.warn(`Error comprimiendo entrada ${key}:`, error);
+          const compressionResult = this.tryCompressEntry(entry, key);
+          if (compressionResult.success) {
+            compressionApplied++;
           }
         }
       }
     }
     
+    return compressionApplied;
+  }
+  
+  /**
+   * Intenta comprimir una entrada específica
+   */
+  private tryCompressEntry(entry: UnifiedCacheEntry<unknown>, key: string): { success: boolean } {
+    try {
+      const compressedData = this.compress(entry.data);
+      const newSize = this.estimateSize(compressedData);
+      
+      if (newSize < entry.size * 0.8) { // Solo si hay mejora significativa
+        entry.data = compressedData;
+        entry.compressed = true;
+        entry.compressionRatio = entry.size / newSize;
+        this.metrics.compressionSavings += entry.size - newSize;
+        entry.size = newSize;
+        return { success: true };
+      }
+    } catch (error) {
+      console.warn(`Error comprimiendo entrada ${key}:`, error);
+    }
+    
+    return { success: false };
+  }
+  
+  /**
+   * Limpia entradas de compresión huérfanas
+   */
+  private cleanupOrphanedCompression(): number {
+    let orphanedCompression = 0;
+    
+    for (const key of this.compressionCache.keys()) {
+      if (!this.isCompressionKeyInUse(key)) {
+        this.compressionCache.delete(key);
+        orphanedCompression++;
+      }
+    }
+    
+    return orphanedCompression;
+  }
+  
+  /**
+   * Verifica si una clave de compresión está en uso
+   */
+  private isCompressionKeyInUse(key: string): boolean {
+    for (const cache of this.caches.values()) {
+      if (cache.has(key)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Optimización automática del cache
+   */
+  optimize(): { optimizationsApplied: string[]; metricsImproved: Record<string, number> } {
+    const optimizations: string[] = [];
+    const beforeMetrics = { ...this.metrics };
+    
+    // 1. Limpiar patrones antiguos
+    const patternsRemoved = this.cleanupOldPatterns();
+    if (patternsRemoved > 0) {
+      optimizations.push(`Removed ${patternsRemoved} old patterns`);
+    }
+    
+    // 2. Comprimir entradas grandes no comprimidas
+    const compressionApplied = this.applyCompressionOptimization();
     if (compressionApplied > 0) {
       optimizations.push(`Applied compression to ${compressionApplied} entries`);
     }
@@ -406,21 +465,7 @@ export class UnifiedCacheManager {
     }
     
     // 4. Limpiar compresión huérfana
-    let orphanedCompression = 0;
-    for (const key of this.compressionCache.keys()) {
-      let found = false;
-      for (const cache of this.caches.values()) {
-        if (cache.has(key)) {
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        this.compressionCache.delete(key);
-        orphanedCompression++;
-      }
-    }
-    
+    const orphanedCompression = this.cleanupOrphanedCompression();
     if (orphanedCompression > 0) {
       optimizations.push(`Cleaned ${orphanedCompression} orphaned compressed entries`);
     }
@@ -802,9 +847,7 @@ let cacheManagerInstance: UnifiedCacheManager | null = null;
  * Obtiene la instancia del cache manager
  */
 export function getCacheManager(config?: CacheConfig): UnifiedCacheManager {
-  if (!cacheManagerInstance) {
-    cacheManagerInstance = new UnifiedCacheManager(config);
-  }
+  cacheManagerInstance ??= new UnifiedCacheManager(config);
   return cacheManagerInstance;
 }
 

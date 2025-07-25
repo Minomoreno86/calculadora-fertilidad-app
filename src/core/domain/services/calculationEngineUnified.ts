@@ -52,7 +52,23 @@ interface ComplexityAnalysis {
 }
 
 /**
- * 🚀 FUNCIÓN PRINCIPAL UNIFICADA
+ * � DETECTAR USO DE VALIDACIÓN PARALELA
+ */
+function detectParallelValidationUsage(result: EvaluationState, usedStandard: boolean): boolean {
+  // Heurística simple: Si el motor standard procesó un caso complejo muy rápido,
+  // probablemente usó validación paralela
+  if (usedStandard && result.input) {
+    const hasComplexFactors = result.input.endometriosisGrade >= 2 || 
+                             result.input.hasPcos || 
+                             result.input.hasOtb ||
+                             (result.input.amh !== undefined && result.input.amh < 1.0);
+    return hasComplexFactors;
+  }
+  return false;
+}
+
+/**
+ * �🚀 FUNCIÓN PRINCIPAL UNIFICADA
  * 
  * API única que reemplaza calculateProbability + calculateProbabilityPremium
  */
@@ -103,12 +119,16 @@ export function calculateProbabilityUnified(
   
   // 📊 GENERAR MÉTRICAS
   const executionTime = performance.now() - startTime;
+  
+  // Detectar si se usó validación paralela desde el resultado
+  const parallelValidationUsed = detectParallelValidationUsage(result, engineDecision.useStandard);
+  
   const metrics: UnifiedEngineMetrics = {
     executionTime,
     engineUsed: engineDecision.useStandard ? 'standard' : 'premium',
     complexityScore: complexity.score,
     cacheHit,
-    parallelValidationUsed: false, // TODO: Detectar desde el resultado
+    parallelValidationUsed,
     decisionReason: engineDecision.reason
   };
   
@@ -121,6 +141,9 @@ export function calculateProbabilityUnified(
     console.log(`   🎯 Razón: ${metrics.decisionReason}`);
   }
   
+  // 📊 ACTUALIZAR MÉTRICAS GLOBALES
+  updateGlobalMetrics(metrics);
+  
   return { result, metrics };
 }
 
@@ -128,94 +151,147 @@ export function calculateProbabilityUnified(
  * 🧮 ANALIZAR COMPLEJIDAD DEL INPUT
  */
 function analyzeInputComplexity(userInput: UserInput): ComplexityAnalysis {
-  let score = 0;
-  const factors = { age: 0, hormonal: 0, anatomical: 0, masculine: 0, interactions: 0 };
+  const factors = {
+    age: calculateAgeComplexity(userInput.age),
+    hormonal: calculateHormonalComplexity(userInput),
+    anatomical: calculateAnatomicalComplexity(userInput),
+    masculine: calculateMasculineComplexity(userInput),
+    interactions: calculateInteractionComplexity(userInput)
+  };
   
-  // 👵 FACTOR EDAD (peso: 0.2)
-  if (userInput.age >= 38) {
-    factors.age = 0.8;
-  } else if (userInput.age >= 35) {
-    factors.age = 0.4;
-  } else {
-    factors.age = 0.1;
-  }
+  // � SCORE FINAL (promedio ponderado)
+  const score = (factors.age * 0.2) + 
+               (factors.hormonal * 0.25) + 
+               (factors.anatomical * 0.25) + 
+               (factors.masculine * 0.15) + 
+               (factors.interactions * 0.15);
   
-  // 🧬 FACTORES HORMONALES (peso: 0.25)
-  let hormonalComplexity = 0;
-  if (userInput.amh !== undefined && userInput.amh < 1.0) hormonalComplexity += 0.3;
-  if (userInput.tsh !== undefined && (userInput.tsh > 4.0 || userInput.tsh < 0.5)) hormonalComplexity += 0.2;
-  if (userInput.prolactin !== undefined && userInput.prolactin > 25) hormonalComplexity += 0.2;
-  if (userInput.hasPcos) hormonalComplexity += 0.4;
-  factors.hormonal = Math.min(hormonalComplexity, 1.0);
+  // 🎯 DETERMINAR SI REQUIERE PREMIUM
+  const requiresPremium = shouldUsePremiumEngine(score, factors, userInput);
   
-  // 🏥 FACTORES ANATÓMICOS (peso: 0.25)
-  let anatomicalComplexity = 0;
-  if (userInput.endometriosisGrade >= 3) anatomicalComplexity += 0.5;
-  if (userInput.myomaType !== MyomaType.None) anatomicalComplexity += 0.3;
-  if (userInput.adenomyosisType !== AdenomyosisType.None) anatomicalComplexity += 0.4;
-  if (userInput.hsgResult !== HsgResult.Normal) anatomicalComplexity += 0.3;
-  if (userInput.hasOtb) anatomicalComplexity += 0.8; // OTB es muy complejo
-  factors.anatomical = Math.min(anatomicalComplexity, 1.0);
+  // 📝 GENERAR REASONING
+  const reasoning = generateComplexityReasoning(score, factors, userInput);
   
-  // 👨 FACTORES MASCULINOS (peso: 0.15)
-  let masculineComplexity = 0;
-  if (userInput.spermConcentration !== undefined && userInput.spermConcentration < 16) masculineComplexity += 0.3;
-  if (userInput.spermProgressiveMotility !== undefined && userInput.spermProgressiveMotility < 30) masculineComplexity += 0.3;
-  if (userInput.spermNormalMorphology !== undefined && userInput.spermNormalMorphology < 2) masculineComplexity += 0.4;
-  factors.masculine = Math.min(masculineComplexity, 1.0);
+  return { score, factors, requiresPremium, reasoning };
+}
+
+/**
+ * 👵 CALCULAR COMPLEJIDAD POR EDAD
+ */
+function calculateAgeComplexity(age: number): number {
+  if (age >= 38) return 0.8;
+  if (age >= 35) return 0.4;
+  return 0.1;
+}
+
+/**
+ * 🧬 CALCULAR COMPLEJIDAD HORMONAL
+ */
+function calculateHormonalComplexity(userInput: UserInput): number {
+  let complexity = 0;
   
-  // 🔗 INTERACCIONES DETECTADAS (peso: 0.15)
-  let interactionComplexity = 0;
+  if (userInput.amh !== undefined && userInput.amh < 1.0) complexity += 0.3;
+  if (userInput.tsh !== undefined && (userInput.tsh > 4.0 || userInput.tsh < 0.5)) complexity += 0.2;
+  if (userInput.prolactin !== undefined && userInput.prolactin > 25) complexity += 0.2;
+  if (userInput.hasPcos) complexity += 0.4;
+  
+  return Math.min(complexity, 1.0);
+}
+
+/**
+ * 🏥 CALCULAR COMPLEJIDAD ANATÓMICA
+ */
+function calculateAnatomicalComplexity(userInput: UserInput): number {
+  let complexity = 0;
+  
+  if (userInput.endometriosisGrade >= 3) complexity += 0.5;
+  if (userInput.myomaType !== MyomaType.None) complexity += 0.3;
+  if (userInput.adenomyosisType !== AdenomyosisType.None) complexity += 0.4;
+  if (userInput.hsgResult !== HsgResult.Normal) complexity += 0.3;
+  if (userInput.hasOtb) complexity += 0.8; // OTB es muy complejo
+  
+  return Math.min(complexity, 1.0);
+}
+
+/**
+ * 👨 CALCULAR COMPLEJIDAD MASCULINA
+ */
+function calculateMasculineComplexity(userInput: UserInput): number {
+  let complexity = 0;
+  
+  if (userInput.spermConcentration !== undefined && userInput.spermConcentration < 16) complexity += 0.3;
+  if (userInput.spermProgressiveMotility !== undefined && userInput.spermProgressiveMotility < 30) complexity += 0.3;
+  if (userInput.spermNormalMorphology !== undefined && userInput.spermNormalMorphology < 2) complexity += 0.4;
+  
+  return Math.min(complexity, 1.0);
+}
+
+/**
+ * 🔗 CALCULAR COMPLEJIDAD DE INTERACCIONES
+ */
+function calculateInteractionComplexity(userInput: UserInput): number {
+  let complexity = 0;
   
   // Interacción edad + reserva ovárica
   if (userInput.age >= 38 && userInput.amh !== undefined && userInput.amh < 0.8) {
-    interactionComplexity += 0.6;
+    complexity += 0.6;
   }
   
   // Interacción endometriosis + factor masculino
-  if (userInput.endometriosisGrade >= 3 && 
-      ((userInput.spermConcentration !== undefined && userInput.spermConcentration < 16) ||
-       (userInput.spermProgressiveMotility !== undefined && userInput.spermProgressiveMotility < 30))) {
-    interactionComplexity += 0.7;
+  if (hasEndometriosisMaleFactorInteraction(userInput)) {
+    complexity += 0.7;
   }
   
   // Interacción PCOS + factores metabólicos
-  if (userInput.hasPcos && 
-      userInput.bmi !== undefined && 
-      userInput.bmi !== null && 
-      typeof userInput.bmi === 'number' && 
-      userInput.bmi >= 30) {
-    interactionComplexity += 0.4;
+  if (hasPcosMetabolicInteraction(userInput)) {
+    complexity += 0.4;
   }
   
-  factors.interactions = Math.min(interactionComplexity, 1.0);
-  
-  // 📊 SCORE FINAL (promedio ponderado)
-  score = (factors.age * 0.2) + 
-          (factors.hormonal * 0.25) + 
-          (factors.anatomical * 0.25) + 
-          (factors.masculine * 0.15) + 
-          (factors.interactions * 0.15);
-  
-  // 🎯 DETERMINAR SI REQUIERE PREMIUM
-  const requiresPremium = score >= 0.4 || 
-                         factors.interactions > 0.3 ||
-                         userInput.hasOtb ||
-                         userInput.endometriosisGrade >= 3;
-  
-  // 📝 GENERAR REASONING
+  return Math.min(complexity, 1.0);
+}
+
+/**
+ * 🔍 DETECTAR INTERACCIÓN ENDOMETRIOSIS + FACTOR MASCULINO
+ */
+function hasEndometriosisMaleFactorInteraction(userInput: UserInput): boolean {
+  return userInput.endometriosisGrade >= 3 && 
+         ((userInput.spermConcentration !== undefined && userInput.spermConcentration < 16) ||
+          (userInput.spermProgressiveMotility !== undefined && userInput.spermProgressiveMotility < 30));
+}
+
+/**
+ * 🔍 DETECTAR INTERACCIÓN PCOS + METABÓLICA
+ */
+function hasPcosMetabolicInteraction(userInput: UserInput): boolean {
+  return userInput.hasPcos && 
+         userInput.bmi !== undefined && 
+         userInput.bmi !== null && 
+         typeof userInput.bmi === 'number' && 
+         userInput.bmi >= 30;
+}
+
+/**
+ * 🎯 DETERMINAR SI REQUIERE MOTOR PREMIUM
+ */
+function shouldUsePremiumEngine(score: number, factors: ComplexityAnalysis['factors'], userInput: UserInput): boolean {
+  return score >= 0.4 || 
+         factors.interactions > 0.3 ||
+         userInput.hasOtb ||
+         userInput.endometriosisGrade >= 3;
+}
+
+/**
+ * 📝 GENERAR EXPLICACIÓN DE COMPLEJIDAD
+ */
+function generateComplexityReasoning(score: number, factors: ComplexityAnalysis['factors'], userInput: UserInput): string {
   let reasoning = `Score: ${score.toFixed(2)}`;
+  
   if (factors.interactions > 0.3) reasoning += ' | High interactions detected';
   if (userInput.hasOtb) reasoning += ' | OTB requires premium logic';
   if (userInput.endometriosisGrade >= 3) reasoning += ' | Severe endometriosis';
   if (factors.hormonal > 0.5) reasoning += ' | Complex hormonal profile';
   
-  return {
-    score,
-    factors,
-    requiresPremium,
-    reasoning
-  };
+  return reasoning;
 }
 
 /**
@@ -264,9 +340,43 @@ function decideEngine(
   };
 }
 
+// 📊 CACHE GLOBAL DE MÉTRICAS
+interface GlobalMetricsCache {
+  totalCalculations: number;
+  standardEngineUsage: number;
+  premiumEngineUsage: number;
+  complexityScores: number[];
+  executionTimes: number[];
+}
+
+const globalMetrics: GlobalMetricsCache = {
+  totalCalculations: 0,
+  standardEngineUsage: 0,
+  premiumEngineUsage: 0,
+  complexityScores: [],
+  executionTimes: []
+};
+
 /**
- * 🔄 FUNCIÓN DE MIGRACIÓN: Reemplaza calculateProbability
+ * � ACTUALIZAR MÉTRICAS GLOBALES
  */
+function updateGlobalMetrics(metrics: UnifiedEngineMetrics): void {
+  globalMetrics.totalCalculations++;
+  globalMetrics.complexityScores.push(metrics.complexityScore);
+  globalMetrics.executionTimes.push(metrics.executionTime);
+  
+  if (metrics.engineUsed === 'standard') {
+    globalMetrics.standardEngineUsage++;
+  } else {
+    globalMetrics.premiumEngineUsage++;
+  }
+  
+  // Limitar arrays para no consumir demasiada memoria (últimas 1000 mediciones)
+  if (globalMetrics.complexityScores.length > 1000) {
+    globalMetrics.complexityScores = globalMetrics.complexityScores.slice(-500);
+    globalMetrics.executionTimes = globalMetrics.executionTimes.slice(-500);
+  }
+}
 export function calculateProbabilityMigrated(userInput: UserInput): EvaluationState {
   const { result } = calculateProbabilityUnified(userInput, { mode: 'auto' });
   return result;
@@ -290,12 +400,17 @@ export function getUnifiedEngineMetrics(): {
   averageComplexityScore: number;
   averageExecutionTime: number;
 } {
-  // TODO: Implementar con cache global de métricas
+  const avgComplexity = globalMetrics.complexityScores.length > 0 ?
+    globalMetrics.complexityScores.reduce((sum, score) => sum + score, 0) / globalMetrics.complexityScores.length : 0;
+  
+  const avgExecutionTime = globalMetrics.executionTimes.length > 0 ?
+    globalMetrics.executionTimes.reduce((sum, time) => sum + time, 0) / globalMetrics.executionTimes.length : 0;
+  
   return {
-    totalCalculations: 0,
-    standardEngineUsage: 0,
-    premiumEngineUsage: 0,
-    averageComplexityScore: 0,
-    averageExecutionTime: 0
+    totalCalculations: globalMetrics.totalCalculations,
+    standardEngineUsage: globalMetrics.standardEngineUsage,
+    premiumEngineUsage: globalMetrics.premiumEngineUsage,
+    averageComplexityScore: Math.round(avgComplexity * 100) / 100,
+    averageExecutionTime: Math.round(avgExecutionTime * 100) / 100
   };
 }

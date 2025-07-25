@@ -17,11 +17,22 @@
 
 import { TreatmentEngine } from '../../../infrastructure/ai/treatmentEngine';
 import { MedicalKnowledgeEngine } from '../../../infrastructure/ai/medicalKnowledgeEngine';
-import { MedicalEvidenceBase } from '../../types/enhanced-medical-types';
 
 // ===================================================================
 // 🔄 UNIFIED INTERFACE COMPATIBILITY V12.1 - TYPE ENHANCED
 // ===================================================================
+
+// 🔬 MEDICAL EVIDENCE BASE - SIMPLIFIED LOCAL DEFINITION
+interface MedicalEvidenceBase {
+  overallSafety: 'excellent' | 'good' | 'moderate' | 'poor' | 'dangerous';
+  mortalityRisk: number;
+  hospitalizations: number;
+  successRate: number;
+  pregnancyRate: number;
+  livebirthRate: number;
+  timeToEffect: number;
+  durationOfEffect: number;
+}
 
 // Import unified types
 import type { MedicalWorkerTask, WorkerResult } from '../UnifiedParallelEngine_V12';
