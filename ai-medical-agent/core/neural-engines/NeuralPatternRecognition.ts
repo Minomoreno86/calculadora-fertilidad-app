@@ -4,7 +4,7 @@
  * Advanced algorithmic approach to medical pattern detection
  */
 
-import { Factors } from '../../../src/core/domain/models';
+import { Factors } from '../../types/medical-models';
 
 // 🎯 TIPOS PARA RECONOCIMIENTO DE PATRONES
 export interface MedicalPattern {

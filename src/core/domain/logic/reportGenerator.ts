@@ -1,12 +1,46 @@
 
-import { Report, Diagnostics, Factors, UserInput, ClinicalFinding } from '../models';
+import { Report, Diagnostics, Factors, UserInput, ClinicalFinding, MyomaType, PolypType } from '../models';
 import { clinicalContentLibrary } from './clinicalContentLibrary';
+
+/**
+ * 🔧 FUNCIÓN HELPER PARA MAPEAR TIPOS DE MIOMAS A CLAVES ESPECÍFICAS
+ */
+function getMyomaKey(input: UserInput): string {
+  switch (input.myomaType) {
+    case MyomaType.Submucosal:
+      return 'MIOMA_SUBMUCOSO';
+    case MyomaType.IntramuralLarge:
+      return 'MIOMA_INTRAMURAL_GRANDE';
+    case MyomaType.Subserosal:
+      return 'MIOMA_SUBSEROSO';
+    case MyomaType.None:
+    default:
+      return 'MIOMA_AUSENTE';
+  }
+}
+
+/**
+ * 🔧 FUNCIÓN HELPER PARA MAPEAR TIPOS DE PÓLIPOS A CLAVES ESPECÍFICAS
+ */
+function getPolypKey(input: UserInput): string {
+  switch (input.polypType) {
+    case PolypType.Small:
+      return 'POLIPO_PEQUENO';
+    case PolypType.Large:
+      return 'POLIPO_GRANDE';
+    case PolypType.Ostium:
+      return 'POLIPO_OSTIUM';
+    case PolypType.None:
+    default:
+      return 'POLIPO_AUSENTE';
+  }
+}
 
 // Mapa de configuración para generar los hallazgos clínicos.
 const findingConfig = [
   {
     factor: 'bmi',
-    key: (d: Diagnostics) => (d.bmiComment === 'Bajo peso' ? 'IMC_BAJO' : 'IMC_ALTO'),
+    key: (d: Diagnostics, _input: UserInput) => (d.bmiComment === 'Bajo peso' ? 'IMC_BAJO' : 'IMC_ALTO'),
     title: 'Índice de Masa Corporal',
   },
   { factor: 'homa', key: 'HOMA_ALTO', title: 'Resistencia a la Insulina (HOMA-IR)' },
@@ -16,8 +50,16 @@ const findingConfig = [
   { factor: 'prolactin', key: 'PRL_ALTA', title: 'Hiperprolactinemia' },
   { factor: 'pcos', key: 'SOP', title: 'Síndrome de Ovario Poliquístico' },
   { factor: 'endometriosis', key: 'ENDOMETRIOSIS', title: 'Endometriosis' },
-  { factor: 'myoma', key: 'MIOMAS', title: 'Miomas Uterinos' },
-  { factor: 'polyp', key: 'POLIPOS', title: 'Pólipos Endometriales' },
+  { 
+    factor: 'myoma', 
+    key: (d: Diagnostics, input: UserInput) => getMyomaKey(input), 
+    title: 'Miomas Uterinos' 
+  },
+  { 
+    factor: 'polyp', 
+    key: (d: Diagnostics, input: UserInput) => getPolypKey(input), 
+    title: 'Pólipos Endometriales' 
+  },
   { factor: 'adenomyosis', key: 'ADENOMIOSIS', title: 'Adenomiosis' },
   { factor: 'hsg', key: 'OBSTRUCCION_TUBARICA', title: 'Permeabilidad Tubárica (HSG)' },
   { factor: 'pelvicSurgery', key: 'CIRUGIA_PELVICA', title: 'Cirugías Pélvicas Previas' },
@@ -74,8 +116,9 @@ export function generateFinalReport(
   // 1. Construir la lista de Hallazgos Clínicos usando el mapa de configuración.
   const clinicalInsights = findingConfig.reduce((acc: ClinicalFinding[], config) => {
     const factorValue = factors[config.factor as keyof Factors];
-    if (factorValue < 1.0) {
-      const key = typeof config.key === 'function' ? config.key(diagnostics) : config.key;
+    // Verificar que factorValue existe y es menor a 1.0 (factor presente y anormal)
+    if (factorValue !== undefined && typeof factorValue === 'number' && factorValue < 1.0) {
+      const key = typeof config.key === 'function' ? config.key(diagnostics, input) : config.key;
       if (clinicalContentLibrary[key]) {
         acc.push({
           key,

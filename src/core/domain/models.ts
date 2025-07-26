@@ -111,16 +111,85 @@ export interface Factors {
   endometriosis: number;
   myoma: number;
   adenomyosis: number;
+  adenomiosis?: number; // Legacy compatibility
   polyp: number;
+  polipos?: number; // Legacy compatibility
   hsg: number;
   otb: number;
   amh: number;
   prolactin: number;
   tsh: number;
   homa: number;
+  homaIR?: number; // Legacy compatibility
   male: number;
+  maleFactor?: number; // Legacy compatibility
   infertilityDuration: number;
   pelvicSurgery: number;
+  cycleIrregular?: number; // Legacy compatibility
+  miomas?: number; // Legacy compatibility
+  age?: number; // For comprehensive analysis
+}
+
+// 🧠 ANALYSIS RESULT INTERFACE V13.1
+export interface AnalysisResult {
+  type: 'hypothesis' | 'treatment' | 'lifestyle' | 'monitoring' | 'diagnostic' | 'prediction' | 'risk';
+  data: {
+    condition?: string;
+    probability?: number;
+    reasoning?: string;
+    evidenceLevel?: 'A' | 'B' | 'C';
+    pmid?: string;
+    treatment?: string;
+    priority?: 'high' | 'medium' | 'low';
+    successRate?: number;
+    timeframe?: string;
+    contraindications?: string[];
+    category?: string;
+    recommendations?: string[];
+    impact?: 'high' | 'medium' | 'low';
+    parameter?: string;
+    frequency?: string;
+    target?: string;
+    riskLevel?: 'high' | 'medium' | 'low';
+    mitigation?: string;
+    severity?: string;
+    outcome?: string; // For prediction type results
+    test?: string; // For diagnostic type results
+  };
+}
+
+// 🧠 MEDICAL ANALYSIS INTERFACE V13.1
+export interface MedicalAnalysis {
+  diagnosticHypotheses: Array<{
+    condition: string;
+    probability: number;
+    reasoning: string;
+    evidenceLevel: 'A' | 'B' | 'C';
+    pmid?: string;
+  }>;
+  treatmentRecommendations: Array<{
+    treatment: string;
+    priority: 'high' | 'medium' | 'low';
+    successRate: number;
+    timeframe: string;
+    reasoning: string;
+    contraindications?: string[];
+  }>;
+  lifestyle: Array<{
+    category: string;
+    recommendations: string[];
+    impact: 'high' | 'medium' | 'low';
+  }>;
+  monitoring: Array<{
+    parameter: string;
+    frequency: string;
+    target: string;
+  }>;
+  nextSteps: string[];
+  urgencyLevel: 'immediate' | 'urgent' | 'routine';
+  results: AnalysisResult[];
+  confidence: number;
+  recommendations: string[];
 }
 
 export interface Diagnostics {
@@ -170,4 +239,112 @@ export interface SimulationResult {
   originalPrognosis: number;
   newPrognosis: number;
   improvement: number;
+}
+
+// 🧠 NEURAL MEDICAL AI INTERFACES V13.1
+export interface MedicalPattern {
+  patternId: string;
+  patternName: string;
+  confidence: number;
+  clinicalRelevance: number;
+  evidence: {
+    symptoms: string[];
+    biomarkers: string[];
+    imaging: string[];
+  };
+}
+
+export interface NeuralAnalysis {
+  primaryPatterns: MedicalPattern[];
+  emergentInsights: string[];
+  hiddenCorrelations: Array<{
+    factors: string[];
+    insight: string;
+    clinicalRelevance: number;
+  }>;
+  predictiveIndicators: Array<{
+    outcome: string;
+    probability: number;
+    timeframe: string;
+    evidence: string;
+  }>;
+}
+
+export interface BayesianDecision {
+  treatment: string;
+  probability: number;
+  reasoning: string;
+}
+
+export interface BayesianDecisionNode {
+  condition: string;
+  probability: number;
+  children: Array<{
+    decision: string;
+    probability: number;
+    outcome: string;
+    children?: BayesianDecisionNode[];
+  }>;
+}
+
+export interface BayesianAnalysis {
+  primaryRecommendation: BayesianDecision;
+  alternativeOptions: BayesianDecision[];
+  riskAssessment: {
+    immediateRisks: string[];
+    longTermRisks: string[];
+    mitigationStrategies: string[];
+  };
+  decisionTree: BayesianDecisionNode;
+}
+
+export interface SuperintellignentAnalysisResult {
+  // 🧠 Análisis Neural de Patrones
+  neuralPatternAnalysis: NeuralAnalysis;
+  
+  // 📊 Decisiones Bayesianas
+  bayesianDecisionAnalysis: BayesianAnalysis;
+  
+  // 🎯 Recomendación Principal Integrada
+  integralRecommendation: {
+    primaryTreatment: string;
+    confidence: number;
+    successProbability: number;
+    timeframe: string;
+    evidenceLevel: 'A' | 'B' | 'C';
+    neuralInsights: string[];
+    bayesianReasoning: string;
+    urgencyLevel: 'immediate' | 'urgent' | 'routine';
+  };
+  
+  // 🌊 Insights Emergentes Únicos
+  emergentInsights: {
+    hiddenConnections: string[];
+    predictiveWarnings: string[];
+    optimizationOpportunities: string[];
+    personalizedStrategies: string[];
+  };
+  
+  // 🔮 Modelado Predictivo
+  predictiveModeling: {
+    shortTermPredictions: Array<{
+      outcome: string;
+      probability: number;
+      timeframe: string;
+    }>;
+    longTermPredictions: Array<{
+      outcome: string;
+      probability: number;
+      timeframe: string;
+    }>;
+  };
+  
+  // 📊 Métricas de Confianza
+  systemMetrics: {
+    overallConfidence: number;
+    neuralAccuracy: number;
+    bayesianCertainty: number;
+    predictionReliability: number;
+    insightDepth: number;
+  };
 }

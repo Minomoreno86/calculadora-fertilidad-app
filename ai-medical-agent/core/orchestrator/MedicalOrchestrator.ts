@@ -1811,7 +1811,11 @@ export class MedicalOrchestrator {
             aiResponses: [],
             topics: [],
             timestamp: [],
-            userIntentions: []
+            userIntentions: [],
+            // 🧬 NESTED DOMAINS EXTENSIONS
+            activeDomains: [],
+            domainSwitches: 0,
+            domainConfidences: []
           },
           memory: {
             patientContext: {},
@@ -1825,6 +1829,13 @@ export class MedicalOrchestrator {
               communicationStyle: 'empathetic',
               informationDepth: 'detailed',
               emotionalState: 'curious'
+            },
+            // 🧬 NESTED DOMAINS MEMORY
+            domainMemory: {
+              preferredDomain: 'female_factor',
+              domainHistory: [],
+              domainSpecificContext: new Map(),
+              crossDomainInsights: []
             }
           },
           userInput: userInput || {} as UserInput

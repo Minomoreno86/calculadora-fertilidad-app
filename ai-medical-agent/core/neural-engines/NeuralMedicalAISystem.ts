@@ -4,7 +4,7 @@
  * Arquitectura inspirada en redes neuronales especializadas para medicina reproductiva
  */
 
-import { Factors, EvaluationState } from '../../../src/core/domain/models';
+import { Factors, EvaluationState } from '../../types/medical-models';
 import { 
   NeuralPatternRecognition, 
   NeuralAnalysis 

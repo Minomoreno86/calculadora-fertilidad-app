@@ -4,7 +4,7 @@
  * Simulates transformer-like architecture for medical dialogue
  */
 
-import { Factors } from '../../../src/core/domain/models';
+import { Factors } from '../../types/medical-models';
 import { NeuralAnalysis } from './NeuralPatternRecognition';
 import { BayesianAnalysis } from './BayesianMedicalDecision';
 

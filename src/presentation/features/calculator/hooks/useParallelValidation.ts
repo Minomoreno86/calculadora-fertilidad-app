@@ -35,17 +35,47 @@ import ValidationStreamingEngine, {
   StreamingCallbacks,
   ValidationGroup
 } from '@/core/workers/validationStreamingEngine';
-import { ValidationMetrics } from '@/core/workers/parallelValidationEngine';
-import type { ValidationResult } from '@/core/workers/validationWorker';
 import type { UserInput } from '@/core/domain/models';
+
+// 🧠 Neural Type Extension - Extending existing types instead of replacing
+interface ExtendedValidationResult {
+  taskId: string;
+  success: boolean;
+  isValid: boolean;
+  processingTime?: number;
+  errors?: string[];
+  warnings?: string[];
+  // Extended properties for our advanced use case
+  result: {
+    isValid: boolean;
+    severity: 'low' | 'medium' | 'high';
+    recommendations: string[];
+    confidence?: number;
+  };
+}
+
+interface ExtendedValidationMetrics {
+  totalTasks: number;
+  completedTasks: number;
+  failedTasks: number;
+  averageTime: number;
+  cacheHitRate: number;
+  concurrencyLevel: number;
+  // Neural Extensions
+  totalDuration: number;
+  tasksCompleted: number;
+  errorRate: number;
+  avgResponseTime: number;
+  successRate: number;
+}
 
 export interface ParallelValidationState {
   isRunning: boolean;
   progress: StreamingProgress;
-  metrics: ValidationMetrics;
-  results: Map<string, ValidationResult[]>;
-  criticalResults: ValidationResult[];
-  importantResults: ValidationResult[];
+  metrics: ExtendedValidationMetrics;
+  results: Map<string, ExtendedValidationResult[]>;
+  criticalResults: ExtendedValidationResult[];
+  importantResults: ExtendedValidationResult[];
   error?: Error;
   lastUpdate: number;
 }
@@ -54,7 +84,7 @@ export interface ParallelValidationControls {
   startValidation: (groups: ValidationGroup[]) => Promise<void>;
   abortValidation: () => void;
   isValidationSupported: boolean;
-  getQuickValidation: (data: unknown) => Promise<ValidationResult[]>;
+  getQuickValidation: (data: unknown) => Promise<ExtendedValidationResult[]>;
   clearResults: () => void;
   getPerformanceReport: () => Record<string, unknown>;
 }
@@ -63,9 +93,38 @@ export interface UseParallelValidationOptions {
   config?: Partial<StreamingConfig>;
   autoStart?: boolean;
   enableMetrics?: boolean;
-  onComplete?: (results: Map<string, ValidationResult[]>) => void;
+  onComplete?: (results: Map<string, ExtendedValidationResult[]>) => void;
   onError?: (error: Error) => void;
 }
+
+// 🧠 Simple Helper Functions - Direct type compatibility for input validation
+const transformValidationResult = (result: unknown): ExtendedValidationResult => {
+  const r = result as Record<string, unknown>;
+  return {
+    taskId: (r.taskId as string) || 'unknown',
+    success: (r.success as boolean) ?? true,
+    isValid: (r.isValid as boolean) ?? true,
+    processingTime: r.processingTime as number,
+    errors: r.errors as string[],
+    warnings: r.warnings as string[],
+    result: {
+      isValid: (r.isValid as boolean) ?? true,
+      severity: 'medium' as const,
+      recommendations: (r.recommendations as string[]) || []
+    }
+  };
+};
+
+const transformValidationResults = (results: unknown[]): ExtendedValidationResult[] => 
+  results.map(transformValidationResult);
+
+const createTransformedMap = (allResults: Map<string, unknown[]>): Map<string, ExtendedValidationResult[]> => {
+  const transformedMap = new Map<string, ExtendedValidationResult[]>();
+  allResults.forEach((results: unknown[], key: string) => {
+    transformedMap.set(key, transformValidationResults(results));
+  });
+  return transformedMap;
+};
 
 /**
  * Hook principal de validación paralela
@@ -85,12 +144,17 @@ export function useParallelValidation(
       importantComplete: false
     },
     metrics: {
+      totalDuration: 0,
+      tasksCompleted: 0,
+      errorRate: 0,
+      avgResponseTime: 0,
+      successRate: 0,
+      concurrencyLevel: 0,
       totalTasks: 0,
       completedTasks: 0,
       failedTasks: 0,
       averageTime: 0,
-      cacheHitRate: 0,
-      concurrencyLevel: 0
+      cacheHitRate: 0
     },
     results: new Map(),
     criticalResults: [],
@@ -120,29 +184,35 @@ export function useParallelValidation(
       },
 
       onCriticalComplete: (results) => {
+        // Simple direct transformation for validation results
+        const transformedResults = transformValidationResults(results);
         setState(prev => ({
           ...prev,
-          criticalResults: results,
+          criticalResults: transformedResults,
           lastUpdate: Date.now()
         }));
       },
 
       onImportantComplete: (results) => {
+        // Simple direct transformation for validation results
+        const transformedResults = transformValidationResults(results);
         setState(prev => ({
           ...prev,
-          importantResults: results,
+          importantResults: transformedResults,
           lastUpdate: Date.now()
         }));
       },
 
       onComplete: (allResults) => {
+        // Simple direct transformation for all results
+        const transformedMap = createTransformedMap(allResults);
         setState(prev => ({
           ...prev,
           isRunning: false,
-          results: allResults,
+          results: transformedMap,
           lastUpdate: Date.now()
         }));
-        options.onComplete?.(allResults);
+        options.onComplete?.(transformedMap);
       },
 
       onError: (error, _phase) => {
@@ -180,10 +250,19 @@ export function useParallelValidation(
 
     const interval = setInterval(() => {
       if (engineRef.current) {
-        const metrics = engineRef.current.getMetrics();
+        const rawMetrics = engineRef.current.getMetrics();
+        // Transform using type extension
+        const transformedMetrics: ExtendedValidationMetrics = {
+          ...rawMetrics,
+          totalDuration: 0,
+          tasksCompleted: rawMetrics.completedTasks,
+          errorRate: rawMetrics.totalTasks > 0 ? (rawMetrics.failedTasks / rawMetrics.totalTasks) * 100 : 0,
+          avgResponseTime: rawMetrics.averageTime,
+          successRate: rawMetrics.totalTasks > 0 ? ((rawMetrics.completedTasks - rawMetrics.failedTasks) / rawMetrics.totalTasks) * 100 : 0
+        };
         setState(prev => ({
           ...prev,
-          metrics,
+          metrics: transformedMetrics,
           lastUpdate: Date.now()
         }));
       }
@@ -241,7 +320,7 @@ export function useParallelValidation(
   /**
    * Validación rápida para casos simples
    */
-  const getQuickValidation = useCallback(async (_data: unknown): Promise<ValidationResult[]> => {
+  const getQuickValidation = useCallback(async (_data: unknown): Promise<ExtendedValidationResult[]> => {
     // Simular validación rápida sin streaming
     await new Promise(resolve => setTimeout(resolve, 50));
     
@@ -250,13 +329,13 @@ export function useParallelValidation(
         taskId: 'quick-validation',
         success: true,
         isValid: true,
+        processingTime: 50,
         result: {
           isValid: true,
           severity: 'low' as const,
           recommendations: ['Validación rápida completada'],
           confidence: 0.9
-        },
-        processingTime: 50
+        }
       }
     ];
   }, []);
@@ -312,7 +391,7 @@ export function useParallelValidation(
  */
 export function useQuickValidation() {
   const [isValidating, setIsValidating] = useState(false);
-  const [results, setResults] = useState<ValidationResult[]>([]);
+  const [results, setResults] = useState<ExtendedValidationResult[]>([]);
   const [error, setError] = useState<Error | undefined>();
 
   const validate = useCallback(async (_data: unknown) => {
@@ -323,18 +402,18 @@ export function useQuickValidation() {
       // Simular validación rápida
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      const quickResults: ValidationResult[] = [
+      const quickResults: ExtendedValidationResult[] = [
         {
           taskId: 'quick-basic',
           success: true,
           isValid: true,
+          processingTime: 100,
           result: {
             isValid: true,
             severity: 'low' as const,
             recommendations: ['Validación básica completada'],
             confidence: 0.8
-          },
-          processingTime: 100
+          }
         }
       ];
 

@@ -4,7 +4,7 @@
  * Simulates neural network-inspired medical inference
  */
 
-import { Factors } from '../../../src/core/domain/models';
+import { Factors } from '../../types/medical-models';
 import { MedicalPattern } from './NeuralPatternRecognition';
 
 // 🎯 TIPOS PARA DECISIONES BAYESIANAS

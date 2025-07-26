@@ -14,6 +14,7 @@ export interface PathologyDefinition {
   symptoms: string[];
   diagnosticCriteria: string[];
   riskFactors: string[];
+  treatmentOptions?: string[];
   prognosis: {
     natural: string;
     withTreatment: string;
@@ -543,6 +544,28 @@ export const PATHOLOGIES_DATABASE: Record<string, PathologyDefinition> = {
       'Uso prolongado estrógenos sin progesterona',
       'Desequilibrios hormonales'
     ],
+    treatmentOptions: [
+      'TRATAMIENTO MÉDICO ESPECIALIZADO:',
+      '• Análogos GnRH: Triptorelina 3.75mg IM mensual x 3-6 meses',
+      '• DIU Levonorgestrel (Mirena®): reduce volumen uterino + síntomas',
+      '• Ácido tranexámico 1.5-3g/día ciclos menstruales abundantes',
+      '• ANTICOAGULACIÓN EN ADENOMIOSIS-FERTILIDAD:',
+      '• Heparina bajo peso molecular (HBPM): Enoxaparina 40mg SC/día',
+      '  - Indicaciones: adenomiosis severa + falla implantación FIV',
+      '  - Protocolo FIV: desde día transferencia hasta semana 12 gestación',
+      '  - Monitoreo: plaquetas, anti-Xa si indicado',
+      '• Aspirina 100mg/día: profilaxis trombosis + mejora flujo uteroplacentario',
+      '• TRATAMIENTO QUIRÚRGICO:',
+      '• Adenomectomía: adenomiosis focal bien delimitada',
+      '• Resección parcial miometrial: casos seleccionados',
+      '• Histerectomía: solo si fertilidad completada',
+      'PROTOCOLO FIV OPTIMIZADO ADENOMIOSIS:',
+      '1. Preparación endometrial prolongada: E2 valerate 6-8mg/día',
+      '2. HBPM profiláctica desde transferencia',
+      '3. Aspirina 100mg desde estimulación ovárica',
+      '4. Monitoreo Doppler arterias uterinas',
+      '5. Progesterona vaginal + oral combinada'
+    ],
     prognosis: {
       natural: 'Reducida significativamente por alteración receptividad endometrial',
       withTreatment: 'FIV tras supresión GnRH: 25-35% (difusa), 30-40% (focal post-cirugía), <30% (severa)',
@@ -557,14 +580,18 @@ export const PATHOLOGIES_DATABASE: Record<string, PathologyDefinition> = {
       'Dolor pélvico crónico',
       'Dismenorrea severa',
       'Hipermenorrea',
-      'Inflamación endometrial crónica'
+      'Inflamación endometrial crónica',
+      'Síndrome antifosfolípido',
+      'Trombofilia hereditaria'
     ],
     evidenceLevel: 'A',
     references: [
       { doi: '10.1093/hropen/hoad025', guideline: 'ESHRE/FIGO Adenomyosis Classification 2023' },
       { guideline: 'ESHRE/FIGO Adenomyosis and Fertility Guidelines 2023' },
       { pmid: '36746012', guideline: 'NICE Fertility Guidelines Update 2024' },
-      { doi: '10.1016/j.fertnstert.2023.07.020', guideline: 'ASRM Anticoagulants 2023' }
+      { doi: '10.1016/j.fertnstert.2023.07.020', guideline: 'ASRM Anticoagulants Fertility 2023' },
+      { doi: '10.1186/s12958-023-01089-0', guideline: 'HBPM Adenomyosis IVF Outcomes 2023' },
+      { pmid: '37234987', guideline: 'Anticoagulation ART Success Rates 2023' }
     ]
   },
 

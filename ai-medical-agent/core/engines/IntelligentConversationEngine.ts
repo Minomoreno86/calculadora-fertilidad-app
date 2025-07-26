@@ -1,7 +1,8 @@
 /**
- * 💬 SISTEMA CONVERSACIONAL MÉDICO INTELIGENTE V2.0
+ * 💬 SISTEMA CONVERSACIONAL MÉDICO INTELIGENTE V13.1 + NESTED DOMAINS
  * Motor de respuestas contextuales para consultas de fertilidad
- * ✨ Con memoria conversacional y respuestas personalizadas
+ * ✨ Con memoria conversacional, respuestas personalizadas y Nested Domain Intelligence
+ * 🧠 NESTED DOMAINS: Especialización jerárquica en dominios médicos
  */
 
 import {
@@ -13,6 +14,16 @@ import {
 
 // Type aliases para mejor legibilidad
 type EvidenceLevel = 'A' | 'B' | 'C' | 'D';
+type UrgencyLevel = 'low' | 'medium' | 'high';
+type WeightCategory = 'bajo_peso' | 'normal' | 'sobrepeso' | 'obesidad' | 'obesidad_severa' | 'peso_mencionado';
+
+// 🧬 NESTED DOMAINS TYPES V13.1
+interface NestedDomainInsight {
+  domain: string;
+  insight: string;
+  evidenceLevel: EvidenceLevel;
+  clinicalRelevance: number;
+}
 
 interface DiagnosticAnalysis {
   primaryDiagnosis: {
@@ -48,7 +59,7 @@ interface PatientContext {
 type ResourceType = 'guideline' | 'article' | 'video' | 'support_group';
 type CommunicationStyle = 'technical' | 'simple' | 'empathetic';
 type InformationDepth = 'basic' | 'detailed' | 'comprehensive';
-type EmotionalState = 'anxious' | 'hopeful' | 'frustrated' | 'curious';
+type EmotionalState = 'anxious' | 'hopeful' | 'frustrated' | 'curious' | 'neutral';
 type QueryComplexity = 'simple' | 'moderate' | 'complex';
 
 // Type alias for educational resource structure
@@ -59,13 +70,18 @@ type EducationalResourceType = {
   url?: string;
 };
 
-// 🧠 INTERFACES PARA CONTEXTO CONVERSACIONAL
+// 🧠 INTERFACES PARA CONTEXTO CONVERSACIONAL + NESTED DOMAINS V13.1
+
 interface ConversationHistory {
   userQueries: string[];
   aiResponses: string[];
   topics: string[];
   timestamp: Date[];
   userIntentions: string[];
+  // 🧬 NESTED DOMAINS EXTENSIONS
+  activeDomains: string[];
+  domainSwitches: number;
+  domainConfidences: number[];
 }
 
 interface ConversationMemory {
@@ -86,6 +102,13 @@ interface ConversationMemory {
     communicationStyle: CommunicationStyle;
     informationDepth: InformationDepth;
     emotionalState: EmotionalState;
+  };
+  // 🧬 NESTED DOMAINS MEMORY
+  domainMemory: {
+    preferredDomain: string;
+    domainHistory: string[];
+    domainSpecificContext: Map<string, Record<string, unknown>>;
+    crossDomainInsights: NestedDomainInsight[];
   };
 }
 
@@ -112,7 +135,21 @@ export class IntelligentConversationEngine {
   private static instance: IntelligentConversationEngine;
   private readonly conversationMemory: Map<string, ConversationMemory> = new Map();
   
-  private constructor() {}
+  // 🧬 NESTED DOMAINS V13.1 INTEGRATION
+  private nestedDomainOrchestrator: import('../nested-domains/SimplifiedNestedDomainOrchestrator').SimplifiedNestedDomainOrchestrator | null = null;
+  
+  private constructor() {
+    // 🧠 Nested Domain Orchestrator will be initialized on first use
+  }
+
+  /**
+   * 🧬 ENSURE NESTED DOMAINS ARE INITIALIZED
+   */
+  private async ensureNestedDomainsInitialized(): Promise<void> {
+    if (this.nestedDomainOrchestrator === null) {
+      await this.initializeNestedDomains();
+    }
+  }
 
   public static getInstance(): IntelligentConversationEngine {
     if (!IntelligentConversationEngine.instance) {
@@ -122,7 +159,21 @@ export class IntelligentConversationEngine {
   }
 
   /**
-   * 🎯 PROCESAMIENTO PRINCIPAL DE CONVERSACIÓN V2.0 - INTELIGENTE
+   * 🧬 INITIALIZE NESTED DOMAINS V13.1
+   */
+  private async initializeNestedDomains(): Promise<void> {
+    try {
+      const { SimplifiedNestedDomainOrchestrator } = await import('../nested-domains/SimplifiedNestedDomainOrchestrator');
+      this.nestedDomainOrchestrator = new SimplifiedNestedDomainOrchestrator();
+      console.log('🧬 Nested Domain Orchestrator initialized successfully');
+    } catch (error) {
+      console.warn('⚠️ Nested Domain Orchestrator not available, using traditional mode:', error);
+      this.nestedDomainOrchestrator = null;
+    }
+  }
+
+  /**
+   * 🎯 PROCESAMIENTO PRINCIPAL DE CONVERSACIÓN V13.1 - NESTED DOMAINS INTELLIGENCE
    */
   public async processConversation(
     userQuery: string,
@@ -130,19 +181,121 @@ export class IntelligentConversationEngine {
     context: SmartContext
   ): Promise<UnifiedMedicalResponse> {
 
+    // 🧠 Ensure Nested Domains are initialized
+    await this.ensureNestedDomainsInitialized();
+
     // 🧠 ANALIZAR INTENCIÓN Y CONTEXTO
     const analyzedQuery = this.analyzeUserQuery(userQuery, context);
+    
+    // ⚖️ ANÁLISIS ESPECÍFICO DE PESO Y METABOLISMO
+    const weightAnalysis = this.analyzeWeightAndGenerateRecommendations(userInput, analyzedQuery.medicalTerms);
+    
+    // 🧬 NESTED DOMAIN CLASSIFICATION V13.1
+    const domainInsights = await this.processNestedDomainClassification(userInput, context);
     
     // 💾 ACTUALIZAR MEMORIA CONVERSACIONAL
     this.updateConversationMemory(userQuery, analyzedQuery, context);
     
-    // 🔄 GENERAR RESPUESTA CONTEXTUAL
+    // 🔄 GENERAR RESPUESTA CONTEXTUAL + DOMAIN-ENHANCED
     const response = await this.generateContextualResponse(analyzedQuery, context);
+    
+    // 🧬 ENHANCE RESPONSE WITH INSIGHTS
+    this.enhanceResponseWithDomainInsights(response, domainInsights);
+    this.enhanceResponseWithWeightRecommendations(response, weightAnalysis);
     
     // 📝 REGISTRAR RESPUESTA EN HISTORIAL
     this.recordResponse(response, context);
     
     return response;
+  }
+
+  /**
+   * 🧬 PROCESAR CLASIFICACIÓN DE DOMINIOS ANIDADOS
+   */
+  private async processNestedDomainClassification(
+    userInput: UnifiedUserInput, 
+    context: SmartContext
+  ): Promise<NestedDomainInsight[]> {
+    let domainInsights: NestedDomainInsight[] = [];
+    
+    if (this.nestedDomainOrchestrator && userInput.symptoms && userInput.symptoms.length > 0) {
+      try {
+        const domainResult = await this.nestedDomainOrchestrator.classifyDomain(
+          userInput.symptoms, 
+          userInput
+        );
+        
+        if (domainResult?.primaryDomain) {
+          console.log(`🧬 Conversation enhanced with domain: ${domainResult.primaryDomain.name} (${domainResult.confidence.toFixed(3)})`);
+          
+          // Update conversation memory with domain context
+          context.conversationHistory.activeDomains.push(domainResult.primaryDomain.name);
+          context.conversationHistory.domainConfidences.push(domainResult.confidence);
+          
+          // Generate domain-specific insights
+          domainInsights = [{
+            domain: domainResult.primaryDomain.name,
+            insight: `Conversación optimizada para especialización en ${domainResult.primaryDomain.name}`,
+            evidenceLevel: 'B' as EvidenceLevel,
+            clinicalRelevance: domainResult.confidence
+          }];
+          
+          // Store domain context
+          context.memory.domainMemory.preferredDomain = domainResult.primaryDomain.name;
+          context.memory.domainMemory.domainHistory.push(domainResult.primaryDomain.name);
+          context.memory.domainMemory.crossDomainInsights = domainInsights;
+        }
+      } catch (error) {
+        console.warn('⚠️ Domain classification failed, using traditional conversation:', error);
+      }
+    }
+    
+    return domainInsights;
+  }
+
+  /**
+   * 🧬 MEJORAR RESPUESTA CON INSIGHTS DE DOMINIO
+   */
+  private enhanceResponseWithDomainInsights(
+    response: UnifiedMedicalResponse, 
+    domainInsights: NestedDomainInsight[]
+  ): void {
+    if (domainInsights.length > 0) {
+      const insight = domainInsights[0];
+      
+      if (response.recommendations && Array.isArray(response.recommendations)) {
+        response.recommendations.push(`🧬 **Especialización de Dominio Activa**: ${insight.domain}`);
+        response.recommendations.push(`🎯 **Confianza de Dominio**: ${(insight.clinicalRelevance * 100).toFixed(1)}%`);
+      } else if (response.recommendations) {
+        if (!response.recommendations.immediate) response.recommendations.immediate = [];
+        response.recommendations.immediate.push(`🧬 **Especialización de Dominio Activa**: ${insight.domain}`);
+        response.recommendations.immediate.push(`🎯 **Confianza de Dominio**: ${(insight.clinicalRelevance * 100).toFixed(1)}%`);
+      }
+    }
+  }
+
+  /**
+   * ⚖️ MEJORAR RESPUESTA CON RECOMENDACIONES DE PESO
+   */
+  private enhanceResponseWithWeightRecommendations(
+    response: UnifiedMedicalResponse,
+    weightAnalysis: { weightCategory: WeightCategory; specificRecommendations: string[]; urgencyLevel: UrgencyLevel }
+  ): void {
+    if (weightAnalysis.specificRecommendations.length > 0) {
+      if (response.recommendations && Array.isArray(response.recommendations)) {
+        response.recommendations.push(`⚖️ **Optimización de Peso Detectada**: ${weightAnalysis.weightCategory}`);
+        response.recommendations.push(...weightAnalysis.specificRecommendations.slice(0, 3));
+      } else if (response.recommendations) {
+        if (!response.recommendations.lifestyle) response.recommendations.lifestyle = [];
+        response.recommendations.lifestyle.push(`⚖️ **Manejo de Peso**: ${weightAnalysis.weightCategory}`);
+        response.recommendations.lifestyle.push(...weightAnalysis.specificRecommendations.slice(0, 2));
+        
+        if (weightAnalysis.urgencyLevel === 'high') {
+          if (!response.recommendations.immediate) response.recommendations.immediate = [];
+          response.recommendations.immediate.push('🚨 **Prioridad Alta**: Optimización de peso antes de tratamientos de fertilidad');
+        }
+      }
+    }
   }
 
   /**
@@ -287,10 +440,43 @@ export class IntelligentConversationEngine {
     const medicalTerms = [
       'sop', 'pcos', 'endometriosis', 'ovarios', 'útero', 'fertilidad', 'embarazo',
       'ciclo', 'menstruación', 'ovulación', 'fiv', 'inseminación', 'hormona',
-      'estrógeno', 'progesterona', 'fsh', 'lh', 'amh', 'reserva ovárica'
+      'estrógeno', 'progesterona', 'fsh', 'lh', 'amh', 'reserva ovárica',
+      'obesidad', 'sobrepeso', 'imc', 'peso', 'diabete', 'resistencia insulina',
+      'metformina', 'ozempic', 'saxenda', 'semaglutida', 'liraglutida', 'orlistat',
+      'cirugía bariátrica', 'bypass', 'manga gástrica', 'nutrición', 'dieta',
+      'síndrome metabólico', 'hiperinsulinemia', 'glucosa', 'azúcar'
     ];
     
     return medicalTerms.filter(term => query.toLowerCase().includes(term));
+  }
+
+  /**
+   * 📊 DETECTAR TÉRMINOS RELACIONADOS CON PESO Y METABOLISMO
+   */
+  private detectWeightTerms(input: string): string[] {
+    const weightPatterns = [
+      /\b(?:peso|sobrepeso|obesidad|obesa?|delgad[ao]s?|flac[ao]s?)\b/gi,
+      /\b(?:IMC|índice\s+de\s+masa\s+corporal|masa\s+corporal)\b/gi,
+      /\b(?:kilo|kilogramo|kg|libra|lb)\b/gi,
+      /\b(?:dieta|alimentación|nutrición|nutricional)\b/gi,
+      /\b(?:ejercicio|actividad\s+física|sedentario|gym|gimnasio)\b/gi,
+      /\b(?:metformina|liraglutida|semaglutida|orlistat|saxenda|ozempic)\b/gi,
+      /\b(?:bariátrica|bypass|manga\s+gástrica|cirugía\s+de\s+peso)\b/gi,
+      /\b(?:resistencia\s+(?:a\s+)?la\s+insulina|hiperinsulinemia)\b/gi,
+      /\b(?:síndrome\s+metabólico|diabetes|glucosa|azúcar)\b/gi
+    ];
+
+    const detectedTerms: string[] = [];
+    
+    weightPatterns.forEach(pattern => {
+      let match;
+      while ((match = pattern.exec(input)) !== null) {
+        detectedTerms.push(match[0].toLowerCase());
+        if (!pattern.global) break; // Evitar loop infinito si no es global
+      }
+    });
+
+    return [...new Set(detectedTerms)]; // Eliminar duplicados
   }
 
   /**
@@ -383,7 +569,17 @@ export class IntelligentConversationEngine {
       'sop': ['Resistencia a la insulina', 'Síndrome metabólico'],
       'endometriosis': ['Adenomiosis', 'Adherencias pélvicas'],
       'fertilidad': ['Calidad ovocitaria', 'Reserva ovárica'],
-      'hormona': ['Desequilibrio hormonal', 'Función tiroidea']
+      'hormona': ['Desequilibrio hormonal', 'Función tiroidea'],
+      'obesidad': ['Resistencia a la insulina', 'Síndrome metabólico', 'Diabetes tipo 2', 'Anovulación crónica'],
+      'sobrepeso': ['Alteraciones hormonales', 'Resistencia insulínica leve', 'Riesgo cardiovascular'],
+      'peso': ['Alteraciones del eje reproductivo', 'Desequilibrios metabólicos'],
+      'imc': ['Evaluación nutricional integral', 'Optimización metabólica'],
+      'diabete': ['Resistencia a la insulina', 'Síndrome metabólico', 'Complicaciones vasculares'],
+      'metformina': ['Resistencia a la insulina', 'SOP con componente metabólico'],
+      'ozempic': ['Diabetes tipo 2', 'Obesidad', 'Pérdida de peso farmacológica'],
+      'saxenda': ['Obesidad', 'Tratamiento farmacológico pérdida peso'],
+      'semaglutida': ['Control glucémico', 'Pérdida de peso significativa'],
+      'liraglutida': ['Diabetes y obesidad', 'Agonistas GLP-1']
     };
     
     const related: string[] = [];
@@ -394,6 +590,68 @@ export class IntelligentConversationEngine {
     });
     
     return related.length > 0 ? related : ['Evaluación integral de fertilidad'];
+  }
+
+  /**
+   * ⚖️ DETECTAR PROBLEMAS DE PESO Y GENERAR RECOMENDACIONES ESPECÍFICAS
+   */
+  private analyzeWeightAndGenerateRecommendations(userInput: UnifiedUserInput, medicalTerms: string[]): {
+    weightCategory: WeightCategory;
+    specificRecommendations: string[];
+    urgencyLevel: UrgencyLevel;
+  } {
+    // Detectar problemas de peso desde input del usuario o términos médicos
+    const hasObesityTerms = medicalTerms.some(term => 
+      ['obesidad', 'sobrepeso', 'imc', 'peso'].includes(term)
+    );
+    
+    const bmi = userInput.bmi;
+    let weightCategory: WeightCategory = 'normal';
+    let specificRecommendations: string[] = [];
+    let urgencyLevel: UrgencyLevel = 'low';
+    
+    if (bmi) {
+      if (bmi < 18.5) {
+        weightCategory = 'bajo_peso';
+        urgencyLevel = 'medium';
+        specificRecommendations = this.getLifestyleRecommendations('bajo_peso');
+      } else if (bmi >= 25 && bmi < 30) {
+        weightCategory = 'sobrepeso';
+        urgencyLevel = 'medium';
+        specificRecommendations = [
+          'Pérdida de peso moderada 5-7% para optimizar fertilidad',
+          'Dieta mediterránea con déficit calórico moderado (300-500 kcal/día)',
+          'Ejercicio aeróbico 150 min/semana + entrenamiento fuerza',
+          'Evaluación resistencia insulínica con HOMA-IR',
+          'Control metabólico antes de iniciar tratamientos de fertilidad'
+        ];
+      } else if (bmi >= 30 && bmi < 35) {
+        weightCategory = 'obesidad';
+        urgencyLevel = 'high';
+        specificRecommendations = this.getLifestyleRecommendations('obesidad');
+      } else if (bmi >= 35) {
+        weightCategory = 'obesidad_severa';
+        urgencyLevel = 'high';
+        specificRecommendations = this.getLifestyleRecommendations('obesidad_severa');
+      }
+    } else if (hasObesityTerms) {
+      // Si no tenemos BMI pero mencionan peso, dar recomendaciones generales
+      weightCategory = 'peso_mencionado';
+      urgencyLevel = 'medium';
+      specificRecommendations = [
+        'Evaluación nutricional integral con cálculo de IMC',
+        'Optimización del peso corporal según rango saludable (IMC 18.5-24.9)',
+        'Análisis de composición corporal y metabolismo basal',
+        'Plan nutricional personalizado según objetivos reproductivos',
+        'Evaluación de factores metabólicos que afectan fertilidad'
+      ];
+    }
+    
+    return {
+      weightCategory,
+      specificRecommendations,
+      urgencyLevel
+    };
   }
 
   /**
@@ -452,6 +710,32 @@ export class IntelligentConversationEngine {
     const recommendations: Record<string, string[]> = {
       'sop': ['Dieta baja en índice glucémico', 'Ejercicio regular de intensidad moderada', 'Control de peso'],
       'endometriosis': ['Dieta antiinflamatoria', 'Técnicas de manejo del dolor', 'Ejercicio adaptado'],
+      'obesidad': [
+        'Pérdida de peso dirigida 5-10% del peso corporal total',
+        'Dieta hipocalórica supervisada con déficit 500-750 kcal/día',
+        'Ejercicio aeróbico 150-300 min/semana + resistencia 2x/semana',
+        'Considerar tratamientos farmacológicos: Liraglutida (Saxenda) 7-10% pérdida, Semaglutida (Ozempic/Wegovy) 12-15% pérdida',
+        'Evaluación metabólica con HOMA-IR, glucosa, insulina basal',
+        'Metformina si resistencia insulínica confirmada (HOMA-IR >2.5)',
+        'Apoyo multidisciplinario: nutrición, endocrinología, psicología'
+      ],
+      'obesidad_severa': [
+        'Pérdida de peso sustancial ≥10% es prioridad absoluta antes de tratamientos',
+        'Evaluación para cirugía bariátrica si IMC ≥40 o ≥35 con comorbilidades',
+        'Agonistas GLP-1: Semaglutida (Wegovy) como primera línea farmacológica',
+        'Orlistat como opción adicional (pérdida modesta 5-7%)',
+        'Plan nutricional intensivo con seguimiento semanal',
+        'Ejercicio supervisado y progresivo según tolerancia',
+        'Manejo integral de resistencia insulínica con metformina + mio-inositol',
+        'Preparación metabólica 3-6 meses antes de TRA'
+      ],
+      'bajo_peso': [
+        'Ganancia de peso gradual hasta IMC 18.5-24.9',
+        'Aumento ingesta calórica supervisada +300-500 kcal/día',
+        'Evitar ejercicio excesivo que pueda suprimir ovulación',
+        'Evaluación trastornos alimentarios si aplica',
+        'Suplementación nutricional específica'
+      ],
       'default': ['Alimentación balanceada', 'Ejercicio regular', 'Manejo del estrés', 'Sueño adecuado']
     };
     
@@ -486,59 +770,74 @@ export class IntelligentConversationEngine {
     context: SmartContext
   ): UnifiedMedicalResponse {
     const clinicalAnalysis = context.clinicalAnalysis;
-    const emotionalState = context.memory.personalityProfile.emotionalState;
+    const userInput = context.userInput;
     
     if (!clinicalAnalysis) {
-      return {
-        primaryInfo: this.personalizeMessage('Para recomendarte el mejor tratamiento', emotionalState),
-        detailedExplanation: `Considerando que mencionas "${analyzedQuery.medicalTerms.join(', ')}", necesito más información sobre tu diagnóstico para sugerir el plan terapéutico más apropiado.`,
-        recommendations: {
-          immediate: ['Obtener diagnóstico médico completo y preciso'],
-          shortTerm: ['Consulta con especialista en medicina reproductiva'],
-          longTerm: ['Desarrollo de plan de tratamiento integral personalizado'],
-          lifestyle: ['Optimización de factores que influyen en el tratamiento'],
-          medical: ['Evaluación médica completa previa al tratamiento']
-        },
-        relatedConditions: this.getRelatedConditionsFromTerms(analyzedQuery.medicalTerms),
-        treatmentOptions: [],
-        evidenceLevel: 'C',
-        confidenceLevel: 50,
-        followUpQuestions: this.generatePersonalizedQuestions(analyzedQuery, 'therapeutic'),
-        redFlags: [],
-        educationalResources: [],
-        followUp: {
-          recommended: true,
-          timeframe: '2-3 semanas',
-          purpose: 'Establecimiento de plan terapéutico basado en diagnóstico'
-        }
-      };
+      return this.generateTherapeuticResponseWithoutDiagnosis(analyzedQuery, context, userInput);
     }
 
+    return this.generateTherapeuticResponseWithDiagnosis(analyzedQuery, context, clinicalAnalysis, userInput);
+  }
+
+  /**
+   * 💊 GENERAR RESPUESTA TERAPÉUTICA SIN DIAGNÓSTICO
+   */
+  private generateTherapeuticResponseWithoutDiagnosis(
+    analyzedQuery: AnalyzedQuery,
+    context: SmartContext,
+    userInput?: UnifiedUserInput
+  ): UnifiedMedicalResponse {
+    const emotionalState = context.memory.personalityProfile.emotionalState;
+    const weightAnalysis = userInput ? this.analyzeWeightAndGenerateRecommendations(userInput, analyzedQuery.medicalTerms) : null;
+    
+    const baseRecommendations = this.buildBaseRecommendationsWithoutDiagnosis(weightAnalysis);
+    const weightAnalysisText = weightAnalysis ? ` He detectado aspectos relacionados con ${weightAnalysis.weightCategory} que requieren atención especializada.` : '';
+    
+    return {
+      primaryInfo: this.personalizeMessage('Para recomendarte el mejor tratamiento', emotionalState),
+      detailedExplanation: `Considerando que mencionas "${analyzedQuery.medicalTerms.join(', ')}", necesito más información sobre tu diagnóstico para sugerir el plan terapéutico más apropiado.${weightAnalysisText}`,
+      recommendations: baseRecommendations,
+      relatedConditions: this.getRelatedConditionsFromTerms(analyzedQuery.medicalTerms),
+      treatmentOptions: [],
+      evidenceLevel: 'C',
+      confidenceLevel: 50,
+      followUpQuestions: this.generatePersonalizedQuestions(analyzedQuery, 'therapeutic'),
+      redFlags: weightAnalysis?.urgencyLevel === 'high' ? ['Optimización de peso urgente antes de tratamientos'] : [],
+      educationalResources: [],
+      followUp: {
+        recommended: true,
+        timeframe: '2-3 semanas',
+        purpose: 'Establecimiento de plan terapéutico basado en diagnóstico'
+      }
+    };
+  }
+
+  /**
+   * 💊 GENERAR RESPUESTA TERAPÉUTICA CON DIAGNÓSTICO
+   */
+  private generateTherapeuticResponseWithDiagnosis(
+    analyzedQuery: AnalyzedQuery,
+    context: SmartContext,
+    clinicalAnalysis: UnifiedClinicalAnalysis,
+    userInput?: UnifiedUserInput
+  ): UnifiedMedicalResponse {
+    const emotionalState = context.memory.personalityProfile.emotionalState;
     const treatment = clinicalAnalysis.treatmentDecisionTree;
+    const weightAnalysis = userInput ? this.analyzeWeightAndGenerateRecommendations(userInput, analyzedQuery.medicalTerms) : null;
+    
+    const recommendations = this.buildRecommendationsWithDiagnosis(clinicalAnalysis, weightAnalysis);
+    const weightOptimizationText = weightAnalysis ? ` He identificado aspectos de ${weightAnalysis.weightCategory} que optimizaremos paralelamente.` : '';
     
     return {
       primaryInfo: `${this.getEmpatheticOpening(emotionalState)} El tratamiento recomendado es: ${treatment.firstLine.treatment}`,
-      detailedExplanation: `Basándome en tu diagnóstico específico y considerando tu perfil personal, esta opción terapéutica ofrece la mejor combinación de efectividad y seguridad para tu caso particular.`,
-      recommendations: {
-        immediate: [`Iniciar preparación para ${treatment.firstLine.treatment}`],
-        shortTerm: ['Seguimiento semanal durante las primeras 4 semanas'],
-        longTerm: ['Evaluación de respuesta y ajustes cada 2-3 meses'],
-        lifestyle: this.getLifestyleRecommendations(clinicalAnalysis.primaryDiagnosis.pathology),
-        medical: ['Monitoreo médico especializado y seguimiento de parámetros']
-      },
+      detailedExplanation: `Basándome en tu diagnóstico específico y considerando tu perfil personal, esta opción terapéutica ofrece la mejor combinación de efectividad y seguridad para tu caso particular.${weightOptimizationText}`,
+      recommendations,
       relatedConditions: clinicalAnalysis.relatedConditions,
-      treatmentOptions: [
-        {
-          treatment: treatment.firstLine.treatment,
-          appropriateness: 90,
-          timing: 'Inicio recomendado en próximo ciclo menstrual',
-          considerations: ['Opción de primera línea basada en evidencia científica', 'Personalizada según tu perfil clínico']
-        }
-      ],
+      treatmentOptions: this.buildTreatmentOptions(treatment, weightAnalysis),
       evidenceLevel: 'A',
       confidenceLevel: 85,
       followUpQuestions: this.generatePersonalizedQuestions(analyzedQuery, 'therapeutic'),
-      redFlags: [],
+      redFlags: weightAnalysis?.urgencyLevel === 'high' ? ['Optimización de peso prioritaria antes de tratamientos'] : [],
       educationalResources: this.getEducationalResources(treatment.firstLine.treatment),
       followUp: {
         recommended: true,
@@ -546,6 +845,82 @@ export class IntelligentConversationEngine {
         purpose: 'Inicio de tratamiento y evaluación de respuesta inicial'
       }
     };
+  }
+
+  /**
+   * 🛠️ CONSTRUIR RECOMENDACIONES BASE SIN DIAGNÓSTICO
+   */
+  private buildBaseRecommendationsWithoutDiagnosis(
+    weightAnalysis: { weightCategory: WeightCategory; specificRecommendations: string[]; urgencyLevel: UrgencyLevel } | null
+  ) {
+    const baseRecommendations = {
+      immediate: ['Obtener diagnóstico médico completo y preciso'],
+      shortTerm: ['Consulta con especialista en medicina reproductiva'],
+      longTerm: ['Desarrollo de plan de tratamiento integral personalizado'],
+      lifestyle: ['Optimización de factores que influyen en el tratamiento'],
+      medical: ['Evaluación médica completa previa al tratamiento']
+    };
+
+    if (weightAnalysis?.specificRecommendations.length) {
+      if (weightAnalysis.urgencyLevel === 'high') {
+        baseRecommendations.immediate.unshift('🚨 Optimización de peso prioritaria antes de tratamientos');
+      }
+      baseRecommendations.lifestyle.push(...weightAnalysis.specificRecommendations.slice(0, 2));
+      
+      if (weightAnalysis.weightCategory === 'obesidad_severa') {
+        baseRecommendations.medical.push('Evaluación para cirugía bariátrica si IMC ≥40');
+        baseRecommendations.medical.push('Consulta endocrinología para agonistas GLP-1 (Semaglutida/Liraglutida)');
+      }
+    }
+
+    return baseRecommendations;
+  }
+
+  /**
+   * 🛠️ CONSTRUIR RECOMENDACIONES CON DIAGNÓSTICO
+   */
+  private buildRecommendationsWithDiagnosis(
+    clinicalAnalysis: UnifiedClinicalAnalysis,
+    weightAnalysis: { weightCategory: WeightCategory; specificRecommendations: string[]; urgencyLevel: UrgencyLevel } | null
+  ) {
+    const treatment = clinicalAnalysis.treatmentDecisionTree;
+    let lifestyleRecommendations = this.getLifestyleRecommendations(clinicalAnalysis.primaryDiagnosis.pathology);
+    
+    if (weightAnalysis?.specificRecommendations.length) {
+      lifestyleRecommendations = [...lifestyleRecommendations, ...weightAnalysis.specificRecommendations.slice(0, 2)];
+    }
+    
+    return {
+      immediate: [`Iniciar preparación para ${treatment.firstLine.treatment}`].concat(
+        weightAnalysis?.urgencyLevel === 'high' ? ['🚨 Optimización de peso prioritaria'] : []
+      ),
+      shortTerm: ['Seguimiento semanal durante las primeras 4 semanas'],
+      longTerm: ['Evaluación de respuesta y ajustes cada 2-3 meses'],
+      lifestyle: lifestyleRecommendations,
+      medical: ['Monitoreo médico especializado y seguimiento de parámetros'].concat(
+        weightAnalysis?.weightCategory === 'obesidad_severa' ? 
+        ['Consulta endocrinología para agonistas GLP-1', 'Evaluación cirugía bariátrica si indicada'] : []
+      )
+    };
+  }
+
+  /**
+   * 🛠️ CONSTRUIR OPCIONES DE TRATAMIENTO
+   */
+  private buildTreatmentOptions(
+    treatment: { firstLine: { treatment: string } },
+    weightAnalysis: { weightCategory: WeightCategory; specificRecommendations: string[]; urgencyLevel: UrgencyLevel } | null
+  ) {
+    return [
+      {
+        treatment: treatment.firstLine.treatment,
+        appropriateness: 90,
+        timing: 'Inicio recomendado en próximo ciclo menstrual',
+        considerations: ['Opción de primera línea basada en evidencia científica', 'Personalizada según tu perfil clínico'].concat(
+          weightAnalysis ? [`Considerando optimización de ${weightAnalysis.weightCategory}`] : []
+        )
+      }
+    ];
   }
 
   /**
@@ -915,7 +1290,11 @@ export class IntelligentConversationEngine {
         aiResponses: [],
         topics: [],
         timestamp: [],
-        userIntentions: []
+        userIntentions: [],
+        // 🧬 NESTED DOMAINS INITIALIZATION
+        activeDomains: [],
+        domainSwitches: 0,
+        domainConfidences: []
       },
       memory: {
         patientContext: {},
@@ -928,7 +1307,14 @@ export class IntelligentConversationEngine {
         personalityProfile: {
           communicationStyle: 'simple',
           informationDepth: 'detailed',
-          emotionalState: 'curious'
+          emotionalState: 'neutral'
+        },
+        // 🧬 NESTED DOMAINS MEMORY INITIALIZATION
+        domainMemory: {
+          preferredDomain: 'general',
+          domainHistory: [],
+          domainSpecificContext: new Map(),
+          crossDomainInsights: []
         }
       },
       userInput

@@ -20,6 +20,14 @@ import {
     TreatmentType
 } from '../../types/MedicalTypes';
 
+// 🧠 SIMPLIFIED NESTED DOMAIN ORCHESTRATOR V13.1 INTEGRATION
+import { 
+  SimplifiedNestedDomainOrchestrator,
+  simplifiedNestedDomainOrchestrator,
+  NestedDomainInsight,
+  DomainClassificationResult
+} from '../nested-domains/SimplifiedNestedDomainOrchestrator';
+
 /**
  * 🔍 TIPOS EXPORTADOS PARA EL CHAT IA
  */
@@ -40,14 +48,21 @@ export interface MedicalKnowledgeQuery {
 export type { MedicalResponse } from '../../types/MedicalTypes';
 
 /**
- * 🧬 MEDICAL KNOWLEDGE ENGINE V11.1 - TYPE-FIRST ARCHITECTURE
- * Motor de Conocimiento Médico con Construcción Incremental
+ * 🧬 MEDICAL KNOWLEDGE ENGINE V13.1 - NESTED DOMAINS ARCHITECTURE
+ * Motor de Conocimiento Médico con Dominios Anidados + Simplified Neural Networks
  */
 export class MedicalKnowledgeEngine {
   private readonly pathologyAnalyzers: Map<string, IPathologyAnalyzer>;
   private readonly treatmentEngines: Map<string, ITreatmentEngine>;
   private readonly evidenceValidator: IEvidenceValidator;
   private readonly riskCalculator: IRiskCalculator;
+  
+  // 🧠 SIMPLIFIED NESTED DOMAIN ORCHESTRATOR V13.1
+  private readonly simplifiedDomainOrchestrator: SimplifiedNestedDomainOrchestrator;
+  private readonly domainClassificationCache: Map<string, DomainClassificationResult>;
+  
+  // 🧠 ALIAS FOR COMPATIBILITY
+  private readonly nestedDomainOrchestrator: SimplifiedNestedDomainOrchestrator;
 
   constructor() {
     this.pathologyAnalyzers = new Map();
@@ -55,41 +70,51 @@ export class MedicalKnowledgeEngine {
     this.evidenceValidator = new EvidenceValidatorImpl();
     this.riskCalculator = new RiskCalculatorImpl();
     
+    // 🚀 INITIALIZE SIMPLIFIED NESTED DOMAIN ORCHESTRATOR
+    this.simplifiedDomainOrchestrator = simplifiedNestedDomainOrchestrator;
+    this.nestedDomainOrchestrator = this.simplifiedDomainOrchestrator; // Alias for compatibility
+    this.domainClassificationCache = new Map();
+    
     this.initializeComponents();
   }
 
   /**
-   * 🔬 ANÁLISIS PATOLÓGICO NEURONAL V11.1
+   * 🔬 ANÁLISIS PATOLÓGICO NEURONAL V13.1 + NESTED DOMAINS
    */
   public async analyzePathology(
     symptoms: string[], 
     patientProfile: PatientProfile
-  ): Promise<PathologyAnalysis> {
+  ): Promise<PathologyAnalysis & { domainInsights: NestedDomainInsight[] }> {
     try {
-      const analyzers = Array.from(this.pathologyAnalyzers.values());
+      // 🧠 SIMPLIFIED NESTED DOMAIN CLASSIFICATION
+      const domainResult = await this.simplifiedDomainOrchestrator.classifyDomain(symptoms, patientProfile);
       
-      if (analyzers.length === 0) {
-        console.warn('⚠️ No hay analizadores disponibles, creando análisis básico');
-        return this.createBasicAnalysisFromSymptoms(symptoms);
-      }
+      console.log(`🎯 Domain Classification: ${domainResult.primaryDomain.name} (${domainResult.confidence.toFixed(3)})`);
+      console.log(`🌊 Secondary Domains: ${domainResult.secondaryDomains.map(d => d.name).join(', ')}`);
       
-      const analyses = await Promise.all(
-        analyzers.map(async (analyzer) => {
-          try {
-            return await analyzer.analyze(symptoms, patientProfile);
-          } catch (error) {
-            console.warn('⚠️ Error en analizador individual:', error);
-            return this.createBasicAnalysisFromSymptoms(symptoms);
-          }
-        })
+      // 🔬 NESTED DOMAIN ANALYSIS
+      const nestedAnalysis = await this.simplifiedDomainOrchestrator.analyzeWithDomains(
+        symptoms, 
+        patientProfile
       );
-
-      const validAnalyses = analyses.filter(analysis => analysis != null);
-      return this.consolidateAnalyses(validAnalyses);
+      
+      console.log(`✅ Simplified Nested Domain Analysis Complete: ${nestedAnalysis.domainInsights.length} insights generated`);
+      
+      return nestedAnalysis;
       
     } catch (error) {
-      console.error('Error en análisis patológico:', error);
-      return this.createBasicAnalysisFromSymptoms(symptoms);
+      console.error('Error en análisis patológico V13.1:', error);
+      // Fallback to traditional analysis
+      const fallbackAnalysis = await this.performTraditionalAnalysis(symptoms, patientProfile);
+      return {
+        ...fallbackAnalysis,
+        domainInsights: [{
+          domain: 'fallback',
+          insight: 'Análisis realizado con sistema tradicional debido a error en nested domains',
+          evidenceLevel: 'C' as EvidenceLevel,
+          clinicalRelevance: 0.60
+        }]
+      };
     }
   }
 
@@ -281,7 +306,193 @@ export class MedicalKnowledgeEngine {
   }
 
   // ====================================================================
-  // 🔧 MÉTODOS DE UTILIDAD PRIVADOS
+  // 🧠 NESTED DOMAINS V13.1 INTEGRATION METHODS
+  // ====================================================================
+
+  /**
+   * � TRADITIONAL ANALYSIS FALLBACK
+   */
+  private async performTraditionalAnalysis(
+    symptoms: string[], 
+    patientProfile: PatientProfile
+  ): Promise<PathologyAnalysis> {
+    const analyzers = Array.from(this.pathologyAnalyzers.values());
+    
+    if (analyzers.length === 0) {
+      console.warn('⚠️ No hay analizadores disponibles, creando análisis básico');
+      return this.createBasicAnalysisFromSymptoms(symptoms);
+    }
+    
+    const analyses = await Promise.all(
+      analyzers.map(async (analyzer) => {
+        try {
+          return await analyzer.analyze(symptoms, patientProfile);
+        } catch (error) {
+          console.warn('⚠️ Error en analizador individual:', error);
+          return this.createBasicAnalysisFromSymptoms(symptoms);
+        }
+      })
+    );
+
+    const validAnalyses = analyses.filter(analysis => analysis != null);
+    return this.consolidateAnalyses(validAnalyses);
+  }
+
+  /**
+   * 🧬 MERGE NESTED + TRADITIONAL ANALYSES
+   */
+  private mergeAnalyses(
+    nestedAnalysis: PathologyAnalysis & { nestedInsights: NestedDomainInsight[] },
+    traditionalAnalysis: PathologyAnalysis
+  ): PathologyAnalysis & { nestedInsights: NestedDomainInsight[] } {
+    
+    // Merge primary diagnosis (nested takes precedence if confidence is higher)
+    const primaryDiagnosis = nestedAnalysis.confidence >= traditionalAnalysis.confidence 
+      ? nestedAnalysis.primaryDiagnosis 
+      : traditionalAnalysis.primaryDiagnosis;
+
+    // Merge differential diagnoses (usar differentialDiagnoses en lugar de secondaryDiagnoses)
+    const differentialDiagnoses = [
+      ...(nestedAnalysis.differentialDiagnoses || []),
+      ...(traditionalAnalysis.differentialDiagnoses || [])
+    ].filter((diagnosis, index, array) => 
+      array.findIndex(d => d.condition === diagnosis.condition) === index
+    ).slice(0, 5); // Limit to top 5
+
+    // Merge risk factors
+    const riskFactors = [
+      ...(nestedAnalysis.riskFactors || []),
+      ...(traditionalAnalysis.riskFactors || [])
+    ].filter((factor, index, array) => array.indexOf(factor) === index);
+
+    // Merge clinical evidence (usar supportingEvidence en lugar de clinicalEvidence)
+    const supportingEvidence = [
+      ...(nestedAnalysis.supportingEvidence || []),
+      ...(traditionalAnalysis.supportingEvidence || [])
+    ];
+
+    // Calculate combined confidence
+    const combinedConfidence = Math.min(
+      (nestedAnalysis.confidence * 0.7) + (traditionalAnalysis.confidence * 0.3),
+      0.95
+    );
+
+    return {
+      primaryDiagnosis,
+      differentialDiagnoses,
+      riskFactors,
+      supportingEvidence,
+      confidence: combinedConfidence,
+      condition: primaryDiagnosis.condition,
+      nestedInsights: nestedAnalysis.nestedInsights || []
+    };
+  }
+
+  /**
+   * 💊 NESTED DOMAIN TREATMENT GENERATION V13.1
+   */
+  public async generateNestedTreatmentRecommendations(
+    diagnosis: DiagnosticResult,
+    patientProfile: PatientProfile
+  ): Promise<TreatmentRecommendation[]> {
+    try {
+      // Get domain classification for patient
+      const symptoms = this.extractSymptomsFromDiagnosis(diagnosis);
+      const domainResult = await this.nestedDomainOrchestrator.classifyDomain(symptoms, patientProfile);
+      
+      // Generate nested domain treatments
+      const nestedTreatments = await this.nestedDomainOrchestrator.generateDomainTreatments(
+        diagnosis,
+        domainResult
+      );
+      
+      // Generate traditional treatments as backup
+      const traditionalTreatments = await this.generateTraditionalTreatments(diagnosis, patientProfile);
+      
+      // Merge and optimize
+      const mergedTreatments = this.mergeTreatmentRecommendations(nestedTreatments, traditionalTreatments);
+      
+      console.log(`🎯 Generated ${mergedTreatments.length} nested domain treatments for ${domainResult.primaryDomain.name}`);
+      
+      return mergedTreatments;
+      
+    } catch (error) {
+      console.error('Error en generación de tratamientos V13.1:', error);
+      return await this.generateTraditionalTreatments(diagnosis, patientProfile);
+    }
+  }
+
+  /**
+   * 💊 TRADITIONAL TREATMENT GENERATION (FALLBACK)
+   */
+  private async generateTraditionalTreatments(
+    diagnosis: DiagnosticResult,
+    patientProfile: PatientProfile
+  ): Promise<TreatmentRecommendation[]> {
+    const engines = this.getTreatmentEnginesForDiagnosis(diagnosis);
+    
+    if (engines.length === 0) {
+      console.warn('⚠️ No hay motores de tratamiento disponibles');
+      return [this.createBasicTreatmentRecommendation(diagnosis, patientProfile)];
+    }
+
+    const recommendations = await Promise.all(
+      engines.map(async (engine) => {
+        try {
+          return await engine.generateRecommendation(diagnosis, patientProfile);
+        } catch (error) {
+          console.warn('⚠️ Error en motor de tratamiento:', error);
+          return this.createBasicTreatmentRecommendation(diagnosis, patientProfile);
+        }
+      })
+    );
+
+    const validRecommendations = recommendations.filter(rec => rec != null);
+    return this.prioritizeRecommendations(validRecommendations);
+  }
+
+  /**
+   * 🔧 UTILITY METHODS FOR NESTED DOMAINS
+   */
+  private extractSymptomsFromDiagnosis(diagnosis: DiagnosticResult): string[] {
+    // Extract symptoms from diagnosis for domain classification
+    const symptoms: string[] = [];
+    
+    if (diagnosis.condition) {
+      symptoms.push(diagnosis.condition);
+    }
+    
+    // Add more symptom extraction logic based on diagnosis
+    return symptoms.length > 0 ? symptoms : ['síntomas_generales'];
+  }
+
+  private mergeTreatmentRecommendations(
+    nestedTreatments: TreatmentRecommendation[],
+    traditionalTreatments: TreatmentRecommendation[]
+  ): TreatmentRecommendation[] {
+    
+    // Combine both treatment sets
+    const allTreatments = [...nestedTreatments, ...traditionalTreatments];
+    
+    // Remove duplicates based on treatment name
+    const uniqueTreatments = allTreatments.filter((treatment, index, array) =>
+      array.findIndex(t => t.name === treatment.name) === index
+    );
+    
+    // Prioritize nested domain treatments (higher evidence level)
+    const prioritized = uniqueTreatments.map(treatment => {
+      const isNested = nestedTreatments.some(nt => nt.name === treatment.name);
+      return {
+        ...treatment,
+        evidenceLevel: isNested ? Math.min(treatment.evidenceLevel + 0.1, 1.0) : treatment.evidenceLevel
+      };
+    });
+    
+    return this.prioritizeRecommendations(prioritized).slice(0, 8); // Limit to top 8
+  }
+
+  // ====================================================================
+  // �🔧 MÉTODOS DE UTILIDAD PRIVADOS (EXISTING + NEW)
   // ====================================================================
 
   private consolidateAnalyses(analyses: PathologyAnalysis[]): PathologyAnalysis {

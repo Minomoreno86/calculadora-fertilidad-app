@@ -14,8 +14,8 @@ interface ChatUIComponentsProps {
 }
 
 export class ChatUIComponents {
-  private theme: ThemeInterface;
-  private styles: Record<string, ViewStyle | TextStyle>;
+  private readonly theme: ThemeInterface;
+  private readonly styles: Record<string, ViewStyle | TextStyle>;
 
   constructor(props: ChatUIComponentsProps) {
     this.theme = props.theme;
@@ -25,7 +25,7 @@ export class ChatUIComponents {
   /**
    * 🎨 CREAR ESTILOS
    */
-  private createStyles = (theme: ThemeInterface): Record<string, ViewStyle | TextStyle> => ({
+  private readonly createStyles = (theme: ThemeInterface): Record<string, ViewStyle | TextStyle> => ({
     messageContainer: {
       flexDirection: 'row',
       marginVertical: 4,
@@ -91,6 +91,88 @@ export class ChatUIComponents {
     aiTime: {
       color: theme.textSecondary || theme.secondary
     } as TextStyle,
+
+    // ACTION CARDS STYLES V14.0
+    actionCardsContainer: {
+      marginVertical: 16,
+      paddingHorizontal: 16,
+    },
+    actionCardsTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#2E3440',
+      marginBottom: 12,
+    },
+    actionCardsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+    },
+    actionCard: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 12,
+      padding: 16,
+      borderLeftWidth: 4,
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 3,
+      minWidth: '48%',
+      maxWidth: '48%',
+    },
+    actionCardHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    actionCardBadge: {
+      backgroundColor: '#F0F4F8',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+    },
+    actionCardCategory: {
+      fontSize: 10,
+      fontWeight: '500',
+      color: '#64748B',
+    },
+    actionCardTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: '#1E293B',
+      marginBottom: 6,
+    },
+    actionCardDescription: {
+      fontSize: 12,
+      color: '#64748B',
+      lineHeight: 18,
+      marginBottom: 8,
+    },
+    actionCardFooter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    actionCardTime: {
+      fontSize: 11,
+      color: '#64748B',
+      fontWeight: '500',
+    },
+    progressContainer: {
+      height: 3,
+      backgroundColor: '#E2E8F0',
+      borderRadius: 2,
+      marginTop: 8,
+      overflow: 'hidden',
+    },
+    progressBar: {
+      height: '100%',
+      backgroundColor: '#10B981',
+      borderRadius: 2,
+    },
+
     quickRepliesContainer: {
       marginTop: 8,
       marginLeft: 40
@@ -279,6 +361,106 @@ export class ChatUIComponents {
   };
 
   /**
+   * 🎨 RENDERIZAR ACTION CARDS V14.0 - FASE 1
+   */
+  renderActionCards = (actionCards: import('../types/ChatTypes').ActionCard[], onActionPress?: (card: import('../types/ChatTypes').ActionCard) => void) => {
+    if (!actionCards?.length) return null;
+
+    return (
+      <View style={this.styles.actionCardsContainer as ViewStyle}>
+        <Text style={this.styles.actionCardsTitle as TextStyle}>
+          💡 Acciones recomendadas para ti:
+        </Text>
+        
+        <View style={this.styles.actionCardsGrid as ViewStyle}>
+          {actionCards.map((card) => (
+            <TouchableOpacity
+              key={card.id}
+              style={[
+                this.styles.actionCard as ViewStyle,
+                { borderLeftColor: this.getUrgencyColor(card.urgency) }
+              ]}
+              onPress={() => onActionPress?.(card)}
+            >
+              <View style={this.styles.actionCardHeader as ViewStyle}>
+                <Ionicons 
+                  name={this.getActionIcon(card.action) as keyof typeof Ionicons.glyphMap} 
+                  size={24} 
+                  color={this.theme.primary} 
+                />
+                <View style={this.styles.actionCardBadge as ViewStyle}>
+                  <Text style={this.styles.actionCardCategory as TextStyle}>
+                    {this.getCategoryLabel(card.category)}
+                  </Text>
+                </View>
+              </View>
+              
+              <Text style={this.styles.actionCardTitle as TextStyle}>
+                {card.title}
+              </Text>
+              
+              <Text style={this.styles.actionCardDescription as TextStyle}>
+                {card.description}
+              </Text>
+              
+              {card.estimatedTime && (
+                <View style={this.styles.actionCardFooter as ViewStyle}>
+                  <Ionicons name="time-outline" size={14} color={this.theme.secondary} />
+                  <Text style={this.styles.actionCardTime as TextStyle}>
+                    {card.estimatedTime}
+                  </Text>
+                </View>
+              )}
+              
+              {card.progress !== undefined && (
+                <View style={this.styles.progressContainer as ViewStyle}>
+                  <View style={[
+                    this.styles.progressBar as ViewStyle,
+                    { width: `${card.progress}%` }
+                  ]} />
+                </View>
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+    );
+  };
+
+  /**
+   * 🎨 HELPERS PARA ACTION CARDS
+   */
+  private getActionIcon(action: string): string {
+    const icons = {
+      schedule: 'calendar',
+      track: 'analytics',
+      learn: 'school',
+      test: 'flask',
+      lifestyle: 'leaf'
+    };
+    return icons[action as keyof typeof icons] || 'ellipse';
+  }
+
+  private getCategoryLabel(category: string): string {
+    const labels = {
+      medical: 'Médico',
+      educational: 'Educativo',
+      tracking: 'Seguimiento',
+      lifestyle: 'Estilo de Vida'
+    };
+    return labels[category as keyof typeof labels] || category;
+  }
+
+  private getUrgencyColor(urgency?: string): string {
+    const colors = {
+      high: '#FF6B6B',
+      medium: '#FFA726',
+      low: '#66BB6A'
+    };
+    return colors[urgency as keyof typeof colors] || colors.low;
+  }
+
+  /**
    * ⌨️ RENDERIZAR INDICADOR DE ESCRITURA
    */
   renderTypingIndicator = (typingAnimation: Animated.Value) => {
@@ -320,7 +502,7 @@ export class ChatUIComponents {
   /**
    * 🎯 OBTENER ICONO DE ADJUNTO
    */
-  private getAttachmentIcon = (type: string): string => {
+  private readonly getAttachmentIcon = (type: string): string => {
     switch (type) {
       case 'recommendation': return 'medical';
       case 'study': return 'document-text';

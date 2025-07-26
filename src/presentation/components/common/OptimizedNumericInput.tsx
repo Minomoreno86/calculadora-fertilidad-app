@@ -75,23 +75,19 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
     };
   }, []);
   
-  // 🎨 Determinar colores basados en validación
-  const getValidationColors = useCallback(() => {
-    if (error) {
-      return {
-        borderColor: theme?.colors?.error,
-        backgroundColor: theme.isDark ? '#4E0D0D' : '#FFEBEE',
-        iconColor: theme?.colors?.error,
-      };
-    }
-    
-    if (!rangeValidation) {
-      return {
-        borderColor: isFocused ? theme?.colors?.primary : theme?.colors?.border,
-        backgroundColor: theme?.colors?.surface,
-        iconColor: isFocused ? theme?.colors?.primary : theme?.colors?.textSecondary,
-      };
-    }
+  // 🎨 Determinar colores para estados de error
+  const getErrorColors = useCallback(() => {
+    if (!error) return null;
+    return {
+      borderColor: theme?.colors?.error,
+      backgroundColor: theme.isDark ? '#4E0D0D' : '#FFEBEE',
+      iconColor: theme?.colors?.error,
+    };
+  }, [error, theme]);
+
+  // 🎨 Determinar colores para validación de rango
+  const getRangeValidationColors = useCallback(() => {
+    if (!rangeValidation) return null;
 
     if (rangeValidation?.isNormal) {
       return {
@@ -99,28 +95,36 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
         backgroundColor: theme.isDark ? '#0D4E1A' : '#E8F5E8',
         iconColor: theme?.colors?.success,
       };
-    } else if (rangeValidation?.isWarning) {
+    }
+    
+    if (rangeValidation?.isWarning) {
       return {
         borderColor: theme?.colors?.warning,
         backgroundColor: theme.isDark ? '#4E3A0D' : '#FFF3E0',
         iconColor: theme?.colors?.warning,
       };
-    } else if (rangeValidation?.isError) {
+    }
+    
+    if (rangeValidation?.isError) {
       return {
         borderColor: theme?.colors?.error,
         backgroundColor: theme.isDark ? '#4E0D0D' : '#FFEBEE',
         iconColor: theme?.colors?.error,
       };
     }
-    
-    return {
-      borderColor: isFocused ? theme?.colors?.primary : theme?.colors?.border,
-      backgroundColor: theme?.colors?.surface,
-      iconColor: isFocused ? theme?.colors?.primary : theme?.colors?.textSecondary,
-    };
-  }, [rangeValidation, error, isFocused, theme]);
 
-  const colors = getValidationColors();
+    return null;
+  }, [rangeValidation, theme]);
+
+  // 🎨 Determinar colores por defecto
+  const getDefaultColors = useCallback(() => ({
+    borderColor: isFocused ? theme?.colors?.primary : theme?.colors?.border,
+    backgroundColor: theme?.colors?.surface,
+    iconColor: isFocused ? theme?.colors?.primary : theme?.colors?.textSecondary,
+  }), [isFocused, theme]);
+
+  // 🎨 Combinar colores basados en prioridad
+  const colors = getErrorColors() || getRangeValidationColors() || getDefaultColors();
   
   // 🚀 Función de debounce optimizada
   const debouncedOnChange = useCallback((value: string, onChange: (value: string) => void) => {
@@ -231,9 +235,8 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
               placeholderTextColor={theme?.colors?.textSecondary}
               keyboardType="numeric"
               returnKeyType="done"
-              blurOnSubmit={true}
-              maxLength={10} // Límite razonable para números
-              selectTextOnFocus={true} // Seleccionar todo al hacer foco
+              maxLength={10}
+              selectTextOnFocus={true}
             />
           </View>
         )}

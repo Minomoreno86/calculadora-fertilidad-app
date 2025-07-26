@@ -8,7 +8,7 @@ import { SuperintellignentAnalysisResult, NeuralMedicalAISystem } from '../../..
 
 // 🎯 TIPOS DE URGENCIA Y ACCIONES
 export type UrgencyLevel = 'low' | 'medium' | 'high' | 'urgent';
-export type QuickReplyAction = 'question' | 'request_info' | 'schedule' | 'clarification';
+export type QuickReplyAction = 'question' | 'request_info' | 'schedule' | 'clarification' | 'treatment_info' | 'result_explanation' | 'general_info';
 export type AttachmentType = 'recommendation' | 'study' | 'protocol' | 'chart';
 export type MessageCategory = 'question' | 'concern' | 'symptom' | 'request' | 'emergency';
 
@@ -136,4 +136,31 @@ export interface NeuralEnhancedResponse {
   attachments?: ChatAttachment[];
   urgencyLevel: UrgencyLevel;
   neuralInsights?: string[];
+  actionCards?: ActionCard[]; // 🎨 V14.0 - Action Cards
+}
+
+// 🎨 ACTION CARDS SYSTEM V14.0 - FASE 1
+export interface ActionCard {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  action: 'schedule' | 'track' | 'learn' | 'test' | 'lifestyle';
+  urgency?: 'low' | 'medium' | 'high';
+  interactive?: boolean;
+  progress?: number;
+  estimatedTime?: string;
+  category: 'medical' | 'educational' | 'tracking' | 'lifestyle';
+}
+
+// 📊 FERTILITY TIMELINE DATA V14.0
+export interface FertilityTimelinePoint {
+  id: string;
+  title: string;
+  description: string;
+  timeframe: string;
+  status: 'pending' | 'current' | 'completed' | 'optional';
+  category: 'assessment' | 'treatment' | 'monitoring' | 'lifestyle';
+  urgency: UrgencyLevel;
+  successRate?: number;
 }

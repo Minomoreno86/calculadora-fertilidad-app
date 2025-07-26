@@ -107,6 +107,11 @@ export const evaluatePcos = (
 };
 
 export const evaluateEndometriosis = (grade: number): PartialEvaluation => {
+  // 🔍 Solo evaluar si hay un grado válido (>0)
+  if (!grade || grade <= 0) {
+    return { factors: {}, diagnostics: {} };
+  }
+
   const endometriosisGrades = [
     { min: 1, max: 2, factor: 0.85, comment: 'Endometriosis leve (Grados I-II)' },
     { min: 3, max: 4, factor: 0.6, comment: 'Endometriosis severa (Grados III-IV)' },
@@ -117,10 +122,17 @@ export const evaluateEndometriosis = (grade: number): PartialEvaluation => {
       return { factors: { endometriosis: gradeRange.factor }, diagnostics: { endometriosisComment: gradeRange.comment } };
     }
   }
-  return { factors: { endometriosis: 1.0 } };
+  
+  // 🚫 NO retornar valor por defecto si no hay coincidencia válida
+  return { factors: {}, diagnostics: {} };
 };
 
 export const evaluateMyomas = (type: MyomaType): PartialEvaluation => {
+  // 🔍 Solo evaluar si hay un tipo válido
+  if (!type || type === undefined || type === null) {
+    return { factors: {}, diagnostics: {} };
+  }
+
   const myomaTypes = [
     { type: MyomaType.Submucosal, factor: 0.3, comment: 'Mioma submucoso detectado' },
     { type: MyomaType.IntramuralLarge, factor: 0.6, comment: 'Mioma intramural grande detectado' },
@@ -131,10 +143,17 @@ export const evaluateMyomas = (type: MyomaType): PartialEvaluation => {
       return { factors: { myoma: myomaType.factor }, diagnostics: { myomaComment: myomaType.comment } };
     }
   }
-  return { factors: { myoma: 1.0 } };
+  
+  // 🚫 NO retornar valor por defecto si no hay coincidencia válida
+  return { factors: {}, diagnostics: {} };
 };
 
 export const evaluateAdenomyosis = (type: AdenomyosisType): PartialEvaluation => {
+  // 🔍 Solo evaluar si hay un tipo válido
+  if (!type || type === undefined || type === null) {
+    return { factors: {}, diagnostics: {} };
+  }
+
   const adenomyosisTypes = [
     { type: AdenomyosisType.Focal, factor: 0.8, comment: 'Adenomiosis focal' },
     { type: AdenomyosisType.Diffuse, factor: 0.5, comment: 'Adenomiosis difusa' },
@@ -145,10 +164,17 @@ export const evaluateAdenomyosis = (type: AdenomyosisType): PartialEvaluation =>
       return { factors: { adenomyosis: adenomyosisType.factor }, diagnostics: { adenomyosisComment: adenomyosisType.comment } };
     }
   }
-  return { factors: { adenomyosis: 1.0 } };
+  
+  // 🚫 NO retornar valor por defecto si no hay coincidencia válida
+  return { factors: {}, diagnostics: {} };
 };
 
 export const evaluatePolyps = (type: PolypType): PartialEvaluation => {
+  // 🔍 Solo evaluar si hay un tipo válido
+  if (!type || type === undefined || type === null) {
+    return { factors: {}, diagnostics: {} };
+  }
+
   const polypTypes = [
     { type: PolypType.Small, factor: 0.85, comment: 'Pólipo endometrial pequeño (< 1 cm)' },
     { type: PolypType.Large, factor: 0.7, comment: 'Pólipo grande (≥ 1 cm) o múltiples' },
@@ -160,10 +186,17 @@ export const evaluatePolyps = (type: PolypType): PartialEvaluation => {
       return { factors: { polyp: polypType.factor }, diagnostics: { polypComment: polypType.comment } };
     }
   }
-  return { factors: { polyp: 1.0 } };
+  
+  // 🚫 NO retornar valor por defecto si no hay coincidencia válida
+  return { factors: {}, diagnostics: {} };
 };
 
 export const evaluateHsg = (result: HsgResult): PartialEvaluation => {
+  // 🔍 Solo evaluar si hay un resultado válido
+  if (!result || result === undefined || result === null || result === HsgResult.Unknown) {
+    return { factors: {}, diagnostics: {} };
+  }
+
   const hsgResults = [
     { result: HsgResult.Unilateral, factor: 0.7, comment: 'Obstrucción tubárica unilateral' },
     { result: HsgResult.Bilateral, factor: 0.0, comment: 'Obstrucción tubárica bilateral' },
@@ -175,7 +208,8 @@ export const evaluateHsg = (result: HsgResult): PartialEvaluation => {
       return { factors: { hsg: hsgResult.factor }, diagnostics: { hsgComment: hsgResult.comment } };
     }
   }
-  if (result === HsgResult.Unknown) return { diagnostics: { missingData: ['Resultado de Histerosalpingografía (HSG)'] } };
+  
+  // Si hay un resultado pero no está en las condiciones problemáticas, son trompas permeables
   return { factors: { hsg: 1.0 }, diagnostics: { hsgComment: 'Ambas trompas permeables' } };
 };
 
