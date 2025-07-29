@@ -66,7 +66,6 @@ export const ClinicalProgress: React.FC<ClinicalProgressProps> = ({
         <Text 
           variant="caption" 
           style={[styles.progressScore, { color: getProgressColor(safeOverallScore) }]}
-          accessibilityLabel={`Puntuación: ${safeOverallScore} de 100, ${scoreInterpretation}`}
         >
           {safeOverallScore}/100 - {scoreInterpretation}
         </Text>
@@ -99,8 +98,6 @@ export const ClinicalProgress: React.FC<ClinicalProgressProps> = ({
                 : (theme.colors.error || '#C62828') 
             }
           ]}
-          accessibilityRole="text"
-          accessibilityHint={safeCanCalculate ? "Datos suficientes para realizar cálculo" : "Se necesitan más datos para calcular"}
         >
           {safeCanCalculate ? '✓ Listo para calcular' : '⚠ Datos insuficientes'}
         </Text>
@@ -130,12 +127,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   progressTitle: {
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
     fontSize: 14,
   },
   progressScore: {
-    fontWeight: '600',
+    fontWeight: '600' as const,
     fontSize: 12,
   },
   progressBarContainer: {
@@ -161,7 +158,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   calculationStatus: {
-    fontWeight: '500',
+    fontWeight: '500' as const,
     fontSize: 12,
   },
 });

@@ -164,7 +164,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   title: {
     ...theme.typography.bodyLarge,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     color: theme.colors.text,
   },
   advancedButton: {
@@ -176,7 +176,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   advancedText: {
     ...theme.typography.caption,
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
   configGrid: {
     flexDirection: 'row',
@@ -192,8 +192,8 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   configLabel: {
     ...theme.typography.caption,
     color: theme.colors.textSecondary,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: '600' as const,
+    textAlign: 'center' as const,
   },
   configBadge: {
     paddingHorizontal: 8,
@@ -205,7 +205,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   configBadgeText: {
     ...theme.typography.caption,
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontWeight: '700' as const,
     fontSize: 10,
   },
   configToggle: {
@@ -217,7 +217,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   configToggleText: {
     ...theme.typography.caption,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     fontSize: 10,
   },
 });

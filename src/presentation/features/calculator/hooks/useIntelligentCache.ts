@@ -2,7 +2,7 @@
 // 🚀 SISTEMA DE CACHE INTELIGENTE PARA VALIDACIONES
 // ===================================================================
 
-import { useEffect, useCallback, useRef } from 'react';
+import React from 'react';
 
 interface CacheEntry<T> {
   data: T;
@@ -40,8 +40,8 @@ const DEFAULT_CONFIG: CacheConfig = {
  */
 export function useIntelligentCache<T>(config: Partial<CacheConfig> = {}) {
   const finalConfig = { ...DEFAULT_CONFIG, ...config };
-  const cacheRef = useRef<Map<string, CacheEntry<T>>>(new Map());
-  const statsRef = useRef<CacheStats>({
+  const cacheRef = React.useRef<Map<string, CacheEntry<T>>>(new Map());
+  const statsRef = React.useRef<CacheStats>({
     totalEntries: 0,
     totalSize: 0,
     hitRate: 0,
@@ -50,7 +50,7 @@ export function useIntelligentCache<T>(config: Partial<CacheConfig> = {}) {
   });
 
   // 📊 Función para estimar el tamaño de un objeto
-  const estimateSize = useCallback((data: T): number => {
+  const estimateSize = React.useCallback((data: T): number => {
     try {
       const jsonString = JSON.stringify(data);
       return new Blob([jsonString]).size;
@@ -60,7 +60,7 @@ export function useIntelligentCache<T>(config: Partial<CacheConfig> = {}) {
   }, []);
 
   // 🧹 Limpiar entradas expiradas
-  const cleanupExpired = useCallback(() => {
+  const cleanupExpired = React.useCallback(() => {
     const now = Date.now();
     const cache = cacheRef.current;
     
@@ -74,7 +74,7 @@ export function useIntelligentCache<T>(config: Partial<CacheConfig> = {}) {
   }, [finalConfig.ttl]);
 
   // 🚀 Desalojar entradas según estrategia
-  const evictEntries = useCallback(() => {
+  const evictEntries = React.useCallback(() => {
     const cache = cacheRef.current;
     const entries = Array.from(cache.entries());
     
@@ -96,7 +96,7 @@ export function useIntelligentCache<T>(config: Partial<CacheConfig> = {}) {
     for (let i = 0; i < entriesToRemove && entries.length > 0; i++) {
       const entryData = entries[i];
       if (entryData) {
-        const [key, entry] = entryData;
+        const [key, entry] = entryData as [string, CacheEntry<T>];
         cache.delete(key);
         statsRef.current.totalEntries--;
         statsRef.current.totalSize -= entry.size;
@@ -105,7 +105,7 @@ export function useIntelligentCache<T>(config: Partial<CacheConfig> = {}) {
   }, [finalConfig.evictionStrategy]);
 
   // 💾 Almacenar en cache
-  const set = useCallback((key: string, data: T): void => {
+  const set = React.useCallback((key: string, data: T): void => {
     const cache = cacheRef.current;
     const size = estimateSize(data);
     const timestamp = Date.now();
@@ -143,7 +143,7 @@ export function useIntelligentCache<T>(config: Partial<CacheConfig> = {}) {
   }, [estimateSize, finalConfig.maxSize, finalConfig.maxEntries, cleanupExpired, evictEntries]);
 
   // 🎯 Obtener del cache
-  const get = useCallback((key: string): T | null => {
+  const get = React.useCallback((key: string): T | null => {
     const cache = cacheRef.current;
     const entry = cache.get(key);
     
@@ -171,7 +171,7 @@ export function useIntelligentCache<T>(config: Partial<CacheConfig> = {}) {
   }, [finalConfig.ttl]);
 
   // 🔑 Generar clave de cache para validaciones
-  const generateValidationKey = useCallback((
+  const generateValidationKey = React.useCallback((
     formData: Record<string, unknown>,
     validationType: string,
     additionalContext?: Record<string, unknown>
@@ -192,7 +192,7 @@ export function useIntelligentCache<T>(config: Partial<CacheConfig> = {}) {
   }, []);
 
   // 📊 Obtener estadísticas actualizadas
-  const getStats = useCallback((): CacheStats => {
+  const getStats = React.useCallback((): CacheStats => {
     const totalRequests = statsRef.current.hitCount + statsRef.current.missCount;
     const hitRate = totalRequests > 0 ? (statsRef.current.hitCount / totalRequests) * 100 : 0;
     
@@ -204,7 +204,7 @@ export function useIntelligentCache<T>(config: Partial<CacheConfig> = {}) {
   }, []);
 
   // 🧹 Limpiar cache manualmente
-  const clear = useCallback(() => {
+  const clear = React.useCallback(() => {
     cacheRef.current.clear();
     statsRef.current = {
       totalEntries: 0,
@@ -216,7 +216,7 @@ export function useIntelligentCache<T>(config: Partial<CacheConfig> = {}) {
   }, []);
 
   // 🔄 Hook para limpieza periódica
-  useEffect(() => {
+  React.useEffect(() => {
     const interval = setInterval(cleanupExpired, 60000); // Cada minuto
     return () => clearInterval(interval);
   }, [cleanupExpired]);

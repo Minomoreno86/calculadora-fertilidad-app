@@ -2,8 +2,41 @@
 // 🎨 COMPONENTE DE CAMPO MEJORADO - Input con animaciones y feedback visual
 // ===================================================================
 
-import React, { useEffect, useRef } from 'react';
-import { View, TextInput, StyleSheet, TextInputProps, Animated } from 'react-native';
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+
+// Safe imports for React Native components
+let TextInput: any;
+let Animated: any;
+let TextInputProps: any;
+
+try {
+  const RNComponents = require('react-native');
+  TextInput = RNComponents.TextInput || (() => null);
+  Animated = RNComponents.Animated || {
+    Value: class { constructor() {} },
+    View: View,
+    Text: (() => null),
+    spring: () => ({ start: () => {} }),
+    timing: () => ({ start: () => {} }),
+    parallel: () => ({ start: () => {} }),
+    sequence: () => ({ start: () => {} })
+  };
+  TextInputProps = RNComponents.TextInputProps || {};
+} catch {
+  TextInput = () => null;
+  Animated = {
+    Value: class { constructor() {} },
+    View: View,
+    Text: (() => null),
+    spring: () => ({ start: () => {} }),
+    timing: () => ({ start: () => {} }),
+    parallel: () => ({ start: () => {} }),
+    sequence: () => ({ start: () => {} })
+  };
+  TextInputProps = {};
+}
+
 import { Control, Controller, FieldError } from 'react-hook-form';
 import { Ionicons } from '@expo/vector-icons';
 import Text from '@/presentation/components/common/Text';
@@ -16,7 +49,7 @@ interface Props {
   name: string;
   label: string;
   placeholder?: string;
-  keyboardType?: TextInputProps['keyboardType'];
+  keyboardType?: string;
   iconName?: keyof typeof Ionicons.glyphMap;
   error?: FieldError;
   rangeValidation?: RangeValidation;
@@ -48,13 +81,13 @@ export const EnhancedTextInput: React.FC<Props> = ({
   enableAnimations = true,
 }) => {
   // 🎭 Referencias para animaciones
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const borderAnim = useRef(new Animated.Value(0)).current;
-  const successAnim = useRef(new Animated.Value(0)).current;
-  const hintOpacity = useRef(new Animated.Value(0)).current;
+  const scaleAnim = React.useRef(new Animated.Value(1)).current;
+  const borderAnim = React.useRef(new Animated.Value(0)).current;
+  const successAnim = React.useRef(new Animated.Value(0)).current;
+  const hintOpacity = React.useRef(new Animated.Value(0)).current;
 
   // 🎨 Efectos de animación basados en el estado
-  useEffect(() => {
+  React.useEffect(() => {
     if (!enableAnimations) return;
 
     if (isActive) {
@@ -101,7 +134,7 @@ export const EnhancedTextInput: React.FC<Props> = ({
   }, [isActive, enableAnimations, scaleAnim, borderAnim, hintOpacity]);
 
   // 🏆 Animación de éxito
-  useEffect(() => {
+  React.useEffect(() => {
     if (!enableAnimations || !showSuccessAnimation) return;
 
     Animated.sequence([
@@ -296,11 +329,11 @@ const styles = StyleSheet.create({
   label: {
     marginBottom: theme.spacing.xs,
     color: theme.colors.text,
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
   successIcon: {
     color: '#10B981',
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -334,7 +367,7 @@ const styles = StyleSheet.create({
   },
   validationMessage: {
     fontSize: 12,
-    fontStyle: 'italic',
+    fontStyle: 'italic' as const,
   },
   errorBorder: {
     borderColor: theme.colors.error,

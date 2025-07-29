@@ -2,7 +2,7 @@
 // 🚀 FASE 2C: HOOK ESPECIALIZADO PARA GESTIÓN DE PROGRESO
 // ===================================================================
 
-import { useMemo } from 'react';
+import React from 'react';
 
 interface FormProgress {
   completedSections: number;
@@ -48,7 +48,7 @@ interface PerformanceReport {
 
 export const useFormProgress = ({ formData }: UseFormProgressProps): UseFormProgressReturn => {
   // 🚀 FASE 2C: Definir secciones y sus campos requeridos
-  const sections = useMemo(() => ({
+  const sections = React.useMemo(() => ({
     demographics: {
       name: 'Datos Demográficos',
       requiredFields: ['age', 'height', 'weight'],
@@ -79,7 +79,7 @@ export const useFormProgress = ({ formData }: UseFormProgressProps): UseFormProg
   }), []);
 
   // 🚀 FASE 2C: Calcular progreso por sección
-  const getSectionProgress = useMemo(() => {
+  const getSectionProgress = React.useMemo(() => {
     return (sectionName: string): number => {
       const section = sections[sectionName as keyof typeof sections];
       if (!section) return 0;
@@ -96,7 +96,7 @@ export const useFormProgress = ({ formData }: UseFormProgressProps): UseFormProg
     };
   }, [formData, sections]);
 
-  const isSectionComplete = useMemo(() => {
+  const isSectionComplete = React.useMemo(() => {
     return (sectionName: string): boolean => {
       const section = sections[sectionName as keyof typeof sections];
       if (!section) return false;
@@ -110,7 +110,7 @@ export const useFormProgress = ({ formData }: UseFormProgressProps): UseFormProg
   }, [formData, sections]);
 
   // 🚀 FASE 2C: Calcular progreso general
-  const progress = useMemo((): FormProgress => {
+  const progress = React.useMemo((): FormProgress => {
     const sectionNames = Object.keys(sections);
     const completedSections = sectionNames.filter(name => isSectionComplete(name)).length;
     const totalSections = sectionNames.length;
@@ -136,7 +136,7 @@ export const useFormProgress = ({ formData }: UseFormProgressProps): UseFormProg
   }, [sections, isSectionComplete]);
 
   // 🚀 CONSOLIDACIÓN: Calcular métricas de benchmark
-  const benchmarkMetrics = useMemo(() => {
+  const benchmarkMetrics = React.useMemo(() => {
     return generateBenchmarkMetrics(formData);
   }, [formData]);
 

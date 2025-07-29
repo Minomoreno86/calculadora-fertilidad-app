@@ -124,14 +124,14 @@ export const theme = {
     // 🌸 TIPOGRAFÍA FERTILIDAD PROFESIONAL (Lato)
     h1: {
       fontSize: 30,
-      fontWeight: '700' as TextStyle['fontWeight'], // Bold para títulos principales
+      fontWeight: '700' as const as TextStyle['fontWeight'], // Bold para títulos principales
       lineHeight: 36,
       letterSpacing: -0.5,
       color: PALETTE.light.primary, // Rosa coral profundo
     },
     h2: {
       fontSize: 24,
-      fontWeight: '600' as TextStyle['fontWeight'], // Semi-bold para subtítulos/secciones
+      fontWeight: '600' as const as TextStyle['fontWeight'], // Semi-bold para subtítulos/secciones
       lineHeight: 30,
       letterSpacing: -0.3,
       color: PALETTE.light.textPrimary,
@@ -180,7 +180,7 @@ export const theme = {
     note: {
       fontSize: 14,
       fontWeight: '400' as TextStyle['fontWeight'],
-      fontStyle: 'italic' as TextStyle['fontStyle'], // Notas clínicas de fertilidad
+      fontStyle: 'italic' as const as TextStyle['fontStyle'], // Notas clínicas de fertilidad
       lineHeight: 20,
       color: PALETTE.light.textSecondary,
     },

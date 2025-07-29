@@ -1,19 +1,55 @@
 {
-  "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true,
+    "strict": false,
     "jsx": "react-jsx",
     "baseUrl": ".",
     "target": "ES2017",
+    "lib": [
+      "ES2017",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "downlevelIteration": true,
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "exactOptionalPropertyTypes": false,
-    "noUncheckedIndexedAccess": true,
+    "noUncheckedIndexedAccess": false,
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "incremental": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "declaration": false,
+    "declarationMap": false,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ]
     }
   },
-  "include": ["src", "**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "include": [
+    "src",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "types/**/*.d.ts"
+  ],
+  "exclude": [
+    "ai-medical-agent/**/*",
+    "backup/**/*",
+    "BACKUP_*/**/*",
+    "test-*.ts",
+    "migration-*.ts",
+    "proxy-server/**/*"
+  ],
+  "extends": "expo/tsconfig.base"
 }

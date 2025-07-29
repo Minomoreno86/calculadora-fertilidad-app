@@ -10,9 +10,9 @@
  * @version 1.0 - Solución de performance crítica
  */
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React from 'react';
 import { ClinicalValidators, ValidationResult } from '@/core/domain/validation/clinicalValidators';
-import { FormState } from '../useCalculatorFormOptimized';
+import { FormState } from '../types/calculator.types';
 
 interface UseStableFormValidationOptions {
   /**
@@ -111,7 +111,6 @@ interface ValidationData {
   spermProgressiveMotility: number;
   spermNormalMorphology: number;
   cycleLength: number;
-  cycleRegularity: string | undefined;
 }
 
 /**
@@ -128,23 +127,23 @@ export const useStableFormValidation = (
   } = options;
 
   // 🚀 Estados optimizados
-  const [clinicalValidation, setClinicalValidation] = useState<ValidationResult | null>(null);
-  const [isValidating, setIsValidating] = useState(false);
+  const [clinicalValidation, setClinicalValidation] = React.useState<ValidationResult | null>(null);
+  const [isValidating, setIsValidating] = React.useState(false);
   
   // 🚀 Referencias para evitar re-renders
-  const validationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastValidatedDataRef = useRef<string>('');
-  const isMountedRef = useRef(true);
+  const validationTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastValidatedDataRef = React.useRef<string>('');
+  const isMountedRef = React.useRef(true);
 
   // 🚀 CONSOLIDACIÓN: Validaciones de rangos integradas
-  const rangeValidations = useMemo(() => ({
+  const rangeValidations = React.useMemo(() => ({
     age: validateAge(options.formData?.age),
     weight: validateWeight(options.formData?.weight),
     height: validateHeight(options.formData?.height)
   }), [options.formData]);
 
-  const rangeStats = useMemo(() => {
-    const validationValues = Object.values(rangeValidations);
+  const rangeStats = React.useMemo(() => {
+    const validationValues = Object.values(rangeValidations) as RangeValidationResult[];
     const totalFields = validationValues.length;
     const warningFields = validationValues.filter(v => v.isWarning).length;
     const errorFields = validationValues.filter(v => v.isError).length;
@@ -161,7 +160,7 @@ export const useStableFormValidation = (
     };
   }, [rangeValidations]);
 
-  const getRangeValidation = useCallback((field: RangeFieldType, value: number): RangeValidationResult => {
+  const getRangeValidation = React.useCallback((field: RangeFieldType, value: number): RangeValidationResult => {
     switch (field) {
       case 'age':
         return validateAge(value);
@@ -181,7 +180,7 @@ export const useStableFormValidation = (
   }, []);
   
   // 🚀 Función auxiliar estable para parsear números
-  const parseNumber = useCallback((value: ValueType): number => {
+  const parseNumber = React.useCallback((value: ValueType): number => {
     if (typeof value === 'number') return value;
     if (typeof value === 'string') {
       const parsed = parseFloat(value);
@@ -191,7 +190,7 @@ export const useStableFormValidation = (
   }, []);
 
   // 🚀 Función para extraer datos de validación (memoizada)
-  const extractValidationData = useCallback((formData: Partial<FormState>) => {
+  const extractValidationData = React.useCallback((formData: Partial<FormState>) => {
     return {
       age: parseNumber(formData.age),
       height: parseNumber(formData.height),
@@ -206,12 +205,11 @@ export const useStableFormValidation = (
       spermProgressiveMotility: parseNumber(formData.spermProgressiveMotility),
       spermNormalMorphology: parseNumber(formData.spermNormalMorphology),
       cycleLength: parseNumber(formData.cycleLength),
-      cycleRegularity: formData.cycleRegularity,
     };
   }, [parseNumber]);
 
   // 🚀 Función de validación con debounce
-  const performValidation = useCallback(async (formData: Partial<FormState>) => {
+  const performValidation = React.useCallback(async (formData: Partial<FormState>) => {
     try {
       setIsValidating(true);
       
@@ -264,7 +262,7 @@ export const useStableFormValidation = (
   }, [requiredFields, extractValidationData]);
 
   // 🚀 Función para disparar validación con debounce
-  const triggerValidation = useCallback((formData: Partial<FormState>) => {
+  const triggerValidation = React.useCallback((formData: Partial<FormState>) => {
     if (!enableRealTimeValidation) return;
     
     // Crear clave única para los datos actuales
@@ -288,7 +286,7 @@ export const useStableFormValidation = (
   }, [enableRealTimeValidation, debounceTime, performValidation]);
 
   // 🚀 Función para limpiar validación
-  const clearValidation = useCallback(() => {
+  const clearValidation = React.useCallback(() => {
     setClinicalValidation(null);
     setIsValidating(false);
     lastValidatedDataRef.current = '';
@@ -300,7 +298,7 @@ export const useStableFormValidation = (
   }, []);
 
   // 🚀 Cleanup al desmontar
-  useEffect(() => {
+  React.useEffect(() => {
     isMountedRef.current = true;
     
     return () => {

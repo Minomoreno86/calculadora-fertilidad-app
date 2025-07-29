@@ -1,20 +1,19 @@
 // ===================================================================
-// 🎯 SERVICIO DE CÁLCULO - Interfaz con el motor de cálculo
+// 🎯 SERVICIO DE CÁLCULO V4.0 - CONSOLIDADO CON MODULAR ENGINE
 // ===================================================================
 
-import { calculateProbability } from '../../../../core/domain/services/calculationEngine';
+import { ModularFertilityEngine } from '../../../../core/domain/services/modular';
 import { mapFormStateToUserInput } from '../utils/dataMapper';
 import { FormState, CalculationResult } from '../types/calculator.types';
-import { FormState as OriginalFormState } from '../useCalculatorFormOptimized';
 
 /**
- * Servicio para realizar cálculos de probabilidad de fertilidad
- * Actúa como interfaz entre el formulario y el motor de cálculo
+ * Servicio para realizar cálculos de probabilidad de fertilidad V4.0
+ * CONSOLIDADO - Usa ModularFertilityEngine unificado para App Store
  */
 export class CalculationService {
   
   /**
-   * Ejecuta el cálculo de probabilidad
+   * Ejecuta el cálculo de probabilidad con UnifiedEngine
    */
   static async executeCalculation(
     formData: FormState,
@@ -36,13 +35,21 @@ export class CalculationService {
       // 🔄 Convertir FormState (strings) a datos numéricos para el motor
       const convertedFormData = _convertFormStateForMapping(formData);
       
-      // 🔄 Mapear datos del formulario a UserInput (bypass de tipos por incompatibilidad temporal)
-      const userInput = mapFormStateToUserInput(convertedFormData as unknown as OriginalFormState, calculatedBmi, calculatedHoma);
+      // 🔄 Mapear datos del formulario a UserInput
+      const userInput = mapFormStateToUserInput(convertedFormData as unknown as FormState, calculatedBmi, calculatedHoma);
       
-      // ⚡ Ejecutar cálculo en el motor
-      const evaluation = calculateProbability(userInput);
+      // ⚡ Ejecutar cálculo con ModularFertilityEngine V4.0 (CONSOLIDADO)
+      const modularEngine = new ModularFertilityEngine();
+      const evaluation = await modularEngine.calculate(userInput);
       
       const executionTime = performance.now() - startTime;
+      
+      // Extraer métricas del resultado modular
+      const metrics = {
+        totalCalculationTime: executionTime,
+        engineMode: 'modular',
+        complexity: 'optimized'
+      };
       
       return {
         success: true,
@@ -177,13 +184,15 @@ export class CalculationService {
 
 // 🔧 HELPER: Convertir FormState (strings) a formato numerico para dataMapper
 function _convertFormStateForMapping(formData: FormState) {
-  const safeParseNumber = (value: string | number | undefined): number => {
+  const safeParseNumber = (value: string | number | undefined): number | string => {
     if (typeof value === 'number') return value;
     if (typeof value === 'string') {
+      // ❌ FIX: NO convertir strings vacíos a 0, mantenerlos como string vacío
+      if (value.trim() === '') return value; // Mantener string vacío
       const parsed = parseFloat(value);
-      return isNaN(parsed) ? 0 : parsed;
+      return isNaN(parsed) ? value : parsed; // Retornar valor original si no es número válido
     }
-    return 0;
+    return value || '';
   };
 
   // Retornar objeto compatible con OriginalFormState simplificado
@@ -191,7 +200,8 @@ function _convertFormStateForMapping(formData: FormState) {
     ...formData,
     age: safeParseNumber(formData.age),
     cycleLength: safeParseNumber(formData.cycleLength),
-    infertilityDuration: safeParseNumber(formData.infertilityDuration),
+    // 🔄 MANTENER infertilityDuration como string para conversión años→meses en DataMapper
+    infertilityDuration: formData.infertilityDuration, // No convertir aquí, let DataMapper handle años→meses
     endometriosisStage: safeParseNumber(formData.endometriosisStage),
     amhValue: safeParseNumber(formData.amhValue),
     tshValue: safeParseNumber(formData.tshValue),

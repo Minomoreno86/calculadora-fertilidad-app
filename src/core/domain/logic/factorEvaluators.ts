@@ -112,24 +112,48 @@ export const evaluateEndometriosis = (grade: number): PartialEvaluation => {
     return { factors: {}, diagnostics: {} };
   }
 
+  // 🏥 EVALUACIÓN POR GRADOS INDIVIDUALES - Más precisa médicamente
   const endometriosisGrades = [
-    { min: 1, max: 2, factor: 0.85, comment: 'Endometriosis leve (Grados I-II)' },
-    { min: 3, max: 4, factor: 0.6, comment: 'Endometriosis severa (Grados III-IV)' },
+    { grade: 1, factor: 0.9, comment: 'Endometriosis mínima (Grado I)' },
+    { grade: 2, factor: 0.85, comment: 'Endometriosis leve (Grado II)' },
+    { grade: 3, factor: 0.7, comment: 'Endometriosis moderada (Grado III)' },
+    { grade: 4, factor: 0.6, comment: 'Endometriosis severa (Grado IV)' },
   ];
 
-  for (const gradeRange of endometriosisGrades) {
-    if (grade >= gradeRange.min && grade <= gradeRange.max) {
-      return { factors: { endometriosis: gradeRange.factor }, diagnostics: { endometriosisComment: gradeRange.comment } };
+  console.log('🔍 [FACTOR EVALUATOR] evaluateEndometriosis called with:', {
+    inputGrade: grade,
+    gradeType: typeof grade,
+    availableGrades: endometriosisGrades.map(eg => ({ grade: eg.grade, factor: eg.factor }))
+  });
+
+  for (const gradeData of endometriosisGrades) {
+    if (grade === gradeData.grade) {
+      console.log('🔍 [FACTOR EVALUATOR] Endometriosis MATCH FOUND! Grade:', grade, 'Factor:', gradeData.factor);
+      return { factors: { endometriosis: gradeData.factor }, diagnostics: { endometriosisComment: gradeData.comment } };
     }
   }
   
+  console.log('🔍 [FACTOR EVALUATOR] Endometriosis NO MATCH FOUND - grade:', grade);
   // 🚫 NO retornar valor por defecto si no hay coincidencia válida
   return { factors: {}, diagnostics: {} };
 };
 
 export const evaluateMyomas = (type: MyomaType): PartialEvaluation => {
+  // 🔍 DEBUG: Ver qué tipo está llegando
+  console.log('🔍 [FACTOR EVALUATOR] evaluateMyomas called with:', {
+    type: type,
+    typeOf: typeof type,
+    isNone: type === MyomaType.None,
+    isUndefined: type === undefined,
+    isNull: type === null,
+    MyomaTypeNoneValue: MyomaType.None,
+    MyomaTypeSubmucosal: MyomaType.Submucosal,
+    MyomaTypeIntramuralLarge: MyomaType.IntramuralLarge
+  });
+  
   // 🔍 Solo evaluar si hay un tipo válido
   if (!type || type === undefined || type === null) {
+    console.log('🔍 [FACTOR EVALUATOR] Myoma evaluation skipped - invalid type');
     return { factors: {}, diagnostics: {} };
   }
 
@@ -138,12 +162,26 @@ export const evaluateMyomas = (type: MyomaType): PartialEvaluation => {
     { type: MyomaType.IntramuralLarge, factor: 0.6, comment: 'Mioma intramural grande detectado' },
   ];
 
+  console.log('🔍 [FACTOR EVALUATOR] Checking myoma types against:', {
+    inputType: type,
+    availableTypes: myomaTypes.map(mt => ({ type: mt.type, factor: mt.factor }))
+  });
+
   for (const myomaType of myomaTypes) {
+    console.log('🔍 [FACTOR EVALUATOR] Comparing:', {
+      input: type,
+      checking: myomaType.type,
+      match: type === myomaType.type,
+      strictEqual: type === myomaType.type
+    });
+    
     if (type === myomaType.type) {
+      console.log('🔍 [FACTOR EVALUATOR] MATCH FOUND! Returning factor:', myomaType.factor);
       return { factors: { myoma: myomaType.factor }, diagnostics: { myomaComment: myomaType.comment } };
     }
   }
   
+  console.log('🔍 [FACTOR EVALUATOR] NO MATCH FOUND - returning empty factors');
   // 🚫 NO retornar valor por defecto si no hay coincidencia válida
   return { factors: {}, diagnostics: {} };
 };
@@ -199,7 +237,7 @@ export const evaluateHsg = (result: HsgResult): PartialEvaluation => {
 
   const hsgResults = [
     { result: HsgResult.Unilateral, factor: 0.7, comment: 'Obstrucción tubárica unilateral' },
-    { result: HsgResult.Bilateral, factor: 0.0, comment: 'Obstrucción tubárica bilateral' },
+    { result: HsgResult.Bilateral, factor: 0.3, comment: 'Obstrucción tubárica bilateral (ajustado para evitar impacto excesivo)' },
     { result: HsgResult.Malformation, factor: 0.3, comment: 'Alteración de la cavidad uterina' },
   ];
 
@@ -208,7 +246,7 @@ export const evaluateHsg = (result: HsgResult): PartialEvaluation => {
       return { factors: { hsg: hsgResult.factor }, diagnostics: { hsgComment: hsgResult.comment } };
     }
   }
-  
+
   // Si hay un resultado pero no está en las condiciones problemáticas, son trompas permeables
   return { factors: { hsg: 1.0 }, diagnostics: { hsgComment: 'Ambas trompas permeables' } };
 };
@@ -299,7 +337,7 @@ class InfertilityFactorsStrategy implements OtbEvaluationStrategy {
   constructor(private readonly hasOtherFactors?: boolean, private readonly desireMultiple?: boolean) {}
   
   evaluate(factor: number, diagnostics: string[]): { factor: number; diagnostics: string[] } {
-    if (this.hasOtherFactors !== undefined) {
+    if this.hasOtherFactors !== undefined) {
       if (this.hasOtherFactors) {
         factor *= 0.5;
         diagnostics.push('Presencia de otros factores de infertilidad. Considerar antes de recanalización.');
@@ -436,9 +474,10 @@ export const evaluateHoma = (homaValue?: number): PartialEvaluation => {
   }
 
   const homaRanges = [
-    { min: 4.0, factor: 0.9, comment: 'Resistencia a la insulina significativa (HOMA-IR ≥4.0)' },
-    { min: 2.5, factor: 0.95, comment: 'Resistencia a la insulina leve (HOMA-IR 2.5-3.9)' },
-    { min: 0, factor: 1.0, comment: 'Sensibilidad normal a la insulina (HOMA-IR <2.5)' },
+    { min: 5.0, factor: 0.2, comment: 'Resistencia a la insulina severa (HOMA-IR ≥5.0) - Riesgo crítico fertilidad' },
+    { min: 4.0, factor: 0.4, comment: 'Resistencia a la insulina significativa (HOMA-IR 4.0-4.9) - Riesgo alto fertilidad' },
+    { min: 2.5, factor: 0.7, comment: 'Resistencia a la insulina leve (HOMA-IR 2.5-3.9) - Riesgo moderado fertilidad' },
+    { min: 0, factor: 1.0, comment: 'Sensibilidad normal a la insulina (HOMA-IR <2.5) - Óptimo para fertilidad' },
   ];
 
   for (const range of homaRanges) {
@@ -450,19 +489,26 @@ export const evaluateHoma = (homaValue?: number): PartialEvaluation => {
   return { factors: { homa: 1.0 }, diagnostics: { homaComment: 'Sensibilidad normal a la insulina' } };
 };
 
-export const evaluateInfertilityDuration = (years?: number): PartialEvaluation => {
-  if (years === undefined) return { factors: { infertilityDuration: 1.0 } };
+export const evaluateInfertilityDuration = (months?: number): PartialEvaluation => {
+  console.log('🔍 evaluateInfertilityDuration DEBUG:', { months, monthsType: typeof months });
+  if (months === undefined) return { factors: { infertilityDuration: 1.0 } };
+  
+  // ⚡ LÓGICA MÉDICA: A mayor duración → menor probabilidad 
+  // (Recibe meses convertidos desde años por dataMapper)
   const infertilityDurationRanges = [
-    { min: 5, factor: 0.85 },
-    { min: 3, factor: 0.93 },
+    { min: 84, factor: 0.35 },   // 84+ meses (7+ años) = 35% (Crítico)
+    { min: 60, factor: 0.55 },   // 60+ meses (5+ años) = 55% (Moderado-Severo) 
+    { min: 36, factor: 0.75 },   // 36+ meses (3+ años) = 75% (Moderado)
+    { min: 24, factor: 0.85 },   // 24+ meses (2+ años) = 85% (Leve)
   ];
 
   for (const range of infertilityDurationRanges) {
-    if (years >= range.min) {
+    if (months >= range.min) {
       return { factors: { infertilityDuration: range.factor } };
     }
   }
-  return { factors: { infertilityDuration: 1.0 } };
+  
+  return { factors: { infertilityDuration: 1.0 } }; // <24 meses = 100% (Normal)
 };
 
 export const evaluatePelvicSurgeries = (surgeries?: number): PartialEvaluation => {

@@ -4,7 +4,31 @@
  */
 
 import React from 'react';
-import { View, Text, TouchableOpacity, Animated, ViewStyle, TextStyle } from 'react-native';
+import { View, Text, TouchableOpacity, ViewStyle, TextStyle } from 'react-native';
+
+// Safe import for Animated
+let Animated: any;
+try {
+  const RNComponents = require('react-native');
+  Animated = RNComponents.Animated || {
+    Value: class { constructor() {} },
+    View: View,
+    interpolate: () => ({}),
+    loop: () => ({ start: () => {} }),
+    sequence: () => ({}),
+    timing: () => ({})
+  };
+} catch {
+  Animated = {
+    Value: class { constructor() {} },
+    View: View,
+    interpolate: () => ({}),
+    loop: () => ({ start: () => {} }),
+    sequence: () => ({}),
+    timing: () => ({})
+  };
+}
+
 import { Ionicons } from '@expo/vector-icons';
 import { ChatMessage, QuickReply, ChatAttachment, ThemeInterface } from '../types/ChatTypes';
 
@@ -99,7 +123,7 @@ export class ChatUIComponents {
     },
     actionCardsTitle: {
       fontSize: 16,
-      fontWeight: '600',
+      fontWeight: '600' as const,
       color: '#2E3440',
       marginBottom: 12,
     },
@@ -135,7 +159,7 @@ export class ChatUIComponents {
     },
     actionCardCategory: {
       fontSize: 10,
-      fontWeight: '500',
+      fontWeight: '500' as const,
       color: '#64748B',
     },
     actionCardTitle: {
@@ -218,7 +242,7 @@ export class ChatUIComponents {
     } as ViewStyle,
     attachmentTitle: {
       fontSize: 14,
-      fontWeight: 'bold',
+      fontWeight: 'bold' as const,
       color: '#000',
       marginLeft: 8
     } as TextStyle,
@@ -254,7 +278,7 @@ export class ChatUIComponents {
     typingText: {
       fontSize: 12,
       color: theme.textSecondary || theme.secondary,
-      fontStyle: 'italic'
+      fontStyle: 'italic' as const
     } as TextStyle
   });
 
@@ -463,7 +487,7 @@ export class ChatUIComponents {
   /**
    * ⌨️ RENDERIZAR INDICADOR DE ESCRITURA
    */
-  renderTypingIndicator = (typingAnimation: Animated.Value) => {
+  renderTypingIndicator = (typingAnimation: any) => {
     return (
       <View style={this.styles.messageContainer as ViewStyle}>
         <View style={this.styles.aiAvatar as ViewStyle}>

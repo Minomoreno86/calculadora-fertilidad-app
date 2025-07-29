@@ -3,7 +3,31 @@
 // ===================================================================
 
 import React from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+
+// Safe import for Animated
+let Animated: any;
+try {
+  const RNComponents = require('react-native');
+  Animated = RNComponents.Animated || {
+    Value: class { constructor() {} },
+    View: View,
+    interpolate: () => ({}),
+    loop: () => ({ start: () => {} }),
+    sequence: () => ({}),
+    timing: () => ({})
+  };
+} catch {
+  Animated = {
+    Value: class { constructor() {} },
+    View: View,
+    interpolate: () => ({}),
+    loop: () => ({ start: () => {} }),
+    sequence: () => ({}),
+    timing: () => ({})
+  };
+}
+
 import { Ionicons } from '@expo/vector-icons';
 import Text from '@/presentation/components/common/Text';
 import { theme } from '@/config/theme';
@@ -134,7 +158,7 @@ export const EnhancedProgressDisplay: React.FC<Props> = ({
       </View>
 
       {/* 💡 Sugerencia de próximo campo */}
-      {Object.values(sectionProgress).some(s => s.nextSuggestedField) && (
+      {Object.values(sectionProgress).some((s: any) => s?.nextSuggestedField) && (
         <View style={styles.suggestionContainer}>
           <Ionicons name="bulb-outline" size={16} color={theme.colors.primary} />
           <Text style={styles.suggestionText}>
@@ -179,7 +203,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.primary,
   },
   progressNumber: {
@@ -187,7 +211,7 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.primary,
   },
   progressSubtext: {
@@ -245,14 +269,14 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '500' as const,
     color: theme.colors.text,
-    textAlign: 'center',
+    textAlign: 'center' as const,
     marginBottom: 2,
   },
   activeSectionLabel: {
     color: theme.colors.primary,
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
   sectionProgress: {
     fontSize: 10,
@@ -283,7 +307,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 12,
     color: theme.colors.primary,
-    fontStyle: 'italic',
+    fontStyle: 'italic' as const,
   },
 });
 

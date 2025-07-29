@@ -28,7 +28,7 @@
  * - Control de flujo avanzado
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React from 'react';
 import ValidationStreamingEngine, { 
   StreamingProgress, 
   StreamingConfig, 
@@ -134,7 +134,7 @@ export function useParallelValidation(
 ): [ParallelValidationState, ParallelValidationControls] {
 
   // Estado principal
-  const [state, setState] = useState<ParallelValidationState>({
+  const [state, setState] = React.useState<ParallelValidationState>({
     isRunning: false,
     progress: {
       phase: 'critical',
@@ -163,13 +163,13 @@ export function useParallelValidation(
   });
 
   // Referencias
-  const engineRef = useRef<ValidationStreamingEngine | null>(null);
-  const isValidationSupported = useRef(true); // En React Native siempre true
+  const engineRef = React.useRef<ValidationStreamingEngine | null>(null);
+  const isValidationSupported = React.useRef(true); // En React Native siempre true
 
   /**
    * Inicializar motor de validación
    */
-  const initializeEngine = useCallback(() => {
+  const initializeEngine = React.useCallback(() => {
     if (engineRef.current) {
       engineRef.current.dispose();
     }
@@ -232,7 +232,7 @@ export function useParallelValidation(
   /**
    * Inicializar al montar el componente
    */
-  useEffect(() => {
+  React.useEffect(() => {
     initializeEngine();
 
     return () => {
@@ -245,8 +245,8 @@ export function useParallelValidation(
   /**
    * Actualizar métricas periódicamente
    */
-  useEffect(() => {
-    if (!options.enableMetrics || !state.isRunning) return;
+  React.useEffect(() => {
+    if (!options.enableMetrics || !state.isRunning) return undefined;
 
     const interval = setInterval(() => {
       if (engineRef.current) {
@@ -274,7 +274,7 @@ export function useParallelValidation(
   /**
    * Iniciar validación paralela
    */
-  const startValidation = useCallback(async (groups: ValidationGroup[], userInput?: Partial<UserInput>) => {
+  const startValidation = React.useCallback(async (groups: ValidationGroup[], userInput?: Partial<UserInput>) => {
     if (!engineRef.current) {
       throw new Error('Motor de validación no inicializado');
     }
@@ -305,7 +305,7 @@ export function useParallelValidation(
   /**
    * Abortar validación en curso
    */
-  const abortValidation = useCallback(() => {
+  const abortValidation = React.useCallback(() => {
     if (engineRef.current) {
       engineRef.current.abort();
     }
@@ -320,7 +320,7 @@ export function useParallelValidation(
   /**
    * Validación rápida para casos simples
    */
-  const getQuickValidation = useCallback(async (_data: unknown): Promise<ExtendedValidationResult[]> => {
+  const getQuickValidation = React.useCallback(async (_data: unknown): Promise<ExtendedValidationResult[]> => {
     // Simular validación rápida sin streaming
     await new Promise(resolve => setTimeout(resolve, 50));
     
@@ -343,7 +343,7 @@ export function useParallelValidation(
   /**
    * Limpiar resultados
    */
-  const clearResults = useCallback(() => {
+  const clearResults = React.useCallback(() => {
     setState(prev => ({
       ...prev,
       results: new Map(),
@@ -357,7 +357,7 @@ export function useParallelValidation(
   /**
    * Obtener reporte de performance
    */
-  const getPerformanceReport = useCallback(() => {
+  const getPerformanceReport = React.useCallback(() => {
     const metrics = engineRef.current?.getMetrics() || state.metrics;
     
     return {
@@ -390,11 +390,11 @@ export function useParallelValidation(
  * Hook simplificado para validación rápida
  */
 export function useQuickValidation() {
-  const [isValidating, setIsValidating] = useState(false);
-  const [results, setResults] = useState<ExtendedValidationResult[]>([]);
-  const [error, setError] = useState<Error | undefined>();
+  const [isValidating, setIsValidating] = React.useState(false);
+  const [results, setResults] = React.useState<ExtendedValidationResult[]>([]);
+  const [error, setError] = React.useState<Error | undefined>();
 
-  const validate = useCallback(async (_data: unknown) => {
+  const validate = React.useCallback(async (_data: unknown) => {
     setIsValidating(true);
     setError(undefined);
 

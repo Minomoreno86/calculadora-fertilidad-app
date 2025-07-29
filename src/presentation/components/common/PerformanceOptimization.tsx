@@ -5,7 +5,7 @@
  * y hooks de performance optimizados (VERSIÓN ESTABILIZADA)
  */
 
-import React, { memo, useMemo, useCallback, useRef, useEffect, useState } from 'react';
+import React from 'react';
 
 // 🚀 FASE 2A: Declaración de __DEV__ para React Native
 declare const __DEV__: boolean;
@@ -56,7 +56,7 @@ export const withPerformanceOptimization = <P extends Record<string, unknown>>(
   Component: React.ComponentType<P>,
   config: MemoConfig = { enabled: true }
 ) => {
-  const OptimizedComponent = memo(Component, createIntelligentComparator(config));
+  const OptimizedComponent = React.memo(Component, createIntelligentComparator(config));
   OptimizedComponent.displayName = `Optimized(${Component.displayName || Component.name})`;
   return OptimizedComponent;
 };
@@ -66,11 +66,11 @@ export const useOptimizedCallback = <T extends (...args: unknown[]) => unknown>(
   callback: T,
   deps: React.DependencyList
 ): T => {
-  const callbackRef = useRef<T>(callback);
-  const depsRef = useRef<React.DependencyList>(deps);
+  const callbackRef = React.useRef<T>(callback);
+  const depsRef = React.useRef<React.DependencyList>(deps);
   
   // Solo actualizar si deps realmente cambiaron
-  const depsChanged = useMemo(() => {
+  const depsChanged = React.useMemo(() => {
     if (depsRef.current.length !== deps.length) return true;
     return deps.some((dep, index) => dep !== depsRef.current[index]);
   }, [deps]);
@@ -80,7 +80,7 @@ export const useOptimizedCallback = <T extends (...args: unknown[]) => unknown>(
     depsRef.current = deps;
   }
   
-  return useCallback((...args: unknown[]) => {
+  return React.useCallback((...args: unknown[]) => {
     return callbackRef.current(...args);
   }, []) as T;
 };
@@ -91,10 +91,10 @@ export const useOptimizedValue = <T,>(
   deps: React.DependencyList,
   enabled = true
 ): T => {
-  const cacheRef = useRef(new Map<string, T>());
+  const cacheRef = React.useRef(new Map<string, T>());
   const depsKey = JSON.stringify(deps);
   
-  return useMemo(() => {
+  return React.useMemo(() => {
     if (!enabled) {
       return factory();
     }
@@ -113,12 +113,12 @@ export const useOptimizedValue = <T,>(
 
 // 🎯 Hook para detectar re-renders excesivos
 export const useRenderOptimization = (componentName: string, threshold = 15) => {
-  const renderCount = useRef(0);
-  const lastAlert = useRef(0);
+  const renderCount = React.useRef(0);
+  const lastAlert = React.useRef(0);
   
   renderCount.current += 1;
   
-  useEffect(() => {
+  React.useEffect(() => {
     if (__DEV__ && renderCount.current > threshold) {
       const now = Date.now();
       if (now - lastAlert.current > 10000) {
@@ -128,7 +128,7 @@ export const useRenderOptimization = (componentName: string, threshold = 15) => 
     }
   });
 
-  const resetCounter = useCallback(() => {
+  const resetCounter = React.useCallback(() => {
     renderCount.current = 0;
   }, []);
 
@@ -141,7 +141,7 @@ export const useOptimizedFormField = <T,>(
   onChange: (value: T) => void,
   validation?: (value: T) => boolean
 ) => {
-  const optimizedOnChange = useCallback((newValue: T) => onChange(newValue), [onChange]);
+  const optimizedOnChange = React.useCallback((newValue: T) => onChange(newValue), [onChange]);
   
   const isValid = useOptimizedValue(
     () => validation ? validation(value) : true,
@@ -167,13 +167,13 @@ export const OptimizationProvider: React.FC<{
   children: React.ReactNode;
   initialConfig?: MemoConfig;
 }> = ({ children, initialConfig = { enabled: true } }) => {
-  const [config, setConfig] = useState<MemoConfig>(initialConfig);
+  const [config, setConfig] = React.useState<MemoConfig>(initialConfig);
 
-  const updateConfig = useCallback((newConfig: Partial<MemoConfig>) => {
+  const updateConfig = React.useCallback((newConfig: Partial<MemoConfig>) => {
     setConfig(prev => ({ ...prev, ...newConfig }));
   }, []);
 
-  const contextValue = useMemo(() => ({
+  const contextValue = React.useMemo(() => ({
     config,
     updateConfig
   }), [config, updateConfig]);

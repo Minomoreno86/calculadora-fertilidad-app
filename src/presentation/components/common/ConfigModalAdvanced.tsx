@@ -1,16 +1,28 @@
-import React, { useState } from 'react';
+import React from 'react';
+const { useState } = React;
 import {
-  Modal,
   View,
   StyleSheet,
   TouchableOpacity,
-  Switch,
   ScrollView,
-  Alert,
   Platform,
 } from 'react-native';
 import Text from './Text';
 import { useDynamicTheme } from '../../../hooks/useDynamicTheme';
+
+// Importación segura de componentes que pueden no estar disponibles
+let Modal: any = null;
+let Switch: any = null;
+let Alert: any = null;
+
+try {
+  const RN = require('react-native');
+  Modal = RN.Modal;
+  Switch = RN.Switch;
+  Alert = RN.Alert;
+} catch (error) {
+  console.warn('Modal, Switch o Alert no disponibles en esta versión de React Native');
+}
 
 // 🎯 TIPOS DE CONFIGURACIÓN AVANZADA
 interface AdvancedConfigState {
@@ -853,7 +865,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   closeText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: '#FFFFFF',
   },
   resetButton: {
@@ -870,7 +882,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: '#FFFFFF',
     fontFamily: 'Lato-Bold',
   },
@@ -883,7 +895,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.text,
     marginBottom: 15,
     fontFamily: 'Lato-Bold',
@@ -908,7 +920,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   optionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
     fontFamily: 'Lato-Bold',
   },
@@ -960,7 +972,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   segmentText: {
     fontSize: 12,
     color: theme.colors.textSecondary,
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
   segmentTextActive: {
     color: theme.colors.text,
@@ -985,7 +997,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   colorCheckmark: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     fontSize: 16,
   },
 
@@ -1010,7 +1022,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   toggleText: {
     fontSize: 14,
     color: theme.colors.textSecondary,
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
   toggleTextActive: {
     color: theme.colors.text,

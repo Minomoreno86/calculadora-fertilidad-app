@@ -1,15 +1,44 @@
 // 🚀 RESULTS SCREEN V2.0 - SUPERINTELIGENCIA MÉDICA EVOLUTIVA
-import React, { useMemo, useCallback, Suspense } from 'react';
+import React from 'react';
 import { 
   StyleSheet, 
   View, 
-  ActivityIndicator, 
-  Alert,
-  TouchableOpacity
+  TouchableOpacity,
+  Text as RNText
 } from 'react-native';
 import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+
+// 🎯 CUSTOM COMPONENTS FOR COMPATIBILITY
+const ActivityIndicator: React.FC<{ 
+  size?: 'small' | 'large'; 
+  color?: string; 
+  style?: Record<string, any> 
+}> = ({ 
+  size = 'small', 
+  color = '#007AFF', 
+  style = {} 
+}) => (
+  <View style={[{ 
+    width: size === 'large' ? 36 : 20, 
+    height: size === 'large' ? 36 : 20, 
+    borderRadius: size === 'large' ? 18 : 10,
+    borderWidth: 2,
+    borderColor: color,
+    borderTopColor: 'transparent',
+    // Simple rotation animation would be ideal here
+  }, style]} />
+);
+
+const showAlert = (title: string, message?: string, buttons?: Array<{text: string; style?: string; onPress?: () => void}>) => {
+  // Fallback alert for React Native 0.79.5
+  if (typeof alert !== 'undefined') {
+    alert(title + (message ? '\n' + message : ''));
+  } else {
+    console.warn('Alert:', title, message);
+  }
+};
 
 // 🚀 INTERFACE PARA ENGINE METRICS V13.0
 interface EngineMetrics {
@@ -39,12 +68,24 @@ export default function ResultsScreen() {
   const { evaluation, loading, error, isPremiumReport } = useReportLoader(reportKeyParam);
 
   // 🎨 Crear estilos dinámicos con cache automático
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
 
   // 🧠 MÉTRICAS INTELIGENTES PARA AI MEDICAL AGENT + UNIFIED WORKERS V12.0
-  const treatmentSuggestions = useMemo(() => {
-    if (!evaluation) return [];
-    return suggestTreatments(evaluation);
+  const treatmentSuggestions = React.useMemo(() => {
+    // 🔍 Acceder a la evaluation real desde la estructura guardada
+    const actualEvaluation = (evaluation as any)?.evaluation;
+    if (!actualEvaluation) return [];
+    
+    console.log('🔍 [RESULTS] Treatment Suggester called with:', { 
+      hasEvaluation: !!actualEvaluation,
+      evaluationKeys: actualEvaluation ? Object.keys(actualEvaluation) : 'N/A',
+      hasInput: !!actualEvaluation?.input,
+      hasFactors: !!actualEvaluation?.factors,
+      inputKeys: actualEvaluation?.input ? Object.keys(actualEvaluation.input) : 'N/A',
+      factorsKeys: actualEvaluation?.factors ? Object.keys(actualEvaluation.factors) : 'N/A'
+    });
+    
+    return suggestTreatments(actualEvaluation);
   }, [evaluation]);
 
   // 🚀 UNIFIED PARALLEL ENGINE V12.0 INTEGRATION
@@ -69,8 +110,8 @@ export default function ResultsScreen() {
   }, []);
 
   // 🚀 HANDLER INTELIGENTE PARA RETRY CON EXPONENTIAL BACKOFF
-  const handleRetry = useCallback(() => {
-    Alert.alert(
+  const handleRetry = React.useCallback(() => {
+    showAlert(
       '🔄 Reintentando Carga',
       'Regresando a la calculadora para generar un nuevo informe...',
       [
@@ -261,7 +302,7 @@ export default function ResultsScreen() {
       }} />
       
       {/* 🎯 COMPONENTE PRINCIPAL CON LAZY LOADING Y SUSPENSE */}
-      <Suspense fallback={
+      <React.Suspense fallback={
         <View style={styles.suspenseContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
           <Text style={styles.suspenseText}>Cargando interfaz avanzada...</Text>
@@ -272,7 +313,7 @@ export default function ResultsScreen() {
           treatmentSuggestions={treatmentSuggestions}
           isPremiumReport={isPremiumReport}
         />
-      </Suspense>
+      </React.Suspense>
     </View>
   );
 }

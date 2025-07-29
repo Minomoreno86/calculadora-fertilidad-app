@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import React from 'react';
+const { useState, useEffect, useCallback } = React;
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // 🎯 TIPOS DE CONFIGURACIÓN AVANZADA
@@ -322,6 +323,7 @@ export const useAdvancedConfig = () => {
 
       return () => clearTimeout(timeoutId);
     }
+    return undefined;
   }, [hasUnsavedChanges, config.ux.autoSave, saveConfig]);
 
   // 📱 CARGAR CONFIGURACIÓN AL INICIAR

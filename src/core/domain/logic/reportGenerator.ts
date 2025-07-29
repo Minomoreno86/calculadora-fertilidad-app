@@ -70,11 +70,17 @@ const findingConfig = [
 /**
  * Helper para generar los textos del pronóstico (categoría, emoji y frase).
  */
-function getPrognosisTexts(
+function generateCategoryAndPhrase(
   numericPrognosis: number,
   factors: Factors,
 ): Pick<Report, 'category' | 'emoji' | 'prognosisPhrase'> {
   const prognosisStr = `${numericPrognosis.toFixed(1)}%`;
+  
+  // 📊 CÁLCULO PROBABILIDAD A 12 MESES como en tests
+  // Fórmula: 1 - (1 - probabilidad_mensual)^12
+  const monthlyProbabilityDecimal = numericPrognosis / 100;
+  const probability12Months = (1 - Math.pow(1 - monthlyProbabilityDecimal, 12)) * 100;
+  const probability12MonthsStr = `${probability12Months.toFixed(1)}%`;
 
   if (factors.otb < 0.001) {
     return {
@@ -87,20 +93,20 @@ function getPrognosisTexts(
     return {
       category: 'BUENO',
       emoji: '🟢',
-      prognosisPhrase: `¡Tu pronóstico de concepción espontánea por ciclo es BUENO (${prognosisStr})!`,
+      prognosisPhrase: `¡Tu pronóstico es BUENO! ${prognosisStr} por ciclo mensual (${probability12MonthsStr} en 12 meses).`,
     };
   }
   if (numericPrognosis >= 5) {
     return {
       category: 'MODERADO',
       emoji: '🟡',
-      prognosisPhrase: `Tu pronóstico es MODERADO (${prognosisStr}). Hay factores que se pueden optimizar.`,
+      prognosisPhrase: `Tu pronóstico es MODERADO: ${prognosisStr} por ciclo mensual (${probability12MonthsStr} en 12 meses). Hay factores que se pueden optimizar.`,
     };
   }
   return {
     category: 'BAJO',
     emoji: '🔴',
-    prognosisPhrase: `Tu pronóstico es BAJO (${prognosisStr}). Se recomienda una evaluación por un especialista.`,
+    prognosisPhrase: `Tu pronóstico es BAJO: ${prognosisStr} por ciclo mensual (${probability12MonthsStr} en 12 meses). Se recomienda evaluación especializada.`,
   };
 }
 
@@ -134,7 +140,7 @@ export function generateFinalReport(
   }, []);
 
   // 2. Generar textos de pronóstico y benchmark usando helpers.
-  const prognosisTexts = getPrognosisTexts(numericPrognosis, factors);
+  const prognosisTexts = generateCategoryAndPhrase(numericPrognosis, factors);
 
   // Lógica de Benchmark (se mantiene aquí por simplicidad, pero también podría extraerse).
   let ageRange: string;

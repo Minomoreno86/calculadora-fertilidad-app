@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode, useMemo, useCallback } from 'react';
+import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 
@@ -11,20 +11,20 @@ interface ThemeContextType {
   setTheme: (mode: ThemeMode) => void;
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const ThemeContext = React.createContext<ThemeContextType | undefined>(undefined);
 
 const THEME_STORAGE_KEY = '@fertility_calculator_theme';
 
 interface ThemeProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const [themeMode, setThemeMode] = useState<ThemeMode>('light');
-  const [isLoading, setIsLoading] = useState(true);
+  const [themeMode, setThemeMode] = React.useState<ThemeMode>('light');
+  const [isLoading, setIsLoading] = React.useState(true);
 
   // 🔄 Cargar tema guardado al iniciar
-  useEffect(() => {
+  React.useEffect(() => {
     loadStoredTheme();
   }, []);
 
@@ -52,20 +52,20 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   };
 
   // 🔄 Alternar entre light y dark
-  const toggleTheme = useCallback(() => {
+  const toggleTheme = React.useCallback(() => {
     const newMode: ThemeMode = themeMode === 'light' ? 'dark' : 'light';
     setThemeMode(newMode);
     saveTheme(newMode);
   }, [themeMode]);
 
   // 🎨 Establecer tema específico
-  const setTheme = useCallback((mode: ThemeMode) => {
+  const setTheme = React.useCallback((mode: ThemeMode) => {
     setThemeMode(mode);
     saveTheme(mode);
   }, []);
 
   // 🎯 Valor del contexto memoizado para evitar re-renders
-  const contextValue: ThemeContextType = useMemo(() => ({
+  const contextValue: ThemeContextType = React.useMemo(() => ({
     themeMode,
     isDark: themeMode === 'dark',
     toggleTheme,
@@ -88,7 +88,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
 // 🪝 Hook personalizado para usar el tema
 export const useTheme = (): ThemeContextType => {
-  const context = useContext(ThemeContext);
+  const context = React.useContext(ThemeContext);
   if (context === undefined) {
     throw new Error('useTheme debe ser usado dentro de un ThemeProvider');
   }

@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Control, FieldErrors, useWatch } from 'react-hook-form';
 import Text from '@/presentation/components/common/Text';
@@ -7,7 +7,7 @@ import { ControlledOptionSelector } from '@/presentation/components/common/Contr
 import { ControlledSwitch } from '@/presentation/components/common/ControlledSwitch';
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 import { OtbMethod } from '@/core/domain/models';
-import { FormState } from '../useCalculatorFormOptimized';
+import { FormState } from '../types/calculator.types';
 
 // 🚀 FASE 2C: Opciones memoizadas para evitar recreación en cada render
 const ENDOMETRIOSIS_OPTIONS = [
@@ -60,7 +60,7 @@ type Props = {
   errors: FieldErrors<FormState>;
 };
 
-export const GynecologyHistoryForm = memo<Props>(({ control, errors }) => {
+export const GynecologyHistoryForm = React.memo<Props>(({ control, errors }) => {
   // 🎨 TEMA DINÁMICO
   const theme = useDynamicTheme();
   
@@ -88,7 +88,7 @@ export const GynecologyHistoryForm = memo<Props>(({ control, errors }) => {
         control={control}
         name="infertilityDuration"
         label="Duración de infertilidad (años)"
-        keyboardType="number-pad"
+        keyboardType="numeric"
         placeholder="Ej: 2 (acepta cualquier duración)"
         error={errors.infertilityDuration}
       />
@@ -96,20 +96,9 @@ export const GynecologyHistoryForm = memo<Props>(({ control, errors }) => {
         control={control}
         name="cycleLength"
         label="Duración promedio del ciclo (días)"
-        keyboardType="number-pad"
+        keyboardType="numeric"
         placeholder="Ej: 28 (Normal: 21-35, acepta cualquier valor)"
         error={errors.cycleLength}
-      />
-      
-      <ControlledOptionSelector
-        control={control}
-        name="cycleRegularity"
-        label="Regularidad del Ciclo Menstrual"
-        options={[
-          { label: 'Regular (variación ±3 días)', value: 'regular' },
-          { label: 'Irregular (variación >3 días)', value: 'irregular' }
-        ]}
-        error={errors.cycleRegularity}
       />
       
       <ControlledOptionSelector
@@ -158,7 +147,7 @@ export const GynecologyHistoryForm = memo<Props>(({ control, errors }) => {
           control={control}
           name="numberOfPelvicSurgeries"
           label="Número de cirugías pélvicas"
-          keyboardType="number-pad"
+          keyboardType="numeric"
           placeholder="Ej: 1"
           error={errors.numberOfPelvicSurgeries}
         />

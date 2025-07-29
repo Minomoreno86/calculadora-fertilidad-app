@@ -1,8 +1,18 @@
 import React from 'react';
-import { View, Switch, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import Text from './Text';
 import { Control, Controller, FieldValues, Path } from 'react-hook-form';
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
+
+// Safe Switch import for React Native compatibility
+let Switch: any;
+try {
+  const RN = require('react-native');
+  Switch = RN.Switch;
+} catch {
+  // Fallback for environments without Switch
+  Switch = View;
+}
 
 type ControlledSwitchProps<TFormValues extends FieldValues> = {
   control: Control<TFormValues>;

@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
   mainResultCard: {
     ...theme.card,
     padding: theme.spacing.l,
-    alignItems: 'center',
+    alignItems: 'center' as const,
     marginBottom: theme.spacing.m,
   },
   emoji: {
@@ -59,8 +59,8 @@ const styles = StyleSheet.create({
   prognosisValue: {
     ...theme.typography.h1,
     fontSize: 32,
-    fontWeight: '700',
-    textAlign: 'center',
+    fontWeight: '700' as const,
+    textAlign: 'center' as const,
   },
   prognosisLabel: {
     ...theme.typography.body,
@@ -70,13 +70,13 @@ const styles = StyleSheet.create({
   },
   prognosisPhrase: {
     ...theme.typography.h3,
-    textAlign: 'center',
+    textAlign: 'center' as const,
     color: theme.colors.text,
     marginBottom: theme.spacing.s,
   },
   benchmarkPhrase: {
     ...theme.typography.small,
-    textAlign: 'center',
+    textAlign: 'center' as const,
     color: theme.colors.subtleText,
   },
 });

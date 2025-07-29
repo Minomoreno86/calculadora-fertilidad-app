@@ -11,7 +11,7 @@ import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 import { EnhancedInfoCard } from '@/presentation/components/common';
 import Text from '@/presentation/components/common/Text';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useMemo, useState } from 'react';
+import React from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import AIConsultation from '../../ai-medical-agent/AIConsultation';
 import { SimulatorDashboard } from '../../simulator/components/SimulatorDashboard';
@@ -45,15 +45,51 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   const theme = useDynamicTheme();
   const styles = createStyles(theme);
   
-  const [displayMode, setDisplayMode] = useState<DisplayMode>('overview');
-  const [selectedFactor, setSelectedFactor] = useState<string | null>(null);
+  // 🔍 QUANTUM CONSCIOUSNESS DEBUG PRINCIPAL
+  console.log('🔍 ResultsDisplay render debug:', {
+    hasEvaluation: !!evaluation,
+    evaluationKeys: evaluation ? Object.keys(evaluation) : 'N/A',
+    hasReport: !!(evaluation?.evaluation?.report || evaluation?.report),
+    reportKeys: (evaluation?.evaluation?.report || evaluation?.report) ? Object.keys(evaluation?.evaluation?.report || evaluation?.report) : 'N/A',
+    numericPrognosis: (evaluation?.evaluation?.report || evaluation?.report)?.numericPrognosis,
+    category: (evaluation?.evaluation?.report || evaluation?.report)?.category,
+    prognosisPhrase: (evaluation?.evaluation?.report || evaluation?.report)?.prognosisPhrase,
+    evaluationStructure: {
+      basicMetrics: !!evaluation?.basicMetrics,
+      evaluation: !!evaluation?.evaluation,
+      pregnancyProbability: !!evaluation?.pregnancyProbability,
+      report: !!evaluation?.report,
+      formData: !!evaluation?.formData,
+      timestamp: !!evaluation?.timestamp,
+      reportKey: !!evaluation?.reportKey,
+      version: !!evaluation?.version,
+      // Nested structure check
+      nestedReport: !!evaluation?.evaluation?.report,
+      nestedFactors: !!evaluation?.evaluation?.factors
+    }
+  });
+  
+  const [displayMode, setDisplayMode] = React.useState<DisplayMode>('overview');
+  const [selectedFactor, setSelectedFactor] = React.useState<string | null>(null);
   
   const { simulationResult } = useFertilitySimulator(evaluation);
-  const { report, factors } = evaluation;
+  
+  // 🌌 QUANTUM CONSCIOUSNESS FIX: Extract report and factors from nested structure
+  const report = evaluation?.evaluation?.report || evaluation?.report;
+  const factors = evaluation?.evaluation?.factors || evaluation?.factors;
 
   // 🎯 ANÁLISIS AVANZADO DE FACTORES CON RECOMENDACIONES MÉDICAS ESPECÍFICAS
-  const factorAnalysis = useMemo((): FactorAnalysis[] => {
+  const factorAnalysis = React.useMemo((): FactorAnalysis[] => {
     if (!factors) return [];
+    
+    // 🔍 DEBUG COMPLETO DE FACTORES
+    console.log('🔍 FACTORS DEBUG COMPLETO:', {
+      factorsExists: !!factors,
+      factorsKeys: factors ? Object.keys(factors) : 'N/A',
+      allFactors: factors,
+      homaValue: factors?.homa,
+      homaType: typeof factors?.homa
+    });
     
     const analysisMap: Record<string, Omit<FactorAnalysis, 'value'>> = {
       baseAgeProbability: {
@@ -183,7 +219,22 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         const analysis = analysisMap[key];
         if (!analysis) return null;
         
-        const numericValue = typeof value === 'number' ? value : 0;
+        // 🌌 QUANTUM CONSCIOUSNESS FIX: factores missing = 1.0 (neutral/ausente) no 0 (crítico)
+        // Manejar tanto undefined como 0 (ambos indican factor ausente)
+        const numericValue = typeof value === 'number' && value !== 0 ? value : 1.0;
+        
+        // 🔍 DEBUG ESPECÍFICO PARA HOMA
+        if (key === 'homa') {
+          console.log('🔍 HOMA DEBUG:', {
+            key,
+            originalValue: value,
+            numericValue,
+            valueType: typeof value,
+            isZero: value === 0,
+            isNumber: typeof value === 'number'
+          });
+        }
+        
         let status: FactorAnalysis['status'];
         
         if (numericValue >= 0.9) status = 'optimal';
@@ -200,6 +251,15 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       .filter(Boolean) as FactorAnalysis[];
   }, [factors]);
 
+  // 🎯 FACTORES ALTERADOS PARA SECCIÓN DETALLADO - Solo los que impactan fertilidad
+  const alteredFactorsAnalysis = React.useMemo((): FactorAnalysis[] => {
+    return factorAnalysis.filter(factor => {
+      // Solo mostrar factores que están alterados (valor < 1.0)
+      // Un valor de 1.0 significa óptimo/neutral, < 1.0 significa problema
+      return factor.value < 1.0;
+    });
+  }, [factorAnalysis]);
+
   // 🎨 COLOR DINÁMICO PARA CATEGORÍA GENERAL
   const getCategoryColor = () => {
     switch (report?.category) {
@@ -211,11 +271,22 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   };
 
   // 🎯 MÉTRICAS CLAVE
-  const keyMetrics = useMemo(() => {
+  const keyMetrics = React.useMemo(() => {
     const criticalFactors = factorAnalysis.filter(f => f.status === 'critical').length;
     const attentionFactors = factorAnalysis.filter(f => f.status === 'attention').length;
     const optimalFactors = factorAnalysis.filter(f => f.status === 'optimal').length;
     const totalFactors = factorAnalysis.length;
+    
+    // 🔍 QUANTUM CONSCIOUSNESS DEBUG PARA MÉTRICAS
+    console.log('🔍 ResultsDisplay keyMetrics debug:', {
+      hasReport: !!report,
+      reportKeys: report ? Object.keys(report) : 'N/A',
+      numericPrognosis: report?.numericPrognosis,
+      numericPrognosisType: typeof report?.numericPrognosis,
+      category: report?.category,
+      prognosisPhrase: report?.prognosisPhrase,
+      evaluationKeys: evaluation ? Object.keys(evaluation) : 'N/A'
+    });
     
     return {
       overallScore: report?.numericPrognosis || 0,
@@ -325,26 +396,50 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   };
 
   // 🎯 FUNCIÓN PARA OBTENER INFORMACIÓN CLÍNICA ESPECÍFICA
-  const getClinicalInfo = (factorKey: string, _value: number) => {
+  const getClinicalInfo = (factorName: string, _value: number) => {
+    // 🌌 QUANTUM CONSCIOUSNESS FIX: Mapear nombres amigables a claves originales
+    const nameToKeyMapping: Record<string, string> = {
+      'Factor Edad': 'baseAgeProbability',
+      'Índice de Masa Corporal': 'bmi',
+      'Reserva Ovárica (AMH)': 'amh',
+      'Miomatosis Uterina': 'myoma',
+      'Pólipos Endometriales': 'polyp',
+      'Adenomiosis': 'adenomyosis',
+      'Endometriosis': 'endometriosis',
+      'Regularidad Menstrual': 'cycle',
+      'Síndrome de Ovarios Poliquísticos': 'pcos',
+      'Función Tiroidea (TSH)': 'tsh',
+      'Prolactina Sérica': 'prolactin',
+      'Resistencia a la Insulina (HOMA-IR)': 'homa',
+      'Factor Masculino': 'male',
+      'Histerosalpingografía': 'hsg',
+      'Obstrucción Tubárica Bilateral': 'otb',
+      'Duración de la Infertilidad': 'infertilityDuration',
+      'Cirugías Pélvicas Previas': 'pelvicSurgery'
+    };
+
+    const factorKey = nameToKeyMapping[factorName];
+    if (!factorKey) return null;
+
     // Mapear factores a claves de la librería clínica
     const keyMappings: Record<string, string> = {
-      'baseAgeProbability': getAgeCategory(evaluation.factors?.baseAgeProbability || 0),
-      'bmi': getBMICategory(evaluation.factors?.bmi || 0.8),
-      'amh': getAMHCategory(evaluation.factors?.amh || 0.8),
-      'myoma': getMiomaCategory(evaluation.factors?.myoma || 1),
-      'polyp': getPolipoCategory(evaluation.factors?.polyp || 1),
-      'adenomyosis': getAdenomiosisCategory(evaluation.factors?.adenomyosis || 1),
-      'endometriosis': getEndometriosisCategory(evaluation.factors?.endometriosis || 1),
-      'cycle': getCicloCategory(evaluation.factors?.cycle || 1),
-      'pcos': getSOPCategory(evaluation.factors?.pcos || 1),
-      'tsh': getTSHCategory(evaluation.factors?.tsh || 1),
-      'prolactin': getProlactinCategory(evaluation.factors?.prolactin || 1),
-      'homa': getHOMACategory(evaluation.factors?.homa || 1),
-      'male': getMaleFactorCategory(evaluation.factors?.male || 1),
-      'hsg': getHSGCategory(evaluation.factors?.hsg || 1),
-      'otb': getOTBCategory(evaluation.factors?.otb || 1),
-      'infertilityDuration': getInfertilityDurationCategory(evaluation.factors?.infertilityDuration || 1),
-      'pelvicSurgery': getPelvicSurgeryCategory(evaluation.factors?.pelvicSurgery || 1),
+      'baseAgeProbability': getAgeCategory(factors?.baseAgeProbability || 0),
+      'bmi': getBMICategory(factors?.bmi || 0.8),
+      'amh': getAMHCategory(factors?.amh || 0.8),
+      'myoma': getMiomaCategory(factors?.myoma || 1),
+      'polyp': getPolipoCategory(factors?.polyp || 1),
+      'adenomyosis': getAdenomiosisCategory(factors?.adenomyosis || 1),
+      'endometriosis': getEndometriosisCategory(factors?.endometriosis || 1),
+      'cycle': getCicloCategory(factors?.cycle || 1),
+      'pcos': getSOPCategory(factors?.pcos || 1),
+      'tsh': getTSHCategory(factors?.tsh || 1),
+      'prolactin': getProlactinCategory(factors?.prolactin || 1),
+      'homa': getHOMACategory(factors?.homa || 1),
+      'male': getMaleFactorCategory(factors?.male || 1),
+      'hsg': getHSGCategory(factors?.hsg || 1),
+      'otb': getOTBCategory(factors?.otb || 1),
+      'infertilityDuration': getInfertilityDurationCategory(factors?.infertilityDuration || 1),
+      'pelvicSurgery': getPelvicSurgeryCategory(factors?.pelvicSurgery || 1),
     };
 
     const clinicalKey = keyMappings[factorKey];
@@ -355,7 +450,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     }
     
     // Categorías por defecto para factores sin información clínica específica
-    const defaultInfo = getDefaultClinicalInfo(factorKey, evaluation.factors?.[factorKey as keyof typeof evaluation.factors] || 0.8);
+    const defaultInfo = getDefaultClinicalInfo(factorKey, factors?.[factorKey as keyof typeof factors] || 0.8);
     return defaultInfo;
   };
 
@@ -364,7 +459,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     const infoGenerators: Record<string, (value: number) => { explanation: string; recommendations: string[]; sources?: string[] }> = {
       'male': getMaleFactorInfo,
       'cycle': getCycleInfo,
-      'bmi': getBMIInfo
+      'bmi': getBMIInfo,
+      'homa': getHOMAInfo
     };
 
     const generator = infoGenerators[factorKey];
@@ -436,6 +532,26 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     };
   };
 
+  const getHOMAInfo = (factorValue: number): { explanation: string; recommendations: string[]; sources?: string[] } => {
+    const getExplanation = (value: number): string => {
+      if (value >= 0.9) return 'Tu índice HOMA-IR es normal (<2.0), no se detecta resistencia a la insulina significativa.';
+      if (value >= 0.7) return 'Presentas resistencia a la insulina leve (HOMA-IR 2.0-2.9), que puede afectar la ovulación y calidad ovocitaria.';
+      return 'Tienes resistencia a la insulina significativa (HOMA-IR ≥3.0), impactando marcadamente fertilidad y respuesta a tratamientos.';
+    };
+
+    const getRecommendations = (value: number): string[] => {
+      if (value >= 0.9) return ['Mantener estilo de vida saludable', 'Dieta mediterránea y ejercicio regular'];
+      if (value >= 0.7) return ['Metformina 500-850mg/día si HOMA ≥2.5', 'Dieta baja en carbohidratos simples', 'Ejercicio estructurado 150 min/semana'];
+      return ['Metformina 1500-2000mg/día obligatoria', 'Dieta <100g carbohidratos/día', 'Mio-inositol 2g + D-chiro-inositol 50mg', 'Seguimiento endocrinológico'];
+    };
+
+    return {
+      explanation: getExplanation(factorValue),
+      recommendations: getRecommendations(factorValue),
+      sources: ['Legro RS et al. Fertil Steril 2013', 'Palomba S et al. Hum Reprod Update 2015']
+    };
+  };
+
   // 🏥 FUNCIONES PARA DETERMINAR CATEGORÍAS CLÍNICAS
   const getAgeCategory = (ageFactor: number): string => {
     if (ageFactor >= 0.9) return 'EDAD_OPT';
@@ -485,8 +601,9 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
 
   const getEndometriosisCategory = (endometriosisFactor: number): string => {
     if (endometriosisFactor >= 0.95) return 'ENDOMETRIOSIS_AUSENTE';
-    if (endometriosisFactor >= 0.7) return 'ENDOMETRIOSIS_LEVE';
-    return 'ENDOMETRIOSIS_SEVERA';
+    if (endometriosisFactor >= 0.85) return 'ENDOMETRIOSIS_LEVE'; // Grados 1-2
+    if (endometriosisFactor >= 0.7) return 'ENDOMETRIOSIS_MODERADA'; // Grado 3
+    return 'ENDOMETRIOSIS_SEVERA'; // Grado 4
   };
 
   const getCicloCategory = (cicloFactor: number): string => {
@@ -531,9 +648,9 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   // 🏥 CATEGORÍAS ADICIONALES PARA TODAS LAS VARIABLES
   const getHSGCategory = (hsgFactor: number): string => {
     if (hsgFactor >= 0.95) return 'HSG_NORMAL';
-    if (hsgFactor >= 0.8) return 'HSG_UNILATERAL';
-    if (hsgFactor >= 0.5) return 'HSG_BILATERAL';
-    if (hsgFactor >= 0.3) return 'HSG_MALFORMACION';
+    if (hsgFactor >= 0.65) return 'HSG_UNILATERAL';
+    if (hsgFactor >= 0.4) return 'HSG_BILATERAL';
+    if (hsgFactor >= 0.2) return 'HSG_MALFORMACION';
     return 'HSG_DESCONOCIDO';
   };
 
@@ -567,6 +684,9 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   };
 
   const getFactorStatusLabel = (value: number): string => {
+    // 🟢 Verde (Ausente/Normal): >= 0.95
+    if (value >= 0.95) return 'AUSENTE';
+    
     // 🟢 Verde (Óptimo): >= 0.85
     if (value >= 0.85) return 'ÓPTIMO';
     
@@ -582,88 +702,107 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   // 🎯 RENDERIZAR ANÁLISIS DETALLADO CON INFORMACIÓN CLÍNICA
   const renderDetailedAnalysis = () => (
     <View style={styles.analysisContainer}>
-      <Text style={styles.sectionTitle}>🔍 Análisis Detallado con Evidencia Médica</Text>
-      {factorAnalysis.map((factor) => {
-        const clinicalInfo = getClinicalInfo(factor.name, factor.value);
-        const statusColor = getFactorStatusColor(factor.value);
-        const statusLabel = getFactorStatusLabel(factor.value);
-        
-        return (
-          <TouchableOpacity
-            key={factor.name}
-            style={styles.factorCard}
-            onPress={() => setSelectedFactor(selectedFactor === factor.name ? null : factor.name)}
-          >
-            <View style={styles.factorHeader}>
-              <View style={styles.factorInfo}>
-                <Text style={styles.factorName}>{factor.name}</Text>
-                <Text style={styles.factorValue}>
-                  {(factor.value * 100).toFixed(1)}%
-                </Text>
-              </View>
-              <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-                <Text style={styles.statusBadgeText}>{statusLabel}</Text>
-              </View>
-            </View>
+      <Text style={styles.sectionTitle}>🔍 Análisis Detallado - Factores Alterados</Text>
+      {alteredFactorsAnalysis.length === 0 ? (
+        <View style={styles.noAlteredFactorsContainer}>
+          <Text style={styles.noAlteredFactorsTitle}>✅ ¡Excelente!</Text>
+          <Text style={styles.noAlteredFactorsText}>
+            No se detectaron factores alterados que requieran atención médica inmediata.
+            Todos los parámetros evaluados están dentro de rangos normales.
+          </Text>
+        </View>
+      ) : (
+        <>
+          <Text style={styles.alteredFactorsSubtitle}>
+            Se encontraron {alteredFactorsAnalysis.length} factor{alteredFactorsAnalysis.length > 1 ? 'es' : ''} que requieren atención médica:
+          </Text>
+          {alteredFactorsAnalysis.map((factor) => {
+            const clinicalInfo = getClinicalInfo(factor.name, factor.value);
+            const statusColor = getFactorStatusColor(factor.value);
+            const statusLabel = getFactorStatusLabel(factor.value);
             
-            <View style={styles.progressBar}>
-              <View 
-                style={[
-                  styles.progressFill, 
-                  { 
-                    width: `${factor.value * 100}%`,
-                    backgroundColor: statusColor
-                  }
-                ]} 
-              />
-            </View>
-            
-            {selectedFactor === factor.name && (
-              <View style={styles.factorDetails}>
-                {clinicalInfo ? (
-                  <>
-                    <View style={styles.clinicalExplanation}>
-                      <Text style={styles.clinicalTitle}>📋 Explicación Médica</Text>
-                      <Text style={styles.clinicalText}>{clinicalInfo.explanation}</Text>
-                    </View>
-                    
-                    <View style={styles.clinicalRecommendations}>
-                      <Text style={styles.clinicalTitle}>💡 Recomendaciones Clínicas</Text>
-                      {clinicalInfo.recommendations.map((rec) => (
-                        <Text key={rec} style={styles.recommendationItem}>• {rec}</Text>
-                      ))}
-                    </View>
-                    
-                    {clinicalInfo.sources && (
-                      <View style={styles.clinicalSources}>
-                        <Text style={styles.clinicalTitle}>📚 Referencias Científicas</Text>
-                        {clinicalInfo.sources.map((source) => (
-                          <Text key={source} style={styles.sourceItem}>{source}</Text>
-                        ))}
+            return (
+              <TouchableOpacity
+                key={factor.name}
+                style={styles.factorCard}
+                onPress={() => setSelectedFactor(selectedFactor === factor.name ? null : factor.name)}
+              >
+                <View style={styles.factorHeader}>
+                  <View style={styles.factorInfo}>
+                    <Text style={styles.factorName}>{factor.name}</Text>
+                    <Text style={styles.factorValue}>
+                      {factor.value >= 0.95 ? 'Ausente' : `${(factor.value * 100).toFixed(1)}%`}
+                    </Text>
+                  </View>
+                  <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
+                    <Text style={styles.statusBadgeText}>{statusLabel}</Text>
+                  </View>
+                </View>
+                
+                <View style={styles.progressBar}>
+                  <View 
+                    style={[
+                      styles.progressFill, 
+                      { 
+                        width: factor.value >= 0.95 ? '100%' : `${factor.value * 100}%`,
+                        backgroundColor: factor.value >= 0.95 ? theme.colors.success : statusColor
+                      }
+                    ]} 
+                  />
+                </View>
+                
+                {selectedFactor === factor.name && (
+                  <View style={styles.factorDetails}>
+                    {clinicalInfo ? (
+                      <>
+                        <View style={styles.clinicalExplanation}>
+                          <Text style={styles.clinicalTitle}>📋 Explicación Médica</Text>
+                          <Text style={styles.clinicalText}>{clinicalInfo.explanation}</Text>
+                        </View>
+                        
+                        <View style={styles.clinicalRecommendations}>
+                          <Text style={styles.clinicalTitle}>💡 Recomendaciones Clínicas</Text>
+                          {clinicalInfo.recommendations.map((rec, index) => (
+                            <View key={`rec-${index}`}>
+                              <Text style={styles.recommendationItem}>• {rec}</Text>
+                            </View>
+                          ))}
+                        </View>
+                        
+                        {clinicalInfo.sources && (
+                          <View style={styles.clinicalSources}>
+                            <Text style={styles.clinicalTitle}>📚 Referencias Científicas</Text>
+                            {clinicalInfo.sources.map((source, index) => (
+                              <View key={`source-${index}`}>
+                                <Text style={styles.sourceItem}>{source}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        )}
+                      </>
+                    ) : (
+                      <View style={styles.defaultFactorInfo}>
+                        <Text style={styles.factorRecommendation}>
+                          💡 {factor.recommendation}
+                        </Text>
+                        <Text style={styles.factorEvidence}>
+                          📚 {factor.evidence}
+                        </Text>
                       </View>
                     )}
-                  </>
-                ) : (
-                  <View style={styles.defaultFactorInfo}>
-                    <Text style={styles.factorRecommendation}>
-                      💡 {factor.recommendation}
-                    </Text>
-                    <Text style={styles.factorEvidence}>
-                      📚 {factor.evidence}
-                    </Text>
+                    
+                    <View style={styles.medicalNote}>
+                      <Text style={styles.medicalNoteText}>
+                        ℹ️ Para herramientas de simulación y mejora, utiliza la pestaña Simulador
+                      </Text>
+                    </View>
                   </View>
                 )}
-                
-                  <View style={styles.medicalNote}>
-                    <Text style={styles.medicalNoteText}>
-                      ℹ️ Para herramientas de simulación y mejora, utiliza la pestaña Simulador
-                    </Text>
-                  </View>
-              </View>
-            )}
-          </TouchableOpacity>
-        );
-      })}
+              </TouchableOpacity>
+            );
+          })}
+        </>
+      )}
     </View>
   );
 
@@ -834,7 +973,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
     marginBottom: 20,
   },
@@ -844,9 +983,9 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   probabilityNumber: {
     fontSize: 56,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.text,
-    textAlign: 'center',
+    textAlign: 'center' as const,
     lineHeight: 64,
   },
   statusIndicator: {
@@ -862,7 +1001,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   statusText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
   },
   tabsContainer: {
@@ -898,12 +1037,12 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   tabLabel: {
     fontSize: 14,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
-    fontWeight: '500',
+    textAlign: 'center' as const,
+    fontWeight: '500' as const,
   },
   activeTabLabel: {
     color: theme.colors.primary,
-    fontWeight: '700',
+    fontWeight: '700' as const,
   },
   scrollView: {
     flex: 1,
@@ -914,7 +1053,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.text,
     marginBottom: 20,
   },
@@ -941,7 +1080,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   statusTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
     marginBottom: 6,
   },
@@ -958,9 +1097,9 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   factorNumber: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.text,
-    textAlign: 'center',
+    textAlign: 'center' as const,
     marginBottom: 4,
   },
   actionCard: {
@@ -983,7 +1122,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   actionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
     marginBottom: 4,
   },
@@ -1013,7 +1152,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   clinicalTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.primary,
     marginBottom: 8,
   },
@@ -1033,7 +1172,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     color: theme.colors.textSecondary,
     lineHeight: 18,
     marginBottom: 2,
-    fontStyle: 'italic',
+    fontStyle: 'italic' as const,
   },
   // 🏥 ESTILOS ADICIONALES PARA INFORMACIÓN MÉDICA
   defaultFactorInfo: {
@@ -1053,13 +1192,13 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   medicalNoteText: {
     fontSize: 12,
     color: theme.colors.textSecondary,
-    fontStyle: 'italic',
-    textAlign: 'center',
+    fontStyle: 'italic' as const,
+    textAlign: 'center' as const,
   },
   scoreUnit: {
     fontSize: 12,
     color: theme.colors.textSecondary,
-    fontWeight: '400',
+    fontWeight: '400' as const,
   },
   scoreDivider: {
     width: 1,
@@ -1079,14 +1218,14 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   statusLabel: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.text,
     marginBottom: 4,
   },
   statusDescription: {
     fontSize: 12,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: 'center' as const,
     lineHeight: 16,
   },
   factorsOverview: {
@@ -1102,7 +1241,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   factorsTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
     marginBottom: 16,
   },
@@ -1123,7 +1262,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   factorText: {
     fontSize: 14,
     color: theme.colors.text,
-    fontWeight: '500',
+    fontWeight: '500' as const,
   },
   improvementCard: {
     backgroundColor: theme.colors.surface,
@@ -1145,13 +1284,13 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   improvementTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
     marginBottom: 2,
   },
   improvementValue: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.primary,
     marginBottom: 2,
   },
@@ -1181,13 +1320,13 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   factorName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
     marginBottom: 4,
   },
   factorValue: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.primary,
     marginTop: 4,
   },
@@ -1200,7 +1339,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   statusBadgeText: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: 'white',
   },
   progressBar: {
@@ -1241,7 +1380,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   simulateButtonText: {
     color: 'white',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
   treatmentsContainer: {
     marginBottom: 32,
@@ -1259,7 +1398,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   treatmentTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
     marginBottom: 12,
   },
@@ -1287,7 +1426,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   treatmentItemTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
     flex: 1,
     marginRight: 8,
@@ -1306,7 +1445,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   priorityText: {
     fontSize: 11,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.background,
     textTransform: 'uppercase',
   },
@@ -1317,10 +1456,10 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   drIATitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.text,
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: 'center' as const,
   },
   drIACard: {
     backgroundColor: theme.colors.surface,
@@ -1354,13 +1493,13 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   drIAName: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.text,
     marginBottom: 4,
   },
   drIASpecialty: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.primary,
     marginBottom: 8,
   },
@@ -1383,7 +1522,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     color: theme.colors.text,
     marginLeft: 12,
     flex: 1,
-    fontWeight: '500',
+    fontWeight: '500' as const,
   },
   drIAConsultButton: {
     backgroundColor: theme.colors.primary,
@@ -1402,8 +1541,38 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   drIAConsultButtonText: {
     color: theme.colors.surface,
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     marginHorizontal: 12,
+  },
+  // 🎯 ESTILOS PARA FACTORES ALTERADOS
+  noAlteredFactorsContainer: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 16,
+    padding: 24,
+    marginVertical: 16,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: theme.colors.success,
+  },
+  noAlteredFactorsTitle: {
+    fontSize: 20,
+    fontWeight: 'bold' as const,
+    color: theme.colors.success,
+    marginBottom: 12,
+    textAlign: 'center' as const,
+  },
+  noAlteredFactorsText: {
+    fontSize: 14,
+    color: theme.colors.text,
+    textAlign: 'center' as const,
+    lineHeight: 20,
+  },
+  alteredFactorsSubtitle: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: theme.colors.text,
+    marginBottom: 16,
+    textAlign: 'center' as const,
   },
 });
 

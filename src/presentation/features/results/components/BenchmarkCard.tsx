@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from 'react';
+import React from 'react';
 import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import Text from '../../../components/common/Text';
 import Box from '../../../components/common/Box';
@@ -19,7 +19,7 @@ const BenchmarkCardBase: React.FC<Props> = ({ report }) => {
   }, [report.benchmarkPhrase, analyzeProps]);
 
   // 🧠 Memoización inteligente con medición de performance
-  const memoizedContent = useMemo(() => {
+  const memoizedContent = React.useMemo(() => {
     return measureFunction('contentMemoization', () => ({
       title: 'Comparativa',
       text: report.benchmarkPhrase,
@@ -30,7 +30,7 @@ const BenchmarkCardBase: React.FC<Props> = ({ report }) => {
   }, [report.benchmarkPhrase, measureFunction]);
 
   // 🎯 Estilos dinámicos basados en contenido
-  const textStyle = useMemo(() => {
+  const textStyle = React.useMemo(() => {
     return measureFunction('styleCalculation', () => {
       if (memoizedContent.wordCount > 50) {
         return [styles.text, { fontSize: 14, lineHeight: 20 }];
@@ -69,7 +69,7 @@ const BenchmarkCardBase: React.FC<Props> = ({ report }) => {
 };
 
 // 🎯 Componente final con todas las optimizaciones
-export const BenchmarkCard = memo(
+export const BenchmarkCard = React.memo(
   withPerformanceTracking(BenchmarkCardBase, 'BenchmarkCard'),
   // 🧠 Comparación personalizada para memo
   (prevProps, nextProps) => {
@@ -87,12 +87,12 @@ const styles = StyleSheet.create({
   title: {
     ...theme.typography.h3,
     color: theme.colors.subtleText,
-    textAlign: 'center',
+    textAlign: 'center' as const,
     marginBottom: theme.spacing.s,
   } as TextStyle,
   text: {
     ...theme.typography.body,
-    textAlign: 'center',
+    textAlign: 'center' as const,
     color: theme.colors.text,
   } as TextStyle,
   perfWarning: {
@@ -100,6 +100,6 @@ const styles = StyleSheet.create({
     color: '#ff6b00',
     textAlign: 'center',
     marginTop: 4,
-    fontWeight: 'bold'
+    fontWeight: 'bold' as const
   } as TextStyle,
 });

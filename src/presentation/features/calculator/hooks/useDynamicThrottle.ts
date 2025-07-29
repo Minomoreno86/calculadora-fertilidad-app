@@ -2,7 +2,7 @@
 // 🚀 HOOK INTELIGENTE DE THROTTLING DINÁMICO
 // ===================================================================
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React from 'react';
 import { useAdaptivePerformance } from '@/core/performance/adaptivePerformanceConfig';
 
 interface ThrottleState {
@@ -40,18 +40,18 @@ export function useDynamicThrottle<T extends (...args: unknown[]) => unknown>(
   const finalConfig = { ...DEFAULT_CONFIG, ...config };
   const { isHighPerformanceDevice, isLowPerformanceDevice, validationDebounce } = useAdaptivePerformance();
   
-  const throttleStateRef = useRef<ThrottleState>({
+  const throttleStateRef = React.useRef<ThrottleState>({
     lastExecution: 0,
     pendingTimeout: null,
     executionCount: 0,
     averageExecutionTime: 0
   });
 
-  const executionTimesRef = useRef<number[]>([]);
-  const [currentDelay, setCurrentDelay] = useState(finalConfig.baseDelay);
+  const executionTimesRef = React.useRef<number[]>([]);
+  const [currentDelay, setCurrentDelay] = React.useState(finalConfig.baseDelay);
 
   // 📊 Calcular delay adaptivo basado en performance
-  const calculateAdaptiveDelay = useCallback((): number => {
+  const calculateAdaptiveDelay = React.useCallback((): number => {
     const state = throttleStateRef.current;
     
     // Base delay según dispositivo
@@ -107,7 +107,7 @@ export function useDynamicThrottle<T extends (...args: unknown[]) => unknown>(
   ]);
 
   // 🎯 Actualizar estadísticas de ejecución
-  const updateExecutionStats = useCallback((executionTime: number) => {
+  const updateExecutionStats = React.useCallback((executionTime: number) => {
     const state = throttleStateRef.current;
     
     // Agregar tiempo de ejecución
@@ -129,7 +129,7 @@ export function useDynamicThrottle<T extends (...args: unknown[]) => unknown>(
   }, [calculateAdaptiveDelay]);
 
   // 🚀 Función throttled principal
-  const throttledFunction = useCallback((...args: Parameters<T>) => {
+  const throttledFunction = React.useCallback((...args: Parameters<T>) => {
     const now = Date.now();
     const state = throttleStateRef.current;
     const timeSinceLastExecution = now - state.lastExecution;
@@ -174,7 +174,7 @@ export function useDynamicThrottle<T extends (...args: unknown[]) => unknown>(
   }, [callback, currentDelay, updateExecutionStats]);
 
   // 🧹 Limpiar al desmontar
-  useEffect(() => {
+  React.useEffect(() => {
     return () => {
       const state = throttleStateRef.current;
       if (state.pendingTimeout) {
@@ -185,7 +185,7 @@ export function useDynamicThrottle<T extends (...args: unknown[]) => unknown>(
   }, []);
 
   // 📊 Función para obtener métricas
-  const getMetrics = useCallback(() => {
+  const getMetrics = React.useCallback(() => {
     const state = throttleStateRef.current;
     const recentExecutions = executionTimesRef.current.filter(
       time => Date.now() - time < finalConfig.performanceWindow
@@ -217,7 +217,7 @@ export function useDynamicThrottle<T extends (...args: unknown[]) => unknown>(
   ]);
 
   // 🔧 Función para ajustar configuración dinámicamente
-  const adjustConfig = useCallback((newConfig: Partial<DynamicThrottleConfig>) => {
+  const adjustConfig = React.useCallback((newConfig: Partial<DynamicThrottleConfig>) => {
     Object.assign(finalConfig, newConfig);
     setCurrentDelay(calculateAdaptiveDelay());
   }, [finalConfig, calculateAdaptiveDelay]);

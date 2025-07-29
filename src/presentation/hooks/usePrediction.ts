@@ -6,7 +6,25 @@
  * - calculationEngine + calculationEnginePremium + Neural Processing
  * - treatmentSuggesterPremium + Neural Optimization
  * - Interface components + Neural UI Enhancement
- * - AI Medical Agent Integration + Neural Context Mastery
+ * - AI Medical Agent Int  const clearCache = React.useCallback(() => {
+    cacheRef.current.clear();
+    metricsRef.current = { hits: 0, misses: 0 };
+    
+    setState(prev => ({
+      ...prev,
+      cacheHitRate: 0
+    }));
+    
+    console.log('🧹 Neural prediction cache cleared');
+  }, []);
+
+  const retry = React.useCallback(async () => {
+    if (lastInputRef.current) {
+      await predict(lastInputRef.current, true); // Force neural prediction
+    }
+  }, [predict]);
+
+  const updatePreferences = React.useCallback((newPreferences: Partial<UserPreferences>) => {ontext Mastery
  * 
  * FUNCIONALIDADES NEURONALES V13.0:
  * ✅ Predicción neuronal reactiva en tiempo real con CNN pattern recognition
@@ -20,10 +38,10 @@
  * ✅ Neural Auto-Prediction con pattern learning
  */
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React from 'react';
 import type { UserInput } from '../../core/domain/models';
 import { 
-  predictFertilityOutcomeAdvanced, 
+  predictFertilityAdvanced, 
   getPredictionEngineMetrics, 
   type PredictionResult, 
   type PredictionInput,
@@ -121,7 +139,7 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
   } = options;
 
   // Neural Processing Mode Setup V13.0
-  const neuralConfig = useMemo(() => ({
+  const neuralConfig = React.useMemo(() => ({
     cnnEnabled: neuralProcessingMode === 'cnn' || neuralProcessingMode === 'ensemble',
     rnnEnabled: neuralProcessingMode === 'rnn' || neuralProcessingMode === 'ensemble',
     transformerEnabled: neuralProcessingMode === 'transformer' || neuralProcessingMode === 'ensemble',
@@ -132,7 +150,7 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
   // 🧠 NEURAL ESTADO LOCAL V13.0
   // ===================================================================
 
-  const [state, setState] = useState<PredictionState>({
+  const [state, setState] = React.useState<PredictionState>({
     isLoading: false,
     isInitialized: false,
     result: null,
@@ -155,17 +173,17 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
   });
 
   // Referencias neuronales para optimización V13.0
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastInputRef = useRef<UserInput | null>(null);
-  const cacheRef = useRef<Map<string, { result: PredictionResult; timestamp: number }>>(new Map());
-  const metricsRef = useRef({ hits: 0, misses: 0 });
-  const preferencesRef = useRef(userPreferences);
-  const priorityRef = useRef(priority); // Neural priority tracking
-  const neuralHistoryRef = useRef<UserInput[]>([]); // Neural pattern history
-  const realTimeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastInputRef = React.useRef<UserInput | null>(null);
+  const cacheRef = React.useRef<Map<string, { result: PredictionResult; timestamp: number }>>(new Map());
+  const metricsRef = React.useRef({ hits: 0, misses: 0 });
+  const preferencesRef = React.useRef(userPreferences);
+  const priorityRef = React.useRef(priority); // Neural priority tracking
+  const neuralHistoryRef = React.useRef<UserInput[]>([]); // Neural pattern history
+  const realTimeIntervalRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Función auxiliar neuronal para calcular neural insights V13.0
-  const calculateNeuralInsights = useCallback((result: PredictionResult): PredictionState['neuralInsights'] => {
+  const calculateNeuralInsights = React.useCallback((result: PredictionResult): PredictionState['neuralInsights'] => {
     if (!enableNeuralInsights) {
       return { patternConfidence: 0, emergentFactors: [], optimizationSuggestions: [] };
     }
@@ -199,7 +217,7 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
   }, [enableNeuralInsights, neuralConfig, priorityRef]);
 
   // Función auxiliar para calcular cache hit rate
-  const calculateCacheHitRate = useCallback((): number => {
+  const calculateCacheHitRate = React.useCallback((): number => {
     const { hits, misses } = metricsRef.current;
     const total = hits + misses;
     
@@ -207,12 +225,13 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
   }, []);
 
   // Función auxiliar para limpiar cache
-  const cleanupCache = useCallback((): void => {
+  const cleanupCache = React.useCallback((): void => {
     const now = Date.now();
     const fiveMinutesAgo = now - (5 * 60 * 1000);
     
     // ✅ Compatibilidad React Native: usar Array.from para iteradores
-    for (const [key, value] of Array.from(cacheRef.current.entries())) {
+    const entries = Array.from(cacheRef.current.entries()) as Array<[string, { result: PredictionResult; timestamp: number }]>;
+    for (const [key, value] of entries) {
       if (value.timestamp < fiveMinutesAgo) {
         cacheRef.current.delete(key);
       }
@@ -225,7 +244,7 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
   // 🧠 NEURAL PREDICCIÓN PRINCIPAL V13.0
   // ===================================================================
 
-  const predict = useCallback(async (userInput: UserInput, force = false): Promise<void> => {
+  const predict = React.useCallback(async (userInput: UserInput, force = false): Promise<void> => {
     const startTime = performance.now();
     
     try {
@@ -285,10 +304,8 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
         clinicalHistory: [] // Neural clinical patterns processed internally
       };
 
-      // Ejecutar predicción neuronal (fixed: removed await)
-      const predictionResult = predictFertilityOutcomeAdvanced(userInput, {
-        sessionContext
-      });
+      // Ejecutar predicción neuronal con await
+      const predictionResult = await predictFertilityAdvanced(userInput, sessionContext);
 
       // Guardar en cache neural
       if (enableCaching) {
@@ -351,7 +368,7 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
   // � NEURAL AUTO-PREDICCIÓN CON DEBOUNCE V13.0
   // ===================================================================
 
-  const debouncedPredict = useCallback((userInput: UserInput) => {
+  const debouncedPredict = React.useCallback((userInput: UserInput) => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
@@ -362,7 +379,7 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
   }, [predict, debounceMs]);
 
   // Neural Auto-Prediction Implementation V13.0
-  useEffect(() => {
+  React.useEffect(() => {
     if (autoPredict && lastInputRef.current && state.isInitialized) {
       console.log('🧠 Neural auto-prediction triggered');
       debouncedPredict(lastInputRef.current);
@@ -370,32 +387,34 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
   }, [autoPredict, debouncedPredict, state.isInitialized]);
 
   // Neural Real-Time Updates Implementation V13.0
-  useEffect(() => {
-    if (enableRealTimeUpdates && state.isRealTimeActive && lastInputRef.current) {
+  React.useEffect(() => {
+    if (!enableRealTimeUpdates || !state.isRealTimeActive || !lastInputRef.current) {
+      return undefined;
+    }
+    
+    if (realTimeIntervalRef.current) {
+      clearInterval(realTimeIntervalRef.current);
+    }
+    
+    realTimeIntervalRef.current = setInterval(() => {
+      if (lastInputRef.current) {
+        console.log('🧠 Neural real-time update triggered');
+        predict(lastInputRef.current, false);
+      }
+    }, 30000); // Neural real-time updates every 30 seconds
+    
+    return () => {
       if (realTimeIntervalRef.current) {
         clearInterval(realTimeIntervalRef.current);
       }
-      
-      realTimeIntervalRef.current = setInterval(() => {
-        if (lastInputRef.current) {
-          console.log('🧠 Neural real-time update triggered');
-          predict(lastInputRef.current, false);
-        }
-      }, 30000); // Neural real-time updates every 30 seconds
-      
-      return () => {
-        if (realTimeIntervalRef.current) {
-          clearInterval(realTimeIntervalRef.current);
-        }
-      };
-    }
+    };
   }, [enableRealTimeUpdates, state.isRealTimeActive, predict]);
 
   // ===================================================================
   // 🧠 NEURAL ACCIONES AUXILIARES V13.0
   // ===================================================================
 
-  const clearPrediction = useCallback(() => {
+  const clearPrediction = React.useCallback(() => {
     setState(prev => ({
       ...prev,
       result: null,
@@ -419,7 +438,7 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
     }
   }, []);
 
-  const clearCache = useCallback(() => {
+  const clearCache = React.useCallback(() => {
     cacheRef.current.clear();
     metricsRef.current = { hits: 0, misses: 0 };
     
@@ -431,13 +450,13 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
     console.log('� Neural prediction cache cleared');
   }, []);
 
-  const retry = useCallback(async () => {
+  const retry = React.useCallback(async () => {
     if (lastInputRef.current) {
       await predict(lastInputRef.current, true); // Force neural prediction
     }
   }, [predict]);
 
-  const updatePreferences = useCallback((newPreferences: Partial<UserPreferences>) => {
+  const updatePreferences = React.useCallback((newPreferences: Partial<UserPreferences>) => {
     if (preferencesRef.current) {
       preferencesRef.current = {
         ...preferencesRef.current,
@@ -458,7 +477,7 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
   }, []);
 
   // Neural Real-Time Toggle V13.0
-  const toggleRealTimeUpdates = useCallback(() => {
+  const toggleRealTimeUpdates = React.useCallback(() => {
     setState(prev => ({
       ...prev,
       isRealTimeActive: !prev.isRealTimeActive
@@ -468,7 +487,7 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
   }, []);
 
   // Neural Performance Optimization V13.0
-  const optimizePerformance = useCallback((mode: NeuralOptimizationPriority) => {
+  const optimizePerformance = React.useCallback((mode: NeuralOptimizationPriority) => {
     priorityRef.current = mode;
     
     // Clear cache if switching to speed mode for fresh optimization
@@ -479,12 +498,12 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
     console.log(`🧠 Neural performance optimized for ${mode} mode`);
   }, [clearCache]);
 
-  const getMetrics = useCallback(() => {
+  const getMetrics = React.useCallback(() => {
     return getPredictionEngineMetrics();
   }, []);
 
   // Neural Insights Getter V13.0
-  const getNeuralInsights = useCallback(() => {
+  const getNeuralInsights = React.useCallback(() => {
     return state.neuralInsights;
   }, [state.neuralInsights]);
 
@@ -493,7 +512,7 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
   // ===================================================================
 
   // Cleanup neuronal al desmontar
-  useEffect(() => {
+  React.useEffect(() => {
     return () => {
       if (debounceRef.current) {
         clearTimeout(debounceRef.current);
@@ -505,8 +524,10 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
   }, []);
 
   // Limpiar cache neural periódicamente
-  useEffect(() => {
-    if (!enableCaching) return;
+  React.useEffect(() => {
+    if (!enableCaching) {
+      return undefined;
+    }
 
     const interval = setInterval(() => {
       cleanupCache();
@@ -519,7 +540,7 @@ export function usePrediction(options: UsePredictionOptions = {}): UsePrediction
   // 🧠 NEURAL ACTIONS OBJECT MEMOIZADO V13.0
   // ===================================================================
 
-  const actions = useMemo<PredictionActions>(() => ({
+  const actions = React.useMemo<PredictionActions>(() => ({
     predict,
     clearPrediction,
     clearCache,
@@ -588,7 +609,7 @@ export function useAutoPrediction(
   });
 
   // Neural auto-predict cuando cambien los inputs
-  useEffect(() => {
+  React.useEffect(() => {
     if (userInput && isValidUserInput(userInput)) {
       console.log('🧠 Neural auto-prediction triggered for input change');
       actions.predict(userInput);

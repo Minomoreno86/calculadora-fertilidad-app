@@ -473,12 +473,12 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     flex: 1,
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     flex: 1,
   },
   badge: {
@@ -716,13 +716,13 @@ const styles = StyleSheet.create({
   },
   metricLabel: {
     fontSize: 12,
-    textAlign: 'center',
+    textAlign: 'center' as const,
     marginBottom: 4,
   },
   metricValue: {
     fontSize: 18,
     fontWeight: '600',
-    textAlign: 'center',
+    textAlign: 'center' as const,
   },
   domainsSection: {
     marginTop: 16,

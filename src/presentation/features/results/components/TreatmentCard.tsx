@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, Linking, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import * as Linking from 'expo-linking';
 import Text from '../../../components/common/Text';
 import Box from '../../../components/common/Box';
 import { TreatmentSuggestion } from '../../../../core/domain/models';
@@ -50,10 +51,10 @@ const styles = StyleSheet.create({
   },
   suggCategory: {
     ...theme.typography.small,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.secondary,
     marginBottom: theme.spacing.xs,
-    textTransform: 'uppercase',
+    textTransform: 'uppercase' as const,
   },
   suggTitle: {
     ...theme.typography.h3,
@@ -68,12 +69,12 @@ const styles = StyleSheet.create({
   suggSourceLink: {
     ...theme.typography.small,
     color: theme.colors.primary,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
+    fontWeight: '600' as const,
+    textDecorationLine: 'underline' as const,
   },
   suggSourceText: {
     ...theme.typography.small,
-    fontStyle: 'italic',
+    fontStyle: 'italic' as const,
     color: theme.colors.subtleText,
   },
 });

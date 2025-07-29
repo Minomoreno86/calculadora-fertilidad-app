@@ -38,7 +38,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     flex: 1,
     color: theme.colors.textSecondary,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '500' as const,
   },
   valueContainer: {
     paddingHorizontal: theme.spacing.s,
@@ -48,8 +48,8 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     backgroundColor: theme.colors.background,
   },
   value: {
-    fontWeight: '700',
-    textAlign: 'center',
+    fontWeight: '700' as const,
+    textAlign: 'center' as const,
     color: theme.colors.text,
     fontSize: 20,
   },
@@ -59,7 +59,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   interpretation: {
     marginTop: theme.spacing.s,
-    fontStyle: 'italic',
+    fontStyle: 'italic' as const,
     color: theme.colors.textSecondary,
     lineHeight: 16,
   },

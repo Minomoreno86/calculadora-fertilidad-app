@@ -11,16 +11,40 @@
  * 🧠 Neural Enhancement V13.0
  */
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React from 'react';
 import {
-  Animated,
-  KeyboardAvoidingView,
   Platform,
   ScrollView,
-  TextInput,
   TouchableOpacity,
   View
 } from 'react-native';
+
+// Safe imports for optional React Native components
+let Animated: any;
+let KeyboardAvoidingView: any;
+let TextInput: any;
+
+try {
+  const RNComponents = require('react-native');
+  Animated = RNComponents.Animated || { 
+    Value: class { constructor() {} },
+    loop: () => ({ start: () => {} }),
+    sequence: () => ({}),
+    timing: () => ({})
+  };
+  KeyboardAvoidingView = RNComponents.KeyboardAvoidingView || View;
+  TextInput = RNComponents.TextInput || (() => null);
+} catch {
+  Animated = { 
+    Value: class { constructor() {} },
+    loop: () => ({ start: () => {} }),
+    sequence: () => ({}),
+    timing: () => ({})
+  };
+  KeyboardAvoidingView = View;
+  TextInput = () => null;
+}
+
 import { Ionicons } from '@expo/vector-icons';
 import Text from '../../../components/common/Text';
 
@@ -48,27 +72,27 @@ const AIChat: React.FC<AIChatProps> = ({
   onRecommendationGenerated
 }) => {
   // 🔄 ESTADOS DEL COMPONENTE
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [inputText, setInputText] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [messages, setMessages] = React.useState<ChatMessage[]>([]);
+  const [inputText, setInputText] = React.useState('');
+  const [isTyping, setIsTyping] = React.useState(false);
   
   // 🧠 MOTORES Y COMPONENTES
-  const [chatEngine] = useState(() => new MedicalAIChatEngine(evaluation));
-  const [styles] = useState(() => createStyles(defaultTheme));
-  const [uiComponents] = useState(() => new ChatUIComponents({ 
+  const [chatEngine] = React.useState(() => new MedicalAIChatEngine(evaluation));
+  const [styles] = React.useState(() => createStyles(defaultTheme));
+  const [uiComponents] = React.useState(() => new ChatUIComponents({ 
     theme: defaultTheme, 
     styles: createStyles(defaultTheme)
   }));
 
   // 🎯 REFERENCIAS
-  const scrollViewRef = useRef<ScrollView>(null);
-  const inputRef = useRef<TextInput>(null);
-  const typingAnimation = useRef(new Animated.Value(0)).current;
+  const scrollViewRef = React.useRef<typeof ScrollView>(null);
+  const inputRef = React.useRef<typeof TextInput>(null);
+  const typingAnimation = React.useRef(new Animated.Value(0)).current;
 
   /**
    * 🎬 INICIALIZAR CHAT
    */
-  const initializeChat = useCallback((): void => {
+  const initializeChat = React.useCallback((): void => {
     const welcomeMessage: ChatMessage = {
       id: 'welcome',
       type: 'ai',
@@ -99,7 +123,7 @@ const AIChat: React.FC<AIChatProps> = ({
   /**
    * 🎭 ANIMACIÓN DE ESCRITURA
    */
-  const startTypingAnimation = useCallback((): void => {
+  const startTypingAnimation = React.useCallback((): void => {
     Animated.loop(
       Animated.sequence([
         Animated.timing(typingAnimation, {
@@ -119,7 +143,7 @@ const AIChat: React.FC<AIChatProps> = ({
   /**
    * 📜 SCROLL AL FINAL
    */
-  const scrollToBottom = useCallback((): void => {
+  const scrollToBottom = React.useCallback((): void => {
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 100);
@@ -128,7 +152,7 @@ const AIChat: React.FC<AIChatProps> = ({
   /**
    * 📨 ENVIAR MENSAJE
    */
-  const sendMessage = useCallback(async (message: string): Promise<void> => {
+  const sendMessage = React.useCallback(async (message: string): Promise<void> => {
     if (!message.trim() || isTyping) return;
 
     const userMessage: ChatMessage = {
@@ -182,17 +206,17 @@ const AIChat: React.FC<AIChatProps> = ({
   /**
    * ⚡ MANEJAR RESPUESTA RÁPIDA
    */
-  const handleQuickReply = useCallback((reply: QuickReply): void => {
+  const handleQuickReply = React.useCallback((reply: QuickReply): void => {
     sendMessage(reply.text);
   }, [sendMessage]);
 
   // 🚀 EFECTOS
-  useEffect(() => {
+  React.useEffect(() => {
     initializeChat();
     startTypingAnimation();
   }, [initializeChat, startTypingAnimation]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 

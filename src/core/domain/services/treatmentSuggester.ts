@@ -334,6 +334,17 @@ function getOptimizationSuggestions(input: UserInput, factors: Factors, currentS
  * Sugiere tratamientos basado en el EvaluationState completo con contexto clínico
  */
 export function suggestTreatments(evaluation: EvaluationState): EnhancedTreatmentSuggestion[] {
+  // 🔍 DEBUG LOGGING para ver qué está llegando
+  console.log('🔍 [TREATMENT SUGGESTER] Received evaluation:', { 
+    evaluation: !!evaluation, 
+    type: typeof evaluation,
+    keys: evaluation ? Object.keys(evaluation) : 'null',
+    hasInput: evaluation ? !!evaluation.input : false,
+    hasFactors: evaluation ? !!evaluation.factors : false,
+    inputType: evaluation && evaluation.input ? typeof evaluation.input : 'undefined',
+    factorsType: evaluation && evaluation.factors ? typeof evaluation.factors : 'undefined'
+  });
+  
   // 🧠 NEURAL SAFETY V13.0: Validar que evaluation y sus propiedades existan
   if (!evaluation) {
     console.warn('⚠️ Treatment Suggester: evaluation is null/undefined');

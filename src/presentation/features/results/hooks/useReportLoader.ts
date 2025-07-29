@@ -1,5 +1,5 @@
 // src/presentation/features/results/hooks/useReportLoader.ts
-import { useEffect, useState } from 'react';
+import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EvaluationState } from '@/core/domain/models'; // Importa EvaluationState desde tus modelos
 
@@ -14,13 +14,13 @@ export const useReportLoader = (reportKey?: string | string[] | null): {
   error: string | null;
   isPremiumReport: boolean;
 } => {
-  const [evaluation, setEvaluation] = useState<EvaluationState | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [evaluation, setEvaluation] = React.useState<EvaluationState | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const [isPremium, setIsPremium] = useState(false);
+  const [isPremium, setIsPremium] = React.useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const fetchReport = async () => {
       // 🚀 ARMONIZACIÓN: Validación robusta de reportKey
       if (!reportKey || 
@@ -61,7 +61,13 @@ export const useReportLoader = (reportKey?: string | string[] | null): {
           console.log('✅ useReportLoader: Report loaded successfully:', { 
             key, 
             hasReport: !!parsedReport,
-            reportType: parsedReport?.report?.category || 'unknown' 
+            reportType: parsedReport?.report?.category || 'unknown',
+            reportStructure: {
+              hasReport: !!parsedReport?.report,
+              hasNumericPrognosis: !!parsedReport?.report?.numericPrognosis,
+              reportKeys: parsedReport?.report ? Object.keys(parsedReport.report) : 'N/A',
+              fullKeys: Object.keys(parsedReport)
+            }
           });
           setEvaluation(parsedReport);
         } else {

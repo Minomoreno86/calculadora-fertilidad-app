@@ -2,7 +2,7 @@
 // 🚀 LAZY VALIDATION HOOK - Validación selectiva bajo demanda
 // ===================================================================
 
-import { useCallback, useMemo } from 'react';
+import React from 'react';
 import { useAdaptivePerformance } from '@/core/performance/adaptivePerformanceConfig';
 
 interface LazyValidationConfig {
@@ -38,7 +38,7 @@ export function useLazyValidation(
   const { isHighPerformanceDevice, isLowPerformanceDevice, validationDebounce } = useAdaptivePerformance();
   
   // 📊 Calcular métricas de completitud
-  const completionMetrics = useMemo(() => {
+  const completionMetrics = React.useMemo(() => {
     const totalFields = Object.keys(formData).length;
     const completedFields = Object.values(formData).filter(value => 
       value !== '' && value !== null && value !== undefined && value !== false
@@ -65,7 +65,7 @@ export function useLazyValidation(
   }, [formData, finalConfig.forceValidationFields]);
 
   // 🎯 Determinar nivel de validación necesario
-  const validationState = useMemo((): LazyValidationState => {
+  const validationState = React.useMemo((): LazyValidationState => {
     const { completionRate, criticalCompletionRate } = completionMetrics;
     
     // Determinar prioridad de validación
@@ -122,7 +122,7 @@ export function useLazyValidation(
   }, [completionMetrics, finalConfig, isHighPerformanceDevice, isLowPerformanceDevice]);
 
   // 🚀 Funciones de utilidad para componentes
-  const shouldValidateField = useCallback((fieldName: string): boolean => {
+  const shouldValidateField = React.useCallback((fieldName: string): boolean => {
     // Siempre validar campos forzados
     if (finalConfig.forceValidationFields.includes(fieldName)) {
       return true;
@@ -137,7 +137,7 @@ export function useLazyValidation(
     return validationState.shouldUseBasicValidation;
   }, [finalConfig, validationState.shouldUseBasicValidation]);
 
-  const getValidationDelay = useCallback((fieldName: string): number => {
+  const getValidationDelay = React.useCallback((fieldName: string): number => {
     // Campos críticos: validación más rápida
     if (finalConfig.forceValidationFields.includes(fieldName)) {
       return Math.max(validationDebounce * 0.5, 100);

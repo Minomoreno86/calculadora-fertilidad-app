@@ -194,6 +194,7 @@ export class CalculationCore {
    * Calcula todos los factores de fertilidad
    */
   calculateFactors(input: UserInput): { factors: Factors; metrics: CalculationMetrics } {
+    console.log('🎯 CalculationCore.calculateFactors EJECUTÁNDOSE:', { infertilityDuration: input.infertilityDuration });
     const startTime = performance.now();
     const factors: Factors = {
       baseAgeProbability: 0,
@@ -283,26 +284,56 @@ export class CalculationCore {
    */
   createReport(factors: Factors, diagnostics: Diagnostics, input: UserInput): Report {
     try {
-      // Calcular pronóstico numérico basado en factores
-      const numericPrognosis = Math.max(0, Math.min(100, 
-        factors.baseAgeProbability * 
-        factors.bmi * 
-        factors.cycle * 
-        factors.pcos * 
-        factors.endometriosis * 
-        factors.myoma * 
-        factors.adenomyosis * 
-        factors.polyp * 
-        factors.hsg * 
-        factors.otb * 
-        factors.amh * 
-        factors.prolactin * 
-        factors.tsh * 
-        factors.homa * 
-        factors.male * 
-        factors.infertilityDuration * 
-        factors.pelvicSurgery
-      ));
+      // 🎯 CRITICAL FIX: Usar factores como multiplicadores de la probabilidad base
+      // La fórmula correcta es: probabilidad_base × (multiplicador1 × multiplicador2 × ...)
+      
+      // Obtener probabilidad base de edad (ya viene como porcentaje)
+      const baseAgeProbability = factors.baseAgeProbability || 17.5;
+      
+      // Normalizar factores - 0 significa "no aplica", se convierte a 1.0 (neutro)
+      const normalizedFactors = {
+        bmi: factors.bmi === 0 ? 1.0 : factors.bmi,
+        cycle: factors.cycle === 0 ? 1.0 : factors.cycle,
+        pcos: factors.pcos === 0 ? 1.0 : factors.pcos,
+        endometriosis: factors.endometriosis === 0 ? 1.0 : factors.endometriosis,
+        myoma: factors.myoma === 0 ? 1.0 : factors.myoma,
+        adenomyosis: factors.adenomyosis === 0 ? 1.0 : factors.adenomyosis,
+        polyp: factors.polyp === 0 ? 1.0 : factors.polyp,
+        hsg: factors.hsg === 0 ? 1.0 : factors.hsg,
+        otb: factors.otb === 0 ? 1.0 : factors.otb,
+        amh: factors.amh === 0 ? 1.0 : factors.amh,
+        prolactin: factors.prolactin === 0 ? 1.0 : factors.prolactin,
+        tsh: factors.tsh === 0 ? 1.0 : factors.tsh,
+        homa: factors.homa === 0 ? 1.0 : factors.homa,
+        male: factors.male === 0 ? 1.0 : factors.male,
+        infertilityDuration: factors.infertilityDuration === 0 ? 1.0 : factors.infertilityDuration,
+        pelvicSurgery: factors.pelvicSurgery === 0 ? 1.0 : factors.pelvicSurgery
+      };
+      
+      // Calcular multiplicador combinado
+      const combinedMultiplier = 
+        normalizedFactors.bmi * 
+        normalizedFactors.cycle * 
+        normalizedFactors.pcos * 
+        normalizedFactors.endometriosis * 
+        normalizedFactors.myoma * 
+        normalizedFactors.adenomyosis * 
+        normalizedFactors.polyp * 
+        normalizedFactors.hsg * 
+        normalizedFactors.otb * 
+        normalizedFactors.amh * 
+        normalizedFactors.prolactin * 
+        normalizedFactors.tsh * 
+        normalizedFactors.homa * 
+        normalizedFactors.male * 
+        normalizedFactors.infertilityDuration * 
+        normalizedFactors.pelvicSurgery;
+      
+      // Fórmula correcta: Probabilidad base × multiplicadores
+      const calculatedPrognosis = baseAgeProbability * combinedMultiplier;
+      
+      // Aplicar límites
+      const numericPrognosis = Math.max(0.1, Math.min(100, calculatedPrognosis));
       
       return reportGenerator.generateFinalReport(numericPrognosis, diagnostics, input, factors);
     } catch (error) {
@@ -341,7 +372,7 @@ export class CalculationCore {
       },
       {
         evaluator: factorEvaluators.evaluateInfertilityDuration as FactorEvaluatorFunction,
-        args: [userInput.infertilityDuration],
+        args: [userInput.infertilityDuration ? userInput.infertilityDuration * 12 : undefined], // 🔄 CRITICAL FIX: Convertir años → meses
         factorKey: 'infertilityDuration',
         required: true,
         priority: 1,
@@ -527,11 +558,20 @@ export class CalculationCore {
     configs: PriorityFactorConfig[],
     factors: Factors
   ): { successCount: number; errorCount: number; criticalErrors: string[] } {
+    console.log('🔧 processFactorGroup EJECUTÁNDOSE:', { 
+      configsCount: configs.length, 
+      factorKeys: configs.map(c => c.factorKey) 
+    });
     let successCount = 0;
     let errorCount = 0;
     const criticalErrors: string[] = [];
     
     for (const config of configs) {
+      console.log('🎮 Procesando factor:', { 
+        factorKey: config.factorKey, 
+        args: config.args,
+        evaluatorName: config.evaluator.name 
+      });
       const evaluation = this.safeEvaluateFactor(
         config.evaluator,
         config.args,
@@ -541,8 +581,16 @@ export class CalculationCore {
       if (evaluation.success && evaluation.factors) {
         successCount++;
         Object.assign(factors, evaluation.factors);
+        console.log('✅ Factor exitoso:', { 
+          factorKey: config.factorKey, 
+          factorValue: evaluation.factors[config.factorKey] 
+        });
       } else {
         errorCount++;
+        console.log('❌ Factor falló:', { 
+          factorKey: config.factorKey, 
+          error: evaluation.error 
+        });
         
         if (config.required) {
           criticalErrors.push(`Factor crítico ${config.factorKey}: ${evaluation.error}`);
@@ -551,6 +599,10 @@ export class CalculationCore {
         // Aplicar valor por defecto
         if (config.defaultFactor !== undefined) {
           factors[config.factorKey] = config.defaultFactor;
+          console.log('🔄 Aplicando factor por defecto:', { 
+            factorKey: config.factorKey, 
+            defaultValue: config.defaultFactor 
+          });
         }
       }
     }

@@ -113,10 +113,8 @@ export const ClinicalAlert: React.FC<ClinicalAlertProps> = ({
           </Text>
           {validation.recommendations.map((rec, index) => (
             <Text 
-              key={`recommendation-${index}-${rec.slice(0, 10)}`} 
               variant="caption" 
               style={styles.recommendation}
-              accessibilityRole="text"
             >
               • {rec}
             </Text>
@@ -129,7 +127,6 @@ export const ClinicalAlert: React.FC<ClinicalAlertProps> = ({
           <Text 
             variant="caption" 
             style={styles.percentileText}
-            accessibilityHint="Comparación estadística con población general"
           >
             Percentil {validation.interpretedValue.percentile} para la edad
           </Text>
@@ -159,7 +156,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   recommendationsTitle: {
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.primary,
     marginBottom: 6,
   },
@@ -174,7 +171,7 @@ const styles = StyleSheet.create({
   },
   percentileText: {
     color: theme.colors.textSecondary,
-    fontStyle: 'italic',
+    fontStyle: 'italic' as const,
     fontSize: 12,
   },
 });

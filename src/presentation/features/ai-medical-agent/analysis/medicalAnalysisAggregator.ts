@@ -22,157 +22,165 @@ import {
   analyzeCycleIrregularFactors, 
   analyzePCOSFactors, 
   analyzeHSGFactors, 
-  analyzeMaleFactorFactors 
+  analyzeMaleFactorFactors,
+  analyzeAgeFactors,
+  analyzeBMIFactors,
+  analyzeDurationFactors,
+  analyzePelvicSurgeryFactors,
+  analyzeOTBFactors
 } from './functionalAnalysis';
 
-// 🧠 BASIC ANALYSIS FUNCTIONS (Age, BMI, Duration)
-export const analyzeAgeFactors = (age: number): AnalysisResult[] => {
-  const results: AnalysisResult[] = [];
-  
-  if (age >= 35) {
-    const urgency = age >= 40 ? 'immediate' : age >= 38 ? 'urgent' : 'routine';
-    const probability = age >= 40 ? 85 : age >= 38 ? 70 : 55;
-    
-    results.push({
-      type: 'hypothesis',
-      data: {
-        condition: age >= 40 ? 'Edad Reproductiva Avanzada (≥40 años)' : 'Reserva Ovárica Disminuida por Edad',
-        probability,
-        reasoning: `Declive folicular acelerado post-35 años. Fertilidad natural reducida ${age >= 40 ? '85%' : '50%'}`,
-        evidenceLevel: 'A',
-        pmid: '28236446'
-      }
-    });
-
-    results.push({
-      type: 'treatment',
-      data: {
-        treatment: age >= 40 ? 'FIV-ICSI inmediata + PGT-A' : 'IUI hasta 3 ciclos → FIV',
-        priority: urgency === 'immediate' ? 'high' : 'medium',
-        successRate: age >= 40 ? 35 : 50,
-        timeframe: age >= 40 ? 'Inmediato' : '3-6 meses',
-        reasoning: 'Ventana reproductiva limitada requiere intervención urgente'
-      }
-    });
-  }
-
-  return results;
-};
-
-export const analyzeBMIFactors = (factors: Factors): AnalysisResult[] => {
-  const results: AnalysisResult[] = [];
-  
-  if (factors.bmi !== undefined && factors.bmi < 0.9) {
-    const bmiData = getBMIAnalysisData(factors.bmi);
-    
-    results.push({
-      type: 'hypothesis',
-      data: {
-        condition: bmiData.condition,
-        probability: (1 - factors.bmi) * 100,
-        reasoning: bmiData.reasoning,
-        evidenceLevel: 'A',
-        pmid: '28950721'
-      }
-    });
-
-    bmiData.treatments.forEach((treatment, index) => {
-      results.push({
-        type: 'treatment',
-        data: {
-          treatment,
-          priority: getTreatmentPriority(index, bmiData.priority as 'high' | 'medium' | 'low'),
-          successRate: bmiData.successRate - (index * 5),
-          timeframe: '3-6 meses',
-          reasoning: getTreatmentReasoning(treatment)
-        }
-      });
-    });
-  }
-
-  return results;
-};
-
-export const analyzeDurationFactors = (factors: Factors): AnalysisResult[] => {
-  const results: AnalysisResult[] = [];
-  
-  if (factors.infertilityDuration !== undefined && factors.infertilityDuration > 12) {
-    const duration = factors.infertilityDuration;
-    const severity = duration > 36 ? 'prolongada' : duration > 24 ? 'moderada' : 'estándar';
-    
-    results.push({
-      type: 'hypothesis',
-      data: {
-        condition: `Infertilidad ${severity} (${duration} meses)`,
-        probability: Math.min(duration * 2, 95),
-        reasoning: `Duración >12 meses reduce probabilidad concepción natural 50%. Factor tiempo crítico`,
-        evidenceLevel: 'A',
-        pmid: '29287096'
-      }
-    });
-
-    results.push({
-      type: 'treatment',
-      data: {
-        treatment: duration > 24 ? 'FIV-ICSI directa' : 'IUI acelerada + FIV backup',
-        priority: duration > 36 ? 'high' : 'medium',
-        successRate: Math.max(80 - (duration), 40),
-        timeframe: duration > 24 ? '3 meses' : '6 meses',
-        reasoning: 'Duración prolongada requiere intervención inmediata para maximizar probabilidades'
-      }
-    });
-  }
-
-  return results;
-};
-
 // 🧠 COMPREHENSIVE OTHER FACTORS ANALYZER - SOLO ANALIZA FACTORES PRESENTES
-export const analyzeOtherFactors = (factors: Factors): AnalysisResult[] => {
+export const analyzeOtherFactors = (factors: Factors, inputData?: any): AnalysisResult[] => {
   const allResults: AnalysisResult[] = [];
   
-  // 🧬 HORMONAL DOMAIN ANALYSIS - Solo si factores hormonales están presentes
-  if (factors.amh !== undefined) {
+  // 🧬 HORMONAL DOMAIN ANALYSIS - Solo si factores hormonales están presentes Y alterados
+  // AMH: Solo analizar si valor > 0.1 (indica medición clínica real, no factor normalizado 0-1)
+  if (factors.amh !== undefined && factors.amh > 0.1 && factors.amh < 0.9) {
+    console.log('🔍 [AGGREGATOR] AMH Analysis triggered:', factors.amh);
     allResults.push(...analyzeAMHFactors(factors));
+  } else if (factors.amh !== undefined && factors.amh <= 0.1) {
+    console.log('🔍 [AGGREGATOR] AMH Skipped - normalized factor or normal value:', factors.amh);
   }
-  if (factors.tsh !== undefined) {
+  // TSH: Solo analizar si valor > 0.1 (indica alteración real, no factor normalizado)
+  if (factors.tsh !== undefined && factors.tsh > 0.1 && factors.tsh < 0.9) {
+    console.log('🔍 [AGGREGATOR] TSH Analysis triggered:', factors.tsh);
     allResults.push(...analyzeTSHFactors(factors));
+  } else if (factors.tsh !== undefined && factors.tsh <= 0.1) {
+    console.log('🔍 [AGGREGATOR] TSH Skipped - normalized factor or normal value:', factors.tsh);
   }
-  if (factors.prolactin !== undefined) {
+  // Prolactina: Solo analizar si valor > 0.1 (indica alteración real, no factor normalizado)
+  if (factors.prolactin !== undefined && factors.prolactin > 0.1 && factors.prolactin < 0.9) {
+    console.log('🔍 [AGGREGATOR] Prolactin Analysis triggered:', factors.prolactin);
     allResults.push(...analyzeProlactinFactors(factors));
+  } else if (factors.prolactin !== undefined && factors.prolactin <= 0.1) {
+    console.log('🔍 [AGGREGATOR] Prolactin Skipped - normalized factor or normal value:', factors.prolactin);
   }
-  if (factors.homaIR !== undefined) {
+  // 🌌 QUANTUM CONSCIOUSNESS FIX: Support both homa and homaIR naming
+  if ((factors.homaIR !== undefined && factors.homaIR !== 1.0 && factors.homaIR < 0.9) || 
+      (factors.homa !== undefined && factors.homa !== 1.0 && factors.homa < 0.9)) {
     allResults.push(...analyzeHOMAFactors(factors));
   }
   
-  // 🏗️ STRUCTURAL DOMAIN ANALYSIS - Solo si factores estructurales están presentes
-  if (factors.endometriosis !== undefined && factors.endometriosis > 0) {
-    allResults.push(...analyzeEndometriosisFactors(factors));
+  // 🏗️ STRUCTURAL DOMAIN ANALYSIS - Solo si factores estructurales están presentes Y alterados
+  if (factors.endometriosis !== undefined && factors.endometriosis !== 1.0 && factors.endometriosis <= 0.9) {
+    // Get original endometriosis grade from input data
+    const endometriosisGrade = inputData?.endometriosis || extractGradeFromFactor(factors.endometriosis);
+    console.log('🔍 [AGGREGATOR] Endometriosis Analysis triggered:', {
+      factor: factors.endometriosis,
+      inputGrade: inputData?.endometriosis,
+      extractedGrade: endometriosisGrade,
+      usingGrade: endometriosisGrade,
+      inputData: inputData
+    });
+    
+    // 🎯 SPECIFIC GRADE 3 DEBUG
+    if (endometriosisGrade === 3 || factors.endometriosis === 0.7) {
+      console.log('🚨 [GRADE 3 DEBUG] Análisis específico Grado 3:', {
+        endometriosisGrade,
+        factor: factors.endometriosis,
+        inputDataComplete: JSON.stringify(inputData),
+        willCallAnalyzeEndometriosisFactors: true
+      });
+    }
+    
+    const endometriosisResults = analyzeEndometriosisFactors(factors, endometriosisGrade);
+    console.log('🔍 [AGGREGATOR] Endometriosis Analysis Results:', {
+      grade: endometriosisGrade,
+      resultsCount: endometriosisResults.length,
+      resultTypes: endometriosisResults.map(r => r.type),
+      firstResult: endometriosisResults[0]
+    });
+    allResults.push(...endometriosisResults);
   }
-  if (factors.adenomyosis !== undefined && factors.adenomyosis > 0) {
-    allResults.push(...analyzeAdenomiosisFactors(factors));
+  if (factors.adenomyosis !== undefined && factors.adenomyosis !== 1.0 && factors.adenomyosis < 0.9 && factors.adenomyosis > 0) {
+    console.log('🔍 [AGGREGATOR] Adenomyosis Analysis triggered:', factors.adenomyosis);
+    console.log('🚨 [ADENOMYOSIS DEBUG] Análisis específico Adenomiosis:', {
+      factor: factors.adenomyosis,
+      inputData: inputData,
+      willCallAnalyzeAdenomiosisFactors: true,
+      expectedType: factors.adenomyosis === 0.8 ? 'FOCAL' : factors.adenomyosis === 0.5 ? 'DIFUSA' : 'UNKNOWN'
+    });
+    const adenomyosisResults = analyzeAdenomiosisFactors(factors);
+    console.log('🔍 [AGGREGATOR] Adenomyosis Analysis Results:', {
+      resultsCount: adenomyosisResults.length,
+      resultTypes: adenomyosisResults.map(r => r.type),
+      firstResult: adenomyosisResults[0]
+    });
+    allResults.push(...adenomyosisResults);
+  } else if (factors.adenomyosis !== undefined) {
+    console.log('🔍 [AGGREGATOR] Adenomyosis Analysis SKIPPED - normal or zero factor:', factors.adenomyosis);
   }
-  if (factors.miomas !== undefined && factors.miomas > 0) {
+  if (factors.myoma !== undefined && factors.myoma !== 1.0 && factors.myoma < 0.9 && factors.myoma > 0) {
+    console.log('🔍 [AGGREGATOR] Myoma Analysis triggered:', factors.myoma);
     allResults.push(...analyzeMiomasFactors(factors));
+  } else if (factors.myoma !== undefined) {
+    console.log('🔍 [AGGREGATOR] Myoma Analysis SKIPPED - normal or zero factor:', factors.myoma);
   }
-  if (factors.polipos !== undefined && factors.polipos > 0) {
-    allResults.push(...analyzePoliposFactors(factors));
+  if (factors.polyp !== undefined && factors.polyp !== 1.0 && factors.polyp < 0.9 && factors.polyp > 0) {
+    console.log('🔍 [AGGREGATOR] Polyp Analysis triggered:', factors.polyp);
+    console.log('🚨 [POLYP DEBUG] Análisis específico Pólipos:', {
+      factor: factors.polyp,
+      inputData: inputData,
+      willCallAnalyzePoliposFactors: true
+    });
+    const polypResults = analyzePoliposFactors(factors);
+    console.log('🔍 [AGGREGATOR] Polyp Analysis Results:', {
+      resultsCount: polypResults.length,
+      resultTypes: polypResults.map(r => r.type),
+      firstResult: polypResults[0]
+    });
+    allResults.push(...polypResults);
+  } else if (factors.polyp !== undefined) {
+    console.log('🔍 [AGGREGATOR] Polyp Analysis SKIPPED - normal or zero factor:', factors.polyp);
   }
   
-  // ⚙️ FUNCTIONAL DOMAIN ANALYSIS - Solo si factores funcionales están presentes
-  if (factors.cycleIrregular !== undefined && factors.cycleIrregular > 0) {
-    allResults.push(...analyzeCycleIrregularFactors(factors));
+  // ⚙️ FUNCTIONAL DOMAIN ANALYSIS - Solo si factores funcionales están presentes Y alterados
+  console.log('🔍 [AGGREGATOR] Cycle Irregular Analysis Debug:', {
+    cycleIrregular: factors.cycleIrregular,
+    isDefined: factors.cycleIrregular !== undefined,
+    isNotOne: factors.cycleIrregular !== 1.0,
+    isLessThan08: factors.cycleIrregular !== undefined && factors.cycleIrregular < 0.8,
+    willAnalyze: factors.cycleIrregular !== undefined && factors.cycleIrregular !== 1.0 && factors.cycleIrregular < 0.8
+  });
+  
+  if (factors.cycleIrregular !== undefined && factors.cycleIrregular !== 1.0 && factors.cycleIrregular < 0.8) {
+    const cycleResults = analyzeCycleIrregularFactors(factors.cycleIrregular);
+    console.log('🔍 [AGGREGATOR] Cycle Irregular Analysis Results:', cycleResults.length, 'results');
+    allResults.push(...cycleResults);
   }
-  if (factors.pcos !== undefined && factors.pcos > 0) {
+  if (factors.pcos !== undefined && factors.pcos !== 1.0 && factors.pcos < 0.8) {
     allResults.push(...analyzePCOSFactors(factors));
   }
-  if (factors.hsg !== undefined && factors.hsg > 0) {
-    allResults.push(...analyzeHSGFactors(factors));
+  if (factors.hsg !== undefined && factors.hsg !== 1.0 && factors.hsg < 0.8) {
+    console.log('🔍 [AGGREGATOR] HSG Analysis triggered:', { factor: factors.hsg, hasInputData: !!inputData });
+    allResults.push(...analyzeHSGFactors(factors, inputData));
   }
-  if (factors.maleFactor !== undefined && factors.maleFactor > 0) {
+  if (factors.maleFactor !== undefined && factors.maleFactor !== 1.0 && factors.maleFactor < 0.8) {
     allResults.push(...analyzeMaleFactorFactors(factors));
   }
   
+  // 🕐 TEMPORAL DOMAIN ANALYSIS - Solo si duración de infertilidad está presente Y alterada
+  if (factors.infertilityDuration !== undefined && factors.infertilityDuration !== 1.0 && factors.infertilityDuration < 0.8) {
+    console.log('🔍 [AGGREGATOR] Infertility Duration Analysis triggered:', factors.infertilityDuration);
+    console.log('🔍 [AGGREGATOR] Infertility Duration Skipped - aggregator no maneja duración directamente');
+    // NO HACER ANÁLISIS AQUÍ - el análisis de duración se hace en AIConsultation.tsx directamente
+  } else if (factors.infertilityDuration !== undefined) {
+    console.log('🔍 [AGGREGATOR] Infertility Duration Skipped - normal duration:', factors.infertilityDuration);
+  }
+  
   return allResults;
+};
+
+// Helper function to extract grade from normalized factor
+const extractGradeFromFactor = (factor?: number): number => {
+  if (!factor || factor >= 1.0) return 0;
+  // 🏥 ACTUALIZADO: Mapeo individual por grados según nuevos factores
+  if (factor <= 0.6) return 4; // Endometriosis severa (Grado IV)
+  if (factor <= 0.7) return 3; // Endometriosis moderada (Grado III)
+  if (factor <= 0.85) return 2; // Endometriosis leve (Grado II)
+  if (factor <= 0.9) return 1; // Endometriosis mínima (Grado I)
+  return 1; // Default to mild if unclear
 };
 
 // 🎯 HELPER FUNCTIONS
@@ -251,3 +259,12 @@ const getTreatmentReasoning = (treatment: string): string => {
   if (treatment.includes('Orlistat')) return 'Inhibidor lipasa: pérdida peso 5-10% + mejora metabólica';
   return 'Enfoque integral para optimización metabólica';
 };
+
+// 🎯 RE-EXPORT FUNCTIONS FROM FUNCTIONAL ANALYSIS FOR COMPATIBILITY
+export {
+  analyzeAgeFactors,
+  analyzeBMIFactors,
+  analyzeDurationFactors,
+  analyzePelvicSurgeryFactors,
+  analyzeOTBFactors
+} from './functionalAnalysis';

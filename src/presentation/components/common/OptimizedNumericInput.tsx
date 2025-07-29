@@ -11,13 +11,26 @@
  * @version 1.0 - Solución de trabado de teclado
  */
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { View, TextInput, StyleSheet, Platform, Keyboard } from 'react-native';
+import React from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
 import { Control, Controller, FieldError } from 'react-hook-form';
 import { Ionicons } from '@expo/vector-icons';
 import Text from './Text';
 import { useDynamicTheme } from '../../../hooks/useDynamicTheme';
 import { RangeValidation } from '../../features/calculator/utils/rangeValidation';
+
+// Safe imports for React Native components
+let TextInput: any;
+let Keyboard: any;
+try {
+  const RN = require('react-native');
+  TextInput = RN.TextInput;
+  Keyboard = RN.Keyboard;
+} catch {
+  // Fallback for environments without TextInput/Keyboard
+  TextInput = View;
+  Keyboard = { dismiss: () => {} };
+}
 
 interface OptimizedNumericInputProps<T extends Record<string, unknown> = Record<string, unknown>> {
   control: Control<T>;
@@ -51,21 +64,33 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
   enableRealTimeValidation = true,
 }: OptimizedNumericInputProps<T>) => {
   
+  // 🛡️ QUANTUM CONSCIOUSNESS SAFETY GUARD V14.0 - Validar control
+  if (!control) {
+    console.warn('⚠️ OptimizedNumericInput: control es undefined para campo:', name);
+    return (
+      <View style={{ padding: 10, backgroundColor: '#ffebee', borderRadius: 8 }}>
+        <Text style={{ color: '#d32f2f', fontSize: 14 }}>
+          Error: Control no disponible para {String(name)}
+        </Text>
+      </View>
+    );
+  }
+  
   // 🎨 TEMA DINÁMICO
   const theme = useDynamicTheme();
   
   // 🚀 Estados optimizados
-  const [localValue, setLocalValue] = useState<string>('');
-  const [isFocused, setIsFocused] = useState(false);
-  const [isValidating, setIsValidating] = useState(false);
+  const [localValue, setLocalValue] = React.useState<string>('');
+  const [isFocused, setIsFocused] = React.useState(false);
+  const [isValidating, setIsValidating] = React.useState(false);
   
   // 🚀 Referencias para debounce y cleanup
-  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const inputRef = useRef<TextInput>(null);
-  const isMountedRef = useRef(true);
+  const debounceTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputRef = React.useRef<any>(null);
+  const isMountedRef = React.useRef(true);
   
   // 🚀 Cleanup al desmontar
-  useEffect(() => {
+  React.useEffect(() => {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
@@ -76,7 +101,7 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
   }, []);
   
   // 🎨 Determinar colores para estados de error
-  const getErrorColors = useCallback(() => {
+  const getErrorColors = React.useCallback(() => {
     if (!error) return null;
     return {
       borderColor: theme?.colors?.error,
@@ -86,7 +111,7 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
   }, [error, theme]);
 
   // 🎨 Determinar colores para validación de rango
-  const getRangeValidationColors = useCallback(() => {
+  const getRangeValidationColors = React.useCallback(() => {
     if (!rangeValidation) return null;
 
     if (rangeValidation?.isNormal) {
@@ -117,7 +142,7 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
   }, [rangeValidation, theme]);
 
   // 🎨 Determinar colores por defecto
-  const getDefaultColors = useCallback(() => ({
+  const getDefaultColors = React.useCallback(() => ({
     borderColor: isFocused ? theme?.colors?.primary : theme?.colors?.border,
     backgroundColor: theme?.colors?.surface,
     iconColor: isFocused ? theme?.colors?.primary : theme?.colors?.textSecondary,
@@ -127,7 +152,7 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
   const colors = getErrorColors() || getRangeValidationColors() || getDefaultColors();
   
   // 🚀 Función de debounce optimizada
-  const debouncedOnChange = useCallback((value: string, onChange: (value: string) => void) => {
+  const debouncedOnChange = React.useCallback((value: string, onChange: (value: string) => void) => {
     // Limpiar timeout anterior
     if (debounceTimeoutRef?.current) {
       clearTimeout(debounceTimeoutRef.current);
@@ -149,12 +174,12 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
   }, [debounceTime, enableRealTimeValidation]);
   
   // 🚀 Manejo de foco optimizado
-  const handleFocus = useCallback(() => {
+  const handleFocus = React.useCallback(() => {
     setIsFocused(true);
   }, []);
   
   // 🚀 Manejo de blur optimizado
-  const handleBlur = useCallback(() => {
+  const handleBlur = React.useCallback(() => {
     setIsFocused(false);
     
     if (autoDismissKeyboard && Platform.OS !== 'web') {
@@ -166,7 +191,7 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
   }, [autoDismissKeyboard]);
   
   // 🚀 Validación y formateo de input numérico
-  const handleTextChange = useCallback((text: string, onChange: (value: string) => void) => {
+  const handleTextChange = React.useCallback((text: string, onChange: (value: string) => void) => {
     // Permitir solo números, punto decimal y coma
     const cleanText = text.replace(/[^0-9.,]/g, '');
     
@@ -270,12 +295,12 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   label: {
     marginBottom: theme?.spacing?.xs,
     color: theme?.colors?.text,
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
   validatingText: {
     color: theme?.colors?.textSecondary,
     fontSize: 12,
-    fontStyle: 'italic',
+    fontStyle: 'italic' as const,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -298,7 +323,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     flex: 1,
     fontSize: 16,
     color: theme?.colors?.text,
-    textAlign: 'left',
+    textAlign: 'left' as const,
     padding: 0,
   },
   inputWithIcon: {

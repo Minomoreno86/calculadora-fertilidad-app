@@ -2,7 +2,7 @@
 // 🚀 FASE 4A: DASHBOARD DE PERFORMANCE PARA DESARROLLO
 // ===================================================================
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useBenchmark } from '../../../core/utils/performanceBenchmark';
 import { theme } from '../../../config/theme';
@@ -17,12 +17,12 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
   onToggle
 }) => {
   const { getReport, getDetailedStats, clearMetrics } = useBenchmark();
-  const [refreshCounter, setRefreshCounter] = useState(0);
-  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshCounter, setRefreshCounter] = React.useState(0);
+  const [autoRefresh, setAutoRefresh] = React.useState(true);
 
   // 🔄 Auto-refresh cada 5 segundos
-  useEffect(() => {
-    if (!autoRefresh || !isVisible) return;
+  React.useEffect(() => {
+    if (!autoRefresh || !isVisible) return undefined;
     
     const interval = setInterval(() => {
       setRefreshCounter(prev => prev + 1);
@@ -121,7 +121,8 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
           <Text style={styles.sectionTitle}>⚡ Average Times</Text>
           {Object.entries(report.averageTimes).slice(0, 10).map(([name, time]) => {
             const thresholds = detailedStats.thresholds.calculation;
-            const color = getPerformanceColor(time, thresholds);
+            const timeValue = typeof time === 'number' ? time : 0;
+            const color = getPerformanceColor(timeValue, thresholds);
             
             return (
               <View key={name} style={styles.row}>
@@ -129,7 +130,7 @@ export const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
                   {name.replace(/([A-Z])/g, ' $1').trim()}:
                 </Text>
                 <Text style={[styles.value, { color }]}>
-                  {time.toFixed(1)}ms
+                  {timeValue.toFixed(1)}ms
                 </Text>
               </View>
             );
@@ -223,7 +224,7 @@ const styles = StyleSheet.create({
   toggleText: {
     color: theme.colors.background,
     fontSize: 12,
-    fontWeight: 'bold'
+    fontWeight: 'bold' as const
   },
   header: {
     flexDirection: 'row',
@@ -237,7 +238,7 @@ const styles = StyleSheet.create({
   title: {
     color: theme.colors.background,
     fontSize: 14,
-    fontWeight: 'bold'
+    fontWeight: 'bold' as const
   },
   controls: {
     flexDirection: 'row',

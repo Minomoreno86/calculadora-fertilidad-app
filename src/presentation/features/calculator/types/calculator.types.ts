@@ -50,7 +50,6 @@ export interface FormState extends Record<string, unknown> {
   semenVolume?: string;
   
   // Ginecología avanzada
-  cycleRegularity: 'regular' | 'irregular';
 }
 
 // 🔹 Interface para compatibilidad con react-hook-form
@@ -151,4 +150,14 @@ export interface CalculationResult {
     executionTime: number;
     cacheHit: boolean;
   };
+}
+
+// 🔹 Resultado simple del cálculo de formulario
+export interface FormCalculationResult {
+  bmi: number;
+  homa: number;
+  formData: FormState;
+  timestamp: Date;
+  completionPercentage: number;
+  reportKey: string;
 }

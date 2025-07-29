@@ -5,32 +5,24 @@
  * con animaciones fluidas, visualización de datos avanzada y UX excepcional
  */
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React from 'react';
 import {
   View,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Animated,
-  Dimensions,
   Platform,
-  LayoutAnimation,
-  UIManager,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { EvaluationState, SimulatableFactor } from '@/core/domain/models';
 import Text from '@/presentation/components/common/Text';
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 import { useFertilitySimulator } from '../../simulator/useFertilitySimulator';
 
-// Enable LayoutAnimation on Android
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
-const { width: screenWidth } = Dimensions.get('window');
+// Simplified for React 19.0.0 compatibility
+const screenWidth = 375; // Default width for calculations
 
 interface ResultsDisplayProps {
   evaluation: EvaluationState;
@@ -63,41 +55,14 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   const styles = createStyles(theme);
   
   // Estados
-  const [activeSection, setActiveSection] = useState('overview');
-  const [expandedFactor, setExpandedFactor] = useState<string | null>(null);
-  
-  // Animaciones
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.9)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
+  const [activeSection, setActiveSection] = React.useState('overview');
+  const [expandedFactor, setExpandedFactor] = React.useState<string | null>(null);
   
   const { simulationResult, simulateFactor } = useFertilitySimulator(evaluation);
   const { report, factors } = evaluation;
 
-  // Animación de entrada
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        friction: 8,
-        tension: 40,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [fadeAnim, scaleAnim, slideAnim]);
-
   // 🎨 ANÁLISIS VISUAL AVANZADO
-  const factorAnalysis = useMemo((): FactorAnalysis[] => {
+  const factorAnalysis = React.useMemo((): FactorAnalysis[] => {
     if (!factors) return [];
 
     const analysisMap: Record<string, Omit<FactorAnalysis, 'id' | 'value'>> = {
@@ -200,7 +165,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   }, [factors]);
 
   // 📊 MÉTRICAS PROCESADAS
-  const processedMetrics = useMemo(() => {
+  const processedMetrics = React.useMemo(() => {
     const score = report?.numericPrognosis || 0;
     const category = report?.category || 'EVALUANDO';
     
@@ -269,18 +234,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
 
   // 🎯 HEADER PREMIUM
   const renderPremiumHeader = () => (
-    <Animated.View
-      style={[
-        styles.headerWrapper,
-        {
-          opacity: fadeAnim,
-          transform: [
-            { scale: scaleAnim },
-            { translateY: slideAnim },
-          ],
-        },
-      ]}
-    >
+    <View style={styles.headerWrapper}>
       <LinearGradient
         colors={getCategoryGradient()}
         style={styles.headerGradient}
@@ -336,7 +290,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
           </View>
         </BlurView>
       </LinearGradient>
-    </Animated.View>
+    </View>
   );
 
   // 📊 NAVIGATION TABS MEJORADO
@@ -362,7 +316,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 key={tab.id}
                 style={[styles.tab, isActive && styles.activeTab]}
                 onPress={() => {
-                  LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                  
                   setActiveSection(tab.id);
                 }}
               >
@@ -385,7 +339,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
 
   // 🎯 OVERVIEW SECTION
   const renderOverviewSection = () => (
-    <Animated.View style={{ opacity: fadeAnim }}>
+    <View style={{ opacity: 1 }}>
       {/* Summary Cards */}
       <View style={styles.summaryGrid}>
         <TouchableOpacity style={[styles.summaryCard, styles.primaryCard]}>
@@ -426,7 +380,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
             </Text>
           </View>
           <View style={styles.progressBarContainer}>
-            <Animated.View
+            <View
               style={[
                 styles.progressBar,
                 {
@@ -465,7 +419,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
           </LinearGradient>
         </View>
       )}
-    </Animated.View>
+    </View>
   );
 
   // 📊 FACTORS SECTION
@@ -477,26 +431,13 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         const isExpanded = expandedFactor === factor.id;
 
         return (
-          <Animated.View
+          <View
             key={factor.id}
-            style={[
-              styles.factorItem,
-              {
-                opacity: fadeAnim,
-                transform: [
-                  {
-                    translateX: fadeAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [50, 0],
-                    }),
-                  },
-                ],
-              },
-            ]}
+            style={styles.factorItem}
           >
             <TouchableOpacity
               onPress={() => {
-                LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                
                 setExpandedFactor(isExpanded ? null : factor.id);
               }}
               style={styles.factorTouchable}
@@ -509,8 +450,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               >
                 <View style={styles.factorContent}>
                   <View style={styles.factorLeft}>
-                    <MaterialCommunityIcons
-                      name={factor.icon as keyof typeof MaterialCommunityIcons.glyphMap}
+                    <Ionicons
+                      name={factor.icon as keyof typeof Ionicons.glyphMap}
                       size={32}
                       color="white"
                     />
@@ -572,7 +513,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 </View>
               )}
             </TouchableOpacity>
-          </Animated.View>
+          </View>
         );
       })}
     </View>
@@ -621,8 +562,8 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 colors={factor.gradient}
                 style={styles.recommendationGradient}
               >
-                <MaterialCommunityIcons
-                  name={factor.icon as keyof typeof MaterialCommunityIcons.glyphMap}
+                <Ionicons
+                  name={factor.icon as keyof typeof Ionicons.glyphMap}
                   size={24}
                   color="white"
                 />
@@ -640,7 +581,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         <>
           <Text style={styles.subsectionTitle}>Opciones de Tratamiento</Text>
           {treatmentSuggestions
-            .toSorted((a, b) => b.priority - a.priority)
+            .sort((a, b) => b.priority - a.priority)
             .map((suggestion, index) => (
               <View key={`treatment-${suggestion.type}-${index}`} style={styles.treatmentCard}>
                 <View style={styles.treatmentHeader}>
@@ -810,12 +751,12 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   scoreValue: {
     fontSize: 36,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: 'white',
   },
   scoreLabel: {
     fontSize: 24,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: 'white',
     marginLeft: 2,
   },
@@ -828,7 +769,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   categoryText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: 'white',
   },
   quickStats: {
@@ -843,7 +784,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   statValue: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: 'white',
     marginTop: 4,
   },
@@ -889,7 +830,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   tabLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.textSecondary,
     marginLeft: 8,
   },
@@ -949,14 +890,14 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   cardTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: 'white',
     marginTop: 12,
-    textAlign: 'center',
+    textAlign: 'center' as const,
   },
   cardValue: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: 'white',
     marginTop: 4,
   },
@@ -964,14 +905,14 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     fontSize: 12,
     color: 'rgba(255,255,255,0.8)',
     marginTop: 4,
-    textAlign: 'center',
+    textAlign: 'center' as const,
   },
   progressSection: {
     marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 22,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.text,
     marginBottom: 16,
   },
@@ -993,12 +934,12 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   progressTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
   },
   progressPercentage: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.primary,
   },
   progressBarContainer: {
@@ -1079,7 +1020,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   factorName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: 'white',
     marginBottom: 4,
   },
@@ -1089,7 +1030,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   factorValue: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: 'white',
     marginRight: 12,
   },
@@ -1103,7 +1044,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   factorStatusText: {
     fontSize: 10,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: 'white',
     marginLeft: 4,
   },
@@ -1147,7 +1088,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   simulateText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: 'white',
     marginLeft: 8,
   },
@@ -1176,7 +1117,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   insightTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: 'white',
     marginLeft: 12,
   },
@@ -1187,7 +1128,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   subsectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.text,
     marginBottom: 12,
     marginTop: 8,
@@ -1211,15 +1152,15 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   recommendationTitle: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: 'white',
-    textAlign: 'center',
+    textAlign: 'center' as const,
     marginTop: 8,
   },
   recommendationText: {
     fontSize: 10,
     color: 'rgba(255,255,255,0.8)',
-    textAlign: 'center',
+    textAlign: 'center' as const,
     marginTop: 4,
   },
   treatmentCard: {
@@ -1240,7 +1181,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   treatmentType: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
     marginLeft: 12,
     flex: 1,
@@ -1253,7 +1194,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   priorityText: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: 'white',
   },
   treatmentDescription: {
@@ -1300,7 +1241,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   timelineTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
     marginBottom: 8,
   },
@@ -1342,7 +1283,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   ctaText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: 'white',
     marginLeft: 12,
   },
@@ -1358,7 +1299,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   secondaryCtaText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.primary,
     marginLeft: 12,
   },
@@ -1384,7 +1325,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   premiumText: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: '#333',
     marginLeft: 6,
   },

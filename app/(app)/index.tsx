@@ -1,12 +1,14 @@
-import { StyleSheet, ScrollView, View, KeyboardAvoidingView, Platform } from 'react-native';
+import React from 'react';
+import { StyleSheet, ScrollView, View } from 'react-native';
+
 import Box from '@/presentation/components/common/Box';
 import Text from '@/presentation/components/common/Text';
 import { Button, EnhancedButton } from '@/presentation/components/common/EnhancedButton';
 import { ConditionalProgressDisplay } from '@/presentation/features/calculator/components/ConditionalProgressDisplay';
 import { EnhancedInfoCard } from '@/presentation/components/common';
 
-// 🚀 CALCULADORA PRINCIPAL
-import { useCalculatorFormOptimized as useCalculatorForm } from '@/presentation/features/calculator/useCalculatorFormOptimized';
+// 🚀 CALCULADORA PRINCIPAL - HOOK REAL V14.0
+import { useCalculatorForm } from '@/presentation/features/calculator';
 
 // 📋 COMPONENTES DEL FORMULARIO
 import { DemographicsForm } from '@/presentation/features/calculator/components/DemographicsForm';
@@ -17,10 +19,9 @@ import { MaleFactorForm } from '@/presentation/features/calculator/components/Ma
 // 🎨 TEMA Y UTILIDADES
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 import { ConfigModal } from '@/presentation/components/common/ConfigModal';
-import React, { useState } from 'react';
 
 export default function CalculatorScreen() {
-  const [configModalVisible, setConfigModalVisible] = useState(false);
+  const [configModalVisible, setConfigModalVisible] = React.useState(false);
   const theme = useDynamicTheme();
 
   // 🚀 HOOK PRINCIPAL DE CALCULADORA
@@ -131,10 +132,7 @@ export default function CalculatorScreen() {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <View style={styles.container}>
       <ScrollView keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <View style={styles.headerRow}>
@@ -163,24 +161,24 @@ export default function CalculatorScreen() {
           />
         </View>
 
-        <Box style={styles.formContainer}>
+        <Box style={styles.formContainer as any}>
           <DemographicsForm
-            control={control}
+            control={control as any}
             calculatedBmi={calculatedBmi}
             errors={errors}
             getRangeValidation={getRangeValidation}
           />
 
           {completionPercentage > 10 && (
-            <GynecologyHistoryForm control={control} errors={errors} />
+            <GynecologyHistoryForm control={control as any} errors={errors} />
           )}
 
           {completionPercentage > 30 && (
-            <LabTestsForm control={control} calculatedHoma={calculatedHoma} errors={errors} />
+            <LabTestsForm control={control as any} calculatedHoma={calculatedHoma} errors={errors} />
           )}
 
           {completionPercentage > 50 && (
-            <MaleFactorForm control={control} errors={errors} />
+            <MaleFactorForm control={control as any} errors={errors} />
           )}
         </Box>
 
@@ -228,7 +226,7 @@ export default function CalculatorScreen() {
           onClose={() => setConfigModalVisible(false)}
         />
       </ScrollView>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -254,12 +252,12 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   title: {
     flex: 1,
-    textAlign: 'center',
+    textAlign: 'center' as const,
     ...theme.typography.h1,
     color: theme.colors.primary,
   },
   subtitle: {
-    textAlign: 'center',
+    textAlign: 'center' as const,
     ...theme.typography.bodyLarge,
     color: theme.colors.textSecondary,
   },
@@ -290,7 +288,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     marginBottom: theme.spacing.xl,
   },
   buttonHelpText: {
-    textAlign: 'center',
+    textAlign: 'center' as const,
     ...theme.typography.caption,
     color: theme.colors.textSecondary,
     marginTop: theme.spacing.s,

@@ -1,7 +1,20 @@
 import React from 'react';
-import { Modal, View, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import Text from './Text';
 import { useDynamicTheme } from '../../../hooks/useDynamicTheme';
+
+// Safe imports for React Native components
+let Modal: any;
+let FlatList: any;
+try {
+  const RN = require('react-native');
+  Modal = RN.Modal;
+  FlatList = RN.FlatList;
+} catch {
+  // Fallback for environments without Modal/FlatList
+  Modal = View;
+  FlatList = View;
+}
 
 type OptionSelectorModalProps = {
   visible: boolean;
@@ -44,7 +57,7 @@ export const OptionSelectorModal: React.FC<OptionSelectorModalProps> = ({
               >
                 <Text style={[
                   styles.optionText,
-                  item.value === selectedValue && { color: theme.colors.primary, fontWeight: '600' }
+                  item.value === selectedValue && { color: theme.colors.primary, fontWeight: '600' as const }
                 ]}>
                   {item.label} {item.value === selectedValue ? '✔️' : ''}
                 </Text>
@@ -78,10 +91,10 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   modalTitle: { 
     fontSize: 18, 
-    fontWeight: 'bold', 
+    fontWeight: 'bold' as const, 
     marginBottom: 16,
     color: theme.colors.text,
-    textAlign: 'center',
+    textAlign: 'center' as const,
   },
   optionItem: { 
     paddingVertical: 12,
@@ -104,6 +117,6 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   closeButtonText: { 
     color: theme.colors.white, 
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
 });

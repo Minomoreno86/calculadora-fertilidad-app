@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useMemo } from 'react';
+import React from 'react';
 import { useAdvancedConfig, AdvancedConfigState } from '../hooks/useAdvancedConfig';
 
 // 🎯 TIPOS DEL CONTEXTO
@@ -35,17 +35,17 @@ interface ConfigContextType {
 }
 
 // 🎯 CONTEXTO
-const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
+const ConfigContext = React.createContext<ConfigContextType | undefined>(undefined);
 
 // 🎯 PROVIDER PRINCIPAL
 interface ConfigProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
   const configHook = useAdvancedConfig();
 
-  const contextValue: ConfigContextType = useMemo(() => ({
+  const contextValue: ConfigContextType = React.useMemo(() => ({
     ...configHook,
   }), [configHook]);
 
@@ -58,7 +58,7 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
 
 // 🎯 HOOK PARA USAR EL CONTEXTO
 export const useConfigContext = (): ConfigContextType => {
-  const context = useContext(ConfigContext);
+  const context = React.useContext(ConfigContext);
   
   if (!context) {
     throw new Error('useConfigContext debe usarse dentro de ConfigProvider');

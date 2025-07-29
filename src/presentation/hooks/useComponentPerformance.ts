@@ -1,8 +1,8 @@
+import React from 'react';
 // ===================================================================
 // 🚀 FASE 4A: HOOK ESPECIALIZADO PARA PERFORMANCE DE COMPONENTES
 // ===================================================================
 
-import { useEffect, useRef, useMemo, useCallback } from 'react';
 import { useBenchmark } from '../../core/utils/performanceBenchmark';
 import { detectDevicePerformance } from '../../core/performance/adaptivePerformanceConfig';
 
@@ -78,40 +78,40 @@ interface ComponentPerformanceData {
 
 export const useComponentPerformance = (options: UseComponentPerformanceOptions) => {
   const { measureTime } = useBenchmark();
-  const renderCount = useRef(0);
-  const propsChangedCount = useRef(0);
-  const effectsCount = useRef(0);
-  const lastRenderTime = useRef(0);
-  const totalRenderTime = useRef(0);
-  const previousProps = useRef<ComponentProps | null>(null);
-  const warnings = useRef<string[]>([]);
+  const renderCount = React.useRef(0);
+  const propsChangedCount = React.useRef(0);
+  const effectsCount = React.useRef(0);
+  const lastRenderTime = React.useRef(0);
+  const totalRenderTime = React.useRef(0);
+  const previousProps = React.useRef<ComponentProps | null>(null);
+  const warnings = React.useRef<string[]>([]);
   
   // 🧠 Neural performance trend tracking
-  const renderHistory = useRef<number[]>([]);
+  const renderHistory = React.useRef<number[]>([]);
   
   // 🆕 NEURAL ENHANCEMENTS V13.0
-  const frameDrops = useRef(0);
-  const memorySnapshots = useRef<number[]>([]);
-  const cacheHits = useRef(0);
-  const cacheMisses = useRef(0);
-  const performancePredictions = useRef<number[]>([]);
-  const neuralOptimizationHistory = useRef<{
+  const frameDrops = React.useRef(0);
+  const memorySnapshots = React.useRef<number[]>([]);
+  const cacheHits = React.useRef(0);
+  const cacheMisses = React.useRef(0);
+  const performancePredictions = React.useRef<number[]>([]);
+  const neuralOptimizationHistory = React.useRef<{
     timestamp: number;
     optimization: string;
     impact: number;
   }[]>([]);
 
   // 🎯 Neural device-adaptive thresholds
-  const adaptiveThresholds = useMemo(() => getAdaptiveThresholds(), []);
+  const adaptiveThresholds = React.useMemo(() => getAdaptiveThresholds(), []);
   
   // 🧠 Medical component profile detection
-  const medicalProfile = useMemo(() => {
+  const medicalProfile = React.useMemo(() => {
     const profile = MEDICAL_COMPONENT_PROFILES[options.componentName as keyof typeof MEDICAL_COMPONENT_PROFILES];
     return profile || { priority: options.medicalPriority || 'medium', targetFPS: 60 };
   }, [options.componentName, options.medicalPriority]);
 
   // 🧠 NEURAL MEMORY TRACKING
-  const trackMemoryUsage = useCallback(() => {
+  const trackMemoryUsage = React.useCallback(() => {
     try {
       const memInfo = (performance as Performance & {
         memory?: { usedJSHeapSize: number };
@@ -131,16 +131,16 @@ export const useComponentPerformance = (options: UseComponentPerformanceOptions)
   }, []);
 
   // 🧠 NEURAL CACHE PERFORMANCE TRACKING
-  const trackCacheHit = useCallback(() => {
+  const trackCacheHit = React.useCallback(() => {
     cacheHits.current++;
   }, []);
 
-  const trackCacheMiss = useCallback(() => {
+  const trackCacheMiss = React.useCallback(() => {
     cacheMisses.current++;
   }, []);
 
   // 🔮 NEURAL PERFORMANCE PREDICTION
-  const predictNextRenderTime = useCallback(() => {
+  const predictNextRenderTime = React.useCallback(() => {
     if (renderHistory.current.length < 3) return lastRenderTime.current;
     
     // Simple linear regression for prediction
@@ -165,7 +165,7 @@ export const useComponentPerformance = (options: UseComponentPerformanceOptions)
   }, []);
 
   // 🧠 NEURAL FRAME DROP DETECTION
-  const detectFrameDrops = useCallback((renderTime: number) => {
+  const detectFrameDrops = React.useCallback((renderTime: number) => {
     const targetFrameTime = 1000 / medicalProfile.targetFPS;
     if (renderTime > targetFrameTime * 1.5) {
       frameDrops.current++;
@@ -178,7 +178,7 @@ export const useComponentPerformance = (options: UseComponentPerformanceOptions)
   }, [medicalProfile.targetFPS]);
 
   // 🎯 Función personalizada de trackRender integrada
-  const trackRender = useCallback((name: string, duration: number) => {
+  const trackRender = React.useCallback((name: string, duration: number) => {
     // Integrar con el sistema de benchmark existente
     measureTime(name, () => {
       // Simulación de trabajo para registrar el tiempo
@@ -190,39 +190,41 @@ export const useComponentPerformance = (options: UseComponentPerformanceOptions)
   }, [measureTime]);
 
   // 📊 Medición automática de render
-  useEffect(() => {
-    if (options.trackRenders) {
-      const renderStart = performance.now();
-      
-      return () => {
-        const renderTime = performance.now() - renderStart;
-        lastRenderTime.current = renderTime;
-        totalRenderTime.current += renderTime;
-        renderCount.current++;
-        
-        // 🧠 NEURAL ENHANCEMENTS
-        trackMemoryUsage();
-        detectFrameDrops(renderTime);
-        if (renderTime < adaptiveThresholds.GOOD) {
-          trackCacheHit();
-        } else {
-          trackCacheMiss();
-        }
-        
-        trackRender(`${options.componentName}_manual`, renderTime);
-        
-        // 🚨 Warning si render es muy lento
-        if (options.warnThreshold && renderTime > options.warnThreshold) {
-          const warning = `⚠️ Render lento en ${options.componentName}: ${renderTime.toFixed(1)}ms`;
-          warnings.current.push(warning);
-          console.warn(warning);
-        }
-      };
+  React.useEffect(() => {
+    if (!options.trackRenders) {
+      return undefined;
     }
+    
+    const renderStart = performance.now();
+    
+    return () => {
+      const renderTime = performance.now() - renderStart;
+      lastRenderTime.current = renderTime;
+      totalRenderTime.current += renderTime;
+      renderCount.current++;
+      
+      // 🧠 NEURAL ENHANCEMENTS
+      trackMemoryUsage();
+      detectFrameDrops(renderTime);
+      if (renderTime < adaptiveThresholds.GOOD) {
+        trackCacheHit();
+      } else {
+        trackCacheMiss();
+      }
+      
+      trackRender(`${options.componentName}_manual`, renderTime);
+      
+      // 🚨 Warning si render es muy lento
+      if (options.warnThreshold && renderTime > options.warnThreshold) {
+        const warning = `⚠️ Render lento en ${options.componentName}: ${renderTime.toFixed(1)}ms`;
+        warnings.current.push(warning);
+        console.warn(warning);
+      }
+    };
   });
 
   // 📊 Tracking de efectos
-  const trackEffect = useCallback((effectName: string) => {
+  const trackEffect = React.useCallback((effectName: string) => {
     if (options.trackEffects) {
       effectsCount.current++;
       measureTime(`${options.componentName}_effect_${effectName}`, () => {
@@ -232,7 +234,7 @@ export const useComponentPerformance = (options: UseComponentPerformanceOptions)
   }, [options.componentName, options.trackEffects, measureTime]);
 
   // 🔍 Análisis de props con tipos seguros
-  const analyzeProps = useCallback((currentProps: ComponentProps) => {
+  const analyzeProps = React.useCallback((currentProps: ComponentProps) => {
     if (options.trackProps && previousProps.current) {
       const changed = Object.keys(currentProps).some(
         key => currentProps[key] !== previousProps.current?.[key]
@@ -253,7 +255,7 @@ export const useComponentPerformance = (options: UseComponentPerformanceOptions)
   }, [options.componentName, options.trackProps, options.autoOptimize]);
 
   // 📈 Datos de performance con umbrales inteligentes y neural analysis
-  const performanceData: ComponentPerformanceData = useMemo(() => {
+  const performanceData: ComponentPerformanceData = React.useMemo(() => {
     const averageRenderTime = renderCount.current > 0 
       ? totalRenderTime.current / renderCount.current 
       : 0;
@@ -347,7 +349,7 @@ export const useComponentPerformance = (options: UseComponentPerformanceOptions)
   }, [options.warnThreshold, adaptiveThresholds]);
 
   // 🧹 Limpiar warnings después de un tiempo
-  useEffect(() => {
+  React.useEffect(() => {
     const cleanup = setTimeout(() => {
       warnings.current = [];
     }, 30000);
@@ -356,11 +358,11 @@ export const useComponentPerformance = (options: UseComponentPerformanceOptions)
   }, []);
 
   // 🎯 Funciones de utilidad
-  const measureFunction = useCallback(<T,>(name: string, fn: () => T): T => {
+  const measureFunction = React.useCallback(<T,>(name: string, fn: () => T): T => {
     return measureTime(`${options.componentName}_${name}`, fn, 'calculation');
   }, [measureTime, options.componentName]);
 
-  const measureAsyncFunction = useCallback(async <T,>(name: string, fn: () => Promise<T>): Promise<T> => {
+  const measureAsyncFunction = React.useCallback(async <T,>(name: string, fn: () => Promise<T>): Promise<T> => {
     const startTime = performance.now();
     try {
       const result = await fn();
@@ -374,7 +376,7 @@ export const useComponentPerformance = (options: UseComponentPerformanceOptions)
   }, [trackRender, options.componentName]);
 
   // 📊 Recomendaciones específicas con umbrales inteligentes y neural insights
-  const getRecommendations = useCallback((): string[] => {
+  const getRecommendations = React.useCallback((): string[] => {
     const recommendations: string[] = [];
     
     // 🧠 Neural-enhanced recommendations based on component classification

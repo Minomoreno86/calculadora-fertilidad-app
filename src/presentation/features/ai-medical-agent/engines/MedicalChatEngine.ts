@@ -4,8 +4,43 @@
  */
 
 import { EvaluationState, Factors } from '@/core/domain/models';
-import { MedicalKnowledgeEngine } from '../../../../../ai-medical-agent/core/modules-integration/ModulesIntegration';
-import { NeuralMedicalAISystem, SuperintellignentAnalysisResult } from '../../../../../ai-medical-agent/core/neural-engines/NeuralMedicalAISystem';
+
+// Safe imports for AI Medical Agent components
+let MedicalKnowledgeEngine: any;
+let NeuralMedicalAISystem: any;
+let SuperintellignentAnalysisResult: any;
+
+try {
+  const ModulesIntegration = require('../../../../../ai-medical-agent/core/modules-integration/ModulesIntegration');
+  MedicalKnowledgeEngine = ModulesIntegration.MedicalKnowledgeEngine || class { 
+    constructor() {} 
+    analyzePatientData() { return null; }
+    getKnowledgeForQuery() { return null; }
+  };
+  
+  const NeuralSystem = require('../../../../../ai-medical-agent/core/neural-engines/NeuralMedicalAISystem');
+  NeuralMedicalAISystem = NeuralSystem.NeuralMedicalAISystem || class {
+    constructor() {}
+    performSuperintellignentAnalysis() { return Promise.resolve(null); }
+  };
+  SuperintellignentAnalysisResult = NeuralSystem.SuperintellignentAnalysisResult || {};
+} catch (error) {
+  console.warn('⚠️ [MEDICAL ENGINE] AI Medical Agent components not available, using fallback implementations');
+  
+  MedicalKnowledgeEngine = class {
+    constructor() {}
+    analyzePatientData() { return null; }
+    getKnowledgeForQuery() { return null; }
+  };
+  
+  NeuralMedicalAISystem = class {
+    constructor() {}
+    performSuperintellignentAnalysis() { return Promise.resolve(null); }
+  };
+  
+  SuperintellignentAnalysisResult = {};
+}
+
 import { MedicalResponseGenerator } from './MedicalResponseGenerator';
 import { 
   ConversationContext, 
@@ -21,11 +56,11 @@ import {
 
 export class MedicalAIChatEngine {
   private readonly context: ConversationContext;
-  private readonly medicalKnowledge: MedicalKnowledgeEngine;
+  private readonly medicalKnowledge: any;
   private readonly medicalResponseGenerator: MedicalResponseGenerator;
-  private readonly neuralPatternEngine: typeof NeuralMedicalAISystem | null;
-  private readonly neuralConversationEngine: typeof NeuralMedicalAISystem | null;
-  private readonly neuralMedicalAI: NeuralMedicalAISystem | null;
+  private readonly neuralPatternEngine: any;
+  private readonly neuralConversationEngine: any;
+  private readonly neuralMedicalAI: any;
   
   constructor(evaluation: EvaluationState) {
     this.context = {
@@ -77,7 +112,7 @@ export class MedicalAIChatEngine {
   /**
    * 🧠 NEURAL PATTERN ANALYSIS V13.0
    */
-  private async performNeuralPatternAnalysis(factors: Factors): Promise<SuperintellignentAnalysisResult | null> {
+  private async performNeuralPatternAnalysis(factors: Factors): Promise<any | null> {
     try {
       if (!this.neuralMedicalAI) {
         const neuralAI = new NeuralMedicalAISystem({

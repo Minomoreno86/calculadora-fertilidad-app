@@ -18,7 +18,7 @@ import Text from '../../../components/common/Text';
 import { OptimizedNumericInput } from '../../../components/common';
 import { CalculatedValue } from '../../../components/common/CalculatedValue';
 import { useDynamicTheme } from '../../../../hooks/useDynamicTheme';
-import { FormState } from '../useCalculatorFormOptimized';
+import { FormState } from '../types/calculator.types';
 
 type Props = {
   control: Control<FormState>;
@@ -66,7 +66,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   clinicalNote: {
     color: theme?.colors?.textSecondary,
-    fontStyle: 'italic',
+    fontStyle: 'italic' as const,
     lineHeight: 18,
   },
 });

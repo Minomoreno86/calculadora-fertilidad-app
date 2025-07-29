@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+const { useState } = React;
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import Text from './Text';
 import { Control, Controller, FieldValues, Path, FieldError } from 'react-hook-form';
@@ -67,7 +68,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   label: {
     ...theme.typography.body,
     marginBottom: theme.spacing.xs,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
   },
   input: {

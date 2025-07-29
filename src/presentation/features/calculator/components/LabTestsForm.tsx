@@ -1,11 +1,11 @@
-import React, { memo, useCallback } from 'react';
+import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Control, FieldErrors } from 'react-hook-form';
 import Text from '@/presentation/components/common/Text';
 import { ControlledTextInput } from '@/presentation/components/common/ControlledTextInput';
 import { CalculatedValue } from '@/presentation/components/common/CalculatedValue';
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
-import { FormState } from '../useCalculatorFormOptimized';
+import { FormState } from '../types/calculator.types';
 
 type Props = {
   control: Control<FormState>;
@@ -13,7 +13,7 @@ type Props = {
   errors: FieldErrors<FormState>;
 };
 
-export const LabTestsForm = memo<Props>(({ control, calculatedHoma, errors }) => {
+export const LabTestsForm = React.memo<Props>(({ control, calculatedHoma, errors }) => {
   // 🎨 TEMA DINÁMICO
   const theme = useDynamicTheme();
   
@@ -21,7 +21,7 @@ export const LabTestsForm = memo<Props>(({ control, calculatedHoma, errors }) =>
   const styles = createStyles(theme);
   
   // 🚀 FASE 2C: Memoizar función de interpretación
-  const getHomaInterpretation = useCallback((homa: number) => {
+  const getHomaInterpretation = React.useCallback((homa: number) => {
     if (homa <= 2.5) return { text: 'Sensibilidad normal a la insulina', type: 'normal' as const };
     if (homa <= 3.8) return { text: 'Resistencia leve a la insulina', type: 'warning' as const };
     return { text: 'Resistencia significativa a la insulina', type: 'danger' as const };

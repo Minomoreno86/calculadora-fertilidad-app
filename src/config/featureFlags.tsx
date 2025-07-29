@@ -80,16 +80,16 @@ export const getEffectiveConfig = (
 };
 
 // 🎯 Hook para usar la configuración de features
-import React, { createContext, useContext, ReactNode } from 'react';
+import React from 'react';
 
-const FeatureConfigContext = createContext<FeatureConfig>(DEFAULT_FEATURES);
+const FeatureConfigContext = React.createContext<FeatureConfig>(DEFAULT_FEATURES);
 
 export const useFeatureConfig = () => {
-  return useContext(FeatureConfigContext);
+  return React.useContext(FeatureConfigContext);
 };
 
 interface FeatureConfigProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
   config?: Partial<FeatureConfig>;
   abTestGroup?: string;
 }

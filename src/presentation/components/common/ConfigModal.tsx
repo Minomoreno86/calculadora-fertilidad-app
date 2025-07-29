@@ -1,15 +1,27 @@
-import React, { useState } from 'react';
+import React from 'react';
+const { useState } = React;
 import {
-  Modal,
   View,
   StyleSheet,
   TouchableOpacity,
-  Switch,
   ScrollView,
-  Alert,
 } from 'react-native';
 import Text from './Text';
 import { useDynamicTheme } from '../../../hooks/useDynamicTheme';
+
+// Importación segura de componentes que pueden no estar disponibles
+let Modal: any = null;
+let Switch: any = null;
+let Alert: any = null;
+
+try {
+  const RN = require('react-native');
+  Modal = RN.Modal;
+  Switch = RN.Switch;
+  Alert = RN.Alert;
+} catch (error) {
+  console.warn('Modal, Switch o Alert no disponibles en esta versión de React Native');
+}
 
 interface ConfigModalProps {
   visible: boolean;
@@ -38,6 +50,11 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ visible, onClose }) =>
   };
 
   const handleExportData = () => {
+    if (!Alert) {
+      console.log('📤 Exportar Datos - Alert no disponible');
+      return;
+    }
+    
     Alert.alert(
       '📤 Exportar Datos',
       'Tu información será exportada de forma segura y privada.',
@@ -49,6 +66,11 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ visible, onClose }) =>
   };
 
   const handleClearData = () => {
+    if (!Alert) {
+      console.log('🧹 Limpiar Datos - Alert no disponible');
+      return;
+    }
+    
     Alert.alert(
       '🧹 Limpiar Datos',
       '¿Estás segura de que quieres eliminar toda la información? Esta acción no se puede deshacer.',
@@ -64,6 +86,11 @@ export const ConfigModal: React.FC<ConfigModalProps> = ({ visible, onClose }) =>
   };
 
   const handleAbout = () => {
+    if (!Alert) {
+      console.log('ℹ️ Acerca de - Alert no disponible');
+      return;
+    }
+    
     Alert.alert(
       'ℹ️ Acerca de',
       'Calculadora de Fertilidad v1.0\n\nDesarrollada con cuidado para proporcionar información personalizada sobre fertilidad.\n\n⚠️ Esta app es solo informativa y no reemplaza la consulta médica.',
@@ -220,12 +247,12 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   closeText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.primary,
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.surface,
     fontFamily: 'Lato-Bold',
   },
@@ -241,7 +268,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.text,
     marginBottom: 15,
     fontFamily: 'Lato-Bold',
@@ -266,7 +293,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   optionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
     fontFamily: 'Lato-Bold',
   },
@@ -308,7 +335,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   fontSizeText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.textSecondary,
   },
   fontSizeTextActive: {

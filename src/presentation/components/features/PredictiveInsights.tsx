@@ -16,9 +16,22 @@
  * ✅ Métricas del modelo IA
  */
 
-import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import React from 'react';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { StyleSheet } from 'react-native';
+
+// Safe imports for optional React Native components
+let ActivityIndicator: any;
+let Alert: any;
+
+try {
+  const RNComponents = require('react-native');
+  ActivityIndicator = RNComponents.ActivityIndicator || (() => null);
+  Alert = RNComponents.Alert || { alert: () => {} };
+} catch {
+  ActivityIndicator = () => null;
+  Alert = { alert: () => {} };
+}
 import { usePrediction } from '../../hooks/usePrediction';
 import type { UserInput } from '../../../core/domain/models';
 import type { PredictionResult } from '../../../core/domain/services/predictiveEngine';
@@ -65,8 +78,8 @@ export function PredictiveInsights({
     priority: 'balanced'
   });
 
-  const [activeTab, setActiveTab] = useState<string>('overview');
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['prediction']));
+  const [activeTab, setActiveTab] = React.useState<string>('overview');
+  const [expandedSections, setExpandedSections] = React.useState<Set<string>>(new Set(['prediction']));
 
   // ===================================================================
   // 🎯 CONFIGURACIÓN DE TABS
@@ -84,7 +97,7 @@ export function PredictiveInsights({
   // 🧠 COMPUTACIONES MEMOIZADAS
   // ===================================================================
 
-  const predictionSummary = useMemo(() => {
+  const predictionSummary = React.useMemo(() => {
     if (!predictionState.result) return null;
 
     const result = predictionState.result;
@@ -524,7 +537,7 @@ function getRiskColor(riskLevel: string): string {
     case 'medium': return theme.colors.warning;
     case 'high': return theme.colors.error;
     case 'critical': return '#8B0000';
-    default: return theme.colors.gray;
+    default: return theme.colors.text;
   }
 }
 
@@ -540,7 +553,7 @@ function getPriorityColor(priority: string): string {
     case 'high': return theme.colors.error;
     case 'medium': return theme.colors.warning;
     case 'low': return theme.colors.success;
-    default: return theme.colors.gray;
+    default: return theme.colors.text;
   }
 }
 
@@ -567,14 +580,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.text,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: 'center' as const,
   },
   
   loadingContainer: {
@@ -585,7 +598,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.text,
     marginTop: 16,
   },
@@ -614,7 +627,7 @@ const styles = StyleSheet.create({
   errorMessage: {
     fontSize: 14,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: 'center' as const,
     marginBottom: 20,
   },
   retryButton: {
@@ -1011,13 +1024,13 @@ const styles = StyleSheet.create({
   treatmentEvidence: {
     fontSize: 12,
     color: theme.colors.textSecondary,
-    fontStyle: 'italic',
+    fontStyle: 'italic' as const,
   },
   
   // Footer
   footer: {
     padding: 12,
-    backgroundColor: theme.colors.backgroundSecondary,
+    backgroundColor: theme.colors.surface,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
   },

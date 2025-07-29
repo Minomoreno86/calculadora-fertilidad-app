@@ -97,12 +97,12 @@ export const FIELD_CONFIGS: FieldConfig[] = [
   },
   {
     name: 'infertilityDuration',
-    label: 'Tiempo buscando embarazo (meses)',
+    label: 'Tiempo buscando embarazo (años)',
     type: 'number',
     required: true,
     section: 'gynecology',
     weight: 0.15,
-    validation: { min: 1, max: 240 }
+    validation: { min: 0.5, max: 20 }
   },
   {
     name: 'hasPcos',

@@ -1,12 +1,44 @@
+import React from 'react';
+import { TouchableOpacity, StyleSheet, View, ViewStyle, TextStyle } from 'react-native';
+import Text from './Text';
+import { useDynamicTheme } from '@/hooks/useDynamicTheme';
+
+// Simple emoji helper
+const getModernEmoji = (name: string): string => {
+  const emojiMap: { [key: string]: string } = {
+    loading: '⏳',
+    check: '✅',
+    heart: '❤️',
+    star: '⭐',
+    medical: '🏥',
+    default: '📱'
+  };
+  return emojiMap[name] || emojiMap.default;
+};
+
+// Safe imports for React Native components
+let Animated: any;
+let ActivityIndicator: any;
+try {
+  const RN = require('react-native');
+  Animated = RN.Animated;
+  ActivityIndicator = RN.ActivityIndicator;
+} catch {
+  // Fallback for environments without components
+  Animated = {
+    Value: class { constructor(v: number) { this.value = v; } value: number; setValue: (v: number) => void = () => {}; },
+    timing: () => ({ start: () => {} }),
+    loop: () => ({ start: () => {} }),
+    sequence: () => ({ start: () => {} }),
+    spring: () => ({ start: () => {} }),
+    View: View
+  };
+  ActivityIndicator = View;
+}
+
 // ===================================================================
 // 🎨 BOTÓN UNIFICADO - Combina funcionalidad básica y efectos avanzados
 // ===================================================================
-
-import React, { memo } from 'react';
-import { TouchableOpacity, StyleSheet, View, Animated, ViewStyle, ActivityIndicator } from 'react-native';
-import Text from './Text';
-import { useDynamicTheme } from '@/hooks/useDynamicTheme';
-import { getModernEmoji } from './ModernIcon';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'text' | 'medical' | 'clinical' | 'fertility';
 type ButtonSize = 'small' | 'medium' | 'large' | 'clinical';
@@ -27,7 +59,7 @@ interface Props {
   completionPercentage?: number; // Solo para enhanced=true
 }
 
-export const EnhancedButton: React.FC<Props> = memo(({
+export const EnhancedButton: React.FC<Props> = React.memo(({
   title,
   onPress,
   variant = 'primary',
@@ -71,6 +103,7 @@ export const EnhancedButton: React.FC<Props> = memo(({
       glow.start();
       return () => glow.stop();
     }
+    return undefined;
   }, [enhanced, variant, disabled, loading, glowAnimation]);
 
   // 🎯 Animaciones de presión (solo si enhanced=true)
@@ -92,8 +125,8 @@ export const EnhancedButton: React.FC<Props> = memo(({
     }
   };
 
-  // 🎨 Estilos dinámicos
-  const getButtonStyle = () => {
+  // 🎨 Estilos dinámicos - separar text y view styles
+  const getButtonStyle = (): ViewStyle[] => {
     const variantStyle = variant === 'clinical' ? 'clinicalVariant' : variant;
     const baseStyle = [
       styles.button, 
@@ -101,19 +134,25 @@ export const EnhancedButton: React.FC<Props> = memo(({
       styles[variantStyle],
       fullWidth && styles.fullWidth,
       disabled && styles.disabled,
-    ];
+    ].filter(Boolean) as ViewStyle[];
     return baseStyle;
   };
 
-  const getTextStyle = () => {
+  const getTextStyle = (): TextStyle[] => {
     const sizeTextKey = size === 'clinical' ? 'clinicalSizeText' : `${size}Text`;
-    const baseStyle = [
-      styles.buttonText, 
-      styles[sizeTextKey as keyof typeof styles],
-      styles[`${variant}Text` as keyof typeof styles],
-      disabled && styles.disabledText,
-    ];
-    return baseStyle;
+    // Solo incluir estilos que son específicamente para texto
+    const textStyles: TextStyle[] = [];
+    
+    // Agregar solo propiedades de texto válidas
+    textStyles.push(styles.buttonText);
+    textStyles.push(styles[sizeTextKey as keyof typeof styles] as TextStyle);
+    textStyles.push(styles[`${variant}Text` as keyof typeof styles] as TextStyle);
+    
+    if (disabled) {
+      textStyles.push(styles.disabledText);
+    }
+    
+    return textStyles.filter(Boolean);
   };
 
   // 🎯 Icono dinámico
@@ -197,9 +236,9 @@ export const EnhancedButton: React.FC<Props> = memo(({
           <View style={styles.content}>
             {iconName && iconPosition === 'left' && (
               <Text style={[
-                ...getTextStyle(), 
+                styles.buttonText, 
                 styles.iconLeft,
-                { fontSize: getIconSize() + 2 }
+                { fontSize: getIconSize() + 2, color: getIconColor() }
               ]}>
                 {getIcon()}
               </Text>
@@ -211,9 +250,9 @@ export const EnhancedButton: React.FC<Props> = memo(({
 
             {iconName && iconPosition === 'right' && (
               <Text style={[
-                ...getTextStyle(), 
+                styles.buttonText, 
                 styles.iconRight,
-                { fontSize: getIconSize() + 2 }
+                { fontSize: getIconSize() + 2, color: getIconColor() }
               ]}>
                 {getIcon()}
               </Text>
@@ -234,13 +273,13 @@ export const EnhancedButton: React.FC<Props> = memo(({
 
 // 🎨 Función para crear estilos dinámicos
 const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
-  // 🎯 Base del botón
+  // 🎯 Base del botón - ViewStyle
   button: {
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    overflow: 'hidden',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    position: 'relative' as const,
+    overflow: 'hidden' as const,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -333,11 +372,11 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     width: '100%',
   },
 
-  // 📝 Texto
+  // 📝 Texto - TextStyle only
   buttonText: {
     fontFamily: 'Lato-Bold',
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: 'bold' as const,
+    textAlign: 'center' as const,
   },
   smallText: {
     fontSize: 12,
@@ -367,7 +406,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   // 🏥 MEDICAL VARIANTS TEXT
   medicalText: {
     color: '#ffffff',
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
   clinicalText: {
     color: '#ffffff',
@@ -375,35 +414,33 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   fertilityText: {
     color: '#ffffff',
-    fontWeight: '700',
+    fontWeight: '700' as const,
   },
   disabledText: {
     color: theme.colors.white,
   },
 
-  // 🎯 Layout
+  // 🎯 Layout - ViewStyle only
   content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
     zIndex: 2,
   },
 
-  // 🎨 Iconos
+  // 🎨 Iconos - solo texto, sin ViewStyle properties
   iconLeft: {
     marginRight: theme.spacing.s,
     opacity: 0.9,
-    transform: [{ scale: 1.1 }],
   },
   iconRight: {
     marginLeft: theme.spacing.s,
     opacity: 0.9,
-    transform: [{ scale: 1.1 }],
   },
 
-  // ✨ Efectos especiales (solo enhanced)
+  // ✨ Efectos especiales (solo enhanced) - ViewStyle only
   glowEffect: {
-    position: 'absolute',
+    position: 'absolute' as const,
     top: -2,
     left: -2,
     right: -2,
@@ -412,7 +449,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     opacity: 0.3,
   },
   progressContainer: {
-    position: 'absolute',
+    position: 'absolute' as const,
     bottom: 0,
     left: 0,
     right: 0,
@@ -424,14 +461,14 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     borderBottomRightRadius: 8,
   },
   loadingOverlay: {
-    position: 'absolute',
+    position: 'absolute' as const,
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
     borderRadius: 8,
   },
   loadingSpinner: {

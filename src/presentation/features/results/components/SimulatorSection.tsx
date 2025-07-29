@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { StyleSheet, View, TouchableOpacity } from 'react-native';
 import Text from '../../../components/common/Text';
 import Box from '../../../components/common/Box';
@@ -18,7 +18,7 @@ type SimulationInsightProps = {
 const SimulationInsight: React.FC<SimulationInsightProps> = ({ label, value, factorName, explanation, onSimulate }) => (
   <View style={styles.insightRow}>
     <Text style={styles.insightText}>
-      {label}: <Text style={{ fontWeight: 'normal' }}>{value}</Text>
+      {label}: <Text style={{ fontWeight: 'normal' as const }}>{value}</Text>
     </Text>
     <TouchableOpacity style={styles.simulateButton} onPress={() => onSimulate(factorName, explanation)}>
       <Text style={styles.simulateButtonText}>✨ Simular Mejora</Text>
@@ -44,10 +44,10 @@ const factorLabels: Partial<Record<keyof Diagnostics, string>> = {
 type Props = { evaluation: EvaluationState };
 
 export const SimulatorSection: React.FC<Props> = ({ evaluation }) => {
-  const [useAdvancedSimulator, setUseAdvancedSimulator] = useState(true);
+  const [useAdvancedSimulator, setUseAdvancedSimulator] = React.useState(true);
   const { simulationResult, simulateFactor, simulateAllImprovements } = useFertilitySimulator(evaluation);
   const suboptimalFactors = Object.entries(evaluation.factors).filter(
-    ([key, value]) => key !== 'baseAgeProbability' && value < 1.0,
+    ([key, value]) => key !== 'baseAgeProbability' && (value as number) < 1.0,
   );
 
   if (suboptimalFactors.length === 0) return null;
@@ -96,7 +96,7 @@ export const SimulatorSection: React.FC<Props> = ({ evaluation }) => {
         <Box style={[styles.card, styles.simulatedCard]}>
           <Text style={styles.title}>✨ Pronóstico Simulado</Text>
           <Text style={styles.simulatedText}>
-            Al mejorar tu <Text style={{ fontWeight: 'bold' }}>{simulationResult.explanation}</Text>, tu probabilidad
+            Al mejorar tu <Text style={{ fontWeight: 'bold' as const }}>{simulationResult.explanation}</Text>, tu probabilidad
             podría aumentar de {simulationResult.originalPrognosis.toFixed(1)}% a:
           </Text>
           <Text style={styles.prognosisHighlight}>{simulationResult.newPrognosis.toFixed(1)}%</Text>
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   toggleText: {
     color: theme.colors.background,
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
   },
   card: { ...theme.card, padding: theme.spacing.l, marginBottom: theme.spacing.m },
   simulatedCard: {
@@ -182,14 +182,14 @@ const styles = StyleSheet.create({
   },
   prognosisHighlight: {
     fontSize: 32,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.success,
-    textAlign: 'center',
+    textAlign: 'center' as const,
     marginVertical: 8,
   },
   improvementText: {
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: 'center' as const,
     color: theme.colors.textSecondary,
     marginBottom: 8,
   },
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.secondary,
     borderRadius: 15,
   },
-  simulateButtonText: { ...theme.typography.small, fontWeight: 'bold', color: theme.colors.buttonText },
+  simulateButtonText: { ...theme.typography.small, fontWeight: 'bold' as const, color: theme.colors.buttonText },
   simulateAllButton: {
     marginTop: theme.spacing.m,
     padding: theme.spacing.s,

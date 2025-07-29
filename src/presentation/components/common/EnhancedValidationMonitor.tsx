@@ -3,9 +3,26 @@
 // ===================================================================
 
 import React from 'react';
-import { View, StyleSheet, Animated } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import Text from './Text';
 import { theme } from '@/config/theme';
+
+// Safe Animated import for React Native compatibility
+let Animated: any;
+try {
+  const RN = require('react-native');
+  Animated = RN.Animated;
+} catch {
+  // Fallback for environments without Animated
+  Animated = {
+    Value: class { constructor(v: number) { this.value = v; } value: number; setValue: (v: number) => void = () => {}; },
+    timing: () => ({ start: () => {} }),
+    loop: () => ({ start: () => {} }),
+    sequence: () => ({ start: () => {} }),
+    View: View,
+    interpolate: (config: any) => config
+  };
+}
 
 interface ValidationMetrics {
   isValidating: boolean;
@@ -237,7 +254,7 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.primary,
   },
   statusDot: {
@@ -276,16 +293,16 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.text,
     minWidth: 45,
-    textAlign: 'right',
+    textAlign: 'right' as const,
   },
   status: {
     fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-    fontStyle: 'italic',
+    fontWeight: '600' as const,
+    textAlign: 'center' as const,
+    fontStyle: 'italic' as const,
   },
   metricsGrid: {
     flexDirection: 'row',
@@ -313,13 +330,13 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#6c757d',
     marginBottom: 4,
-    textAlign: 'center',
+    textAlign: 'center' as const,
   },
   metricValue: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.primary,
-    textAlign: 'center',
+    textAlign: 'center' as const,
   },
   detailSection: {
     backgroundColor: '#f8f9fa',
@@ -331,7 +348,7 @@ const styles = StyleSheet.create({
   },
   detailTitle: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.primary,
     marginBottom: 12,
   },
@@ -347,13 +364,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6c757d',
     marginBottom: 4,
-    textAlign: 'center',
+    textAlign: 'center' as const,
   },
   detailValue: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
-    textAlign: 'center',
+    textAlign: 'center' as const,
   },
   footer: {
     flexDirection: 'row',
@@ -373,12 +390,12 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 12,
     color: '#059669',
-    fontWeight: '500',
+    fontWeight: '500' as const,
   },
   efficiencyBadge: {
     fontSize: 11,
     color: '#6c757d',
-    fontStyle: 'italic',
+    fontStyle: 'italic' as const,
     backgroundColor: '#e9ecef',
     paddingHorizontal: 8,
     paddingVertical: 2,

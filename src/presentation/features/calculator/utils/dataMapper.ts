@@ -1,11 +1,12 @@
-import { FormState } from '../useCalculatorFormOptimized';
+import { FormState } from '../types/calculator.types';
 import { UserInput } from '@/core/domain/models';
 
 export const mapFormStateToUserInput = (
   formData: FormState,
-  calculatedBmi: number | null,
-  calculatedHoma: number | null
+  calculatedBmi?: number | null,
+  calculatedHoma?: number | null
 ): UserInput => {
+  console.log('🚨 DATAMAPPER EJECUTANDOSE - INFERTILITY RAW:', formData.infertilityDuration);
   
   // 🔧 Helper para convertir campos string a number correctamente
   const parseOptionalNumber = (value: string | number | undefined): number | undefined => {
@@ -44,7 +45,20 @@ export const mapFormStateToUserInput = (
 
     // Ginecología - convertir strings a numbers
     cycleDuration: parseOptionalNumber(formData.cycleLength),
-    infertilityDuration: parseOptionalNumber(formData.infertilityDuration),
+    // 🔄 CONVERSIÓN: Usuario ingresa años, motor espera meses
+    infertilityDuration: (() => {
+      const rawValue = formData.infertilityDuration;
+      const parsedValue = parseOptionalNumber(rawValue);
+      const monthsValue = parsedValue ? parsedValue * 12 : undefined;
+      console.log('🔍 DURACION INFERTILIDAD DEBUG:', { 
+        rawValue, 
+        parsedValue, 
+        monthsValue,
+        rawType: typeof rawValue,
+        parsedType: typeof parsedValue 
+      });
+      return monthsValue;
+    })(),
     hasPcos: formData.hasPcos,
     endometriosisGrade: formData.endometriosisStage,
     myomaType: formData.myomaType,

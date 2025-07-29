@@ -1,11 +1,24 @@
-import React, { useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, LayoutAnimation, Platform, UIManager } from 'react-native';
+import React from 'react';
+const { useState } = React;
+import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import Text from './Text';
 import { useDynamicTheme } from '../../../hooks/useDynamicTheme';
 import { Ionicons } from '@expo/vector-icons';
 
-// Habilitar LayoutAnimation para Android
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+// Importación condicional para componentes que pueden no estar disponibles
+let LayoutAnimation: any = null;
+let UIManager: any = null;
+
+try {
+  const RN = require('react-native');
+  LayoutAnimation = RN.LayoutAnimation;
+  UIManager = RN.UIManager;
+} catch (error) {
+  console.warn('LayoutAnimation/UIManager no disponibles en esta versión de React Native');
+}
+
+// Habilitar LayoutAnimation para Android si está disponible
+if (Platform.OS === 'android' && UIManager?.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
@@ -23,7 +36,9 @@ const Accordion: React.FC<AccordionProps> = ({ title, children, initialExpanded 
   const [isExpanded, setIsExpanded] = useState(initialExpanded);
 
   const toggleExpand = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    if (LayoutAnimation?.configureNext) {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets?.easeInEaseOut || {});
+    }
     setIsExpanded(!isExpanded);
   };
 
@@ -59,7 +74,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.text,
   },
   content: {

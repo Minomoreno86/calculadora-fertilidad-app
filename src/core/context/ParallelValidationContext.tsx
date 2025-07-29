@@ -5,7 +5,7 @@
  * que necesitan acceso a sus métricas y estado en tiempo real.
  */
 
-import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
+import React from 'react';
 import type { ValidationMetrics } from '@/core/workers/parallelValidationEngine_FASE2';
 
 // 🚀 MÉTRICAS EXTENDIDAS DEL MOTOR PARALELO
@@ -41,14 +41,14 @@ const defaultContext: ParallelValidationContextType = {
 };
 
 // 🚀 CREAR CONTEXTO
-const ParallelValidationContext = createContext<ParallelValidationContextType>(defaultContext);
+const ParallelValidationContext = React.createContext<ParallelValidationContextType>(defaultContext);
 
 // 🚀 PROVIDER DEL CONTEXTO
-export const ParallelValidationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [metrics, setMetrics] = useState<ExtendedParallelMetrics | null>(null);
-  const [isEngineActive, setIsEngineActive] = useState(false);
+export const ParallelValidationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [metrics, setMetrics] = React.useState<ExtendedParallelMetrics | null>(null);
+  const [isEngineActive, setIsEngineActive] = React.useState(false);
 
-  const updateMetrics = useCallback((newMetrics: ExtendedParallelMetrics) => {
+  const updateMetrics = React.useCallback((newMetrics: ExtendedParallelMetrics) => {
     setMetrics({
       ...newMetrics,
       lastUpdate: Date.now(),
@@ -57,16 +57,16 @@ export const ParallelValidationProvider: React.FC<{ children: ReactNode }> = ({ 
     setIsEngineActive(true);
   }, []);
 
-  const markEngineActive = useCallback(() => {
+  const markEngineActive = React.useCallback(() => {
     setIsEngineActive(true);
   }, []);
 
-  const markEngineInactive = useCallback(() => {
+  const markEngineInactive = React.useCallback(() => {
     setIsEngineActive(false);
   }, []);
 
   // 🧠 NEURAL OPTIMIZATION: Memoizar value object para prevenir re-renders
-  const contextValue = useMemo(() => ({
+  const contextValue = React.useMemo(() => ({
     metrics,
     updateMetrics,
     isEngineActive,
@@ -83,7 +83,7 @@ export const ParallelValidationProvider: React.FC<{ children: ReactNode }> = ({ 
 
 // 🚀 HOOK PARA USAR EL CONTEXTO
 export const useParallelValidationContext = (): ParallelValidationContextType => {
-  const context = useContext(ParallelValidationContext);
+  const context = React.useContext(ParallelValidationContext);
   
   if (!context) {
     throw new Error('useParallelValidationContext debe usarse dentro de ParallelValidationProvider');

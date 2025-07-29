@@ -10,9 +10,9 @@
  * @version 1.0 - Optimización crítica
  */
 
-import { useRef, useMemo, useCallback } from 'react';
+import React from 'react';
 import { UseFormWatch } from 'react-hook-form';
-import { FormState } from '../useCalculatorFormOptimized';
+import { FormState } from '../types/calculator.types';
 
 interface UseStableWatchedFieldsOptions {
   /**
@@ -52,15 +52,15 @@ export const useStableWatchedFields = (
   const { throttleTime = 100 } = options;
   
   // 🚀 Referencias estables
-  const watchedFieldsRef = useRef<string>('{}');
-  const stableFieldsRef = useRef<FormState | null>(null);
-  const lastUpdateRef = useRef<number>(0);
+  const watchedFieldsRef = React.useRef<string>('{}');
+  const stableFieldsRef = React.useRef<FormState | null>(null);
+  const lastUpdateRef = React.useRef<number>(0);
   
   // 🚀 Observar campos con throttling - versión simplificada
   const watchedFieldsRaw = watch(); // Observar todos los campos
   
   // 🚀 Estabilizar watchedFields solo cuando sea necesario
-  const stableWatchedFields = useMemo(() => {
+  const stableWatchedFields = React.useMemo(() => {
     const now = Date.now();
     const watchedFieldsString = JSON.stringify(watchedFieldsRaw || {});
     
@@ -86,7 +86,7 @@ export const useStableWatchedFields = (
   }, [watchedFieldsRaw, throttleTime]);
   
   // 🚀 Función para forzar actualización
-  const forceUpdate = useCallback(() => {
+  const forceUpdate = React.useCallback(() => {
     const watchedFieldsString = JSON.stringify(watchedFieldsRaw || {});
     watchedFieldsRef.current = watchedFieldsString;
     lastUpdateRef.current = Date.now();
@@ -94,7 +94,7 @@ export const useStableWatchedFields = (
   }, [watchedFieldsRaw]);
   
   // 🚀 Función optimizada para verificar validez de campo
-  const isFieldValid = useCallback((fieldName: string): boolean => {
+  const isFieldValid = React.useCallback((fieldName: string): boolean => {
     const value = stableWatchedFields[fieldName as keyof FormState];
     
     if (value === undefined || value === null) return false;
@@ -130,7 +130,7 @@ export const useStableWatchedFields = (
   }, [stableWatchedFields]);
   
   // 🚀 Cálculo estabilizado de completitud
-  const completionPercentage = useMemo(() => {
+  const completionPercentage = React.useMemo(() => {
     // Campos básicos (peso 60%)
     const basicFields: (keyof FormState)[] = [
       'age', 'weight', 'height', 'cycleLength', 'infertilityDuration'

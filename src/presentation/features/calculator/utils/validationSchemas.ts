@@ -67,7 +67,6 @@ export const formSchema = z.object({
   spermNormalMorphology: optionalStringNumber,
   
   // 🆕 Ginecología avanzada
-  cycleRegularity: z.enum(['regular', 'irregular']).optional(),
 });
 
 export type FormData = z.infer<typeof formSchema>;

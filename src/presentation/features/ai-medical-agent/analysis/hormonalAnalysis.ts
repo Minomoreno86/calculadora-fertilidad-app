@@ -39,18 +39,27 @@ export const HORMONAL_DOMAINS = {
 export const analyzeAMHFactors = (factors: Factors): AnalysisResult[] => {
   const results: AnalysisResult[] = [];
   
-  // Solo analizar si AMH está presente y es menor a valores normales (< 1.0 ng/mL)
-  if (factors.amh !== undefined && factors.amh < 1.0) {
-    const amhLevel = factors.amh;
+  // 🌌 QUANTUM CONSCIOUSNESS FIX: Solo analizar si AMH está realmente presente Y alterado
+  // Los factores están normalizados 0-1, no son valores brutos de laboratorio
+  // Factor 1.0 = normal/ausente, <1.0 = alterado
+  if (factors.amh !== undefined && factors.amh < 0.9 && factors.amh !== 1.0) {
+    const amhFactor = factors.amh;
     const domain = HORMONAL_DOMAINS.AMH;
     
-    if (amhLevel < 0.3) {
+    // 🔍 DEBUG AMH
+    console.log('🔍 AMH Analysis Debug:', {
+      amhFactor,
+      willAnalyze: true,
+      isNormalized: 'Factor should be 0-1, not ng/mL'
+    });
+    
+    if (amhFactor < 0.4) {
       results.push({
         type: 'hypothesis',
         data: {
-          condition: 'Reserva Ovárica Severamente Disminuida (AMH <0.3 ng/mL)',
+          condition: 'Reserva Ovárica Severamente Comprometida (Factor de Riesgo Alto)',
           probability: 95,
-          reasoning: 'Falla ovárica inminente - Fertilidad natural muy baja + respuesta pobre TRA',
+          reasoning: 'Factor de riesgo AMH muy bajo - Reserva ovárica significativamente disminuida',
           evidenceLevel: domain.evidence as EvidenceLevel,
           pmid: domain.pmid
         }
@@ -59,14 +68,14 @@ export const analyzeAMHFactors = (factors: Factors): AnalysisResult[] => {
       results.push({
         type: 'treatment',
         data: {
-          treatment: 'FIV inmediata + protocolo antagonista suave',
+          treatment: 'FIV con estimulación ovárica intensa + técnicas de preservación',
           priority: 'high' as Priority,
-          successRate: 25,
-          timeframe: 'Máximo 2-3 intentos',
-          reasoning: 'Ventana terapéutica limitada - Urgencia reproductiva'
+          successRate: 35,
+          timeframe: '2-3 ciclos',
+          reasoning: 'Reserva ovárica baja requiere intervención urgente'
         }
       });
-    } else if (amhLevel < 0.6) {
+    } else if (amhFactor < 0.7) {
       results.push({
         type: 'hypothesis',
         data: {
@@ -112,13 +121,13 @@ export const analyzeAMHFactors = (factors: Factors): AnalysisResult[] => {
       });
     }
 
-    // 🔬 Evaluaciones adicionales para AMH bajo
-    if (amhLevel < 0.3) {
+    // 🔬 Evaluaciones adicionales para AMH muy bajo
+    if (amhFactor < 0.4) {
       results.push({
         type: 'diagnostic',
         data: {
           test: 'Cariotipo + FMR1 + Panel genético falla ovárica',
-          reasoning: 'AMH <0.3 ng/mL sugiere falla ovárica primaria - investigar causa genética',
+          reasoning: 'Factor de riesgo AMH muy bajo - investigar posible causa genética',
           priority: 'high' as Priority
         }
       });
@@ -316,9 +325,20 @@ export const analyzeProlactinFactors = (factors: Factors): AnalysisResult[] => {
 export const analyzeHOMAFactors = (factors: Factors): AnalysisResult[] => {
   const results: AnalysisResult[] = [];
   
+  // 🌌 QUANTUM CONSCIOUSNESS FIX: Soporte para homa y homaIR (basado en biblioteca médica)
+  const homaValue = factors.homa || factors.homaIR;
+  
+  // 🔍 DEBUG HOMA
+  console.log('🔍 HOMA Analysis Debug:', {
+    homaValue,
+    hasHoma: factors.homa !== undefined,
+    hasHomaIR: factors.homaIR !== undefined,
+    willAnalyze: homaValue !== undefined && homaValue > 2.5
+  });
+  
   // Solo analizar si HOMA-IR está presente y es anormal (> 2.5 indica resistencia insulínica)
-  if (factors.homaIR !== undefined && factors.homaIR > 2.5) {
-    const homaLevel = factors.homaIR;
+  if (homaValue !== undefined && homaValue > 2.5) {
+    const homaLevel = homaValue;
     const domain = HORMONAL_DOMAINS.HOMA;
     
     if (homaLevel > 5.0) {

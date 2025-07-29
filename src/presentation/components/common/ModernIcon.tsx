@@ -149,7 +149,7 @@ export const ModernIcon: React.FC<ModernIconProps> = ({
         {
           fontSize: size,
           color: color,
-          textAlign: 'center',
+          textAlign: 'center' as const,
           lineHeight: size + 2,
         },
         style

@@ -12,7 +12,7 @@
  * @version 2.0 - Armonía total con ecosistema
  */
 
-import React, { memo, useMemo } from 'react';
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import Text from '@/presentation/components/common/Text';
 import { theme } from '@/config/theme';
@@ -80,7 +80,7 @@ export const adaptMetricsForMonitor = (
   };
 };
 
-export const CalculatorPerformanceMonitor = memo<CalculatorPerformanceProps>(({
+export const CalculatorPerformanceMonitor = React.memo<CalculatorPerformanceProps>(({
   isValidating,
   progress,
   metrics,
@@ -89,7 +89,7 @@ export const CalculatorPerformanceMonitor = memo<CalculatorPerformanceProps>(({
 }) => {
   
   // Validación defensiva robusta
-  const safeMetrics = useMemo(() => ({
+  const safeMetrics = React.useMemo(() => ({
     validation: {
       isValidating: metrics?.validation?.isValidating ?? false,
       progress: Math.max(0, Math.min(100, metrics?.validation?.progress ?? 0)),
@@ -106,8 +106,9 @@ export const CalculatorPerformanceMonitor = memo<CalculatorPerformanceProps>(({
       status: metrics?.performance?.status ?? 'Listo',
     }
   }), [metrics]);
+  
   // 🎨 Determinar color del progreso basado en estado
-  const progressColor = useMemo(() => {
+  const progressColor = React.useMemo(() => {
     if (isValidating) return theme.colors.primary;
     if (safeMetrics.validation.errorCount > 0) return theme.colors.error;
     if (safeMetrics.validation.warningCount > 0) return theme.colors.warning;
@@ -115,7 +116,7 @@ export const CalculatorPerformanceMonitor = memo<CalculatorPerformanceProps>(({
   }, [isValidating, safeMetrics.validation.errorCount, safeMetrics.validation.warningCount]);
 
   // 📊 Formatear métricas para mostrar
-  const formattedMetrics = useMemo(() => ({
+  const formattedMetrics = React.useMemo(() => ({
     totalTime: `${safeMetrics.performance.totalTime}ms`,
     averageTime: `${safeMetrics.performance.averageTaskTime}ms`,
     cacheHit: `${safeMetrics.performance.cacheHitRate}%`,
@@ -125,21 +126,21 @@ export const CalculatorPerformanceMonitor = memo<CalculatorPerformanceProps>(({
   }), [safeMetrics.performance]);
 
   // 🎯 Estado de validación
-  const validationStatus = useMemo(() => {
+  const validationStatus = React.useMemo(() => {
     if (isValidating) return { text: 'Validando...', color: theme.colors.primary };
     if (safeMetrics.validation.errorCount > 0) return { text: 'Errores detectados', color: theme.colors.error };
     if (safeMetrics.validation.warningCount > 0) return { text: 'Advertencias', color: theme.colors.warning };
     return { text: 'Validación exitosa', color: theme.colors.success };
   }, [isValidating, safeMetrics.validation]);
 
-  const efficiencyColor = useMemo(() => {
+  const efficiencyColor = React.useMemo(() => {
     if (formattedMetrics.efficiency === 'Excelente') return theme.colors.success;
     if (formattedMetrics.efficiency === 'Buena') return theme.colors.warning;
     return theme.colors.error;
   }, [formattedMetrics.efficiency]);
 
   // Optimización de visibilidad: componente se auto-oculta en producción cuando la validación es exitosa
-  const shouldHideMonitor = useMemo(() => {
+  const shouldHideMonitor = React.useMemo(() => {
     return !showDevInfo && 
            !isValidating && 
            safeMetrics.validation.isFormValid && 
@@ -162,7 +163,6 @@ export const CalculatorPerformanceMonitor = memo<CalculatorPerformanceProps>(({
       <View style={styles.statusRow}>
         <Text 
           style={[styles.statusText, { color: validationStatus.color }]}
-          accessibilityRole="text"
         >
           {validationStatus.text}
         </Text>
@@ -319,13 +319,13 @@ const styles = StyleSheet.create({
   
   statusText: {
     ...theme.typography.body,
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
   
   progressText: {
     ...theme.typography.caption,
     color: theme.colors.textSecondary,
-    fontWeight: '500',
+    fontWeight: '500' as const,
   },
   
   progressContainer: {
@@ -350,13 +350,13 @@ const styles = StyleSheet.create({
   errorText: {
     ...theme.typography.caption,
     color: theme.colors.error,
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
   
   warningText: {
     ...theme.typography.caption,
     color: theme.colors.warning,
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
   
   devSection: {
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
   
   devTitle: {
     ...theme.typography.caption,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     marginBottom: theme.spacing.xs,
     color: theme.colors.primary,
   },
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
   
   metricValue: {
     ...theme.typography.caption,
-    fontWeight: '700',
+    fontWeight: '700' as const,
     color: theme.colors.text,
     marginTop: 2,
   },
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
   
   efficiencyValue: {
     ...theme.typography.caption,
-    fontWeight: '700',
+    fontWeight: '700' as const,
   },
   
   detailsSection: {
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
   
   detailsTitle: {
     ...theme.typography.caption,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     marginBottom: theme.spacing.xs,
     color: theme.colors.textSecondary,
   },

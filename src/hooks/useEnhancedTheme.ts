@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import React from 'react';
+const { useMemo } = React;
 import { useFeatureConfig } from './useAdvancedConfig';
 import { useDynamicTheme } from './useDynamicTheme';
 

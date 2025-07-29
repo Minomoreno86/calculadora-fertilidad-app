@@ -333,6 +333,16 @@ export const clinicalContentLibrary: Record<string, ClinicalInfo> = {
     ],
     sources: ['PMID: 35373629 [cite: 124]', 'PMID: 34397855 [cite: 125]'],
   },
+  ENDOMETRIOSIS_MODERADA: {
+    explanation:
+      'Endometriosis moderada (Grado III). Afecta la fertilidad por distorsión anatómica pélvica, inflamación crónica y formación de adherencias. [cite: 121]',
+    recommendations: [
+      'Cirugía laparoscópica conservadora para liberar adherencias y resección de endometriomas >3cm. [cite: 123]',
+      'FIV tras cirugía + transferencia embrión único + protocolo largo. [cite: 124]',
+      'No retrasar más de 6 meses post-cirugía si edad >35 años. [cite: 7]',
+    ],
+    sources: ['PMID: 35373629 [cite: 124]', 'PMID: 34397855 [cite: 125]'],
+  },
   ENDOMETRIOSIS_SEVERA: {
     explanation:
       'Endometriosis severa (Grados III-IV). Afecta la fertilidad por daño anatómico, inflamación y reducción de calidad ovocitaria. [cite: 121]',
@@ -460,9 +470,18 @@ export const clinicalContentLibrary: Record<string, ClinicalInfo> = {
     explanation:
       'Tienes una obstrucción tubárica unilateral (una trompa obstruida o hidrosálpinx unilateral). Esto reduce la probabilidad de embarazo espontáneo en ~20-30%. [cite: 145]',
     recommendations: [
-      'Considerar inseminación intrauterina (IAC) o FIV tras 6-12 meses si no hay embarazo. [cite: 146]',
+      'EVALUACIÓN SEGÚN EDAD Y PERFIL:',
+      '• MENOR DE 35 AÑOS: Manejo conservador con IUI + estimulación ovárica suave (4-6 ciclos máximo).',
+      '• MAYOR DE 35 AÑOS: FIV directa más eficiente por ventana reproductiva limitada.',
+      '• OPCIÓN INTERMEDIA: Inseminación intrauterina (IAC) si trompa contralateral permeable confirmada.',
+      'FACTORES DE DECISIÓN QUIRÚRGICA:',
+      '• Confirmar permeabilidad trompa contralateral (HSG + laparoscopia)',
+      '• Salpingostomía solo si hidrosálpinx unilateral corregible',
+      '• Espermatograma pareja normal',
+      '• Edad materna <35 años para cirugía conservadora',
+      'SEGUIMIENTO ESPECIALIZADO: Escalamiento a FIV si no concepción en 6-12 meses.',
     ],
-    sources: ['DOI: 10.1016/j.fertnstert.2020.12.010 [cite: 145]'],
+    sources: ['DOI: 10.1016/j.fertnstert.2020.12.010 [cite: 145]', 'PMID: 32805143 [cite: 146]'],
   },
   HSG_BILATERAL: {
     explanation:

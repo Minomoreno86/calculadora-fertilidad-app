@@ -123,14 +123,14 @@ export const useDynamicTheme = () => {
     typography: {
       h1: {
         fontSize: 30,
-        fontWeight: '700' as TextStyle['fontWeight'],
+        fontWeight: '700' as const as TextStyle['fontWeight'],
         lineHeight: 36,
         letterSpacing: -0.5,
         color: currentPalette.primary,
       },
       h2: {
         fontSize: 24,
-        fontWeight: '600' as TextStyle['fontWeight'],
+        fontWeight: '600' as const as TextStyle['fontWeight'],
         lineHeight: 30,
         letterSpacing: -0.3,
         color: currentPalette.textPrimary,

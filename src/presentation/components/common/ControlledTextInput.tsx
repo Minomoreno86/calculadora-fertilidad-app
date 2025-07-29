@@ -1,16 +1,38 @@
 import React from 'react';
-import { View, TextInput, StyleSheet, TextInputProps } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import Text from './Text';
 import { Control, Controller, FieldValues, Path, FieldError } from 'react-hook-form';
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 import { Ionicons } from '@expo/vector-icons';
 
-type ControlledTextInputProps<TFormValues extends FieldValues> = TextInputProps & {
+// Safe TextInput import for React Native compatibility
+let TextInput: any;
+let TextInputProps: any;
+try {
+  const RN = require('react-native');
+  TextInput = RN.TextInput;
+  TextInputProps = RN.TextInputProps;
+} catch {
+  // Fallback for environments without TextInput
+  TextInput = View;
+  TextInputProps = {};
+}
+
+type ControlledTextInputProps<TFormValues extends FieldValues> = {
   control: Control<TFormValues>;
   name: Path<TFormValues>;
   label: string;
   iconName?: keyof typeof Ionicons.glyphMap;
   error?: FieldError;
+  // Common TextInput props
+  placeholder?: string;
+  keyboardType?: 'default' | 'numeric' | 'decimal-pad' | 'email-address' | 'phone-pad';
+  secureTextEntry?: boolean;
+  multiline?: boolean;
+  maxLength?: number;
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  autoCorrect?: boolean;
+  editable?: boolean;
 };
 
 export const ControlledTextInput = <TFormValues extends FieldValues>({
@@ -19,7 +41,14 @@ export const ControlledTextInput = <TFormValues extends FieldValues>({
   label,
   iconName,
   error,
-  ...textInputProps
+  placeholder,
+  keyboardType = 'default',
+  secureTextEntry = false,
+  multiline = false,
+  maxLength,
+  autoCapitalize = 'sentences',
+  autoCorrect = true,
+  editable = true,
 }: ControlledTextInputProps<TFormValues>) => {
   // 🎨 TEMA DINÁMICO
   const theme = useDynamicTheme();
@@ -40,7 +69,7 @@ export const ControlledTextInput = <TFormValues extends FieldValues>({
               style={styles.input}
               onBlur={onBlur}
               onChangeText={(text) => {
-                if (textInputProps.keyboardType === 'numeric' || textInputProps.keyboardType === 'decimal-pad') {
+                if (keyboardType === 'numeric' || keyboardType === 'decimal-pad') {
                   onChange(text.replace(',', '.'));
                 } else {
                   onChange(text);
@@ -48,7 +77,14 @@ export const ControlledTextInput = <TFormValues extends FieldValues>({
               }}
               value={value}
               placeholderTextColor={theme.colors.placeholder}
-              {...textInputProps}
+              placeholder={placeholder}
+              keyboardType={keyboardType}
+              secureTextEntry={secureTextEntry}
+              multiline={multiline}
+              maxLength={maxLength}
+              autoCapitalize={autoCapitalize}
+              autoCorrect={autoCorrect}
+              editable={editable}
             />
           )}
         />
@@ -66,7 +102,7 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   label: {
     ...theme.typography.body,
     marginBottom: theme.spacing.xs,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     color: theme.colors.text,
   },
   inputContainer: {

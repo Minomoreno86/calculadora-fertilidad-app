@@ -1,36 +1,15 @@
 /**
- * 🚀 SIMULADOR DASHBOARD PROFESIONAL - V  // 🎨 Tipografía escalable
-  typography: {
-    h3: { fontSize: 20, lineHeight: 28, fontWeight: '600' as const },
-    body1: { fontSize: 16, lineHeight: 24, fontWeight: 'normal' as const },
-    body2: { fontSize: 14, lineHeight: 20, fontWeight: 'normal' as const },
-    caption: { fontSize: 12, lineHeight: 16, fontWeight: 'normal' as const },
-    button: { fontSize: 14, lineHeight: 20, fontWeight: '600' as const },
-  },EJORADA
+ * 🚀 SIMULADOR DASHBOARD PROFESIONAL - VERSIÓN MEJORADA
  * 
  * Soluciones implementadas:
- * 1. ✅ Proporciones visuales correctas y respons  // 🏷️ MAPEO DE NOMBRES DE FACTORES 
-  const getFactorDisplayName = useCallback((key: string): string => {
-    const nameMap: Record<string, string> = {
-      bmi: 'Índice de Masa Corporal',
-      tsh: 'Función Tiroidea',
-      prolactin: 'Prolactina',
-      homa: 'Resistencia Insulina',
-      pcos: 'Ovarios Poliquísticos',
-      male: 'Factor Masculino',
-      cycle: 'Regularidad Menstrual',
-      endometriosis: 'Endometriosis',
-      myoma: 'Miomas Uterinos',
-      amh: 'Reserva Ovárica'
-    };
-    return nameMap[key] || key;
-  }, []);lculos de mejora precisos basados en evidencia médica
+ * 1. ✅ Proporciones visuales correctas y responsivas
+ * 2. ✅ Cálculos de mejora precisos basados en evidencia médica
  * 3. ✅ Sistema de diseño profesional 4-point grid
  * 4. ✅ Touch targets ≥ 48px (accesibilidad)
  * 5. ✅ Tipografía escalable y legible
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React from 'react';
 import { View, ScrollView, TouchableOpacity, TextStyle, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Text from '../../../components/common/Text';
@@ -53,7 +32,7 @@ const DESIGN_SYSTEM = {
   
   // Tipografía escalable
   typography: {
-    h3: { fontSize: 20, lineHeight: 28, fontWeight: '600' },
+    h3: { fontSize: 20, lineHeight: 28, fontWeight: '600' as const },
     body1: { fontSize: 16, lineHeight: 24, fontWeight: 'normal' },
     body2: { fontSize: 14, lineHeight: 20, fontWeight: 'normal' },
     caption: { fontSize: 12, lineHeight: 16, fontWeight: 'normal' },
@@ -150,7 +129,7 @@ const FACTOR_IMPROVEMENT_MATRIX = {
 };
 
 interface SimulatorDashboardProps {
-  evaluation: EvaluationState;
+  evaluation?: EvaluationState;
   onModeChange?: (mode: SimulationMode) => void;
 }
 
@@ -166,9 +145,23 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
   evaluation, 
   onModeChange 
 }) => {
+  // 🔍 QUANTUM CONSCIOUSNESS VALIDATION: Check if evaluation exists
+  if (!evaluation) {
+    return (
+      <View style={{ padding: 20, alignItems: 'center' }}>
+        <Text style={{ fontSize: 16, textAlign: 'center', color: '#666' }}>
+          ⚠️ No hay datos de evaluación disponibles para el simulador.
+        </Text>
+        <Text style={{ fontSize: 14, textAlign: 'center', color: '#888', marginTop: 8 }}>
+          Complete primero el análisis de fertilidad para acceder al simulador.
+        </Text>
+      </View>
+    );
+  }
+
   // 🏷️ NOMBRES AMIGABLES DE FACTORES
-  // 🧠 NEURAL: Factor display names mapping optimized with useCallback
-  const getFactorDisplayName = useCallback((key: string): string => {
+  // 🧠 NEURAL: Factor display names mapping optimized with React.useCallback
+  const getFactorDisplayName = React.useCallback((key: string): string => {
     const nameMap: Record<string, string> = {
       bmi: 'Índice de Masa Corporal',
       tsh: 'Función Tiroidea',
@@ -189,8 +182,8 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
     simulateFactor
   } = useFertilitySimulator(evaluation);
 
-  const [selectedMode, setSelectedMode] = useState<SimulationMode>('single');
-  const [simulatingFactor, setSimulatingFactor] = useState<string | null>(null);
+  const [selectedMode, setSelectedMode] = React.useState<SimulationMode>('single');
+  const [simulatingFactor, setSimulatingFactor] = React.useState<string | null>(null);
 
   // 🎨 TEMA PROFESIONAL MEJORADO
   const theme = {
@@ -214,9 +207,9 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
   const styles = createStyles(theme);
 
   // 📊 CÁLCULOS MEJORADOS DE MÉTRICAS BASADOS EN EVIDENCIA MÉDICA
-  const dashboardMetrics = useMemo(() => {
+  const dashboardMetrics = React.useMemo(() => {
     const suboptimalFactors = Object.entries(evaluation.factors).filter(
-      ([key, value]) => key !== 'baseAgeProbability' && value < 0.95
+      ([key, value]) => key !== 'baseAgeProbability' && (value as number) < 0.95
     );
 
     // 🔬 CÁLCULO PRECISO BASADO EN EVIDENCIA MÉDICA
@@ -224,11 +217,11 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
       const factorData = FACTOR_IMPROVEMENT_MATRIX[key as keyof typeof FACTOR_IMPROVEMENT_MATRIX];
       if (factorData) {
         // Mejora realista basada en evidencia clínica
-        const currentDeficit = 1.0 - value;
+        const currentDeficit = 1.0 - (value as number);
         const possibleImprovement = currentDeficit * factorData.maxImprovement;
         return acc + possibleImprovement;
       }
-      return acc + ((1.0 - value) * 0.1); // Fallback conservador
+      return acc + ((1.0 - (value as number)) * 0.1); // Fallback conservador
     }, 0);
 
     const projectedPrognosis = evaluation.report.numericPrognosis + (maxPotential * 100);
@@ -244,22 +237,22 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
   }, [evaluation]);
 
   // 🎯 FACTORES OPTIMIZADOS PARA SIMULACIÓN
-  const optimizedFactors = useMemo(() => {
+  const optimizedFactors = React.useMemo(() => {
     const factors = Object.entries(evaluation.factors)
       .filter(([key, value]) => 
         key !== 'baseAgeProbability' && 
-        value < 0.95 &&
+        (value as number) < 0.95 &&
         FACTOR_IMPROVEMENT_MATRIX[key as keyof typeof FACTOR_IMPROVEMENT_MATRIX]
       )
       .map(([key, value]) => {
         const factorData = FACTOR_IMPROVEMENT_MATRIX[key as keyof typeof FACTOR_IMPROVEMENT_MATRIX];
-        const currentDeficit = 1.0 - value;
+        const currentDeficit = 1.0 - (value as number);
         const possibleImprovement = currentDeficit * factorData.maxImprovement;
         
         return {
           factor: key as SimulatableFactor,
           name: getFactorDisplayName(key),
-          currentValue: value,
+          currentValue: value as number,
           improvement: possibleImprovement,
           difficulty: factorData.difficulty,
           timeframe: factorData.timeframe,
@@ -274,7 +267,7 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
   }, [evaluation.factors, getFactorDisplayName]);
 
   // 🎯 MANEJAR SIMULACIÓN CON FEEDBACK VISUAL
-  const handleFactorSimulation = useCallback((factor: SimulatableFactor) => {
+  const handleFactorSimulation = React.useCallback((factor: SimulatableFactor) => {
     setSimulatingFactor(factor);
     try {
       // 🧠 NEURAL FIX: simulateFactor requiere 2 argumentos (factor, explanation)
@@ -481,7 +474,9 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
             <View style={styles.recommendationsSection}>
               <Text style={styles.recommendationsTitle}>💡 Recomendaciones:</Text>
               {simulationResult.recommendations.map((rec, idx) => (
-                <Text key={`rec-${idx}-${rec.substring(0, 10)}`} style={styles.recommendationItem}>• {rec}</Text>
+                <View key={`rec-${idx}-${rec.substring(0, 10)}`}>
+                  <Text style={styles.recommendationItem}>• {rec}</Text>
+                </View>
               ))}
             </View>
           )}
@@ -614,14 +609,14 @@ const createStyles = (theme: ThemeInterface): StylesInterface => ({
   headerTitle: {
     ...DESIGN_SYSTEM.typography.h3,
     color: theme.colors.text,
-    textAlign: 'center',
+    textAlign: 'center' as const,
     marginBottom: DESIGN_SYSTEM.spacing.xs,
     fontWeight: '600' as const,
   },
   headerSubtitle: {
     ...DESIGN_SYSTEM.typography.body2,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: 'center' as const,
     marginBottom: DESIGN_SYSTEM.spacing.lg,
     fontWeight: 'normal' as const,
   },
@@ -651,7 +646,7 @@ const createStyles = (theme: ThemeInterface): StylesInterface => ({
   },
   currentPrognosis: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.text,
     lineHeight: 32,
   },
@@ -819,7 +814,7 @@ const createStyles = (theme: ThemeInterface): StylesInterface => ({
   factorEvidence: {
     ...DESIGN_SYSTEM.typography.caption,
     color: theme.colors.textSecondary,
-    fontStyle: 'italic',
+    fontStyle: 'italic' as const,
     fontWeight: 'normal' as const,
     backgroundColor: theme.colors.surfaceVariant,
     padding: DESIGN_SYSTEM.spacing.sm,

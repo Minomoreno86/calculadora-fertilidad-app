@@ -1,17 +1,18 @@
-import React, { memo } from 'react';
+import React from 'react';
 import { StyleSheet, View } from 'react-native';
+import { Control, FieldErrors } from 'react-hook-form';
 import Text from '@/presentation/components/common/Text';
 import { ControlledTextInput } from '@/presentation/components/common/ControlledTextInput';
+import { ControlledOptionSelector } from '@/presentation/components/common/ControlledOptionSelector';
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
-import { Control, FieldErrors } from 'react-hook-form';
-import { FormState } from '../useCalculatorFormOptimized';
+import { FormState } from '../types/calculator.types';
 
 type Props = {
   control: Control<FormState>;
   errors: FieldErrors<FormState>;
 };
 
-export const MaleFactorForm = memo<Props>(({ control, errors }) => {
+export const MaleFactorForm = React.memo<Props>(({ control, errors }) => {
   // 🎨 TEMA DINÁMICO
   const theme = useDynamicTheme();
   

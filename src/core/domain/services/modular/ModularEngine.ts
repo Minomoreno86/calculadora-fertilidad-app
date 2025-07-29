@@ -300,11 +300,23 @@ export class ModularFertilityEngine {
   async calculateFast(input: UserInput): Promise<EvaluationState> {
     this.ensureInitialized();
     
-    return calculateFertilityFast(input, {
-      enableProfiling: false,
-      useCache: true,
-      allowFallback: true
-    });
+    try {
+      // Usar core directamente para máxima velocidad
+      const sanitizedInput = sanitizeUserInputPure(input);
+      const result = calculatePureFertilityFactors(sanitizedInput);
+      
+      return result;
+    } catch (error) {
+      console.error('❌ Error en calculateFast:', error);
+      
+      // Fallback a cálculo básico simplificado
+      try {
+        return calculatePureFertilityFactors(input);
+      } catch (fallbackError) {
+        console.error('❌ Fallback también falló en calculateFast:', fallbackError);
+        throw new Error(`CalculateFast falló: ${error}. Fallback: ${fallbackError}`);
+      }
+    }
   }
   
   /**

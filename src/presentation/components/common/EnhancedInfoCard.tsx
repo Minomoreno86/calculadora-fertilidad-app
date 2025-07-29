@@ -3,9 +3,24 @@
 // ===================================================================
 
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import Text from './Text';
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
+
+// Safe Animated import for React Native compatibility
+let Animated: any;
+try {
+  const RN = require('react-native');
+  Animated = RN.Animated;
+} catch {
+  // Fallback for environments without Animated
+  Animated = {
+    Value: class { constructor(v: number) { this.value = v; } value: number; setValue: (v: number) => void = () => {}; },
+    timing: () => ({ start: () => {} }),
+    parallel: () => ({ start: () => {} }),
+    View: View
+  };
+}
 
 interface Props {
   type: 'tip' | 'info' | 'success' | 'warning' | 'error';
@@ -220,7 +235,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '600' as const,
     marginBottom: 4,
     lineHeight: 22,
   },

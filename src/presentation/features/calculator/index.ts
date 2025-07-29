@@ -6,93 +6,68 @@
 export { useCalculatorForm } from './useCalculatorForm';
 export type { UseCalculatorFormReturn } from './useCalculatorForm';
 
-// 🚀 Hook modular avanzado (funcionalidades premium)
-export { useCalculatorForm as useCalculatorFormModular } from './useCalculatorFormModular';
-export type { UseCalculatorFormReturn as UseCalculatorFormModularReturn } from './useCalculatorFormModular';
-
-// 🚀 NUEVO: Hook de validación paralela independiente
-export { useCalculatorParallelValidation } from './hooks/useCalculatorParallelValidation';
-
 // 🎯 Hooks especializados consolidados
-export { useFormState } from './hooks/useFormState';
-export { useFormValidation } from './hooks/useFormValidation';
 export { useCalculations } from './hooks/useCalculations';
 export { useFormProgress } from './hooks/useFormProgress'; // ✨ Incluye métricas de benchmark consolidadas
 export { useUXEnhancements } from './hooks/useUXEnhancements';
 export { useStableFormValidation } from './hooks/useStableFormValidation'; // ✨ Incluye validaciones de rangos consolidadas
+export { useParallelValidation } from './hooks/useParallelValidation';
+export { useLazyValidation } from './hooks/useLazyValidation';
+export { useIntelligentCache } from './hooks/useIntelligentCache';
+export { useMathMemoization } from './hooks/useMathMemoization';
+export { useDynamicThrottle } from './hooks/useDynamicThrottle';
+export { useStableWatchedFields } from './hooks/useStableWatchedFields';
+export { useRenderOptimization } from './hooks/useRenderOptimization';
+export { useQuantumCache } from './hooks/useQuantumCache';
 
 // 🛠️ Servicios
 export { CalculationService } from './services/calculationService';
 export { StorageService } from './services/storageService';
 
-// 🔧 Utilidades
+// 🔧 Utilidades consolidadas
 export * from './utils/formHelpers';
 export * from './utils/formConstants';
+// export * from './utils/rangeValidation'; // Skip to avoid conflicts with formHelpers
+
+// 🔍 Validación y mapeo
+export { formSchema } from './utils/validationSchemas';
+export { mapFormStateToUserInput } from './utils/dataMapper';
 
 // 📝 Tipos
 export type * from './types/calculator.types';
 
-// 📊 Componentes de formulario originales
+// 📊 Componentes de formulario consolidados
 export { DemographicsForm } from './components/DemographicsForm';
 export { GynecologyHistoryForm } from './components/GynecologyHistoryForm';
 export { LabTestsForm } from './components/LabTestsForm';
 export { MaleFactorForm } from './components/MaleFactorForm';
-
-// 🚀 NUEVO: Componentes mejorados con validación paralela
 export { default as CalculatorPerformanceMonitor } from './components/CalculatorPerformanceMonitor';
 export { EnhancedProgressDisplay } from './components/EnhancedProgressDisplay';
 export { ConditionalProgressDisplay } from './components/ConditionalProgressDisplay';
-
-// 🔍 Validación
-export { formSchema } from './utils/validationSchemas';
-export { mapFormStateToUserInput } from './utils/dataMapper';
+export { EnhancedTextInput } from './components/EnhancedTextInput';
 
 // ===================================================================
-// 🎯 GUÍA DE MIGRACIÓN RÁPIDA - VALIDACIÓN PARALELA
+// 🎯 GUÍA DE USO - CALCULADORA DE FERTILIDAD
 // ===================================================================
 //
-// Para migrar a la nueva versión con validación paralela:
+// HOOKS PRINCIPALES:
+// - useCalculatorForm: Hook principal de formulario con validación
+// - useCalculations: Cálculos BMI, HOMA y probabilidades
+// - useFormProgress: Progreso del formulario con métricas
+// - useParallelValidation: Validación en paralelo para performance
 //
-// 1. REEMPLAZAR HOOK EXISTENTE:
-// ```typescript
-// // Antes:
-// import { useCalculatorForm } from '@/presentation/features/calculator';
-// const calculator = useCalculatorForm();
+// COMPONENTES:
+// - DemographicsForm, GynecologyHistoryForm, LabTestsForm, MaleFactorForm
+// - CalculatorPerformanceMonitor: Monitor de rendimiento
+// - EnhancedProgressDisplay: Display de progreso mejorado
 //
-// // Después (API 100% compatible + funcionalidades adicionales):
-// import { useCalculatorWithParallelValidation } from '@/presentation/features/calculator';
-// const calculator = useCalculatorWithParallelValidation();
-// ```
+// SERVICIOS:
+// - CalculationService: Interfaz con motor de cálculo
+// - StorageService: Persistencia de datos
 //
-// 2. USAR COMPONENTE COMPLETO MEJORADO:
-// ```typescript
-// import { EnhancedCalculatorForm } from '@/presentation/features/calculator';
-// 
-// <EnhancedCalculatorForm
-//   onCalculationComplete={(result) => handleResult(result)}
-//   showPerformanceMonitor={__DEV__}
-//   enableParallelValidation={true}
-// />
-// ```
-//
-// 3. AGREGAR SOLO MONITOR DE RENDIMIENTO:
-// ```typescript
-// import { CalculatorPerformanceMonitor } from '@/presentation/features/calculator';
-// 
-// <CalculatorPerformanceMonitor
-//   isValidating={calculator.isValidating}
-//   progress={calculator.validationMetrics.validation.progress}
-//   metrics={calculator.validationMetrics}
-//   devData={calculator.devData?.parallelValidation}
-// />
-// ```
-//
-// BENEFICIOS DE LA MIGRACIÓN:
-// ✅ Validación 80% más rápida (465ms vs 2300ms promedio)
-// ✅ Cache inteligente con 80% de aciertos
-// ✅ Validación en tiempo real sin bloqueo de UI
-// ✅ Métricas detalladas de rendimiento
-// ✅ Detección temprana de errores críticos
-// ✅ API 100% compatible con código existente
+// UTILIDADES:
+// - formHelpers: Helpers de validación y formateo
+// - formConstants: Constantes del formulario
+// - validationSchemas: Esquemas de validación
 //
 // ===================================================================

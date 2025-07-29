@@ -343,17 +343,22 @@ export class CalculationEngineWorker {
       return 0.9;
     }
     
-    if (duration <= 12) {
+    // 🚨 CORRECCIÓN MÉDICA: Duración de infertilidad según evidencia clínica
+    if (duration <= 24) {
+      // 0-2 años: Normal según guías médicas
       return 1.0;
-    } else if (duration <= 24) {
-      intermediates.infertility_duration_moderate = 0.9;
-      return 0.9;
-    } else if (duration <= 36) {
-      intermediates.infertility_duration_prolonged = 0.8;
-      return 0.8;
+    } else if (duration <= 60) {
+      // 2-5 años: Moderado - requiere intervención especializada
+      intermediates.infertility_duration_moderate = 0.55;
+      return 0.55;
+    } else if (duration <= 84) {
+      // 5-7 años: Severo - pronóstico reservado
+      intermediates.infertility_duration_severe = 0.35;
+      return 0.35;
     } else {
-      intermediates.infertility_duration_severe = 0.7;
-      return 0.7;
+      // 7+ años: Crítico - intervención inmediata
+      intermediates.infertility_duration_critical = 0.15;
+      return 0.15;
     }
   }
 

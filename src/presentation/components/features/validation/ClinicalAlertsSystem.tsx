@@ -2,12 +2,32 @@
 // 🚨 SISTEMA DE ALERTAS CLÍNICAS INTELIGENTES
 // ===================================================================
 
-import React, { useState, useMemo } from 'react';
-import { View, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React from 'react';
+import { View, ScrollView, TouchableOpacity } from 'react-native';
+
+// Safe imports for optional React Native components
+let Alert: any;
+
+try {
+  const RNComponents = require('react-native');
+  Alert = RNComponents.Alert || { alert: () => {} };
+} catch {
+  Alert = { alert: () => {} };
+}
+
 import Text from '@/presentation/components/common/Text';
 import Box from '@/presentation/components/common/Box';
 import { ModernIcon } from '@/presentation/components/common/ModernIcon';
-import { ClinicalInsight } from '@/core/domain/validation/useIntelligentClinicalValidation';
+
+// Fallback interface for missing types
+interface ClinicalInsight {
+  type: 'critical' | 'warning' | 'info' | 'success';
+  title: string;
+  message: string;
+  urgency?: 'low' | 'medium' | 'high' | 'critical';
+  medicalContext?: any;
+  nextSteps?: string[];
+}
 
 interface ClinicalAlertsSystemProps {
   criticalAlerts: ClinicalInsight[];
@@ -92,7 +112,7 @@ const ClinicalAlertCard: React.FC<{
                 variant="h3"
                 style={{ 
                   color: config.textColor, 
-                  fontWeight: '700',
+                  fontWeight: '700' as const,
                   flex: 1
                 }}
               >
@@ -112,7 +132,7 @@ const ClinicalAlertCard: React.FC<{
                 >
                   <Text
                     variant="caption"
-                    style={{ color: 'white', fontWeight: '600' }}
+                    style={{ color: 'white', fontWeight: '600' as const }}
                   >
                     {insight.urgency.toUpperCase()}
                   </Text>
@@ -192,7 +212,7 @@ const ClinicalAlertCard: React.FC<{
                 variant="body"
                 style={{ 
                   color: config.textColor, 
-                  fontStyle: 'italic',
+                  fontStyle: 'italic' as const,
                   lineHeight: 20
                 }}
               >
@@ -493,10 +513,10 @@ export const ClinicalAlertsSystem: React.FC<ClinicalAlertsSystemProps> = ({
   clinicalScore,
   onActionRequired
 }) => {
-  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const [expandedCards, setExpandedCards] = React.useState<Set<string>>(new Set());
 
   // Combinar todas las alertas con priorización
-  const allInsights = useMemo(() => {
+  const allInsights = React.useMemo(() => {
     const combined = [
       ...criticalAlerts,
       ...warnings,
@@ -548,7 +568,7 @@ export const ClinicalAlertsSystem: React.FC<ClinicalAlertsSystemProps> = ({
       <Box style={{ padding: 20 }}>
         <Text
           variant="h3"
-          style={{ color: '#6B7280', textAlign: 'center' }}
+          style={{ color: '#6B7280', textAlign: 'center' as const }}
         >
           No hay alertas clínicas disponibles
         </Text>

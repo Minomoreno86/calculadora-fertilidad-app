@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   },
   title: {
     marginBottom: theme.spacing.xs,
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
   message: {
     lineHeight: 20,

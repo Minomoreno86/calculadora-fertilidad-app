@@ -149,10 +149,10 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.primary,
     marginBottom: 12,
-    textAlign: 'center',
+    textAlign: 'center' as const,
   },
   progressContainer: {
     flexDirection: 'row',
@@ -173,14 +173,14 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: 'bold' as const,
     color: theme.colors.text,
     minWidth: 35,
   },
   status: {
     fontSize: 14,
-    fontWeight: '500',
-    textAlign: 'center',
+    fontWeight: '500' as const,
+    textAlign: 'center' as const,
     marginBottom: 16,
   },
   metricsRow: {
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
   efficiencyText: {
     fontSize: 12,
     color: '#059669',
-    fontStyle: 'italic',
+    fontStyle: 'italic' as const,
     fontWeight: '500',
   },
 });
