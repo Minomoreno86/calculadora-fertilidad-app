@@ -120,13 +120,17 @@ export interface AIChatProps {
   neuralAnalysis?: SuperintellignentAnalysisResult;
 }
 
-// 🎨 TEMA
+// 🎨 TEMA MÉDICO PROFESIONAL MEJORADO
 export interface ThemeInterface {
   primary: string;
   secondary: string;
   background: string;
   border?: string;
   textSecondary?: string;
+  gradient?: string[];       // ✅ Gradientes para header/botones
+  success?: string;          // ✅ Verde médico para estados positivos
+  warning?: string;          // ✅ Amarillo médico para advertencias
+  error?: string;            // ✅ Rojo médico para errores
 }
 
 // 🧠 RESPUESTA NEURAL MEJORADA

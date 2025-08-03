@@ -172,7 +172,84 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
   const [selectedMode, setSelectedMode] = React.useState<SimulationMode>('single');
   const [simulatingFactor, setSimulatingFactor] = React.useState<string | null>(null);
 
-  // 🔍 VALIDACIÓN DESPUÉS DE HOOKS: Check if evaluation exists
+  // 📊 CÁLCULOS MEJORADOS DE MÉTRICAS - MOVIDO ANTES DEL RETURN CONDICIONAL
+  const dashboardMetrics = React.useMemo(() => {
+    if (!evaluation?.factors) return null;
+    
+    const suboptimalFactors = Object.entries(evaluation.factors).filter(
+      ([key, value]) => key !== 'baseAgeProbability' && (value as number) < 0.95
+    );
+
+    // 🔬 CÁLCULO PRECISO BASADO EN EVIDENCIA MÉDICA
+    const maxPotential = suboptimalFactors.reduce((acc, [key, value]) => {
+      const factorData = FACTOR_IMPROVEMENT_MATRIX[key as keyof typeof FACTOR_IMPROVEMENT_MATRIX];
+      if (factorData) {
+        // Mejora realista basada en evidencia clínica
+        const currentDeficit = 1.0 - (value as number);
+        const possibleImprovement = currentDeficit * factorData.maxImprovement;
+        return acc + possibleImprovement;
+      }
+      return acc + ((1.0 - (value as number)) * 0.1); // Fallback conservador
+    }, 0);
+
+    const projectedPrognosis = evaluation.report?.numericPrognosis ? evaluation.report.numericPrognosis + (maxPotential * 100) : 0;
+    
+    return {
+      currentPrognosis: evaluation.report?.numericPrognosis || 0,
+      maxPotential: Math.min(projectedPrognosis, 80), // Cap realista en 80%
+      factorsToImprove: suboptimalFactors.length,
+      improvement: maxPotential * 100,
+      realisticTimeframe: '2-6 meses', // Basado en evidencia médica
+      totalCost: 'Bajo-Medio' // Estimación realista
+    };
+  }, [evaluation]);
+
+  // 🎯 FACTORES OPTIMIZADOS PARA SIMULACIÓN - MOVIDO ANTES DEL RETURN CONDICIONAL
+  const optimizedFactors = React.useMemo(() => {
+    if (!evaluation?.factors) return [];
+    
+    const factors = Object.entries(evaluation.factors)
+      .filter(([key, value]) => 
+        key !== 'baseAgeProbability' && 
+        (value as number) < 0.95 &&
+        FACTOR_IMPROVEMENT_MATRIX[key as keyof typeof FACTOR_IMPROVEMENT_MATRIX]
+      )
+      .map(([key, value]) => {
+        const factorData = FACTOR_IMPROVEMENT_MATRIX[key as keyof typeof FACTOR_IMPROVEMENT_MATRIX];
+        const currentDeficit = 1.0 - (value as number);
+        const possibleImprovement = currentDeficit * factorData.maxImprovement;
+        
+        return {
+          factor: key as SimulatableFactor,
+          name: getFactorDisplayName(key),
+          currentValue: value as number,
+          improvement: possibleImprovement,
+          difficulty: factorData.difficulty,
+          timeframe: factorData.timeframe,
+          evidence: factorData.evidence,
+          cost: factorData.cost,
+          priority: (possibleImprovement * 0.7) + ((1 - factorData.difficulty) * 0.3) // 70% impacto, 30% facilidad
+        };
+      })
+      .sort((a, b) => b.priority - a.priority);
+
+    return factors;
+  }, [evaluation.factors, getFactorDisplayName]);
+
+  // 🎯 MANEJAR SIMULACIÓN CON FEEDBACK VISUAL - MOVIDO ANTES DEL RETURN CONDICIONAL
+  const handleFactorSimulation = React.useCallback((factor: SimulatableFactor) => {
+    setSimulatingFactor(factor);
+    try {
+      // 🧠 NEURAL FIX: simulateFactor requiere 2 argumentos (factor, explanation)
+      const factorName = getFactorDisplayName(factor);
+      simulateFactor(factor, `Optimización de ${factorName}`);
+    } finally {
+      // Delay para mostrar el feedback visual
+      setTimeout(() => setSimulatingFactor(null), 500);
+    }
+  }, [simulateFactor, getFactorDisplayName]);
+
+  // 🔍 VALIDACIÓN DESPUÉS DE TODOS LOS HOOKS: Check if evaluation exists
   if (!evaluation) {
     return (
       <View style={{ padding: 20, alignItems: 'center' }}>
@@ -206,79 +283,6 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
   };
 
   const styles = createStyles(theme);
-
-  // 📊 CÁLCULOS MEJORADOS DE MÉTRICAS BASADOS EN EVIDENCIA MÉDICA
-  const dashboardMetrics = React.useMemo(() => {
-    const suboptimalFactors = Object.entries(evaluation.factors).filter(
-      ([key, value]) => key !== 'baseAgeProbability' && (value as number) < 0.95
-    );
-
-    // 🔬 CÁLCULO PRECISO BASADO EN EVIDENCIA MÉDICA
-    const maxPotential = suboptimalFactors.reduce((acc, [key, value]) => {
-      const factorData = FACTOR_IMPROVEMENT_MATRIX[key as keyof typeof FACTOR_IMPROVEMENT_MATRIX];
-      if (factorData) {
-        // Mejora realista basada en evidencia clínica
-        const currentDeficit = 1.0 - (value as number);
-        const possibleImprovement = currentDeficit * factorData.maxImprovement;
-        return acc + possibleImprovement;
-      }
-      return acc + ((1.0 - (value as number)) * 0.1); // Fallback conservador
-    }, 0);
-
-    const projectedPrognosis = evaluation.report.numericPrognosis + (maxPotential * 100);
-    
-    return {
-      currentPrognosis: evaluation.report.numericPrognosis,
-      maxPotential: Math.min(projectedPrognosis, 80), // Cap realista en 80%
-      factorsToImprove: suboptimalFactors.length,
-      improvement: maxPotential * 100,
-      realisticTimeframe: '2-6 meses', // Basado en evidencia médica
-      totalCost: 'Bajo-Medio' // Estimación realista
-    };
-  }, [evaluation]);
-
-  // 🎯 FACTORES OPTIMIZADOS PARA SIMULACIÓN
-  const optimizedFactors = React.useMemo(() => {
-    const factors = Object.entries(evaluation.factors)
-      .filter(([key, value]) => 
-        key !== 'baseAgeProbability' && 
-        (value as number) < 0.95 &&
-        FACTOR_IMPROVEMENT_MATRIX[key as keyof typeof FACTOR_IMPROVEMENT_MATRIX]
-      )
-      .map(([key, value]) => {
-        const factorData = FACTOR_IMPROVEMENT_MATRIX[key as keyof typeof FACTOR_IMPROVEMENT_MATRIX];
-        const currentDeficit = 1.0 - (value as number);
-        const possibleImprovement = currentDeficit * factorData.maxImprovement;
-        
-        return {
-          factor: key as SimulatableFactor,
-          name: getFactorDisplayName(key),
-          currentValue: value as number,
-          improvement: possibleImprovement,
-          difficulty: factorData.difficulty,
-          timeframe: factorData.timeframe,
-          evidence: factorData.evidence,
-          cost: factorData.cost,
-          priority: (possibleImprovement * 0.7) + ((1 - factorData.difficulty) * 0.3) // 70% impacto, 30% facilidad
-        };
-      })
-      .sort((a, b) => b.priority - a.priority);
-
-    return factors;
-  }, [evaluation.factors, getFactorDisplayName]);
-
-  // 🎯 MANEJAR SIMULACIÓN CON FEEDBACK VISUAL
-  const handleFactorSimulation = React.useCallback((factor: SimulatableFactor) => {
-    setSimulatingFactor(factor);
-    try {
-      // 🧠 NEURAL FIX: simulateFactor requiere 2 argumentos (factor, explanation)
-      const factorName = getFactorDisplayName(factor);
-      simulateFactor(factor, `Optimización de ${factorName}`);
-    } finally {
-      // Delay para mostrar el feedback visual
-      setTimeout(() => setSimulatingFactor(null), 500);
-    }
-  }, [simulateFactor, getFactorDisplayName]);
 
   // 🎯 OBTENER COLOR POR DIFICULTAD
   const getDifficultyColor = (difficulty: number): string => {

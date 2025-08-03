@@ -6,13 +6,19 @@ import React from 'react';
 import { View, TouchableOpacity, ViewStyle } from 'react-native';
 
 // Safe imports for optional React Native components
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let Modal: any;
 
 try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const RNComponents = require('react-native');
-  Modal = RNComponents.Modal || (() => null);
+  const FallbackModal = () => null;
+  FallbackModal.displayName = 'FallbackModal';
+  Modal = RNComponents.Modal || FallbackModal;
 } catch {
-  Modal = () => null;
+  const FallbackModal = () => null;
+  FallbackModal.displayName = 'FallbackModal';
+  Modal = FallbackModal;
 }
 
 import Text from '@/presentation/components/common/Text';
@@ -230,12 +236,12 @@ const InlineAlertsCompact: React.FC<{
 
 // 🎯 Componente integrador principal
 export const IntelligentValidationIntegrator: React.FC<IntelligentValidationIntegratorProps> = ({
-  formData,
+  formData: _formData,
   onValidationChange,
-  onActionRequired,
+  onActionRequired: _onActionRequired,
   showInlineAlerts = true,
   showMedicalAnalysis: _showMedicalAnalysis = true,
-  basicValidationOnly = false,
+  basicValidationOnly: _basicValidationOnly = false,
   style
 }) => {
   const [showFullAlertsModal, setShowFullAlertsModal] = React.useState(false);
@@ -256,7 +262,7 @@ export const IntelligentValidationIntegrator: React.FC<IntelligentValidationInte
       mockValidationResult.isValid,
       mockValidationResult.canProceed
     );
-  }, [onValidationChange]);
+  }, [onValidationChange, mockValidationResult.isValid, mockValidationResult.canProceed]);
 
   const { criticalAlerts, warnings, urgencyLevel, completionScore } = mockValidationResult;
 

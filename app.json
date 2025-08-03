@@ -14,7 +14,9 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.calculadorafertilidad.app",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {

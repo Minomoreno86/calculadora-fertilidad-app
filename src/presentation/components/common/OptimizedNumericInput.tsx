@@ -19,10 +19,14 @@ import Text from './Text';
 import { useDynamicTheme } from '../../../hooks/useDynamicTheme';
 import { RangeValidation } from '../../features/calculator/utils/rangeValidation';
 
-// Safe imports for React Native components
+// Safe TextInput and Keyboard import for React Native compatibility
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let TextInput: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let Keyboard: any;
+
 try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const RN = require('react-native');
   TextInput = RN.TextInput;
   Keyboard = RN.Keyboard;
@@ -74,22 +78,10 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
   
   // 🚀 Referencias para debounce y cleanup
   const debounceTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const inputRef = React.useRef<any>(null);
+  const inputRef = React.useRef<typeof TextInput>(null);
   const isMountedRef = React.useRef(true);
 
-  // 🛡️ VALIDACIÓN DESPUÉS DE HOOKS - Validar control
-  if (!control) {
-    console.warn('⚠️ OptimizedNumericInput: control es undefined para campo:', name);
-    return (
-      <View style={{ padding: 10, backgroundColor: '#ffebee', borderRadius: 8 }}>
-        <Text style={{ color: '#d32f2f', fontSize: 14 }}>
-          Error: Control no disponible para {String(name)}
-        </Text>
-      </View>
-    );
-  }
-  
-  // 🚀 Cleanup al desmontar
+  // 🚀 Cleanup al desmontar - MOVIDO ANTES DEL RETURN CONDICIONAL
   React.useEffect(() => {
     isMountedRef.current = true;
     return () => {
@@ -99,8 +91,8 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
       }
     };
   }, []);
-  
-  // 🎨 Determinar colores para estados de error
+
+  // 🎨 Determinar colores para estados de error - MOVIDO ANTES DEL RETURN
   const getErrorColors = React.useCallback(() => {
     if (!error) return null;
     return {
@@ -110,7 +102,7 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
     };
   }, [error, theme]);
 
-  // 🎨 Determinar colores para validación de rango
+  // 🎨 Determinar colores para validación de rango - MOVIDO ANTES DEL RETURN
   const getRangeValidationColors = React.useCallback(() => {
     if (!rangeValidation) return null;
 
@@ -141,17 +133,14 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
     return null;
   }, [rangeValidation, theme]);
 
-  // 🎨 Determinar colores por defecto
+  // 🎨 Determinar colores por defecto - MOVIDO ANTES DEL RETURN
   const getDefaultColors = React.useCallback(() => ({
     borderColor: isFocused ? theme?.colors?.primary : theme?.colors?.border,
     backgroundColor: theme?.colors?.surface,
     iconColor: isFocused ? theme?.colors?.primary : theme?.colors?.textSecondary,
   }), [isFocused, theme]);
 
-  // 🎨 Combinar colores basados en prioridad
-  const colors = getErrorColors() || getRangeValidationColors() || getDefaultColors();
-  
-  // 🚀 Función de debounce optimizada
+  // 🚀 Función de debounce optimizada - MOVIDO ANTES DEL RETURN
   const debouncedOnChange = React.useCallback((value: string, onChange: (value: string) => void) => {
     // Limpiar timeout anterior
     if (debounceTimeoutRef?.current) {
@@ -173,12 +162,12 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
     }
   }, [debounceTime, enableRealTimeValidation]);
   
-  // 🚀 Manejo de foco optimizado
+  // 🚀 Manejo de foco optimizado - MOVIDO ANTES DEL RETURN
   const handleFocus = React.useCallback(() => {
     setIsFocused(true);
   }, []);
   
-  // 🚀 Manejo de blur optimizado
+  // 🚀 Manejo de blur optimizado - MOVIDO ANTES DEL RETURN
   const handleBlur = React.useCallback(() => {
     setIsFocused(false);
     
@@ -190,7 +179,7 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
     }
   }, [autoDismissKeyboard]);
   
-  // 🚀 Validación y formateo de input numérico
+  // 🚀 Validación y formateo de input numérico - MOVIDO ANTES DEL RETURN
   const handleTextChange = React.useCallback((text: string, onChange: (value: string) => void) => {
     // Permitir solo números, punto decimal y coma
     const cleanText = text.replace(/[^0-9.,]/g, '');
@@ -198,18 +187,24 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
     // Reemplazar coma por punto para consistencia
     const normalizedText = cleanText.replace(',', '.');
     
-    // Evitar múltiples puntos decimales
-    const parts = normalizedText.split('.');
-    const formattedText = parts.length > 2 
-      ? `${parts?.[0]}.${parts.slice(1).join('')}` 
-      : normalizedText;
-    
-    // Actualizar valor local inmediatamente para UX responsiva
-    setLocalValue(formattedText);
-    
-    // Aplicar debounce para el onChange del formulario
-    debouncedOnChange(formattedText, onChange);
+    setLocalValue(normalizedText);
+    debouncedOnChange(normalizedText, onChange);
   }, [debouncedOnChange]);
+
+  // 🎨 Combinar colores basados en prioridad
+  const colors = getErrorColors() || getRangeValidationColors() || getDefaultColors();
+
+  // 🛡️ VALIDACIÓN DESPUÉS DE TODOS LOS HOOKS - Validar control
+  if (!control) {
+    console.warn('⚠️ OptimizedNumericInput: control es undefined para campo:', name);
+    return (
+      <View style={{ padding: 10, backgroundColor: '#ffebee', borderRadius: 8 }}>
+        <Text style={{ color: '#d32f2f', fontSize: 14 }}>
+          Error: Control no disponible para {String(name)}
+        </Text>
+      </View>
+    );
+  }
   
   // 🎨 Crear estilos dinámicos
   const styles = createStyles(theme);

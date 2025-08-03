@@ -21,7 +21,7 @@ type UnifiedEngineMetrics = {
 };
 
 // Función temporal de compatibilidad para migration gradual
-const calculateProbabilityUnified = async (input: any, options?: any) => {
+const calculateProbabilityUnified = async (input: Record<string, unknown>, options?: Record<string, unknown>) => {
   const modularEngine = new ModularFertilityEngine();
   const result = await modularEngine.calculate(input);
   

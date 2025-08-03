@@ -20,11 +20,15 @@ import {
 } from 'react-native';
 
 // Safe imports for optional React Native components
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let Animated: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let KeyboardAvoidingView: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let TextInput: any;
 
 try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const RNComponents = require('react-native');
   Animated = RNComponents.Animated || { 
     Value: class { constructor() {} },
@@ -33,7 +37,9 @@ try {
     timing: () => ({})
   };
   KeyboardAvoidingView = RNComponents.KeyboardAvoidingView || View;
-  TextInput = RNComponents.TextInput || (() => null);
+  const FallbackTextInput = () => null;
+  FallbackTextInput.displayName = 'FallbackTextInput';
+  TextInput = RNComponents.TextInput || FallbackTextInput;
 } catch {
   Animated = { 
     Value: class { constructor() {} },
@@ -42,14 +48,16 @@ try {
     timing: () => ({})
   };
   KeyboardAvoidingView = View;
-  TextInput = () => null;
+  const FallbackTextInput = () => null;
+  FallbackTextInput.displayName = 'FallbackTextInput';
+  TextInput = FallbackTextInput;
 }
 
 import { Ionicons } from '@expo/vector-icons';
 import Text from '../../../components/common/Text';
 
-// 🧠 IMPORTACIONES MODULARES V13.0
-import { MedicalAIChatEngine } from '../engines/MedicalChatEngine';
+// 🧠 IMPORTACIONES MODULARES V13.0 SÚPER MEJORADAS
+import { SmartMedicalChatEngine } from '../engines/SmartMedicalChatEngine';
 import { ChatUIComponents } from './ChatUIComponents';
 import { 
   AIChatProps, 
@@ -58,13 +66,17 @@ import {
   ThemeInterface 
 } from '../types/ChatTypes';
 
-// 🎨 TEMA POR DEFECTO
+// 🎨 TEMA MÉDICO PROFESIONAL MEJORADO
 const defaultTheme: ThemeInterface = {
-  primary: '#007AFF',
-  secondary: '#8E8E93',
-  background: '#F2F2F7',
-  border: '#C7C7CC',
-  textSecondary: '#8E8E93'
+  primary: '#0066CC',       // ✅ Azul médico profesional
+  secondary: '#6B7280',     // ✅ Gris elegante
+  background: '#F8FAFC',    // ✅ Fondo más limpio
+  border: '#E5E7EB',        // ✅ Bordes suaves
+  textSecondary: '#6B7280', // ✅ Texto secundario legible
+  gradient: ['#0066CC', '#0052A3'], // ✅ Gradiente profesional
+  success: '#10B981',       // ✅ Verde médico
+  warning: '#F59E0B',       // ✅ Amarillo médico
+  error: '#EF4444'          // ✅ Rojo médico
 };
 
 const AIChat: React.FC<AIChatProps> = ({ 
@@ -76,8 +88,8 @@ const AIChat: React.FC<AIChatProps> = ({
   const [inputText, setInputText] = React.useState('');
   const [isTyping, setIsTyping] = React.useState(false);
   
-  // 🧠 MOTORES Y COMPONENTES
-  const [chatEngine] = React.useState(() => new MedicalAIChatEngine(evaluation));
+  // 🧠 MOTORES Y COMPONENTES SÚPER INTELIGENTES
+  const [chatEngine] = React.useState(() => new SmartMedicalChatEngine(evaluation));
   const [styles] = React.useState(() => createStyles(defaultTheme));
   const [uiComponents] = React.useState(() => new ChatUIComponents({ 
     theme: defaultTheme, 
@@ -90,35 +102,41 @@ const AIChat: React.FC<AIChatProps> = ({
   const typingAnimation = React.useRef(new Animated.Value(0)).current;
 
   /**
-   * 🎬 INICIALIZAR CHAT
+   * 🎬 INICIALIZAR CHAT INTELIGENTE
    */
-  const initializeChat = React.useCallback((): void => {
-    const welcomeMessage: ChatMessage = {
-      id: 'welcome',
-      type: 'ai',
-      message: `¡Hola! Soy el Dr. IA, especialista en fertilidad. He analizado tu evaluación y estoy aquí para resolver tus dudas.\n\n¿En qué puedo ayudarte hoy?`,
-      timestamp: new Date(),
-      quickReplies: [
-        {
-          id: 'explain_results',
-          text: 'Explícame mis resultados',
-          action: 'question'
-        },
-        {
-          id: 'treatment_options',
-          text: '¿Qué opciones de tratamiento tengo?',
-          action: 'request_info'
-        },
-        {
-          id: 'lifestyle_tips',
-          text: 'Consejos de estilo de vida',
-          action: 'request_info'
-        }
-      ]
-    };
+  const initializeChat = React.useCallback(async (): Promise<void> => {
+    try {
+      // 🧠 USAR EL MOTOR INTELIGENTE PARA SALUDO PERSONALIZADO
+      const welcomeResponse = await chatEngine.generateResponse('¡Hola!');
+      
+      const welcomeMessage: ChatMessage = {
+        id: 'welcome',
+        type: 'ai',
+        message: welcomeResponse.response,
+        timestamp: new Date(),
+        quickReplies: welcomeResponse.quickReplies
+      };
 
-    setMessages([welcomeMessage]);
-  }, []);
+      setMessages([welcomeMessage]);
+    } catch (error) {
+      console.error('❌ [CHAT INIT] Error inicializando chat:', error);
+      
+      // 🛡️ FALLBACK SEGURO
+      const fallbackMessage: ChatMessage = {
+        id: 'welcome-fallback',
+        type: 'ai', 
+        message: `🩺 **Dr. IA - Tu Especialista en Fertilidad**\n\n¡Hola! Estoy aquí para ayudarte con tu consulta de fertilidad. ¿En qué puedo asistirte hoy?`,
+        timestamp: new Date(),
+        quickReplies: [
+          { id: 'help_results', text: '📊 Mis resultados', action: 'question' },
+          { id: 'help_improve', text: '📈 Cómo mejorar', action: 'request_info' },
+          { id: 'help_treatment', text: '💊 Tratamientos', action: 'request_info' }
+        ]
+      };
+      
+      setMessages([fallbackMessage]);
+    }
+  }, [chatEngine]);
 
   /**
    * 🎭 ANIMACIÓN DE ESCRITURA
@@ -204,10 +222,34 @@ const AIChat: React.FC<AIChatProps> = ({
   }, [chatEngine, isTyping, onRecommendationGenerated]);
 
   /**
-   * ⚡ MANEJAR RESPUESTA RÁPIDA
+   * ⚡ MANEJAR RESPUESTA RÁPIDA MEJORADA
    */
   const handleQuickReply = React.useCallback((reply: QuickReply): void => {
-    sendMessage(reply.text);
+    // 🎯 FEEDBACK VISUAL INMEDIATO
+    setIsTyping(true);
+    
+    // 🎨 SIMULAR INTERACCIÓN MÁS NATURAL
+    setTimeout(() => {
+      sendMessage(reply.text);
+    }, 200); // Pequeño delay para que se vea el typing
+  }, [sendMessage]);
+
+  /**
+   * 🎯 FUNCIONES AUXILIARES PARA MEJOR UX
+   */
+  const handleInputFocus = React.useCallback((): void => {
+    // 🔝 SCROLL AUTOMÁTICO AL ENFOCAR INPUT
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 300);
+  }, []);
+
+  const handleSendWithFeedback = React.useCallback((text: string): void => {
+    if (text.trim()) {
+      // 🎨 LIMPIAR INPUT INMEDIATAMENTE PARA MEJOR UX
+      setInputText('');
+      sendMessage(text.trim());
+    }
   }, [sendMessage]);
 
   // 🚀 EFECTOS
@@ -263,29 +305,44 @@ const AIChat: React.FC<AIChatProps> = ({
         {isTyping && uiComponents.renderTypingIndicator(typingAnimation)}
       </ScrollView>
 
-      {/* Input */}
+      {/* 🎨 INPUT MEJORADO CON MEJOR UX */}
       <View style={styles.inputContainer}>
         <TextInput
           ref={inputRef}
           style={styles.textInput}
-          placeholder="Escribe tu consulta médica..."
+          placeholder="💬 Pregúntame sobre tu fertilidad..."
           placeholderTextColor={defaultTheme.secondary}
           value={inputText}
           onChangeText={setInputText}
+          onFocus={handleInputFocus}
           multiline
           maxLength={500}
-          onSubmitEditing={() => sendMessage(inputText)}
+          returnKeyType="send"
+          onSubmitEditing={() => handleSendWithFeedback(inputText)}
+          blurOnSubmit={false}
+          // 🎯 MEJORAR ACCESIBILIDAD
+          accessibilityLabel="Campo de texto para consulta médica"
+          accessibilityHint="Escribe tu pregunta sobre fertilidad aquí"
         />
         <TouchableOpacity
           style={[
             styles.sendButton,
-            { backgroundColor: inputText.trim() ? defaultTheme.primary : defaultTheme.border }
+            { 
+              backgroundColor: inputText.trim() ? defaultTheme.primary : defaultTheme.border,
+              // 🎨 EFECTOS VISUALES MEJORADOS
+              transform: [{ scale: inputText.trim() ? 1.05 : 1 }],
+              shadowOpacity: inputText.trim() ? 0.3 : 0.1
+            }
           ]}
-          onPress={() => sendMessage(inputText)}
+          onPress={() => handleSendWithFeedback(inputText)}
           disabled={!inputText.trim() || isTyping}
+          activeOpacity={0.8}
+          // 🎯 MEJORAR ACCESIBILIDAD
+          accessibilityLabel="Enviar mensaje"
+          accessibilityRole="button"
         >
           <Ionicons 
-            name="send" 
+            name={isTyping ? "hourglass-outline" : "send"} 
             size={20} 
             color={inputText.trim() ? "white" : defaultTheme.textSecondary} 
           />
@@ -295,7 +352,7 @@ const AIChat: React.FC<AIChatProps> = ({
   );
 };
 
-// 🎨 ESTILOS OPTIMIZADOS
+// 🎨 ESTILOS MODERNOS Y PROFESIONALES MEJORADOS
 const createStyles = (theme: ThemeInterface) => ({
   container: {
     flex: 1,
@@ -304,19 +361,26 @@ const createStyles = (theme: ThemeInterface) => ({
   chatHeader: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    padding: 16,
+    padding: 20,                    // ✅ Más padding
+    paddingTop: 50,                 // ✅ Safe area para notch
     backgroundColor: theme.primary,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.border
+    borderBottomWidth: 0,           // ✅ Sin borde, más limpio
+    shadowColor: '#000',            // ✅ Sombra elegante
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8
   },
   headerAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    width: 48,                      // ✅ Avatar más grande
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
-    marginRight: 12
+    marginRight: 16,                // ✅ Más separación
+    borderWidth: 2,                 // ✅ Borde elegante
+    borderColor: 'rgba(255, 255, 255, 0.3)'
   },
   headerInfo: {
     flex: 1
@@ -340,28 +404,44 @@ const createStyles = (theme: ThemeInterface) => ({
   inputContainer: {
     flexDirection: 'row' as const,
     alignItems: 'flex-end' as const,
-    padding: 16,
+    padding: 20,                    // ✅ Más padding
+    paddingBottom: 30,              // ✅ Safe area para home indicator
     backgroundColor: 'white',
-    borderTopWidth: 1,
-    borderTopColor: theme.border
+    borderTopWidth: 0,              // ✅ Sin borde superior
+    shadowColor: '#000',            // ✅ Sombra superior elegante
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 8
   },
   textInput: {
     flex: 1,
-    borderWidth: 1,
+    borderWidth: 2,                 // ✅ Borde más grueso
     borderColor: theme.border,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginRight: 8,
-    maxHeight: 100,
-    fontSize: 16
+    borderRadius: 25,               // ✅ Más redondeado
+    paddingHorizontal: 20,          // ✅ Más padding horizontal
+    paddingVertical: 14,            // ✅ Más padding vertical
+    marginRight: 12,                // ✅ Más separación
+    maxHeight: 120,                 // ✅ Altura máxima mayor
+    fontSize: 16,
+    backgroundColor: '#FAFAFA',     // ✅ Fondo sutil
+    shadowColor: '#000',            // ✅ Sombra interna sutil
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1
   },
   sendButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 50,                      // ✅ Botón más grande
+    height: 50,
+    borderRadius: 25,
     justifyContent: 'center' as const,
-    alignItems: 'center' as const
+    alignItems: 'center' as const,
+    shadowColor: '#000',            // ✅ Sombra para el botón
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4
   }
 });
 

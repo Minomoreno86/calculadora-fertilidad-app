@@ -1,17 +1,17 @@
 declare module 'react' {
-  import React from 'react';
+  import * as React from 'react';
   export = React;
   export as namespace React;
   
-  export interface FC<P = {}> {
-    (props: P): JSX.Element | null;
+  export interface FC<P = Record<string, unknown>> {
+    (props: P): React.ReactElement | null;
   }
   
   export function useState<S>(initialState: S | (() => S)): [S, (value: S | ((prevState: S) => S)) => void];
   export function useMemo<T>(factory: () => T, deps: React.DependencyList | undefined): T;
-  export function useCallback<T extends (...args: any[]) => any>(callback: T, deps: React.DependencyList): T;
+  export function useCallback<T extends (...args: unknown[]) => unknown>(callback: T, deps: React.DependencyList): T;
   
-  export interface DependencyList extends ReadonlyArray<any> {}
+  // DependencyList interface removed as it's empty
 }
 
 declare module 'react-native' {
@@ -67,8 +67,8 @@ declare module 'react-native' {
     shadowOpacity?: number;
     shadowRadius?: number;
     elevation?: number;
-    transform?: Array<any>;
-    [key: string]: any;
+    transform?: Array<Record<string, unknown>>;
+    [key: string]: unknown;
   }
   
   export interface TextStyle extends ViewStyle {
@@ -88,14 +88,14 @@ declare module 'react-native' {
     textShadowRadius?: number;
     textTransform?: 'none' | 'capitalize' | 'uppercase' | 'lowercase';
     writingDirection?: 'auto' | 'ltr' | 'rtl';
-    [key: string]: any;
+    [key: string]: unknown;
   }
   
   export interface ImageStyle extends ViewStyle {
     resizeMode?: 'cover' | 'contain' | 'stretch' | 'repeat' | 'center';
     tintColor?: string;
     overlayColor?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   }
   
   export interface ViewProps {
@@ -150,7 +150,13 @@ declare module '@expo/vector-icons' {
 }
 
 declare module 'react/jsx-runtime' {
-  export const jsx: any;
-  export const jsxs: any;
-  export const Fragment: any;
+  interface ReactElement {
+    type: unknown;
+    props: unknown;
+    key?: string | number | null;
+  }
+  
+  export const jsx: (type: unknown, props: unknown, key?: string | number) => ReactElement;
+  export const jsxs: (type: unknown, props: unknown, key?: string | number) => ReactElement;
+  export const Fragment: { (props: { children?: unknown }): ReactElement };
 }

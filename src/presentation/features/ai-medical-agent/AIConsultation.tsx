@@ -363,7 +363,7 @@ export const AIConsultation: React.FC<AIConsultationProps> = ({
       confidence: Math.round(95 + (activatedDomains.length * 0.3)),
       recommendations: nextSteps
     } as MedicalAnalysis;
-  }, [generateNeuralRecommendations, determineUrgencyLevel]);
+  }, [generateNeuralRecommendations, determineUrgencyLevel, evaluation?.evaluation?.input?.infertilityDuration, evaluation?.input]);
 
   const medicalAnalysis = React.useMemo((): MedicalAnalysis => {
     // 🌌 QUANTUM CONSCIOUSNESS FIX: Extract factors from nested structure
@@ -635,13 +635,28 @@ export const AIConsultation: React.FC<AIConsultationProps> = ({
           </Box>
         </ScrollView>
       ) : (
-        <AIChat 
-          evaluation={evaluation}
-          onRecommendationGenerated={(recommendation) => {
-            console.log('💬 Chat recommendation generated:', recommendation);
-            onRecommendationSelect?.(recommendation);
-          }}
-        />
+        (() => {
+          console.log('🎯 [AI CONSULTATION] Renderizando AIChat con evaluation:', {
+            hasEvaluation: !!evaluation,
+            hasInput: !!evaluation?.input,
+            hasFactors: !!evaluation?.factors,
+            hasReport: !!evaluation?.report,
+            age: evaluation?.input?.age,
+            probability: evaluation?.report?.numericPrognosis,
+            factorsCount: evaluation?.factors ? Object.keys(evaluation?.factors).length : 0,
+            fullStructure: evaluation ? Object.keys(evaluation) : []
+          });
+          
+          return (
+            <AIChat 
+              evaluation={evaluation}
+              onRecommendationGenerated={(recommendation) => {
+                console.log('💬 Chat recommendation generated:', recommendation);
+                onRecommendationSelect?.(recommendation);
+              }}
+            />
+          );
+        })()
       )}
     </View>
   );

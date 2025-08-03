@@ -52,8 +52,9 @@ export class ChatUIComponents {
   private readonly createStyles = (theme: ThemeInterface): Record<string, ViewStyle | TextStyle> => ({
     messageContainer: {
       flexDirection: 'row',
-      marginVertical: 4,
-      alignItems: 'flex-end'
+      marginVertical: 8,                    // ✅ Más separación entre mensajes
+      alignItems: 'flex-end',
+      paddingHorizontal: 4                  // ✅ Padding para animaciones
     } as ViewStyle,
     userMessage: {
       justifyContent: 'flex-end'
@@ -62,42 +63,60 @@ export class ChatUIComponents {
       justifyContent: 'flex-start'
     } as ViewStyle,
     aiAvatar: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
+      width: 40,                            // ✅ Avatar más grande
+      height: 40,
+      borderRadius: 20,
       backgroundColor: theme.primary,
       justifyContent: 'center',
       alignItems: 'center',
-      marginRight: 8
+      marginRight: 12,                      // ✅ Más separación
+      shadowColor: '#000',                  // ✅ Sombra elegante
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 4,
+      elevation: 4,
+      borderWidth: 2,                       // ✅ Borde elegante
+      borderColor: 'rgba(255, 255, 255, 0.9)'
     } as ViewStyle,
     userAvatar: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: theme.background,
+      width: 40,                            // ✅ Avatar más grande
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: '#F3F4F6',           // ✅ Fondo más elegante
       borderWidth: 2,
       borderColor: theme.primary,
       justifyContent: 'center',
       alignItems: 'center',
-      marginLeft: 8
+      marginLeft: 12,                       // ✅ Más separación
+      shadowColor: '#000',                  // ✅ Sombra elegante
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3
     } as ViewStyle,
     messageBubble: {
-      maxWidth: '75%' as const,
-      borderRadius: 16,
-      paddingHorizontal: 12,
-      paddingVertical: 8
+      maxWidth: '78%' as const,             // ✅ Ancho ligeramente mayor
+      borderRadius: 20,                     // ✅ Más redondeado
+      paddingHorizontal: 16,                // ✅ Más padding
+      paddingVertical: 12,                  // ✅ Más padding vertical
+      shadowColor: '#000',                  // ✅ Sombra elegante
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      elevation: 3
     } as ViewStyle,
     userBubble: {
       backgroundColor: theme.primary
     } as ViewStyle,
     aiBubble: {
-      backgroundColor: 'white',
+      backgroundColor: '#FFFFFF',           // ✅ Blanco puro
       borderWidth: 1,
-      borderColor: theme.border || theme.secondary
+      borderColor: '#E5E7EB'                // ✅ Borde más sutil
     } as ViewStyle,
     messageText: {
       fontSize: 16,
-      lineHeight: 20
+      lineHeight: 24,                       // ✅ Mejor line height para legibilidad
+      fontFamily: 'System'                  // ✅ Fuente sistema más legible
     } as TextStyle,
     userText: {
       color: 'white'
@@ -197,31 +216,51 @@ export class ChatUIComponents {
       borderRadius: 2,
     },
 
+    // 🎨 NUEVO UX - BOTONES MODERNOS AL FINAL
     quickRepliesContainer: {
-      marginTop: 8,
-      marginLeft: 40
+      marginTop: 20,                        // ✅ Más separación superior
+      marginHorizontal: 16,                 // ✅ Margen horizontal uniforme
+      backgroundColor: '#FAFBFC',           // ✅ Fondo sutil diferenciado
+      borderRadius: 16,                     // ✅ Bordes redondeados
+      padding: 16,                          // ✅ Padding interno
+      shadowColor: '#000',                  // ✅ Sombra moderna
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      elevation: 3
     } as ViewStyle,
     quickRepliesTitle: {
-      fontSize: 12,
-      color: theme.textSecondary || theme.secondary,
-      marginBottom: 8
+      fontSize: 15,                         // ✅ Título más prominente
+      color: '#1F2937',                     // ✅ Color más fuerte
+      marginBottom: 14,                     // ✅ Más separación
+      fontWeight: '600',                    // ✅ Peso semi-bold
+      textAlign: 'center'                   // ✅ Centrado
     } as TextStyle,
     quickReplyButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: 'white',
-      borderWidth: 1,
-      borderColor: theme.border || theme.secondary,
-      borderRadius: 20,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      marginBottom: 6,
-      alignSelf: 'flex-start'
+      justifyContent: 'center',             // ✅ Centrado
+      backgroundColor: '#FFFFFF',           // ✅ Fondo blanco limpio
+      borderWidth: 2,                       // ✅ Borde más fuerte
+      borderColor: theme.primary || '#0066CC', // ✅ Color primario
+      borderRadius: 25,                     // ✅ Muy redondeado
+      paddingHorizontal: 20,                // ✅ Más padding horizontal
+      paddingVertical: 14,                  // ✅ Más padding vertical
+      marginBottom: 12,                     // ✅ Más separación entre botones
+      minHeight: 48,                        // ✅ Altura mínima para tap fácil
+      shadowColor: theme.primary || '#0066CC', // ✅ Sombra coloreada
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 2
     } as ViewStyle,
     quickReplyText: {
-      fontSize: 14,
-      color: theme.primary,
-      marginRight: 6
+      fontSize: 15,                         // ✅ Texto más grande
+      color: theme.primary || '#0066CC',    // ✅ Color primario
+      fontWeight: '600',                    // ✅ Peso semi-bold
+      textAlign: 'center',                  // ✅ Centrado
+      flex: 1,                              // ✅ Ocupa espacio disponible
+      marginRight: 8                        // ✅ Separación del icono
     } as TextStyle,
     attachmentsContainer: {
       marginTop: 8,
@@ -334,22 +373,59 @@ export class ChatUIComponents {
   };
 
   /**
-   * ⚡ RENDERIZAR RESPUESTAS RÁPIDAS
+   * ⚡ RENDERIZAR RESPUESTAS RÁPIDAS MEJORADAS
    */
   renderQuickReplies = (quickReplies: QuickReply[], onQuickReply: (reply: QuickReply) => void) => {
     return (
       <View style={this.styles.quickRepliesContainer as ViewStyle}>
-        <Text style={this.styles.quickRepliesTitle as TextStyle}>Respuestas sugeridas:</Text>
-        {quickReplies.map((reply) => (
+        <Text style={this.styles.quickRepliesTitle as TextStyle}>
+          ✨ ¿Qué te gustaría explorar?
+        </Text>
+        {quickReplies.map((reply, index) => (
           <TouchableOpacity
             key={reply.id}
-            style={this.styles.quickReplyButton as ViewStyle}
+            style={[
+              this.styles.quickReplyButton as ViewStyle,
+              // 🎨 EFECTOS VISUALES ESCALONADOS
+              { 
+                opacity: 0.95,
+                transform: [{ scale: 0.98 }] 
+              }
+            ]}
             onPress={() => onQuickReply(reply)}
+            activeOpacity={0.85}
+            // 🎯 FEEDBACK HÁPTICO
+            onPressIn={() => {
+              // Aquí podríamos añadir vibración ligera
+            }}
           >
-            <Text style={this.styles.quickReplyText as TextStyle}>{reply.text}</Text>
-            <Ionicons name="arrow-forward" size={14} color={this.theme.primary} />
+            <Text style={this.styles.quickReplyText as TextStyle}>
+              {reply.text}
+            </Text>
+            <Ionicons 
+              name="chevron-forward" 
+              size={18} 
+              color={this.theme.primary || '#0066CC'} 
+            />
           </TouchableOpacity>
         ))}
+        
+        {/* 🎨 INDICADOR VISUAL AL FINAL */}
+        <View style={{
+          alignItems: 'center',
+          marginTop: 8,
+          paddingTop: 12,
+          borderTopWidth: 1,
+          borderTopColor: '#E5E7EB'
+        }}>
+          <Text style={{
+            fontSize: 12,
+            color: '#9CA3AF',
+            fontStyle: 'italic'
+          }}>
+            💬 O escribe tu pregunta específica arriba
+          </Text>
+        </View>
       </View>
     );
   };

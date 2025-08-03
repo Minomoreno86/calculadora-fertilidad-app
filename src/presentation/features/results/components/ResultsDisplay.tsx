@@ -487,7 +487,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       totalFactors,
       improvementPotential: simulationResult?.improvement || 0
     };
-  }, [factorAnalysis, report, simulationResult]);
+  }, [factorAnalysis, report, simulationResult, evaluation]);
 
   // 📊 RENDERIZAR HEADER LIMPIO
   const renderHeader = () => (
@@ -1698,9 +1698,41 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         );
       
       case 'ai-consultation':
+        // 🎯 CREAR EVALUATION CORREGIDA CON ESTRUCTURA CORRECTA
+        const correctedEvaluation = {
+          input: evaluation?.evaluation?.input || evaluation?.input,
+          factors: evaluation?.evaluation?.factors || evaluation?.factors,
+          report: evaluation?.evaluation?.report || evaluation?.report,
+          // 🔧 MANTENER PROPIEDADES ADICIONALES
+          basicMetrics: evaluation?.basicMetrics,
+          pregnancyProbability: evaluation?.pregnancyProbability,
+          formData: evaluation?.formData,
+          timestamp: evaluation?.timestamp,
+          reportKey: evaluation?.reportKey,
+          version: evaluation?.version
+        };
+
+        console.log('🎯 [RESULTS DISPLAY] Evaluation ORIGINAL vs CORREGIDA:', {
+          original: {
+            hasInput: !!evaluation?.input,
+            hasFactors: !!evaluation?.factors,
+            hasReport: !!evaluation?.report,
+            age: evaluation?.input?.age,
+            probability: evaluation?.report?.numericPrognosis
+          },
+          corrected: {
+            hasInput: !!correctedEvaluation.input,
+            hasFactors: !!correctedEvaluation.factors,
+            hasReport: !!correctedEvaluation.report,
+            age: correctedEvaluation.input?.age,
+            probability: correctedEvaluation.report?.numericPrognosis,
+            factorsCount: correctedEvaluation.factors ? Object.keys(correctedEvaluation.factors).length : 0
+          }
+        });
+        
         return (
           <AIConsultation 
-            evaluation={evaluation}
+            evaluation={correctedEvaluation}
             onRecommendationSelect={(recommendation: unknown) => {
               console.log('🤖 AI Recommendation selected:', recommendation);
             }}
