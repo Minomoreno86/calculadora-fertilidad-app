@@ -290,7 +290,15 @@ export class CalculationCore {
       // Obtener probabilidad base de edad (ya viene como porcentaje)
       const baseAgeProbability = factors.baseAgeProbability || 17.5;
       
-      // Normalizar factores - 0 significa "no aplica", se convierte a 1.0 (neutro)
+      // 🔍 DEBUG: Factores antes de normalizar
+      console.log('🔍 FACTORS DEBUG - Before normalization:', {
+        'factors.hsg': factors.hsg,
+        'factors.otb': factors.otb,
+        hsgType: typeof factors.hsg,
+        otbType: typeof factors.otb
+      });
+
+      // Normalizar factores - CORREGIDO: solo undefined se convierte a 1.0 (neutro)
       const normalizedFactors = {
         bmi: factors.bmi === 0 ? 1.0 : factors.bmi,
         cycle: factors.cycle === 0 ? 1.0 : factors.cycle,
@@ -299,8 +307,8 @@ export class CalculationCore {
         myoma: factors.myoma === 0 ? 1.0 : factors.myoma,
         adenomyosis: factors.adenomyosis === 0 ? 1.0 : factors.adenomyosis,
         polyp: factors.polyp === 0 ? 1.0 : factors.polyp,
-        hsg: factors.hsg === 0 ? 1.0 : factors.hsg,
-        otb: factors.otb === 0 ? 1.0 : factors.otb,
+        hsg: factors.hsg === undefined ? 1.0 : factors.hsg, // ✅ CORREGIDO: 0.0 es válido (bilateral)
+        otb: factors.otb === undefined ? 1.0 : factors.otb, // ✅ CORREGIDO: 0.0 es válido (ligadura)
         amh: factors.amh === 0 ? 1.0 : factors.amh,
         prolactin: factors.prolactin === 0 ? 1.0 : factors.prolactin,
         tsh: factors.tsh === 0 ? 1.0 : factors.tsh,
@@ -309,6 +317,14 @@ export class CalculationCore {
         infertilityDuration: factors.infertilityDuration === 0 ? 1.0 : factors.infertilityDuration,
         pelvicSurgery: factors.pelvicSurgery === 0 ? 1.0 : factors.pelvicSurgery
       };
+
+      // 🔍 DEBUG: Factores después de normalizar
+      console.log('🔍 FACTORS DEBUG - After normalization:', {
+        'normalizedFactors.hsg': normalizedFactors.hsg,
+        'normalizedFactors.otb': normalizedFactors.otb,
+        baseAgeProbability,
+        'Expected calc': `${baseAgeProbability} * ${normalizedFactors.hsg} = ${baseAgeProbability * normalizedFactors.hsg}`
+      });
       
       // Calcular multiplicador combinado
       const combinedMultiplier = 
@@ -332,8 +348,19 @@ export class CalculationCore {
       // Fórmula correcta: Probabilidad base × multiplicadores
       const calculatedPrognosis = baseAgeProbability * combinedMultiplier;
       
+      // 🔍 DEBUG: Resultado final
+      console.log('🔍 CALCULATION DEBUG - Final result:', {
+        baseAgeProbability,
+        combinedMultiplier,
+        calculatedPrognosis,
+        'hsg in multiplier': normalizedFactors.hsg,
+        'otb in multiplier': normalizedFactors.otb
+      });
+      
       // Aplicar límites
       const numericPrognosis = Math.max(0.1, Math.min(100, calculatedPrognosis));
+      
+      console.log('🔍 FINAL RESULT:', { calculatedPrognosis, numericPrognosis });
       
       return reportGenerator.generateFinalReport(numericPrognosis, diagnostics, input, factors);
     } catch (error) {

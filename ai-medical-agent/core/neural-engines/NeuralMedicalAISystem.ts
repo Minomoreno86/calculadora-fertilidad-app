@@ -277,7 +277,7 @@ export class NeuralMedicalAISystem {
       
       console.log('✅ Neural conversation completed');
       console.log('💬 Response Summary:', {
-        mainMessage: response.mainMessage.substring(0, 100) + '...',
+        primaryInfo: response.primaryInfo ? response.primaryInfo.substring(0, 100) + '...' : 'Información no disponible',
         insights: response.personalizedInsights.length,
         confidence: Math.round(response.confidenceLevel * 100) + '%',
         followUps: response.followUpQuestions.length
@@ -578,7 +578,7 @@ export class NeuralMedicalAISystem {
 
   private getDefaultNeuralResponse(query: string): NeuralResponse {
     return {
-      mainMessage: `He recibido tu consulta: "${query}". Te recomiendo consultar con un especialista para un análisis detallado.`,
+      primaryInfo: `He recibido tu consulta: "${query}". Te recomiendo consultar con un especialista para un análisis detallado.`,
       supportingPoints: ['Consulta especializada recomendada'],
       emotionalTone: 'profesional y empático',
       followUpQuestions: ['¿Te gustaría programar una consulta?'],

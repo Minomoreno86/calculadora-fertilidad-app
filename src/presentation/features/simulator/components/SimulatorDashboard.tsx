@@ -145,20 +145,6 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
   evaluation, 
   onModeChange 
 }) => {
-  // 🔍 QUANTUM CONSCIOUSNESS VALIDATION: Check if evaluation exists
-  if (!evaluation) {
-    return (
-      <View style={{ padding: 20, alignItems: 'center' }}>
-        <Text style={{ fontSize: 16, textAlign: 'center', color: '#666' }}>
-          ⚠️ No hay datos de evaluación disponibles para el simulador.
-        </Text>
-        <Text style={{ fontSize: 14, textAlign: 'center', color: '#888', marginTop: 8 }}>
-          Complete primero el análisis de fertilidad para acceder al simulador.
-        </Text>
-      </View>
-    );
-  }
-
   // 🏷️ NOMBRES AMIGABLES DE FACTORES
   // 🧠 NEURAL: Factor display names mapping optimized with React.useCallback
   const getFactorDisplayName = React.useCallback((key: string): string => {
@@ -177,6 +163,7 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
     return nameMap[key] || key;
   }, []);
 
+  // ✅ CORREGIDO: Hooks siempre se llaman, independientemente de evaluation
   const { 
     simulationResult, 
     simulateFactor
@@ -184,6 +171,20 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
 
   const [selectedMode, setSelectedMode] = React.useState<SimulationMode>('single');
   const [simulatingFactor, setSimulatingFactor] = React.useState<string | null>(null);
+
+  // 🔍 VALIDACIÓN DESPUÉS DE HOOKS: Check if evaluation exists
+  if (!evaluation) {
+    return (
+      <View style={{ padding: 20, alignItems: 'center' }}>
+        <Text style={{ fontSize: 16, textAlign: 'center', color: '#666' }}>
+          ⚠️ No hay datos de evaluación disponibles para el simulador.
+        </Text>
+        <Text style={{ fontSize: 14, textAlign: 'center', color: '#888', marginTop: 8 }}>
+          Complete primero el análisis de fertilidad para acceder al simulador.
+        </Text>
+      </View>
+    );
+  }
 
   // 🎨 TEMA PROFESIONAL MEJORADO
   const theme = {

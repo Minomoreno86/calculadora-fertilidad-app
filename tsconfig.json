@@ -16,7 +16,7 @@
     "exactOptionalPropertyTypes": false,
     "noUncheckedIndexedAccess": false,
     "moduleResolution": "bundler",
-    "module": "ESNext",
+    "module": "esnext",
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,

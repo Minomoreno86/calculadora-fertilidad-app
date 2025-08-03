@@ -212,7 +212,7 @@ export const analyzeCycleIrregularFactors = (normalizedCycleIrregular: number): 
 export const analyzePCOSFactors = (factors: Factors): AnalysisResult[] => {
   const results: AnalysisResult[] = [];
   
-  if (factors.pcos !== undefined && factors.pcos < 0.8) {
+  if (factors.pcos !== undefined && factors.pcos < 1.0) { // ✅ Incluir PCOS leve (0.9)
     const pcosLevel = factors.pcos;
     
     let condition: string;
@@ -221,37 +221,37 @@ export const analyzePCOSFactors = (factors: Factors): AnalysisResult[] => {
     let treatments: string[];
     let priority: Priority;
     
-    if (pcosLevel < 0.3) {
-      // PCOS severo con múltiples manifestaciones
-      condition = 'PCOS Severo (Fenotipo Completo)';
+    if (pcosLevel <= 0.6) {
+      // PCOS severo con múltiples manifestaciones (factor 0.6)
+      condition = 'PCOS Severo (Anovulación Confirmada)';
       probability = 95;
-      reasoning = 'Oligo/anovulación + hiperandrogenismo + ovarios poliquísticos + resistencia insulínica';
+      reasoning = 'Anovulación crónica: ciclo >35 días, IMC >30, HOMA >3.5 + AMH >6 ng/mL';
       treatments = [
         'Metformina 1500-2000mg + inositol 4g/día',
         'Letrozol 5-7.5mg para inducción ovulación',
         'Pérdida peso 10% + dieta baja en carbohidratos'
       ];
       priority = 'high';
-    } else if (pcosLevel < 0.6) {
-      // PCOS moderado
-      condition = 'PCOS Moderado (2 criterios Rotterdam)';
+    } else if (pcosLevel <= 0.75) {
+      // PCOS moderado (factor 0.75)
+      condition = 'PCOS Moderado (Anovulación o AMH Elevada)';
       probability = 80;
-      reasoning = 'Dos criterios PCOS presentes. Ovulación irregular + manifestaciones androgénicas o ecográficas';
+      reasoning = 'Anovulación parcial: ciclo >35 días O IMC >30 O AMH >6 ng/mL';
       treatments = [
         'Letrozol 2.5-5mg ciclos 3-7 para ovulación',
         'Inositol 2g/día + vitamina D 4000UI',
-        'Anticonceptivos combinados si no desea embarazo inmediato'
+        'Control peso y resistencia insulínica'
       ];
       priority = 'medium';
     } else {
-      // PCOS leve o criterios limitados
-      condition = 'PCOS Leve o Criterios Borderline';
+      // PCOS leve (factor 0.9)
+      condition = 'PCOS Leve (Ovulación Preservada)';
       probability = 65;
-      reasoning = 'Un criterio PCOS claro + sospecha clínica. Requiere confirmación diagnóstica';
+      reasoning = 'Criterios PCOS presentes pero ovulación regular. AMH <6 ng/mL y ciclo <35 días';
       treatments = [
         'Monitoreo ovulación + optimización estilo vida',
         'Inositol 1-2g/día + ejercicio regular',
-        'Evaluación hormonal completa para confirmación'
+        'Control ginecológico cada 6 meses'
       ];
       priority = 'low';
     }
@@ -312,7 +312,21 @@ export const analyzeHSGFactors = (factors: Factors, inputData?: UserInput): Anal
         'SEGUIMIENTO ESPECIALIZADO: Centro FIV con experiencia en factor tubárico severo'
       ];
       priority = 'high';
-    } else if (hsgLevel < 0.6) {
+    } else if (hsgLevel === 0.3) {
+      // ✅ MALFORMACIÓN UTERINA HSG - FACTOR 0.3
+      condition = 'Malformación Uterina Detectada en HSG';
+      probability = 65;
+      reasoning = 'Malformación congénita uterina (septa, bicorne, unicorne) detectada por HSG. Afecta implantación y riesgo de aborto';
+      treatments = [
+        'HISTEROSCOPIA DIAGNÓSTICA: Evaluación detallada de tipo y severidad de malformación',
+        'RESONANCIA MAGNÉTICA PÉLVICA: Confirmar diagnóstico y planificar tratamiento quirúrgico',
+        'CORRECCIÓN QUIRÚRGICA: Histeroscopia operatoria para septoplastia si septa presente',
+        'EVALUACIÓN GENÉTICA: Cariotipo si malformación compleja o asociada a otras anomalías',
+        'SEGUIMIENTO ESPECIALIZADO: Centro con experiencia en cirugía reproductiva',
+        'PROTOCOLO GESTACIONAL: Vigilancia obstétrica estrecha si se logra embarazo'
+      ];
+      priority = 'medium';
+    } else if (hsgLevel < 0.8) {
       // Alteraciones moderadas HSG - UNILATERAL
       condition = 'Obstrucción Tubárica Unilateral en HSG';
       probability = 70;
@@ -387,8 +401,9 @@ export const analyzeHSGFactors = (factors: Factors, inputData?: UserInput): Anal
 export const analyzeMaleFactorFactors = (factors: Factors): AnalysisResult[] => {
   const results: AnalysisResult[] = [];
   
-  if (factors.maleFactor !== undefined && factors.maleFactor < 0.8) {
-    const maleLevel = factors.maleFactor;
+  // ✅ CORREGIDO: El factor se llama 'male' en el sistema, no 'maleFactor'
+  if (factors.male !== undefined && factors.male < 1.0) {
+    const maleLevel = factors.male;
     
     let condition: string;
     let probability: number;
@@ -527,34 +542,48 @@ export const analyzeBMIFactors = (factors: Factors): AnalysisResult[] => {
       let treatments: string[];
       let priority: Priority;
       
-      if (bmiLevel < 0.3) {
-        condition = 'IMC Severamente Alterado (Obesidad III°/Bajo Peso Severo)';
-        probability = 90;
-        reasoning = 'Disfunción ovulatoria severa + complicaciones obstétricas + resistencia insulínica';
+      if (bmiLevel <= 0.4) {
+        // Factor 0.4 = Obesidad Clase III (BMI ≥40)
+        condition = 'Obesidad Clase III (IMC ≥40)';
+        probability = 95;
+        reasoning = 'Disfunción ovulatoria severa + anovulación crónica + resistencia insulínica severa + alto riesgo obstétrico';
         treatments = [
-          'Pérdida peso supervisada 10-15% pre-concepcional',
-          'Metformina 1500mg + inositol si obesidad',
-          'Evaluación endocrinológica + nutricional'
+          'Cirugía bariátrica pre-concepcional si IMC >40',
+          'Pérdida peso supervisada 15-20% obligatorio',
+          'Metformina 2000mg + evaluación endocrinológica completa'
         ];
         priority = 'high';
-      } else if (bmiLevel < 0.6) {
-        condition = 'IMC Moderadamente Alterado (Obesidad I°-II°/Bajo Peso)';
+      } else if (bmiLevel <= 0.6) {
+        // Factor 0.6 = Obesidad Clase II (BMI 35-39.9)
+        condition = 'Obesidad Clase II (IMC 35-39.9)';
+        probability = 85;
+        reasoning = 'Anovulación frecuente + resistencia insulínica + riesgo complicaciones obstétricas elevado';
+        treatments = [
+          'Pérdida peso supervisada 10-15% pre-concepcional',
+          'Metformina 1500-2000mg + inositol 4g/día',
+          'Evaluación endocrinológica + cardiológica'
+        ];
+        priority = 'high';
+      } else if (bmiLevel <= 0.75) {
+        // Factor 0.75 = Obesidad Clase I (BMI 30-34.9)
+        condition = 'Obesidad Clase I (IMC 30-34.9)';
         probability = 75;
-        reasoning = 'Ovulación irregular + mayor riesgo complicaciones gestacionales';
+        reasoning = 'Ovulación irregular + resistencia insulínica incipiente + riesgo gestacional moderado';
         treatments = [
           'Pérdida peso 5-10% con dieta mediterránea',
-          'Ejercicio moderado 150min/semana',
-          'Suplementación vitamina D + folatos'
+          'Metformina 1000-1500mg si HOMA-IR >2.5',
+          'Ejercicio estructurado 150min/semana'
         ];
         priority = 'medium';
-      } else if (bmiLevel < 0.9) {
-        condition = 'IMC Levemente Alterado (Sobrepeso/Bajo Peso Leve)';
+      } else if (bmiLevel <= 0.9) {
+        // Factor 0.9 = Sobrepeso (BMI 25-29.9)
+        condition = 'Sobrepeso (IMC 25-29.9)';
         probability = 60;
-        reasoning = 'Riesgo leve de disfunción ovulatoria + complicaciones menores';
+        reasoning = 'Riesgo leve disfunción ovulatoria + tendencia resistencia insulínica';
         treatments = [
-          'Optimización nutricional pre-concepcional',
+          'Pérdida peso 3-5% con dieta equilibrada',
           'Actividad física regular + monitoreo peso',
-          'Evaluación metabólica si sobrepeso'
+          'Suplementación vitamina D + folatos'
         ];
         priority = 'low';
       } else {
@@ -694,51 +723,57 @@ export const analyzeDurationFactors = (infertilityDuration?: number): AnalysisRe
   return results;
 };
 
-// 🧠 ANÁLISIS CIRUGÍAS PÉLVICAS - BASADO EN BIBLIOTECA MÉDICA
-export const analyzePelvicSurgeryFactors = (pelvicSurgery?: string): AnalysisResult[] => {
+// 🧠 ANÁLISIS CIRUGÍAS PÉLVICAS - BASADO EN FACTOR NUMÉRICO
+export const analyzePelvicSurgeryFactors = (factors: Factors): AnalysisResult[] => {
   const results: AnalysisResult[] = [];
   
-  if (pelvicSurgery && pelvicSurgery !== 'none') {
+  console.log('🔍 [PELVIC SURGERY ANALYSIS] Debug:', { 
+    pelvicSurgery: factors.pelvicSurgery, 
+    isDefined: factors.pelvicSurgery !== undefined,
+    willAnalyze: factors.pelvicSurgery !== undefined && factors.pelvicSurgery < 1.0
+  });
+  
+  if (factors.pelvicSurgery !== undefined && factors.pelvicSurgery < 1.0) {
+    const surgeryFactor = factors.pelvicSurgery;
     let condition: string;
     let probability: number;
     let reasoning: string;
     let treatments: string[];
     let priority: Priority;
     
-    const complexSurgeries = ['multiple', 'endometriosis', 'myomectomy', 'ovarian'];
-    const isComplex = complexSurgeries.some(surgery => pelvicSurgery.toLowerCase().includes(surgery));
-    
-    if (isComplex) {
-      // Cirugías múltiples/complejas
-      condition = 'Cirugías Pélvicas Múltiples/Complejas';
-      probability = 95;
-      reasoning = 'Alto riesgo adherencias + factor tubárico + endometriosis severa';
+    if (surgeryFactor <= 0.88) {
+      // Cirugías múltiples (2+ cirugías) - Factor 0.88
+      condition = 'Cirugías Pélvicas Múltiples (2+ Procedimientos)';
+      probability = 90;
+      reasoning = 'Alto riesgo adherencias pélvicas + alteración anatomía tubárica + posible factor endometrial';
       treatments = [
-        'HSG + Laparoscopia diagnóstica urgente',
-        'FIV-ICSI directa si adherencias severas',
-        'Evaluación quirúrgica reconstructiva especializada'
+        'HSG + Histeroscopia diagnóstica para evaluar cavidad/trompas',
+        'Laparoscopia diagnóstica si sospecha adherencias severas',
+        'FIV-ICSI precoz si factor tubárico confirmado',
+        'Cirugía adhesiolisis solo si sintomática'
       ];
       priority = 'high';
-    } else if (pelvicSurgery.toLowerCase().includes('appendectomy') || pelvicSurgery.toLowerCase().includes('cesarean')) {
-      // Cirugía significativa previa
-      condition = 'Cirugía Pélvica Significativa Previa';
-      probability = 80;
-      reasoning = 'Riesgo moderado adherencias + alteración anatomía pélvica';
+    } else if (surgeryFactor <= 0.95) {
+      // Una cirugía pélvica - Factor 0.95
+      condition = 'Cirugía Pélvica Previa (1 Procedimiento)';
+      probability = 75;
+      reasoning = 'Riesgo moderado adherencias + posible alteración permeabilidad tubárica según tipo cirugía';
       treatments = [
-        'HSG para evaluar permeabilidad tubárica',
-        'IUI si trompas permeables, FIV si obstruidas',
-        'Laparoscopia si dolor o sospecha endometriosis'
+        'HSG para evaluación permeabilidad tubárica',
+        'Histeroscopia si cirugía uterina previa',
+        'IUI si trompas permeables + semen normal',
+        'FIV si obstrucción tubárica o múltiples factores'
       ];
       priority = 'medium';
     } else {
-      // Cirugía menor previa
-      condition = 'Cirugía Pélvica Menor Previa';
-      probability = 65;
-      reasoning = 'Riesgo bajo adherencias + posible impacto fertilidad';
+      // Casos edge o cirugía muy menor - Factor >0.95 pero <1.0
+      condition = 'Cirugía Pélvica Menor/Impacto Mínimo';
+      probability = 60;
+      reasoning = 'Impacto mínimo en fertilidad + riesgo bajo adherencias';
       treatments = [
-        'Evaluación clínica + HSG si indicado',
-        'Seguimiento ovulación + timing optimizado',
-        'IUI si no embarazo en 6-12 meses'
+        'Seguimiento ovulación natural 6-12 meses',
+        'HSG solo si otros factores presentes',
+        'IUI si no concepción tras seguimiento'
       ];
       priority = 'low';
     }
@@ -760,7 +795,7 @@ export const analyzePelvicSurgeryFactors = (pelvicSurgery?: string): AnalysisRes
         data: {
           treatment,
           priority: index === 0 ? priority : 'medium' as Priority,
-          successRate: isComplex ? 40 + (index * 10) : 65 - (index * 10),
+          successRate: surgeryFactor <= 0.88 ? 40 + (index * 10) : 65 - (index * 10),
           timeframe: index === 0 ? '1-3 meses' : '3-6 meses',
           reasoning: 'Anatomía alterada requiere evaluación específica'
         }
@@ -771,50 +806,90 @@ export const analyzePelvicSurgeryFactors = (pelvicSurgery?: string): AnalysisRes
   return results;
 };
 
-// 🧠 ANÁLISIS OTB (OCLUSIÓN TUBÁRICA BILATERAL) - BASADO EN BIBLIOTECA MÉDICA
-export const analyzeOTBFactors = (otb?: boolean, otbYears?: number): AnalysisResult[] => {
+// 🧠 ANÁLISIS OTB (OCLUSIÓN TUBÁRICA BILATERAL) - BASADO EN FACTOR NUMÉRICO
+export const analyzeOTBFactors = (factors: Factors): AnalysisResult[] => {
   const results: AnalysisResult[] = [];
   
-  if (otb === true) {
+  console.log('🔍 [OTB ANALYSIS] Debug:', { 
+    otb: factors.otb, 
+    isDefined: factors.otb !== undefined,
+    willAnalyze: factors.otb !== undefined && factors.otb < 1.0
+  });
+  
+  if (factors.otb !== undefined && factors.otb < 1.0) {
+    const otbFactor = factors.otb;
     let condition: string;
     let probability: number;
     let reasoning: string;
     let treatments: string[];
     let priority: Priority;
     
-    if (otbYears !== undefined && otbYears <= 2) {
-      // OTB reciente/compleja
-      condition = 'OTB Reciente o Técnica Compleja';
-      probability = 98;
-      reasoning = 'Oclusión tubárica bilateral efectiva. Esterilización quirúrgica confirmada';
+    if (otbFactor <= 0.05) {
+      // Cauterización extensa (Factor ~0.05) - Imposible reversión
+      condition = 'OTB por Cauterización Extensa (Irreversible)';
+      probability = 99;
+      reasoning = 'Cauterización extensa bilateral. Destrucción tubárica completa. Imposible recanalización natural o quirúrgica';
       treatments = [
-        'FIV-ICSI como primera opción (gold standard)',
-        'Reversión tubárica solo si condiciones óptimas',
-        'Counseling opciones reproductivas + donación'
+        'FIV-ICSI como ÚNICA opción reproductiva viable',
+        'NO candidata a reversión tubárica (tejido tubárico destruido)',
+        'Counseling reproductivo: FIV vs adopción vs ovodonación',
+        'Evaluación psicológica para aceptación nueva realidad reproductiva'
       ];
       priority = 'high';
-    } else if (otbYears !== undefined && otbYears >= 5) {
-      // OTB antigua, posible recanalización
-      condition = 'OTB Antigua (>5 años) - Riesgo Recanalización';
-      probability = 85;
-      reasoning = 'Posible recanalización tubárica parcial + embarazo ectópico alto riesgo';
+    } else if (otbFactor <= 0.08) {
+      // Salpingectomía parcial (Factor ~0.08) - Muy severo
+      condition = 'OTB por Salpingectomía Parcial (Muy Severa)';
+      probability = 95;
+      reasoning = 'Resección parcial bilateral trompas. Longitud tubárica severamente comprometida. Pronóstico reversión muy pobre';
       treatments = [
-        'HSG para evaluar recanalización',
-        'FIV-ICSI preferida vs reversión tubárica',
-        'Vigilancia embarazo ectópico si concepción natural'
+        'FIV-ICSI como primera línea (tasas éxito >90%)',
+        'Reversión tubárica solo si: longitud residual >3cm + edad <32 años',
+        'Evaluación quirúrgica especializada con laparoscopia diagnóstica',
+        'Counseling fertilidad: expectativas realistas FIV vs reversión'
+      ];
+      priority = 'high';
+    } else if (otbFactor <= 0.12) {
+      // Clips/Anillos (Factor ~0.1-0.12) - Severo pero posible reversión
+      condition = otbFactor <= 0.1 ? 'OTB por Clips Metálicos (Severa)' : 'OTB por Anillos Silicona (Severa)';
+      probability = 90;
+      reasoning = otbFactor <= 0.1 ? 
+        'Clips metálicos bilaterales. Obstrucción completa con daño tubárico moderado. Reversión técnicamente posible' :
+        'Anillos de silicona bilaterales. Compresión tubárica severa. Reversión posible con técnica especializada';
+      treatments = [
+        'FIV-ICSI como tratamiento de primera elección (85-90% éxito)',
+        'Reversión tubárica posible si: edad <35, deseo múltiples embarazos, longitud >4cm',
+        'Laparoscopia diagnóstica para evaluar estado tubárico y adherencias',
+        'HSG pre-reversión para confirmar permeabilidad uterina',
+        'Consejería: FIV (rápido, predecible) vs Reversión (natural, múltiples embarazos)'
+      ];
+      priority = 'high';
+    } else if (otbFactor <= 0.8) {
+      // Ligadura simple (Factor ~0.75) - MEJOR pronóstico (ligadura parcial)
+      condition = 'OTB por Ligadura Simple (Mejor Pronóstico)';
+      probability = 70;
+      reasoning = 'Ligadura simple bilateral. Técnica menos destructiva. MEJOR candidata para reversión exitosa. Preservación anatómica tubárica';
+      treatments = [
+        'REVERSIÓN TUBÁRICA VIABLE: Evaluación para recanalización quirúrgica',
+        'Criterios reversión: edad <38 años, longitud tubárica >4cm, sin adherencias severas',
+        'HSG + laparoscopia diagnóstica para planificar reversión',
+        'FIV-ICSI como alternativa si no candidata a reversión',
+        'Seguimiento post-reversión: 60-80% embarazos naturales en 2 años',
+        'Vigilancia embarazo ectópico (riesgo 2-3% post-reversión)'
       ];
       priority = 'medium';
     } else {
-      // OTB dudosa/incompleta
-      condition = 'OTB Dudosa o Técnica Simple';
-      probability = 70;
-      reasoning = 'Posible oclusión incompleta + riesgo recanalización aumentado';
+      // Casos especiales >0.8 - Recanalización parcial/desconocida
+      condition = 'OTB con Recanalización Parcial (Evaluación Especializada)';
+      probability = 60;
+      reasoning = 'Posible recanalización espontánea parcial. Estado tubárico incierto. Requiere evaluación especializada urgente';
       treatments = [
-        'HSG + evaluación ginecológica especializada',
-        'Confirmar efectividad OTB antes de TRA',
-        'FIV-ICSI vs reversión según evaluación'
+        'HSG URGENTE para evaluar grado recanalización actual',
+        'Laparoscopia diagnóstica si HSG muestra permeabilidad parcial',
+        'Seguimiento ovulación + timing si permeabilidad confirmada',
+        'VIGILANCIA ESTRICTA embarazo ectópico (riesgo muy alto 15-20%)',
+        'FIV-ICSI si permeabilidad dudosa o embarazo ectópico previo'
       ];
-      priority = 'low';
+      priority = 'medium';
     }
 
     results.push({
@@ -834,7 +909,7 @@ export const analyzeOTBFactors = (otb?: boolean, otbYears?: number): AnalysisRes
         data: {
           treatment,
           priority: index === 0 ? priority : 'medium' as Priority,
-          successRate: (otbYears && otbYears <= 2) ? 60 + (index * 5) : 50 + (index * 10),
+          successRate: otbFactor <= 0.3 ? 60 + (index * 5) : 50 + (index * 10),
           timeframe: index === 0 ? '2-4 meses' : '6-12 meses',
           reasoning: 'OTB requiere técnicas reproducción asistida especializadas'
         }

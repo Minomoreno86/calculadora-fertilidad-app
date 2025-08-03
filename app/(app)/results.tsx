@@ -3,8 +3,7 @@ import React from 'react';
 import { 
   StyleSheet, 
   View, 
-  TouchableOpacity,
-  Text as RNText
+  TouchableOpacity
 } from 'react-native';
 import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 const ActivityIndicator: React.FC<{ 
   size?: 'small' | 'large'; 
   color?: string; 
-  style?: Record<string, any> 
+  style?: object 
 }> = ({ 
   size = 'small', 
   color = '#007AFF', 
@@ -31,7 +30,7 @@ const ActivityIndicator: React.FC<{
   }, style]} />
 );
 
-const showAlert = (title: string, message?: string, buttons?: Array<{text: string; style?: string; onPress?: () => void}>) => {
+const showAlert = (title: string, message?: string, _buttons?: Array<{text: string; style?: string; onPress?: () => void}>) => {
   // Fallback alert for React Native 0.79.5
   if (typeof alert !== 'undefined') {
     alert(title + (message ? '\n' + message : ''));
@@ -53,6 +52,10 @@ interface EngineMetrics {
 import { useReportLoader } from '@/presentation/features/results/hooks/useReportLoader';
 const ResultsDisplay = React.lazy(() => import('@/presentation/features/results/components/ResultsDisplay').then(module => ({ default: module.ResultsDisplay })));
 import { suggestTreatments } from '@/core/domain/services/treatmentSuggester';
+import type { EvaluationState } from '@/core/domain/models';
+
+// 🏥 FREEMIUM MEDICAL SYSTEM - APROVECHA TODA TU INFORMACIÓN MÉDICA
+import type { FreemiumConfig } from '@/core/freemium/FreemiumMedicalSystem';
 
 import Text from '@/presentation/components/common/Text';
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
@@ -67,25 +70,33 @@ export default function ResultsScreen() {
   
   const { evaluation, loading, error, isPremiumReport } = useReportLoader(reportKeyParam);
 
+  // 🏥 CONFIGURACIÓN FREEMIUM - APROVECHA TU SISTEMA MÉDICO
+  const freemiumConfig: FreemiumConfig = React.useMemo(() => ({
+    tier: isPremiumReport ? 'premium' : 'basic',
+    subscriptionActive: isPremiumReport || false,
+    medicalFeaturesEnabled: isPremiumReport || false
+  }), [isPremiumReport]);
+
   // 🎨 Crear estilos dinámicos con cache automático
   const styles = React.useMemo(() => createStyles(theme), [theme]);
 
   // 🧠 MÉTRICAS INTELIGENTES PARA AI MEDICAL AGENT + UNIFIED WORKERS V12.0
   const treatmentSuggestions = React.useMemo(() => {
     // 🔍 Acceder a la evaluation real desde la estructura guardada
-    const actualEvaluation = (evaluation as any)?.evaluation;
+    if (!evaluation || typeof evaluation !== 'object') return [];
+    
+    // Type guard para verificar si evaluation tiene la propiedad evaluation
+    const hasNestedEvaluation = evaluation && 
+      typeof evaluation === 'object' && 
+      'evaluation' in evaluation;
+    
+    const actualEvaluation = hasNestedEvaluation 
+      ? (evaluation as { evaluation: unknown }).evaluation 
+      : evaluation;
+    
     if (!actualEvaluation) return [];
     
-    console.log('🔍 [RESULTS] Treatment Suggester called with:', { 
-      hasEvaluation: !!actualEvaluation,
-      evaluationKeys: actualEvaluation ? Object.keys(actualEvaluation) : 'N/A',
-      hasInput: !!actualEvaluation?.input,
-      hasFactors: !!actualEvaluation?.factors,
-      inputKeys: actualEvaluation?.input ? Object.keys(actualEvaluation.input) : 'N/A',
-      factorsKeys: actualEvaluation?.factors ? Object.keys(actualEvaluation.factors) : 'N/A'
-    });
-    
-    return suggestTreatments(actualEvaluation);
+    return suggestTreatments(actualEvaluation as EvaluationState);
   }, [evaluation]);
 
   // 🚀 UNIFIED PARALLEL ENGINE V12.0 INTEGRATION
@@ -107,6 +118,34 @@ export default function ResultsScreen() {
     const interval = setInterval(updateMetrics, 10000); // Update every 10s
     
     return () => clearInterval(interval);
+  }, []);
+
+  // 🚀 HANDLERS FREEMIUM MÉDICO
+  const handleUpgradeToPremium = React.useCallback(() => {
+    showAlert(
+      '💎 Upgrade a Premium Medical',
+      'Desbloquea análisis médico completo con 63 patologías, 35 tratamientos y chat IA médica especializada.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { 
+          text: 'Activar Premium', 
+          onPress: () => {
+            // TODO: Implementar navegación a pantalla de suscripción
+            console.log('🚀 Navegando a Premium Subscription...');
+          }
+        }
+      ]
+    );
+  }, []);
+
+  const handleStartAIChat = React.useCallback(() => {
+    // TODO: Integrar con AI Medical Agent
+    console.log('🤖 Iniciando chat médico IA...');
+    showAlert(
+      '🤖 Chat Médico IA',
+      'Función disponible próximamente. Podrás consultar con nuestra IA médica especializada.',
+      [{ text: 'Entendido' }]
+    );
   }, []);
 
   // 🚀 HANDLER INTELIGENTE PARA RETRY CON EXPONENTIAL BACKOFF
@@ -301,7 +340,7 @@ export default function ResultsScreen() {
         headerTitleStyle: { fontWeight: 'bold' }
       }} />
       
-      {/* 🎯 COMPONENTE PRINCIPAL CON LAZY LOADING Y SUSPENSE */}
+      {/* 🎯 COMPONENTE PRINCIPAL CON LAZY LOADING Y SUSPENSE - TU DISEÑO ORIGINAL */}
       <React.Suspense fallback={
         <View style={styles.suspenseContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -312,6 +351,9 @@ export default function ResultsScreen() {
           evaluation={evaluation}
           treatmentSuggestions={treatmentSuggestions}
           isPremiumReport={isPremiumReport}
+          freemiumConfig={freemiumConfig}
+          onUpgradeToPremium={handleUpgradeToPremium}
+          onStartAIChat={handleStartAIChat}
         />
       </React.Suspense>
     </View>

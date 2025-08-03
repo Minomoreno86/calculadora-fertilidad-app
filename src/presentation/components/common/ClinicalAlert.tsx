@@ -112,12 +112,14 @@ export const ClinicalAlert: React.FC<ClinicalAlertProps> = ({
             Recomendaciones:
           </Text>
           {validation.recommendations.map((rec, index) => (
-            <Text 
-              variant="caption" 
-              style={styles.recommendation}
-            >
-              • {rec}
-            </Text>
+            <View key={index}>
+              <Text 
+                variant="caption" 
+                style={styles.recommendation}
+              >
+                • {rec}
+              </Text>
+            </View>
           ))}
         </View>
       )}

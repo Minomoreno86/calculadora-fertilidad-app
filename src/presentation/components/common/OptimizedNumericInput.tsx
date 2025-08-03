@@ -64,19 +64,7 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
   enableRealTimeValidation = true,
 }: OptimizedNumericInputProps<T>) => {
   
-  // 🛡️ QUANTUM CONSCIOUSNESS SAFETY GUARD V14.0 - Validar control
-  if (!control) {
-    console.warn('⚠️ OptimizedNumericInput: control es undefined para campo:', name);
-    return (
-      <View style={{ padding: 10, backgroundColor: '#ffebee', borderRadius: 8 }}>
-        <Text style={{ color: '#d32f2f', fontSize: 14 }}>
-          Error: Control no disponible para {String(name)}
-        </Text>
-      </View>
-    );
-  }
-  
-  // 🎨 TEMA DINÁMICO
+  // 🎨 TEMA DINÁMICO - ✅ CORREGIDO: Hooks siempre se llaman primero
   const theme = useDynamicTheme();
   
   // 🚀 Estados optimizados
@@ -88,6 +76,18 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
   const debounceTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = React.useRef<any>(null);
   const isMountedRef = React.useRef(true);
+
+  // 🛡️ VALIDACIÓN DESPUÉS DE HOOKS - Validar control
+  if (!control) {
+    console.warn('⚠️ OptimizedNumericInput: control es undefined para campo:', name);
+    return (
+      <View style={{ padding: 10, backgroundColor: '#ffebee', borderRadius: 8 }}>
+        <Text style={{ color: '#d32f2f', fontSize: 14 }}>
+          Error: Control no disponible para {String(name)}
+        </Text>
+      </View>
+    );
+  }
   
   // 🚀 Cleanup al desmontar
   React.useEffect(() => {

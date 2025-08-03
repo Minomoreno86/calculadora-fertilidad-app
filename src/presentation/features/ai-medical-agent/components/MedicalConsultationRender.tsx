@@ -189,102 +189,108 @@ const RecommendationsSection: React.FC<{ recommendations: string[] }> = ({ recom
   );
 };
 
-// 🔬 INDIVIDUAL RESULT CARDS
+// 🔬 INDIVIDUAL RESULT CARDS MEJORADAS
 const DiagnosticResultCard: React.FC<{ result: AnalysisResult }> = ({ result }) => {
   return (
-    <View style={[styles.resultCard, { backgroundColor: '#ECFDF5', borderColor: '#D1FAE5' }]}>
-      <View style={styles.resultHeader}>
-        <Text style={[styles.resultTitle, { color: '#065F46' }]}>
-          {result.data.condition}
+    <View style={[styles.resultCard, { backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' }]}>
+      <ScrollView showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
+        <View style={styles.resultHeader}>
+          <Text style={[styles.resultTitle, { color: '#14532D' }]}>
+            {result.data.condition}
+          </Text>
+          <View style={[styles.evidenceBadge, { backgroundColor: '#BBF7D0' }]}>
+            <Text style={[styles.evidenceText, { color: '#14532D' }]}>
+              {result.data.evidenceLevel} - PMID: {result.data.pmid}
+            </Text>
+          </View>
+        </View>
+        <Text style={[styles.resultReasoning, { color: '#166534' }]}>
+          {result.data.reasoning}
         </Text>
-        <View style={[styles.evidenceBadge, { backgroundColor: '#D1FAE5' }]}>
-          <Text style={[styles.evidenceText, { color: '#065F46' }]}>
-            {result.data.evidenceLevel} - PMID: {result.data.pmid}
-          </Text>
-        </View>
-      </View>
-      <Text style={[styles.resultReasoning, { color: '#047857' }]}>
-        {result.data.reasoning}
-      </Text>
-      {result.data.severity && (
-        <View style={[styles.severityBadge, { backgroundColor: '#A7F3D0' }]}>
-          <Text style={[styles.severityText, { color: '#065F46' }]}>
-            Severidad: {result.data.severity}
-          </Text>
-        </View>
-      )}
+        {result.data.severity && (
+          <View style={[styles.severityBadge, { backgroundColor: '#DCFCE7' }]}>
+            <Text style={[styles.severityText, { color: '#14532D' }]}>
+              Severidad: {result.data.severity}
+            </Text>
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 };
 
 const HypothesisResultCard: React.FC<{ result: AnalysisResult }> = ({ result }) => {
   return (
-    <View style={[styles.resultCard, { backgroundColor: '#FFF7ED', borderColor: '#FED7AA' }]}>
-      <View style={styles.resultHeader}>
-        <Text style={[styles.resultTitle, { color: '#9A3412' }]}>
-          {result.data.condition}
-        </Text>
-        <View style={styles.probabilityContainer}>
-          <View style={[styles.progressBarSmall, { backgroundColor: '#FED7AA' }]}>
-            <View 
-              style={[
-                styles.progressFillSmall, 
-                { 
-                  backgroundColor: '#EA580C',
-                  width: `${result.data.probability || 0}%`
-                }
-              ]} 
-            />
+    <View style={[styles.resultCard, { backgroundColor: '#FEFCF3', borderColor: '#FDE68A' }]}>
+      <ScrollView showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
+        <View style={styles.resultHeader}>
+          <Text style={[styles.resultTitle, { color: '#92400E' }]}>
+            {result.data.condition}
+          </Text>
+          <View style={styles.probabilityContainer}>
+            <View style={[styles.progressBarSmall, { backgroundColor: '#FDE68A' }]}>
+              <View 
+                style={[
+                  styles.progressFillSmall, 
+                  { 
+                    backgroundColor: '#D97706',
+                    width: `${result.data.probability || 0}%`
+                  }
+                ]} 
+              />
+            </View>
+            <Text style={[styles.probabilityText, { color: '#92400E' }]}>
+              {result.data.probability}%
+            </Text>
           </View>
-          <Text style={[styles.probabilityText, { color: '#9A3412' }]}>
-            {result.data.probability}%
-          </Text>
         </View>
-      </View>
-      <Text style={[styles.resultReasoning, { color: '#C2410C' }]}>
-        {result.data.reasoning}
-      </Text>
-      <View style={styles.badgeContainer}>
-        <View style={[styles.evidenceBadge, { backgroundColor: '#FED7AA' }]}>
-          <Text style={[styles.evidenceText, { color: '#9A3412' }]}>
-            Evidencia {result.data.evidenceLevel}
-          </Text>
+        <Text style={[styles.resultReasoning, { color: '#A16207' }]}>
+          {result.data.reasoning}
+        </Text>
+        <View style={styles.badgeContainer}>
+          <View style={[styles.evidenceBadge, { backgroundColor: '#FDE68A' }]}>
+            <Text style={[styles.evidenceText, { color: '#92400E' }]}>
+              Evidencia {result.data.evidenceLevel}
+            </Text>
+          </View>
+          <View style={[styles.pmidBadge, { backgroundColor: '#FEF3C7' }]}>
+            <Text style={[styles.pmidText, { color: '#92400E' }]}>
+              PMID: {result.data.pmid}
+            </Text>
+          </View>
         </View>
-        <View style={[styles.pmidBadge, { backgroundColor: '#FFEDD5' }]}>
-          <Text style={[styles.pmidText, { color: '#9A3412' }]}>
-            PMID: {result.data.pmid}
-          </Text>
-        </View>
-      </View>
+      </ScrollView>
     </View>
   );
 };
 
 const TreatmentResultCard: React.FC<{ result: AnalysisResult }> = ({ result }) => {
   return (
-    <View style={[styles.resultCard, { backgroundColor: '#FAF5FF', borderColor: '#DDD6FE' }]}>
-      <View style={styles.resultHeader}>
-        <Text style={[styles.resultTitle, { color: '#581C87' }]}>
-          {result.data.treatment}
-        </Text>
-        <View style={styles.treatmentBadges}>
-          <TreatmentPriorityBadge priority={result.data.priority || 'medium'} />
-          <View style={[styles.successBadge, { backgroundColor: '#E9D5FF' }]}>
-            <Text style={[styles.successText, { color: '#581C87' }]}>
-              {result.data.successRate}% éxito
-            </Text>
+    <View style={[styles.resultCard, { backgroundColor: '#FDFAFF', borderColor: '#C7D2FE' }]}>
+      <ScrollView showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
+        <View style={styles.resultHeader}>
+          <Text style={[styles.resultTitle, { color: '#4C1D95' }]}>
+            {result.data.treatment}
+          </Text>
+          <View style={styles.treatmentBadges}>
+            <TreatmentPriorityBadge priority={result.data.priority || 'medium'} />
+            <View style={[styles.successBadge, { backgroundColor: '#C7D2FE' }]}>
+              <Text style={[styles.successText, { color: '#4C1D95' }]}>
+                {result.data.successRate}% éxito
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
-      <Text style={[styles.resultReasoning, { color: '#7C3AED' }]}>
-        {result.data.reasoning}
-      </Text>
-      <View style={styles.timeframeContainer}>
-        <Ionicons name="time" size={16} color="#8B5CF6" />
-        <Text style={[styles.timeframeText, { color: '#8B5CF6' }]}>
-          Tiempo estimado: {result.data.timeframe}
+        <Text style={[styles.resultReasoning, { color: '#5B21B6' }]}>
+          {result.data.reasoning}
         </Text>
-      </View>
+        <View style={styles.timeframeContainer}>
+          <Ionicons name="time" size={16} color="#6D28D9" />
+          <Text style={[styles.timeframeText, { color: '#6D28D9' }]}>
+            Tiempo estimado: {result.data.timeframe}
+          </Text>
+        </View>
+      </ScrollView>
     </View>
   );
 };
@@ -442,25 +448,40 @@ const MetricCard: React.FC<{
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    padding: 18, // ✅ MÁS PADDING general
   },
   analysisCard: {
     borderLeftWidth: 4,
-    marginBottom: 16,
-    padding: 16,
+    marginBottom: 18,
+    padding: 18,
     borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   sectionCard: {
     borderLeftWidth: 4,
-    marginBottom: 16,
-    padding: 16,
+    marginBottom: 18,
+    padding: 18,
     borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   recommendationCard: {
     borderLeftWidth: 4,
-    marginBottom: 16,
-    padding: 16,
+    marginBottom: 18,
+    padding: 18,
     borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   cardHeader: {
     marginBottom: 12,
@@ -514,27 +535,37 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   resultCard: {
-    padding: 16,
-    borderRadius: 8,
+    padding: 18,
+    borderRadius: 12,
     borderWidth: 1,
-    marginBottom: 12,
+    marginBottom: 14,
+    maxHeight: 300, // ✅ LÍMITE DE ALTURA para evitar tarjetas muy largas
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   resultHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   resultTitle: {
     fontSize: 16,
     fontWeight: '600',
     flex: 1,
     marginRight: 12,
+    lineHeight: 22, // ✅ MEJOR LINE HEIGHT para legibilidad
+    flexWrap: 'wrap', // ✅ WRAP para títulos largos
   },
   resultReasoning: {
     fontSize: 14,
-    marginBottom: 8,
-    lineHeight: 20,
+    marginBottom: 12,
+    lineHeight: 22, // ✅ MEJOR LINE HEIGHT para legibilidad
+    maxHeight: 110, // ✅ LÍMITE DE ALTURA para texto largo
+    overflow: 'hidden', // ✅ OCULTAR overflow
   },
   evidenceBadge: {
     paddingHorizontal: 8,
@@ -576,7 +607,9 @@ const styles = StyleSheet.create({
   },
   badgeContainer: {
     flexDirection: 'row',
-    gap: 8,
+    flexWrap: 'wrap', // ✅ WRAP para badges múltiples
+    gap: 10,
+    marginTop: 8,
   },
   pmidBadge: {
     paddingHorizontal: 8,
@@ -664,21 +697,27 @@ const styles = StyleSheet.create({
   recommendationItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
-    padding: 12,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
+    gap: 12,
+    padding: 16, // ✅ MÁS PADDING para mejor espaciado
+    backgroundColor: '#FEFEFE',
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    marginBottom: 8,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   recommendationIcon: {
-    marginTop: 2,
+    marginTop: 3,
   },
   recommendationText: {
     flex: 1,
     fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 22, // ✅ MEJOR LINE HEIGHT para legibilidad
+    color: '#374151',
   },
   metricsCard: {
     padding: 16,

@@ -90,17 +90,18 @@ export const evaluatePcos = (
   let factor = 0.9; // Leve (ovulación preservada, AMH <6)
   let severity = 'SOP Leve (ovulación preservada, AMH <6 ng/mL)';
 
-  // Criterios avanzados para severidad
+  // Criterios avanzados para severidad (incluye duración del ciclo)
   const isAnovulatory = (bmi !== undefined && bmi !== null && bmi >= 30) || 
-                       (homaIr !== null && homaIr !== undefined && homaIr >= 3.5);
+                       (homaIr !== null && homaIr !== undefined && homaIr >= 3.5) ||
+                       (cycleDuration !== undefined && cycleDuration > 35); // ✅ AGREGADO
   const isHighAmh = amh && amh > 6;
 
   if (isAnovulatory && isHighAmh) {
     factor = 0.6; // Severo
-    severity = 'SOP Severo (anovulación, IMC >30 o HOMA >3.5)';
+    severity = 'SOP Severo (anovulación: IMC >30, HOMA >3.5 o ciclo >35 días)';
   } else if (isAnovulatory || isHighAmh) {
     factor = 0.75; // Moderado
-    severity = 'SOP Moderado (con anovulación o AMH >6 ng/mL)';
+    severity = 'SOP Moderado (anovulación: ciclo >35 días, IMC >30 o AMH >6 ng/mL)';
   }
 
   return { factors: { pcos: factor }, diagnostics: { pcosSeverity: severity } };
@@ -232,22 +233,31 @@ export const evaluatePolyps = (type: PolypType): PartialEvaluation => {
 export const evaluateHsg = (result: HsgResult): PartialEvaluation => {
   // 🔍 Solo evaluar si hay un resultado válido
   if (!result || result === undefined || result === null || result === HsgResult.Unknown) {
+    console.log('🔍 HSG DEBUG - No valid result:', { result, resultType: typeof result });
     return { factors: {}, diagnostics: {} };
   }
 
   const hsgResults = [
     { result: HsgResult.Unilateral, factor: 0.7, comment: 'Obstrucción tubárica unilateral' },
-    { result: HsgResult.Bilateral, factor: 0.3, comment: 'Obstrucción tubárica bilateral (ajustado para evitar impacto excesivo)' },
+    { result: HsgResult.Bilateral, factor: 0.0, comment: 'Obstrucción tubárica bilateral' },
     { result: HsgResult.Malformation, factor: 0.3, comment: 'Alteración de la cavidad uterina' },
   ];
 
   for (const hsgResult of hsgResults) {
     if (result === hsgResult.result) {
+      console.log('🔍 HSG DEBUG - Match found:', {
+        inputResult: result,
+        matchedResult: hsgResult.result,
+        appliedFactor: hsgResult.factor,
+        isBilateral: result === HsgResult.Bilateral,
+        shouldBeZero: hsgResult.factor === 0.0
+      });
       return { factors: { hsg: hsgResult.factor }, diagnostics: { hsgComment: hsgResult.comment } };
     }
   }
-
+  
   // Si hay un resultado pero no está en las condiciones problemáticas, son trompas permeables
+  console.log('🔍 HSG DEBUG - Default normal case:', { result });
   return { factors: { hsg: 1.0 }, diagnostics: { hsgComment: 'Ambas trompas permeables' } };
 };
 
@@ -294,18 +304,28 @@ class MethodEvaluationStrategy implements OtbEvaluationStrategy {
 
     switch (this.method) {
       case OtbMethod.ExtensiveCauterization:
+        factor *= 0.05; // ✅ Cauterización extensa = factor MUY bajo (casi 0)
+        diagnostics.push('Método de OTB: Cauterización extensa. Imposible recanalización natural.');
+        break;
       case OtbMethod.PartialSalpingectomy:
-        factor *= 0.1;
-        diagnostics.push('Método de OTB: Cauterización extensa o salpingectomía parcial. Pronóstico muy pobre para recanalización.');
+        factor *= 0.08; // ✅ Salpingectomía parcial = factor MUY bajo
+        diagnostics.push('Método de OTB: Salpingectomía parcial. Pronóstico muy pobre para recanalización.');
         break;
       case OtbMethod.Clips:
+        factor *= 0.1; // ✅ Clips = factor bajo (como cauterización)
+        diagnostics.push('Método de OTB: Clips metálicos. Pronóstico pobre para recanalización.');
+        break;
       case OtbMethod.Rings:
+        factor *= 0.12; // ✅ Anillos = factor bajo (como cauterización)
+        diagnostics.push('Método de OTB: Anillos de silicona. Pronóstico pobre para recanalización.');
+        break;
       case OtbMethod.Ligation:
-        factor *= 0.8;
-        diagnostics.push('Método de OTB: Clips, anillos o ligaduras. Mejor pronóstico para recanalización.');
+        factor *= 0.75; // ✅ Ligadura simple = ÚNICA con mejor pronóstico (ligadura parcial)
+        diagnostics.push('Método de OTB: Ligadura simple. Mejor pronóstico para recanalización (técnica menos destructiva).');
         break;
       case OtbMethod.Unknown:
-        diagnostics.push('Método de OTB no especificado para evaluación de recanalización.');
+        factor *= 0.1; // ✅ Desconocido = asumir factor bajo por seguridad
+        diagnostics.push('Método de OTB no especificado. Asumir pronóstico pobre para recanalización.');
         break;
     }
 
@@ -337,7 +357,7 @@ class InfertilityFactorsStrategy implements OtbEvaluationStrategy {
   constructor(private readonly hasOtherFactors?: boolean, private readonly desireMultiple?: boolean) {}
   
   evaluate(factor: number, diagnostics: string[]): { factor: number; diagnostics: string[] } {
-    if this.hasOtherFactors !== undefined) {
+    if (this.hasOtherFactors !== undefined) {
       if (this.hasOtherFactors) {
         factor *= 0.5;
         diagnostics.push('Presencia de otros factores de infertilidad. Considerar antes de recanalización.');
@@ -431,15 +451,24 @@ export const evaluateProlactin = (prolactin?: number): PartialEvaluation => {
     return { factors: { prolactin: 1.0 }, diagnostics: { prolactinComment: 'Valor de prolactina inválido (negativo)' } };
   }
   
+  // 🎯 RANGOS MEJORADOS PARA PROLACTINA (ng/mL)
   if (prolactin > 200) {
-    return { factors: { prolactin: 0.3 }, diagnostics: { prolactinComment: 'Hiperprolactinemia severa (>200 ng/ml) - requiere evaluación urgente' } };
+    return { factors: { prolactin: 0.3 }, diagnostics: { prolactinComment: 'Hiperprolactinemia severa (>200 ng/mL) - probable adenoma, evaluación urgente' } };
+  }
+  
+  if (prolactin >= 100) {
+    return { factors: { prolactin: 0.5 }, diagnostics: { prolactinComment: 'Hiperprolactinemia moderada-severa (100-200 ng/mL) - posible micro-adenoma' } };
+  }
+  
+  if (prolactin >= 50) {
+    return { factors: { prolactin: 0.7 }, diagnostics: { prolactinComment: 'Hiperprolactinemia moderada (50-100 ng/mL)' } };
   }
   
   if (prolactin >= 25) {
-    return { factors: { prolactin: 0.7 }, diagnostics: { prolactinComment: 'Hiperprolactinemia moderada (≥25 ng/ml)' } };
+    return { factors: { prolactin: 0.85 }, diagnostics: { prolactinComment: 'Hiperprolactinemia leve (25-50 ng/mL) - evaluar causas' } };
   }
   
-  return { factors: { prolactin: 1.0 }, diagnostics: { prolactinComment: 'Nivel de prolactina normal (<25 ng/ml)' } };
+  return { factors: { prolactin: 1.0 }, diagnostics: { prolactinComment: 'Nivel de prolactina normal (<25 ng/mL)' } };
 };
 
 export const evaluateTsh = (tsh?: number): PartialEvaluation => {
@@ -470,7 +499,7 @@ export const evaluateHoma = (homaValue?: number): PartialEvaluation => {
   }
   
   if (homaValue > 20) {
-    return { factors: { homa: 0.7 }, diagnostics: { homaComment: 'Resistencia a la insulina severa (HOMA-IR >20)' } };
+    return { factors: { homa: 0.2 }, diagnostics: { homaComment: 'Resistencia a la insulina extrema (HOMA-IR >20) - riesgo crítico diabetes tipo 2' } };
   }
 
   const homaRanges = [

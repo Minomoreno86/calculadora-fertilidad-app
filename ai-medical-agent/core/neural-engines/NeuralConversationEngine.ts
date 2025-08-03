@@ -22,7 +22,7 @@ export interface ConversationContext {
 }
 
 export interface NeuralResponse {
-  mainMessage: string;
+  primaryInfo: string;
   supportingPoints: string[];
   emotionalTone: string;
   followUpQuestions: string[];
@@ -148,7 +148,7 @@ export class NeuralConversationEngine {
     const conversationStyle = this.determineOptimalStyle(context, queryAnalysis);
     
     // 🧠 GENERACIÓN DE RESPUESTA PRINCIPAL
-    const mainMessage = this.generateMainMessage(
+    const primaryInfo = this.generatePrimaryInfo(
       queryAnalysis,
       neuralAnalysis,
       bayesianAnalysis,
@@ -190,7 +190,7 @@ export class NeuralConversationEngine {
     this.updateConversationMemory(userQuery, queryAnalysis, emotionalState);
     
     return {
-      mainMessage,
+      primaryInfo,
       supportingPoints,
       emotionalTone: this.generateEmotionalTone(emotionalState, conversationStyle),
       followUpQuestions,
@@ -273,7 +273,7 @@ export class NeuralConversationEngine {
   /**
    * 💬 GENERACIÓN DE MENSAJE PRINCIPAL NEURAL
    */
-  private generateMainMessage(
+  private generatePrimaryInfo(
     queryAnalysis: ReturnType<typeof this.analyzeQuery>,
     neuralAnalysis: NeuralAnalysis,
     bayesianAnalysis: BayesianAnalysis,

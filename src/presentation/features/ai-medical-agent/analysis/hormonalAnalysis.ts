@@ -42,92 +42,139 @@ export const analyzeAMHFactors = (factors: Factors): AnalysisResult[] => {
   // 🌌 QUANTUM CONSCIOUSNESS FIX: Solo analizar si AMH está realmente presente Y alterado
   // Los factores están normalizados 0-1, no son valores brutos de laboratorio
   // Factor 1.0 = normal/ausente, <1.0 = alterado
-  if (factors.amh !== undefined && factors.amh < 0.9 && factors.amh !== 1.0) {
+  // ✅ CORREGIDO: Trigger cuando AMH < 1.0 (cualquier alteración de la reserva normal)
+  if (factors.amh !== undefined && factors.amh < 1.0) {
     const amhFactor = factors.amh;
     const domain = HORMONAL_DOMAINS.AMH;
     
-    // 🔍 DEBUG AMH
+    let condition: string;
+    let probability: number;
+    let reasoning: string;
+    let treatments: string[];
+    let priority: Priority;
+    
+    // 🔍 DEBUG AMH - CORREGIDO con rangos alineados a evaluateAmh
     console.log('🔍 AMH Analysis Debug:', {
       amhFactor,
       willAnalyze: true,
-      isNormalized: 'Factor should be 0-1, not ng/mL'
+      alignedToEvaluateAmh: 'Using exact ranges from factorEvaluators.ts'
     });
     
-    if (amhFactor < 0.4) {
-      results.push({
-        type: 'hypothesis',
-        data: {
-          condition: 'Reserva Ovárica Severamente Comprometida (Factor de Riesgo Alto)',
-          probability: 95,
-          reasoning: 'Factor de riesgo AMH muy bajo - Reserva ovárica significativamente disminuida',
-          evidenceLevel: domain.evidence as EvidenceLevel,
-          pmid: domain.pmid
-        }
-      });
-
-      results.push({
-        type: 'treatment',
-        data: {
-          treatment: 'FIV con estimulación ovárica intensa + técnicas de preservación',
-          priority: 'high' as Priority,
-          successRate: 35,
-          timeframe: '2-3 ciclos',
-          reasoning: 'Reserva ovárica baja requiere intervención urgente'
-        }
-      });
-    } else if (amhFactor < 0.7) {
-      results.push({
-        type: 'hypothesis',
-        data: {
-          condition: 'Reserva Ovárica Disminuida (AMH 0.3-0.6 ng/mL)',
-          probability: 85,
-          reasoning: 'Reserva ovárica baja - Fertilidad tiempo-dependiente + respuesta subóptima',
-          evidenceLevel: domain.evidence as EvidenceLevel,
-          pmid: domain.pmid
-        }
-      });
-
-      results.push({
-        type: 'treatment',
-        data: {
-          treatment: 'FIV con protocolo agonista/antagonista + DHEA',
-          priority: 'high' as Priority,
-          successRate: 45,
-          timeframe: '3-6 meses preparación',
-          reasoning: 'Optimización reserva + máxima respuesta ovárica'
-        }
-      });
+    if (amhFactor < 0.3) {
+      // Factor <0.3 = Reserva crítica/indetectable
+      condition = 'Reserva Ovárica Crítica (AMH Indetectable <0.1 ng/mL)';
+      probability = 98;
+      reasoning = 'Reserva ovárica crítica. Falla ovárica prematura confirmada. Respuesta imposible a estimulación propia';
+      treatments = [
+        '🥚 OVODONACIÓN RECOMENDADA como primera línea (85-90% embarazo)',
+        '🥚 FIV con óvulos donados: opción más efectiva y rápida',
+        'Evaluación genética URGENTE: FMR1, cariotipo, panel falla ovárica',
+        'Protocolo óvulos propios SOLO si deseo específico (respuesta <2 óvulos)',
+        'Consejería reproductiva: ventajas ovodonación vs frustración óvulos propios',
+        '⏱️ NO demorar decisión: preservar receptividad endometrial'
+      ];
+      priority = 'high';
+    } else if (amhFactor < 0.4) {
+      // ✅ NUEVO RANGO: Factor 0.3-0.39 = Reserva crítica pero con posibilidad
+      condition = 'Reserva Ovárica Crítica Severa (AMH 0.1-0.3 ng/mL)';
+      probability = 95;
+      reasoning = 'Reserva ovárica crítica severa. Muy alta probabilidad falla con óvulos propios. Ovodonación altamente recomendada';
+      treatments = [
+        '🥚 CONSIDERAR SERIAMENTE OVODONACIÓN (80-85% éxito vs 15-25% óvulos propios)',
+        '🥚 Counseling fertilidad: comparar realísticamente ambas opciones',
+        'SI INSISTE óvulos propios: máximo 1-2 intentos FIV antes ovodonación',
+        'Protocolo estimulación máxima: FSH 450UI + LH + antagonista',
+        'Suplementación intensiva: DHEA 75mg + CoQ10 600mg + melatonina',
+        '⚠️ Transparencia: 75-80% posibilidad cancelación ciclo por mala respuesta'
+      ];
+      priority = 'high';
+    } else if (amhFactor < 0.6) {
+      // Factor 0.4-0.59 = Muy baja reserva (<0.5 ng/mL)
+      condition = 'Reserva Ovárica Muy Baja (AMH 0.3-0.5 ng/mL)';
+      probability = 85;
+      reasoning = 'Reserva ovárica muy baja. Respuesta pobre a estimulación. Ovodonación debe ser discutida como alternativa viable';
+      treatments = [
+        'FIV URGENTE con protocolo antagonista + FSH alta dosis (300-450 UI)',
+        '🥚 INFORMAR sobre ovodonación como alternativa (70-80% éxito)',
+        'Acumulación óvulos: 2-3 ciclos FIV antes transferencia si <5 óvulos/ciclo',
+        '🥚 Cambiar a ovodonación si 2 ciclos consecutivos <3 óvulos maduros',
+        'Suplementación: DHEA 75mg + CoQ10 600mg + Vitamina D',
+        'Evaluación genética: FMR1 + panel genético si edad <35 años'
+      ];
+      priority = 'high';
+    } else if (amhFactor < 0.85) {
+      // Factor 0.6-0.84 = Baja reserva (0.5-0.9 ng/mL)
+      condition = 'Reserva Ovárica Baja (AMH 0.5-0.9 ng/mL)';
+      probability = 75;
+      reasoning = 'Reserva ovárica baja. Respuesta subóptima a estimulación. Fertilidad tiempo-dependiente';
+      treatments = [
+        'FIV como tratamiento de primera línea (evitar pérdida tiempo)',
+        'Protocolo antagonista flexible + FSH recombinante',
+        'Optimización pre-FIV: DHEA 25mg + CoQ10 400mg x 3 meses',
+        'Seguimiento folicular estrecho + trigger personalizado',
+        'Considerar acumulación óvulos si edad >37 años',
+        'Cronometría crítica: no demorar >6 meses'
+      ];
+      priority = 'high';
+    } else if (amhFactor < 0.9) {
+      // Factor 0.85-0.89 = Ligeramente disminuida (1.0-1.9 ng/mL)
+      condition = 'Reserva Ovárica Ligeramente Disminuida (AMH 1.0-1.9 ng/mL)';
+      probability = 65;
+      reasoning = 'Reserva ovárica en descenso. Respuesta normal-baja a estimulación. Ventana terapéutica limitada';
+      treatments = [
+        'IUI hasta 3-4 ciclos si trompas permeables + edad <35',
+        'FIV si no embarazo en 6 meses o edad >35 años',
+        'Protocolo estimulación estándar con seguimiento estrecho',
+        'Suplementación opcional: CoQ10 300mg + Vitamina D',
+        'Optimización estilo vida: ejercicio moderado + peso ideal',
+        'Seguimiento AMH cada 6-12 meses para monitoreo'
+      ];
+      priority = 'medium';
     } else {
-      results.push({
-        type: 'hypothesis',
-        data: {
-          condition: 'Reserva Ovárica Moderadamente Reducida (AMH 0.6-1.0 ng/mL)',
-          probability: 75,
-          reasoning: 'Reserva ovárica en descenso - Fertilidad tiempo-dependiente',
-          evidenceLevel: domain.evidence as EvidenceLevel,
-          pmid: domain.pmid
-        }
-      });
-
-      results.push({
-        type: 'treatment',
-        data: {
-          treatment: 'IUI hasta 6 ciclos si factor tubario normal, luego FIV',
-          priority: 'medium' as Priority,
-          successRate: 55,
-          timeframe: 'Cada ciclo',
-          reasoning: 'Optimización fertilidad natural antes TRA'
-        }
-      });
+      // Factor 0.9-0.99 = Alta reserva (≥4.0 ng/mL) - riesgo PCOS
+      condition = 'Reserva Ovárica Alta (AMH ≥4.0 ng/mL) - Riesgo PCOS';
+      probability = 60;
+      reasoning = 'Reserva alta puede indicar PCOS. Riesgo hiperestimulación ovárica. Requiere protocolo especializado';
+      treatments = [
+        'EVALUACIÓN PCOS completa: criterios Rotterdam + ecografía',
+        'Protocolo antagonista con dosis FSH reducida (150-175 UI)',
+        'Prevención hiperestimulación: antagonista GnRH + cabergolina',
+        'Trigger con agonista GnRH si >15 folículos',
+        'Metformina si insulinorresistencia confirmada',
+        'Monitoreo estricto durante estimulación'
+      ];
+      priority = 'medium';
     }
 
+    results.push({
+      type: 'hypothesis',
+      data: {
+        condition,
+        probability,
+        reasoning,
+        evidenceLevel: domain.evidence as EvidenceLevel,
+        pmid: domain.pmid
+      }
+    });
+
+    results.push({
+      type: 'treatment',
+      data: {
+        treatment: treatments.join(' || '),
+        priority,
+        successRate: amhFactor < 0.3 ? 25 : amhFactor < 0.6 ? 40 : amhFactor < 0.85 ? 60 : 70,
+        timeframe: amhFactor < 0.6 ? 'URGENTE 2-3 meses' : amhFactor < 0.85 ? '3-6 meses' : '6-12 meses',
+        reasoning: `Reserva ovárica factor ${amhFactor} - protocolo específico requerido`
+      }
+    });
+
     // 🔬 Evaluaciones adicionales para AMH muy bajo
-    if (amhFactor < 0.4) {
+    if (amhFactor < 0.6) {
       results.push({
         type: 'diagnostic',
         data: {
-          test: 'Cariotipo + FMR1 + Panel genético falla ovárica',
-          reasoning: 'Factor de riesgo AMH muy bajo - investigar posible causa genética',
+          test: 'Panel genético falla ovárica: FMR1 + Cariotipo + BMP15 + GDF9',
+          reasoning: 'AMH muy baja - descartar causas genéticas de falla ovárica prematura',
           priority: 'high' as Priority
         }
       });
@@ -141,87 +188,91 @@ export const analyzeAMHFactors = (factors: Factors): AnalysisResult[] => {
 export const analyzeTSHFactors = (factors: Factors): AnalysisResult[] => {
   const results: AnalysisResult[] = [];
   
-  // Solo analizar si TSH está presente y es anormal (> 2.5 mUI/L para fertilidad)
-  if (factors.tsh !== undefined && factors.tsh > 2.5) {
-    const tshLevel = factors.tsh;
+  // ✅ CORREGIDO: Analizar cuando TSH < 1.0 (alteración de función normal) usando factores normalizados
+  if (factors.tsh !== undefined && factors.tsh < 1.0) {
+    const tshFactor = factors.tsh;
     const domain = HORMONAL_DOMAINS.TSH;
     
-    if (tshLevel > 10) {
-      results.push({
-        type: 'hypothesis',
-        data: {
-          condition: 'Hipotiroidismo Severo (TSH >10 mUI/L)',
-          probability: 95,
-          reasoning: 'Hipotiroidismo manifiesto - Anovulación + riesgo obstétrico alto',
-          evidenceLevel: domain.evidence as EvidenceLevel,
-          pmid: domain.pmid
-        }
-      });
-
-      results.push({
-        type: 'treatment',
-        data: {
-          treatment: 'Levotiroxina: inicio 50-100 mcg/día + titulación',
-          priority: 'high' as Priority,
-          successRate: 90,
-          timeframe: '6-8 semanas entre ajustes',
-          reasoning: 'Sustitución hormonal tiroidea completa'
-        }
-      });
-    } else if (tshLevel > 5) {
-      results.push({
-        type: 'hypothesis',
-        data: {
-          condition: 'Hipotiroidismo Moderado (TSH 5-10 mUI/L)',
-          probability: 85,
-          reasoning: 'Disfunción tiroidea moderada - Impacto fertilidad significativo',
-          evidenceLevel: domain.evidence as EvidenceLevel,
-          pmid: domain.pmid
-        }
-      });
-
-      results.push({
-        type: 'treatment',
-        data: {
-          treatment: 'Levotiroxina 25-75 mcg/día',
-          priority: 'high' as Priority,
-          successRate: 85,
-          timeframe: '6-8 semanas reevaluación',
-          reasoning: 'Corrección disfunción tiroidea moderada'
-        }
-      });
+    let condition: string;
+    let probability: number;
+    let reasoning: string;
+    let treatments: string[];
+    let priority: Priority;
+    let frequency: string;
+    
+    // 🔍 DEBUG TSH - CORREGIDO con factores normalizados alineados a evaluateTsh
+    console.log('🔍 TSH Analysis Debug:', {
+      tshFactor,
+      willAnalyze: true,
+      alignedToEvaluateTsh: 'Using normalized factors 0-1, not raw values'
+    });
+    
+    if (tshFactor <= 0.4) {
+      // Factor ≤0.4 = TSH >10 mUI/L = Hipotiroidismo severo
+      condition = 'Hipotiroidismo Severo (TSH >10 mUI/L)';
+      probability = 95;
+      reasoning = 'Hipotiroidismo manifiesto con anovulación crónica + alto riesgo obstétrico. Tratamiento endocrinológico urgente requerido';
+      treatments = [
+        'LEVOTIROXINA URGENTE: 50-100 mcg/día según peso corporal (1.6 mcg/kg/día)',
+        'Titulación cada 6-8 semanas hasta TSH <2.5 mUI/L (objetivo pre-concepcional)',
+        'MONITOREO TSH + T4 libre cada 4-6 semanas durante tratamiento activo',
+        'Evaluación endocrinológica especializada INMEDIATA (dentro 48-72h)',
+        '⚠️ CONTRAINDICADO intentar embarazo hasta eutiroidismo confirmado (TSH <2.5)',
+        'Anticuerpos tiroideos completos: anti-TPO + anti-tiroglobulina + TSI',
+        'Ecografía tiroidea si bocio palpable o sospecha nódulos',
+        'Educación paciente: síntomas hipotiroidismo + importancia adherencia'
+      ];
+      priority = 'high';
+      frequency = 'Cada 4-6 semanas';
     } else {
-      results.push({
-        type: 'hypothesis',
-        data: {
-          condition: 'Hipotiroidismo Subclínico (TSH 2.5-5 mUI/L)',
-          probability: 75,
-          reasoning: 'Disfunción tiroidea leve - Optimización pre-concepcional recomendada',
-          evidenceLevel: domain.evidence as EvidenceLevel,
-          pmid: domain.pmid
-        }
-      });
-
-      results.push({
-        type: 'treatment',
-        data: {
-          treatment: 'Levotiroxina 25-50 mcg/día',
-          priority: 'medium' as Priority,
-          successRate: 85,
-          timeframe: '6-8 semanas reevaluación',
-          reasoning: 'Optimización función tiroidea pre-concepcional'
-        }
-      });
+      // Factor 0.4-0.99 = TSH 2.5-10 mUI/L = Hipotiroidismo subclínico/moderado
+      condition = 'Hipotiroidismo Subclínico-Moderado (TSH 2.5-10 mUI/L)';
+      probability = 80;
+      reasoning = 'Disfunción tiroidea subclínica que compromete fertilidad. Optimización pre-concepcional esencial para embarazo exitoso';
+      treatments = [
+        'LEVOTIROXINA: 25-75 mcg/día según nivel TSH basal y peso corporal',
+        'Objetivo terapéutico: TSH <2.5 mUI/L para optimización pre-concepcional',
+        'MONITOREO TSH + T4 libre cada 6-8 semanas hasta estabilización',
+        'Anticuerpos anti-TPO si TSH persistentemente elevada >3 meses',
+        'Suplemento YODO 150 mcg/día si planifica embarazo (evitar exceso)',
+        'Seguimiento endocrinológico durante embarazo: ↑dosis 30-50% necesario',
+        'Control nutricional: selenio, vitamina D, evitar goitrogénicos',
+        'Monitoreo función reproductiva: regularidad menstrual + ovulación'
+      ];
+      priority = 'high';
+      frequency = 'Cada 6-8 semanas';
     }
+
+    results.push({
+      type: 'hypothesis',
+      data: {
+        condition,
+        probability,
+        reasoning,
+        evidenceLevel: domain.evidence as EvidenceLevel,
+        pmid: domain.pmid
+      }
+    });
+
+    results.push({
+      type: 'treatment',
+      data: {
+        treatment: treatments.join(' || '),
+        priority,
+        successRate: tshFactor <= 0.4 ? 90 : 85,
+        timeframe: frequency,
+        reasoning: `Función tiroidea factor ${tshFactor} - protocolo específico tiroidea`
+      }
+    });
 
     // 🔬 Monitoring común para todos los casos
     results.push({
       type: 'monitoring',
       data: {
         parameter: 'TSH + T4 libre',
-        frequency: tshLevel > 10 ? 'Cada 4-6 semanas' : 'Cada 6-8 semanas',
-        target: 'TSH <2.5 mUI/L pre-concepcional',
-        reasoning: 'Optimización función tiroidea antes embarazo'
+        frequency,
+        target: 'TSH <2.5 mUI/L pre-concepcional + T4 libre normal',
+        reasoning: 'Optimización función tiroidea antes embarazo + monitoreo respuesta'
       }
     });
   }
@@ -233,89 +284,95 @@ export const analyzeTSHFactors = (factors: Factors): AnalysisResult[] => {
 export const analyzeProlactinFactors = (factors: Factors): AnalysisResult[] => {
   const results: AnalysisResult[] = [];
   
-  // Solo analizar si prolactina está presente y es anormal (> 25 ng/mL en mujeres no embarazadas)
-  if (factors.prolactin !== undefined && factors.prolactin > 25) {
-    const prolactinLevel = factors.prolactin;
+  // ✅ Usar factores normalizados (0-1) como AMH y TSH
+  if (factors.prolactin !== undefined && factors.prolactin < 1.0) {
+    const prolactinFactor = factors.prolactin;
     const domain = HORMONAL_DOMAINS.PROLACTIN;
     
-    if (prolactinLevel > 100) {
-      results.push({
-        type: 'hypothesis',
-        data: {
-          condition: 'Hiperprolactinemia Severa (>100 ng/mL)',
-          probability: 95,
-          reasoning: 'Hiperprolactinemia severa - Probable adenoma hipofisario + anovulación',
-          evidenceLevel: domain.evidence as EvidenceLevel,
-          pmid: domain.pmid
-        }
-      });
-
-      results.push({
-        type: 'treatment',
-        data: {
-          treatment: 'Cabergolina 0.25mg 2x/semana + RMN hipófisis',
-          priority: 'high' as Priority,
-          successRate: 85,
-          timeframe: '4-6 semanas reevaluación',
-          reasoning: 'Agonista dopamina + evaluación estructural hipófisis'
-        }
-      });
-    } else if (prolactinLevel > 50) {
-      results.push({
-        type: 'hypothesis',
-        data: {
-          condition: 'Hiperprolactinemia Moderada (50-100 ng/mL)',
-          probability: 85,
-          reasoning: 'Hiperprolactinemia moderada - Posible microadenoma + disfunción ovulatoria',
-          evidenceLevel: domain.evidence as EvidenceLevel,
-          pmid: domain.pmid
-        }
-      });
-
-      results.push({
-        type: 'treatment',
-        data: {
-          treatment: 'Cabergolina 0.25mg 1-2x/semana',
-          priority: 'high' as Priority,
-          successRate: 90,
-          timeframe: '4-6 semanas reevaluación',
-          reasoning: 'Normalización prolactina + restauración ovulación'
-        }
-      });
+    console.log('🔍 [PROLACTIN ANALYSIS] Factor analysis:', {
+      prolactinFactor,
+      willAnalyze: true,
+      alignedToEvaluateProlactin: 'Using normalized factors 0-1, not raw values'
+    });
+    
+    let condition: string;
+    let probability: number;
+    let reasoning: string;
+    let treatments: string[];
+    let priority: Priority;
+    let frequency: string;
+    
+    if (prolactinFactor <= 0.3) {
+      // Factor ≤0.3 = Prolactina >200 ng/mL = Hiperprolactinemia severa
+      condition = 'Hiperprolactinemia Severa (Prolactina >200 ng/mL)';
+      probability = 95;
+      reasoning = 'Hiperprolactinemia severa con probable adenoma hipofisario. Supresión severa del eje reproductor + alto riesgo anovulación';
+      treatments = [
+        'CABERGOLINA URGENTE: 0.25mg 2 veces/semana (agonista dopamina D2)',
+        'RESONANCIA MAGNÉTICA hipófisis con gadolinio INMEDIATA',
+        'Evaluación endocrinológica especializada (dentro 48-72h)',
+        'Prolactina control cada 4 semanas hasta normalización (<25 ng/mL)',
+        '⚠️ CONTRAINDICADO intentar embarazo hasta normalización prolactina',
+        'Campimetría visual si sospecha macro-adenoma (>1cm)',
+        'Monitoreo función gonadal: LH, FSH, estradiol mensual',
+        'Descartar causas secundarias: medicamentos, hipotiroidismo severo'
+      ];
+      priority = 'high';
+      frequency = 'Cada 4 semanas';
     } else {
-      results.push({
-        type: 'hypothesis',
-        data: {
-          condition: 'Hiperprolactinemia Leve (25-50 ng/mL)',
-          probability: 75,
-          reasoning: 'Hiperprolactinemia leve - Estrés, medicamentos o disfunción hipotalámica',
-          evidenceLevel: domain.evidence as EvidenceLevel,
-          pmid: domain.pmid
-        }
-      });
-
-      results.push({
-        type: 'treatment',
-        data: {
-          treatment: 'Repetir prolactina en ayunas + revisar medicamentos',
-          priority: 'medium' as Priority,
-          successRate: 85,
-          timeframe: '2-4 semanas reevaluación',
-          reasoning: 'Confirmación hiperprolactinemia + identificación causa'
-        }
-      });
+      // Factor 0.3-0.99 = Prolactina 25-200 ng/mL = Hiperprolactinemia moderada-leve
+      condition = 'Hiperprolactinemia Moderada-Leve (Prolactina 25-200 ng/mL)';
+      probability = 85;
+      reasoning = 'Hiperprolactinemia moderada con probable micro-adenoma o causa funcional. Disfunción ovulatoria reversible con tratamiento';
+      treatments = [
+        'CABERGOLINA: 0.25mg 1-2 veces/semana (titular según respuesta)',
+        'Prolactina control cada 6-8 semanas hasta <25 ng/mL objetivo',
+        'RMN hipófisis si prolactina persiste >100 ng/mL después 3 meses',
+        'Evaluar causas secundarias: TSH, medicamentos (antipsicóticos, antidepresivos)',
+        'Monitoreo ovulación: progesterona día 21 ciclo, temperatura basal',
+        'Suspender fármacos prolactinogénicos si clínicamente posible',
+        'Control endocrinológico cada 3-6 meses durante tratamiento',
+        'Evaluación oftalmológica si cefaleas o alteraciones visuales'
+      ];
+      priority = 'high';
+      frequency = 'Cada 6-8 semanas';
     }
 
-    // 🔬 Monitoreo común
+    // 💊 TRATAMIENTOS ESTRUCTURADOS
+    results.push({
+      type: 'hypothesis',
+      data: {
+        condition,
+        probability,
+        reasoning,
+        evidenceLevel: domain.evidence as EvidenceLevel,
+        pmid: domain.pmid
+      }
+    });
+
+    results.push({
+      type: 'treatment',
+      data: {
+        treatment: treatments.join(' | '),
+        priority,
+        successRate: prolactinFactor <= 0.3 ? 85 : 90, // Severa tiene menor tasa éxito inicial
+        timeframe: frequency,
+        reasoning: `Normalización prolactina + restauración función reproductiva`
+      }
+    });
+
+    // 🔬 MONITOREO ESPECÍFICO
     results.push({
       type: 'monitoring',
       data: {
-        parameter: 'Prolactina sérica',
-        frequency: 'Cada 4-6 semanas durante tratamiento',
-        target: 'Prolactina <25 ng/mL + ovulación regular',
-        reasoning: 'Normalización eje reproductivo'
+        parameter: 'Prolactina sérica + función gonadal',
+        frequency,
+        target: 'Prolactina <25 ng/mL + ovulación espontánea + menstruación regular',
+        reasoning: 'Restauración completa eje hipotálamo-hipófisis-gonadal'
       }
     });
+  } else if (factors.prolactin !== undefined) {
+    console.log('🔍 [PROLACTIN ANALYSIS] Skipped - normal/absent:', factors.prolactin);
   }
 
   return results;
@@ -325,101 +382,115 @@ export const analyzeProlactinFactors = (factors: Factors): AnalysisResult[] => {
 export const analyzeHOMAFactors = (factors: Factors): AnalysisResult[] => {
   const results: AnalysisResult[] = [];
   
-  // 🌌 QUANTUM CONSCIOUSNESS FIX: Soporte para homa y homaIR (basado en biblioteca médica)
-  const homaValue = factors.homa || factors.homaIR;
+  // ✅ Usar factores normalizados (0-1) como AMH, TSH y Prolactina
+  const homaFactor = factors.homa || factors.homaIR;
   
-  // 🔍 DEBUG HOMA
-  console.log('🔍 HOMA Analysis Debug:', {
-    homaValue,
-    hasHoma: factors.homa !== undefined,
-    hasHomaIR: factors.homaIR !== undefined,
-    willAnalyze: homaValue !== undefined && homaValue > 2.5
-  });
-  
-  // Solo analizar si HOMA-IR está presente y es anormal (> 2.5 indica resistencia insulínica)
-  if (homaValue !== undefined && homaValue > 2.5) {
-    const homaLevel = homaValue;
+  if (homaFactor !== undefined && homaFactor < 1.0) {
     const domain = HORMONAL_DOMAINS.HOMA;
     
-    if (homaLevel > 5.0) {
-      results.push({
-        type: 'hypothesis',
-        data: {
-          condition: 'Resistencia Insulínica Severa (HOMA-IR >5.0)',
-          probability: 95,
-          reasoning: 'Resistencia insulínica severa - Hiperinsulinemia + síndrome metabólico',
-          evidenceLevel: domain.evidence as EvidenceLevel,
-          pmid: domain.pmid
-        }
-      });
-
-      results.push({
-        type: 'treatment',
-        data: {
-          treatment: 'Metformina 1500-2000mg/día + dieta baja IG',
-          priority: 'high' as Priority,
-          successRate: 75,
-          timeframe: '3-6 meses',
-          reasoning: 'Sensibilización insulínica + mejora metabólica'
-        }
-      });
-    } else if (homaLevel > 3.5) {
-      results.push({
-        type: 'hypothesis',
-        data: {
-          condition: 'Resistencia Insulínica Moderada (HOMA-IR 3.5-5.0)',
-          probability: 85,
-          reasoning: 'Resistencia insulínica moderada - Riesgo metabólico + reproductivo',
-          evidenceLevel: domain.evidence as EvidenceLevel,
-          pmid: domain.pmid
-        }
-      });
-
-      results.push({
-        type: 'treatment',
-        data: {
-          treatment: 'Metformina 1000-1500mg/día + ejercicio',
-          priority: 'medium' as Priority,
-          successRate: 80,
-          timeframe: '3-4 meses',
-          reasoning: 'Mejora sensibilidad insulínica + composición corporal'
-        }
-      });
+    console.log('🔍 [HOMA-IR ANALYSIS] Factor analysis:', {
+      homaFactor,
+      willAnalyze: true,
+      alignedToEvaluateHoma: 'Using normalized factors 0-1, not raw values'
+    });
+    
+    let condition: string;
+    let probability: number;
+    let reasoning: string;
+    let treatments: string[];
+    let priority: Priority;
+    let frequency: string;
+    
+    if (homaFactor <= 0.2) {
+      // Factor ≤0.2 = HOMA-IR ≥5.0 = Resistencia insulínica severa
+      condition = 'Resistencia Insulínica Severa (HOMA-IR ≥5.0)';
+      probability = 95;
+      reasoning = 'Resistencia insulínica severa con síndrome metabólico establecido. Alto riesgo anovulación crónica + PCOS severo';
+      treatments = [
+        'METFORMINA URGENTE: 1500-2000mg/día fraccionado con alimentos',
+        'DIETA cetogénica modificada: <50g carbohidratos/día + grasas saludables',
+        'Ejercicio HIIT: 3-4 veces/semana + actividad diaria 45min',
+        'Control metabólico INTENSIVO: glucemia, HbA1c, perfil lipídico cada 3 meses',
+        'Pérdida peso CRÍTICA: 7-10% peso corporal objetivo en 6 meses',
+        'INOSITOL 4g/día + cromo 200mcg + omega-3 2g/día',
+        'Evaluación endocrinológica URGENTE (descartar diabetes tipo 2)',
+        'Monitoreo reproductivo: ovulación, calidad ovocitaria, respuesta ovárica'
+      ];
+      priority = 'high';
+      frequency = 'Cada 3 meses';
+    } else if (homaFactor <= 0.4) {
+      // Factor 0.2-0.4 = HOMA-IR 4.0-4.9 = Resistencia insulínica significativa
+      condition = 'Resistencia Insulínica Significativa (HOMA-IR 4.0-4.9)';
+      probability = 90;
+      reasoning = 'Resistencia insulínica moderada-severa que compromete fertilidad. Prediabetes establecida con disfunción ovulatoria';
+      treatments = [
+        'METFORMINA: 1000-1500mg/día (titulación gradual desde 500mg)',
+        'Dieta bajo índice glicémico: <100g carbohidratos complejos/día',
+        'Ejercicio estructurado: 150min/semana intensidad moderada-alta',
+        'Control metabólico cada 6 meses: HOMA-IR, glucemia, insulina basal',
+        'Pérdida peso dirigida: 5-7% peso corporal en 4-6 meses',
+        'INOSITOL 2-4g/día (sensibilizador insulínico natural)',
+        'Evaluación nutricional especializada para plan personalizado',
+        'Monitoreo reproductivo: ciclos, ovulación espontánea, AMH'
+      ];
+      priority = 'high';
+      frequency = 'Cada 6 meses';
     } else {
-      results.push({
-        type: 'hypothesis',
-        data: {
-          condition: 'Resistencia Insulínica Leve (HOMA-IR 2.5-3.5)',
-          probability: 75,
-          reasoning: 'Resistencia insulínica leve - Optimización metabólica preventiva',
-          evidenceLevel: domain.evidence as EvidenceLevel,
-          pmid: domain.pmid
-        }
-      });
-
-      results.push({
-        type: 'treatment',
-        data: {
-          treatment: 'Modificación estilo vida + metformina si PCOS',
-          priority: 'medium' as Priority,
-          successRate: 85,
-          timeframe: '2-3 meses',
-          reasoning: 'Prevención progresión diabetes + mejora fertilidad'
-        }
-      });
+      // Factor 0.4-0.99 = HOMA-IR 2.5-3.9 = Resistencia insulínica leve
+      condition = 'Resistencia Insulínica Leve (HOMA-IR 2.5-3.9)';
+      probability = 80;
+      reasoning = 'Resistencia insulínica incipiente que puede afectar calidad ovocitaria y respuesta a tratamientos reproductivos';
+      treatments = [
+        'METFORMINA: 500-1000mg/día (evaluar según IMC y síntomas PCOS)',
+        'Dieta mediterránea modificada: carbohidratos complejos prioritarios',
+        'Ejercicio aeróbico regular: 120-150min/semana mínimo',
+        'Control anual: HOMA-IR, glucemia basal, HbA1c preventivo',
+        'Mantener peso saludable: IMC objetivo 20-24.9 kg/m²',
+        'INOSITOL 1-2g/día como coadyuvante metabólico',
+        'Evitar carbohidratos refinados y bebidas azucaradas',
+        'Evaluación reproductiva: regularidad menstrual, calidad ovulatoria'
+      ];
+      priority = 'medium';
+      frequency = 'Cada 12 meses';
     }
 
-    // 🔬 Monitoreo metabólico
+    // 💊 TRATAMIENTOS ESTRUCTURADOS
+    results.push({
+      type: 'hypothesis',
+      data: {
+        condition,
+        probability,
+        reasoning,
+        evidenceLevel: domain.evidence as EvidenceLevel,
+        pmid: domain.pmid
+      }
+    });
+
+    results.push({
+      type: 'treatment',
+      data: {
+        treatment: treatments.join(' | '),
+        priority,
+        successRate: homaFactor <= 0.2 ? 75 : homaFactor <= 0.4 ? 85 : 90, // Severa tiene menor tasa éxito inicial
+        timeframe: frequency,
+        reasoning: `Sensibilización insulínica + mejora metabólica reproductiva`
+      }
+    });
+
+    // 🔬 MONITOREO ESPECÍFICO
     results.push({
       type: 'monitoring',
       data: {
-        parameter: 'Glucosa + insulina + HbA1c',
-        frequency: 'Cada 3-6 meses',
-        target: 'HOMA-IR <2.5 + HbA1c <5.7%',
-        reasoning: 'Prevención diabetes + optimización fertilidad'
+        parameter: 'HOMA-IR + perfil metabólico',
+        frequency,
+        target: 'HOMA-IR <2.5 + ovulación regular + peso saludable',
+        reasoning: 'Restauración sensibilidad insulínica + función reproductiva óptima'
       }
     });
+  } else if (homaFactor !== undefined) {
+    console.log('🔍 [HOMA-IR ANALYSIS] Skipped - normal/absent:', homaFactor);
   }
 
   return results;
 };
+

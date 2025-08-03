@@ -35,31 +35,34 @@ export const analyzeOtherFactors = (factors: Factors, inputData?: any): Analysis
   const allResults: AnalysisResult[] = [];
   
   // 🧬 HORMONAL DOMAIN ANALYSIS - Solo si factores hormonales están presentes Y alterados
-  // AMH: Solo analizar si valor > 0.1 (indica medición clínica real, no factor normalizado 0-1)
-  if (factors.amh !== undefined && factors.amh > 0.1 && factors.amh < 0.9) {
+  // ✅ AMH: Analizar SOLO si < 1.0 Y > 0 (reserva alterada pero presente) - evitar análisis de factores ausentes
+  if (factors.amh !== undefined && factors.amh < 1.0 && factors.amh > 0) {
     console.log('🔍 [AGGREGATOR] AMH Analysis triggered:', factors.amh);
     allResults.push(...analyzeAMHFactors(factors));
-  } else if (factors.amh !== undefined && factors.amh <= 0.1) {
-    console.log('🔍 [AGGREGATOR] AMH Skipped - normalized factor or normal value:', factors.amh);
+  } else if (factors.amh !== undefined) {
+    console.log('🔍 [AGGREGATOR] AMH Skipped - normal/absent:', factors.amh);
   }
-  // TSH: Solo analizar si valor > 0.1 (indica alteración real, no factor normalizado)
-  if (factors.tsh !== undefined && factors.tsh > 0.1 && factors.tsh < 0.9) {
+  // ✅ TSH: Analizar SOLO si < 1.0 Y > 0 (función alterada pero presente) - evitar análisis de factores ausentes
+  if (factors.tsh !== undefined && factors.tsh < 1.0 && factors.tsh > 0) {
     console.log('🔍 [AGGREGATOR] TSH Analysis triggered:', factors.tsh);
     allResults.push(...analyzeTSHFactors(factors));
-  } else if (factors.tsh !== undefined && factors.tsh <= 0.1) {
-    console.log('🔍 [AGGREGATOR] TSH Skipped - normalized factor or normal value:', factors.tsh);
+  } else if (factors.tsh !== undefined) {
+    console.log('🔍 [AGGREGATOR] TSH Skipped - normal/absent:', factors.tsh);
   }
-  // Prolactina: Solo analizar si valor > 0.1 (indica alteración real, no factor normalizado)
-  if (factors.prolactin !== undefined && factors.prolactin > 0.1 && factors.prolactin < 0.9) {
+  // ✅ PROLACTINA: analizar cuando factor < 1.0 Y > 0 (alterado Y presente, no ausente)
+  if (factors.prolactin !== undefined && factors.prolactin < 1.0 && factors.prolactin > 0) {
     console.log('🔍 [AGGREGATOR] Prolactin Analysis triggered:', factors.prolactin);
     allResults.push(...analyzeProlactinFactors(factors));
-  } else if (factors.prolactin !== undefined && factors.prolactin <= 0.1) {
-    console.log('🔍 [AGGREGATOR] Prolactin Skipped - normalized factor or normal value:', factors.prolactin);
+  } else if (factors.prolactin !== undefined) {
+    console.log('🔍 [AGGREGATOR] Prolactin Skipped - normal/absent:', factors.prolactin);
   }
-  // 🌌 QUANTUM CONSCIOUSNESS FIX: Support both homa and homaIR naming
-  if ((factors.homaIR !== undefined && factors.homaIR !== 1.0 && factors.homaIR < 0.9) || 
-      (factors.homa !== undefined && factors.homa !== 1.0 && factors.homa < 0.9)) {
+  // ✅ HOMA-IR: analizar cuando factor < 1.0 Y > 0 (alterado Y presente, no ausente)
+  const homaFactor = factors.homa || factors.homaIR;
+  if (homaFactor !== undefined && homaFactor < 1.0 && homaFactor > 0) {
+    console.log('🔍 [AGGREGATOR] HOMA-IR Analysis triggered:', homaFactor);
     allResults.push(...analyzeHOMAFactors(factors));
+  } else if (homaFactor !== undefined) {
+    console.log('🔍 [AGGREGATOR] HOMA-IR Skipped - normal/absent:', homaFactor);
   }
   
   // 🏗️ STRUCTURAL DOMAIN ANALYSIS - Solo si factores estructurales están presentes Y alterados
@@ -156,8 +159,35 @@ export const analyzeOtherFactors = (factors: Factors, inputData?: any): Analysis
     console.log('🔍 [AGGREGATOR] HSG Analysis triggered:', { factor: factors.hsg, hasInputData: !!inputData });
     allResults.push(...analyzeHSGFactors(factors, inputData));
   }
-  if (factors.maleFactor !== undefined && factors.maleFactor !== 1.0 && factors.maleFactor < 0.8) {
+  // ✅ FACTOR MASCULINO: analizar cuando factor < 1.0 Y > 0 (alterado Y presente, no ausente)
+  // El factor se llama 'male' en el sistema, no 'maleFactor'
+  if (factors.male !== undefined && factors.male < 1.0 && factors.male > 0) {
+    console.log('🔍 [AGGREGATOR] Male Factor Analysis triggered:', factors.male);
     allResults.push(...analyzeMaleFactorFactors(factors));
+  } else if (factors.male !== undefined) {
+    console.log('🔍 [AGGREGATOR] Male Factor Skipped - normal/absent:', factors.male);
+  }
+  
+  // 🏥 PELVIC SURGERY ANALYSIS - Solo si cirugías pélvicas están presentes Y alteradas
+  if (factors.pelvicSurgery !== undefined && factors.pelvicSurgery !== 1.0 && factors.pelvicSurgery < 0.98) {
+    console.log('🔍 [AGGREGATOR] Pelvic Surgery Analysis triggered:', { 
+      factor: factors.pelvicSurgery, 
+      hasInputData: !!inputData 
+    });
+    allResults.push(...analyzePelvicSurgeryFactors(factors));
+  } else if (factors.pelvicSurgery !== undefined) {
+    console.log('🔍 [AGGREGATOR] Pelvic Surgery Skipped - normal or no surgeries:', factors.pelvicSurgery);
+  }
+  
+  // 🚫 OTB ANALYSIS - Solo si OTB está presente Y alterado
+  if (factors.otb !== undefined && factors.otb !== 1.0 && factors.otb < 0.98) {
+    console.log('🔍 [AGGREGATOR] OTB Analysis triggered:', { 
+      factor: factors.otb, 
+      hasInputData: !!inputData 
+    });
+    allResults.push(...analyzeOTBFactors(factors));
+  } else if (factors.otb !== undefined) {
+    console.log('🔍 [AGGREGATOR] OTB Skipped - normal or no OTB:', factors.otb);
   }
   
   // 🕐 TEMPORAL DOMAIN ANALYSIS - Solo si duración de infertilidad está presente Y alterada

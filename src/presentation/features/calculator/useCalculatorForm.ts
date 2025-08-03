@@ -210,7 +210,16 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
         myomaType: (watchedFields.myomaType as MyomaType) || MyomaType.None,
         adenomyosisType: (watchedFields.adenomyosisType as AdenomyosisType) || AdenomyosisType.None,
         polypType: (watchedFields.polypType as PolypType) || PolypType.None,
-        hsgResult: (watchedFields.hsgResult as HsgResult) || HsgResult.Normal,
+        hsgResult: (() => {
+          const hsgValue = (watchedFields.hsgResult as HsgResult) || HsgResult.Normal;
+          console.log('🔍 HSG DEBUG - Form Value:', {
+            rawFormValue: watchedFields.hsgResult,
+            convertedValue: hsgValue,
+            isBilateral: hsgValue === HsgResult.Bilateral,
+            HsgResultEnum: HsgResult
+          });
+          return hsgValue;
+        })(),
         hasOtb: watchedFields.hasOtb || false,
         otbMethod: watchedFields.hasOtb ? (watchedFields.otbMethod as OtbMethod) : undefined,
         hasOtherInfertilityFactors: watchedFields.hasOtherInfertilityFactors || false,

@@ -424,7 +424,7 @@ export class MedicalOrchestrator {
     // Store neural config con tipo explícito
     (this as unknown as MedicalOrchestratorWithNeuralConfig).neuralConfig = neuralConfig;
     
-    // 🧠 COMPONENTES NEURONALES DIRECTOS (sin SimplifiedClinicalEngine)
+    // 🧠 COMPONENTES NEURONALES DIRECTOS
     this.successCalculator = OptimizedSuccessCalculator.getInstance();
     this.conversationEngine = IntelligentConversationEngine.getInstance();
     
@@ -729,7 +729,7 @@ export class MedicalOrchestrator {
       }
     }
     
-    // 3️⃣ ANÁLISIS NEURONAL AVANZADO DIRECTO (sin SimplifiedClinicalEngine)
+    // 3️⃣ ANÁLISIS NEURONAL AVANZADO DIRECTO
     console.log('🧠 Ejecutando análisis neuronal avanzado con AI Medical Agent...');
     const [clinicalResult, successResult, neuralPredictions, aiInsights] = await Promise.all([
       // 🧠 ANÁLISIS CLÍNICO NEURONAL DIRECTO usando MedicalRAM
@@ -1381,7 +1381,7 @@ export class MedicalOrchestrator {
   }
 
   /**
-   * 🧠 ANÁLISIS CLÍNICO NEURONAL AVANZADO (reemplaza SimplifiedClinicalEngine)
+   * 🧠 ANÁLISIS CLÍNICO NEURONAL AVANZADO
    * Utiliza el sistema RAM y AI Medical Agent para análisis superior
    */
   private async performAdvancedClinicalAnalysis(userInput: UserInput): Promise<OperationResult<UnifiedClinicalAnalysis>> {
