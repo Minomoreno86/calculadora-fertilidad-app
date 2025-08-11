@@ -3,8 +3,8 @@ import { StyleSheet, View } from 'react-native';
 import { Control, FieldErrors } from 'react-hook-form';
 import Text from '@/presentation/components/common/Text';
 import { ControlledTextInput } from '@/presentation/components/common/ControlledTextInput';
-import { ControlledOptionSelector } from '@/presentation/components/common/ControlledOptionSelector';
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { FormState } from '../types/calculator.types';
 
 type Props = {
@@ -15,44 +15,45 @@ type Props = {
 export const MaleFactorForm = React.memo<Props>(({ control, errors }) => {
   // 🎨 TEMA DINÁMICO
   const theme = useDynamicTheme();
+  const { t } = useLanguage();
   
   // 🎨 Crear estilos dinámicos
   const styles = createStyles(theme);
   
   return (
     <View style={styles.container}>
-      <Text style={styles.groupLabel}>Factor Masculino (Espermatograma)</Text>
+      <Text style={styles.groupLabel}>{t('male_factor.factor_masculino_espermatograma')}</Text>
 
       <ControlledTextInput
         control={control}
         name="spermConcentration"
-        label="Concentración (millones/mL)"
+        label={t('male_factor.concentracion_label')}
         keyboardType="decimal-pad"
-        placeholder="Ej: 45 (Normal: ≥15, acepta cualquier valor)"
+        placeholder={t('male_factor.concentracion_placeholder')}
         error={errors.spermConcentration}
       />
       <ControlledTextInput
         control={control}
         name="spermProgressiveMotility"
-        label="Motilidad Progresiva (%)"
+        label={t('male_factor.motilidad_label')}
         keyboardType="decimal-pad"
-        placeholder="Ej: 50 (Normal: ≥32%, acepta cualquier valor)"
+        placeholder={t('male_factor.motilidad_placeholder')}
         error={errors.spermProgressiveMotility}
       />
       <ControlledTextInput
         control={control}
         name="spermNormalMorphology"
-        label="Morfología Normal (%)"
+        label={t('male_factor.morfologia_label')}
         keyboardType="decimal-pad"
-        placeholder="Ej: 5 (Normal: ≥4%, acepta cualquier valor)"
+        placeholder={t('male_factor.morfologia_placeholder')}
         error={errors.spermNormalMorphology}
       />
       <ControlledTextInput
         control={control}
         name="semenVolume"
-        label="Volumen Seminal (mL)"
+        label={t('male_factor.volumen_label')}
         keyboardType="decimal-pad"
-        placeholder="Ej: 2.5 (Normal: ≥1.5, acepta cualquier valor)"
+        placeholder={t('male_factor.volumen_placeholder')}
         error={errors.semenVolume}
       />
     </View>
@@ -65,7 +66,17 @@ MaleFactorForm.displayName = 'MaleFactorForm';
 // 🎨 Función para crear estilos dinámicos
 const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
   container: {
-    marginBottom: theme.spacing.l,
+    backgroundColor: theme.colors.surface,
+    marginHorizontal: 16,
+    marginVertical: 10,
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: theme.colors.shadow || '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 12,
+    gap: 16,
   },
   groupLabel: {
     ...theme.typography.h3,

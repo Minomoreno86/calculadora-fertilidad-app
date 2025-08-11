@@ -38,7 +38,7 @@ export interface AdvancedConfigState {
   // 🏥 Configuraciones Médicas
   medical: {
     units: 'metric' | 'imperial';
-    language: 'es' | 'en' | 'pt' | 'fr';
+
     medicalTerminology: 'simple' | 'technical';
     riskTolerance: 'conservative' | 'moderate' | 'aggressive';
     showMedicalReferences: boolean;
@@ -107,7 +107,7 @@ export const DEFAULT_ADVANCED_CONFIG: AdvancedConfigState = {
   },
   medical: {
     units: 'metric',
-    language: 'es',
+
     medicalTerminology: 'simple',
     riskTolerance: 'moderate',
     showMedicalReferences: true,

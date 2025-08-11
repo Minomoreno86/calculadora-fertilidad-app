@@ -1,0 +1,60 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-debug/
+.expo/
+.next/
+
+# Configuration files
+.vscode/
+.git/
+
+# Demo and backup files
+**/backup/
+**/*backup*
+**/*demo*
+DEMO_*.ts
+**/DEMO_*.ts
+
+# Documentation and markdown
+*.md
+**/*.md
+
+# AI agent unused (not in production)
+ai-medical-agent/
+
+# Context files
+context-ai/
+
+# PowerShell scripts
+*.ps1
+
+# Migration files
+migration-*.ts
+*migration*.ts
+
+# Debug files
+debug-*.ts
+*debug*.ts
+
+# Presentation folder (not main app)
+presentation/
+
+# Proxy server
+proxy-server/
+
+# Fix scripts
+fix-*.cjs
+fix-*.js
+fix-*.ts
+
+# Consolidate scripts
+consolidate-*.ps1
+
+# Neural validation scripts
+neural-*.cjs
+
+# PRP files
+*.prp

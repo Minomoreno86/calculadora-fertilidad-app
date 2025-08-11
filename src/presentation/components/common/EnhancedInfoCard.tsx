@@ -8,8 +8,9 @@ import Text from './Text';
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 
 // Safe Animated import for React Native compatibility
-let Animated: any;
+let Animated: unknown;
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const RN = require('react-native');
   Animated = RN.Animated;
 } catch {

@@ -21,14 +21,15 @@ import {
 
 // Safe imports for optional React Native components
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-let Animated: any;
+let Animated: unknown;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-let KeyboardAvoidingView: any;
+let KeyboardAvoidingView: unknown;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-let TextInput: any;
+let TextInput: unknown;
 
 try {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const RNComponents = require('react-native');
   Animated = RNComponents.Animated || { 
     Value: class { constructor() {} },

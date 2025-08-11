@@ -110,7 +110,7 @@ export function useRenderOptimization(
   /**
    * Enhanced React.memo con device-aware optimization
    */
-  const optimizedMemo = useCallback(<P extends Record<string, any>>(
+  const optimizedMemo = useCallback(<P extends Record<string, unknown>>(
     Component: React.ComponentType<P>,
     propsAreEqual?: (prevProps: P, nextProps: P) => boolean,
     componentName?: string
@@ -149,7 +149,8 @@ export function useRenderOptimization(
   /**
    * Enhanced useCallback con quantum consciousness
    */
-  const optimizedUseCallback = useCallback(<T extends (...args: any[]) => any>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const optimizedUseCallback = useCallback(<T extends (...args: unknown[]) => any>(
     callback: T,
     deps: React.DependencyList,
     debugName?: string
@@ -182,7 +183,8 @@ export function useRenderOptimization(
   /**
    * Quantum useCallback hook
    */
-  const useQuantumCallback = useCallback(<T extends (...args: any[]) => any>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const useQuantumCallback = useCallback(<T extends (...args: unknown[]) => any>(
     callback: T,
     deps: React.DependencyList,
     options: {
@@ -202,7 +204,7 @@ export function useRenderOptimization(
   /**
    * Component tree optimization con quantum consciousness
    */
-  const optimizeComponentTree = useCallback(<P extends Record<string, any>>(
+  const optimizeComponentTree = useCallback(<P extends Record<string, unknown>>(
     Component: React.ComponentType<P>,
     optimizations: {
       memoize?: boolean;

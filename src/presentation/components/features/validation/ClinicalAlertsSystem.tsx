@@ -6,9 +6,10 @@ import React from 'react';
 import { View, ScrollView, TouchableOpacity } from 'react-native';
 
 // Safe imports for optional React Native components
-let Alert: any;
+let Alert: unknown;
 
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const RNComponents = require('react-native');
   Alert = RNComponents.Alert || { alert: () => {} };
 } catch {
@@ -25,7 +26,7 @@ interface ClinicalInsight {
   title: string;
   message: string;
   urgency?: 'low' | 'medium' | 'high' | 'critical';
-  medicalContext?: any;
+  medicalContext?: unknown;
   nextSteps?: string[];
 }
 

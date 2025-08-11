@@ -179,7 +179,7 @@ export const AIConsultation: React.FC<AIConsultationProps> = ({
   }, []);
 
   // 🧠 INTEGRATED ANALYSIS SYSTEM V13.1 - NEURAL + NESTED DOMAINS
-  const performIntegratedAnalysis = React.useCallback((factors: Factors, inputData?: any): MedicalAnalysis => {
+  const performIntegratedAnalysis = React.useCallback((factors: Factors, inputData?: unknown): MedicalAnalysis => {
     const startTime = performance.now();
     const allResults: AnalysisResult[] = [];
     const activatedDomains: string[] = [];

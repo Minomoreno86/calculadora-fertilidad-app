@@ -9,29 +9,28 @@ import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
-// 🎯 CUSTOM COMPONENTS FOR COMPATIBILITY
-const ActivityIndicator: React.FC<{ 
-  size?: 'small' | 'large'; 
-  color?: string; 
-  style?: object 
-}> = ({ 
-  size = 'small', 
-  color = '#007AFF', 
-  style = {} 
+// 🎨 TEMA DINÁMICO
+import { useDynamicTheme } from '@/hooks/useDynamicTheme';
+import { useLanguage } from '@/contexts/LanguageContext';
+
+// 🏥 IMPORT CALCULADORA PARA MOSTRAR CUANDO NO HAY REPORTKEY
+import { CalculatorFormMain } from '@/presentation/features/calculator/components/CalculatorFormMain';
+
+// === Restaurados: componentes utilitarios y tipos perdidos ===
+const ActivityIndicator: React.FC<{ size?: 'small' | 'large'; color?: string; style?: object }> = ({
+  size = 'small', color = '#007AFF', style = {}
 }) => (
-  <View style={[{ 
-    width: size === 'large' ? 36 : 20, 
-    height: size === 'large' ? 36 : 20, 
+  <View style={[{
+    width: size === 'large' ? 36 : 20,
+    height: size === 'large' ? 36 : 20,
     borderRadius: size === 'large' ? 18 : 10,
     borderWidth: 2,
     borderColor: color,
     borderTopColor: 'transparent',
-    // Simple rotation animation would be ideal here
   }, style]} />
 );
 
 const showAlert = (title: string, message?: string, _buttons?: Array<{text: string; style?: string; onPress?: () => void}>) => {
-  // Fallback alert for React Native 0.79.5
   if (typeof alert !== 'undefined') {
     alert(title + (message ? '\n' + message : ''));
   } else {
@@ -39,7 +38,6 @@ const showAlert = (title: string, message?: string, _buttons?: Array<{text: stri
   }
 };
 
-// 🚀 INTERFACE PARA ENGINE METRICS V13.0
 interface EngineMetrics {
   responseTime: string;
   improvement: string;
@@ -47,10 +45,11 @@ interface EngineMetrics {
   aiAccuracy: string;
   workersActive: number;
 }
+// === Fin restauración ===
 
 // 🎯 COMPONENTES ESENCIALES EVOLUTIVOS
 import { useReportLoader } from '@/presentation/features/results/hooks/useReportLoader';
-const ResultsDisplay = React.lazy(() => import('@/presentation/features/results/components/ResultsDisplay').then(module => ({ default: module.ResultsDisplay })));
+import { ResultsDisplay } from '@/presentation/features/results/components/ResultsDisplay';
 import { suggestTreatments } from '@/core/domain/services/treatmentSuggester';
 import type { EvaluationState } from '@/core/domain/models';
 
@@ -58,17 +57,26 @@ import type { EvaluationState } from '@/core/domain/models';
 import type { FreemiumConfig } from '@/core/freemium/FreemiumMedicalSystem';
 
 import Text from '@/presentation/components/common/Text';
-import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 
 export default function ResultsScreen() {
   const params = useLocalSearchParams();
   const theme = useDynamicTheme();
+  const { t } = useLanguage();
   
   // 🎯 VALIDACIÓN ROBUSTA Y PREDICTIVA
   const reportKeyParam = params.reportKey;
   console.log('🔍 ResultsScreen V2.0: Received params:', { reportKey: reportKeyParam });
   
   const { evaluation, loading, error, isPremiumReport } = useReportLoader(reportKeyParam);
+
+  // 🔧 CORRECCIÓN DE ESTRUCTURA ANIDADA PARA TODA LA APP
+  const hasNestedEvaluationStructure = evaluation && 
+    typeof evaluation === 'object' && 
+    'evaluation' in evaluation;
+  
+  const correctedEvaluation = hasNestedEvaluationStructure 
+    ? (evaluation as { evaluation: unknown }).evaluation as EvaluationState
+    : evaluation;
 
   // 🏥 CONFIGURACIÓN FREEMIUM - APROVECHA TU SISTEMA MÉDICO
   const freemiumConfig: FreemiumConfig = React.useMemo(() => ({
@@ -82,22 +90,10 @@ export default function ResultsScreen() {
 
   // 🧠 MÉTRICAS INTELIGENTES PARA AI MEDICAL AGENT + UNIFIED WORKERS V12.0
   const treatmentSuggestions = React.useMemo(() => {
-    // 🔍 Acceder a la evaluation real desde la estructura guardada
-    if (!evaluation || typeof evaluation !== 'object') return [];
+    if (!correctedEvaluation || typeof correctedEvaluation !== 'object') return [];
     
-    // Type guard para verificar si evaluation tiene la propiedad evaluation
-    const hasNestedEvaluation = evaluation && 
-      typeof evaluation === 'object' && 
-      'evaluation' in evaluation;
-    
-    const actualEvaluation = hasNestedEvaluation 
-      ? (evaluation as { evaluation: unknown }).evaluation 
-      : evaluation;
-    
-    if (!actualEvaluation) return [];
-    
-    return suggestTreatments(actualEvaluation as EvaluationState);
-  }, [evaluation]);
+    return suggestTreatments(correctedEvaluation as EvaluationState);
+  }, [correctedEvaluation]);
 
   // 🚀 UNIFIED PARALLEL ENGINE V12.0 INTEGRATION
   const [engineMetrics, setEngineMetrics] = React.useState<EngineMetrics | null>(null);
@@ -174,7 +170,7 @@ export default function ResultsScreen() {
     return (
       <View style={styles.container}>
         <Stack.Screen options={{ 
-          title: 'Analizando Fertilidad...',
+          title: t('results.cargando_resultados'),
           headerStyle: { backgroundColor: theme.colors.primary },
           headerTintColor: 'white'
         }} />
@@ -240,7 +236,7 @@ export default function ResultsScreen() {
     return (
       <View style={styles.container}>
         <Stack.Screen options={{ 
-          title: 'Error en Análisis',
+          title: t('results.error_carga'),
           headerStyle: { backgroundColor: theme.colors.error },
           headerTintColor: 'white'
         }} />
@@ -251,7 +247,7 @@ export default function ResultsScreen() {
         >
           <View style={styles.errorContainer}>
             <Ionicons name="alert-circle" size={64} color={theme.colors.error} />
-            <Text style={styles.errorTitle}>❌ Error al cargar el informe</Text>
+            <Text style={styles.errorTitle}>{t('results.error_cargar_informe')}</Text>
             <Text style={styles.errorDetails}>{error}</Text>
             
             <View style={styles.errorActions}>
@@ -265,7 +261,7 @@ export default function ResultsScreen() {
                   style={styles.buttonGradient}
                 >
                   <Ionicons name="refresh" size={20} color="white" />
-                  <Text style={styles.buttonText}>Reintentar Análisis</Text>
+                  <Text style={styles.buttonText}>{t('results.reintentar_analisis')}</Text>
                 </LinearGradient>
               </TouchableOpacity>
               
@@ -274,15 +270,15 @@ export default function ResultsScreen() {
                 onPress={() => router.push('/')}
                 activeOpacity={0.7}
               >
-                <Text style={styles.secondaryButtonText}>Nueva Evaluación</Text>
+                <Text style={styles.secondaryButtonText}>{t('results.nueva_evaluacion')}</Text>
               </TouchableOpacity>
             </View>
             
             <View style={styles.helpSection}>
-              <Text style={styles.helpTitle}>💡 Sugerencias:</Text>
-              <Text style={styles.helpText}>• Verifica tu conexión a internet</Text>
-              <Text style={styles.helpText}>• Completa todos los campos requeridos</Text>
-              <Text style={styles.helpText}>• Contacta soporte si persiste el problema</Text>
+              <Text style={styles.helpTitle}>{t('results.sugerencias')}</Text>
+              <Text style={styles.helpText}>{t('results.verificar_conexion')}</Text>
+              <Text style={styles.helpText}>{t('results.completar_campos')}</Text>
+              <Text style={styles.helpText}>{t('results.contactar_soporte')}</Text>
             </View>
           </View>
         </LinearGradient>
@@ -291,71 +287,75 @@ export default function ResultsScreen() {
   }
 
   // 🚨 NO DATA STATE PREMIUM
-  if (!evaluation) {
+  if (!correctedEvaluation) {
+    // 🏥 MOSTRAR CALCULADORA DIRECTAMENTE EN LUGAR DE BOTONES
     return (
-      <View style={styles.container}>
-        <Stack.Screen options={{ 
-          title: 'Sin Datos',
-          headerStyle: { backgroundColor: theme.colors.warning },
-          headerTintColor: 'white'
-        }} />
-        
-        <LinearGradient
-          colors={[theme.colors.warning + '10', theme.colors.background]}
-          style={styles.warningGradient}
-        >
-          <View style={styles.noDataContainer}>
-            <Ionicons name="document-outline" size={64} color={theme.colors.warning} />
-            <Text style={styles.noDataTitle}>❌ No se encontró el informe</Text>
-            <Text style={styles.noDataSubtitle}>
-              Parece que el análisis no se completó correctamente
-            </Text>
-            
-            <TouchableOpacity 
-              style={styles.generateButton} 
-              onPress={() => router.push('/')}
-              activeOpacity={0.7}
-            >
-              <LinearGradient
-                colors={[theme.colors.primary, theme.colors.primary + 'CC']}
-                style={styles.buttonGradient}
-              >
-                <Ionicons name="calculator" size={20} color="white" />
-                <Text style={styles.buttonText}>Generar Nuevo Análisis</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-        </LinearGradient>
-      </View>
+      <>
+        <Stack.Screen options={{ title: t('calculator.titulo') }} />
+        <CalculatorFormMain />
+      </>
     );
   }
+
+  // FALLBACK ORIGINAL (comentado - no debería ejecutarse)
+  // if (!correctedEvaluation) {
+  //   return (
+  //     <View style={styles.container}>
+  //       <Stack.Screen options={{ 
+  //         title: 'Sin Datos',
+  //         headerStyle: { backgroundColor: theme.colors.warning },
+  //         headerTintColor: 'white'
+  //       }} />
+  //       
+  //       <LinearGradient
+  //         colors={[theme.colors.warning + '10', theme.colors.background]}
+  //         style={styles.warningGradient}
+  //       >
+  //         <View style={styles.noDataContainer}>
+  //           <Ionicons name="document-outline" size={64} color={theme.colors.warning} />
+  //           <Text style={styles.noDataTitle}>❌ No se encontró el informe</Text>
+  //           <Text style={styles.noDataSubtitle}>
+  //             Parece que el análisis no se completó correctamente
+  //           </Text>
+  //           
+  //           <TouchableOpacity 
+  //             style={styles.generateButton} 
+  //             onPress={() => router.push('/')}
+  //             activeOpacity={0.7}
+  //           >
+  //             <LinearGradient
+  //               colors={[theme.colors.primary, theme.colors.primary + 'CC']}
+  //               style={styles.buttonGradient}
+  //             >
+  //               <Ionicons name="calculator" size={20} color="white" />
+  //               <Text style={styles.buttonText}>Generar Nuevo Análisis</Text>
+  //             </LinearGradient>
+  //           </TouchableOpacity>
+  //         </View>
+  //       </LinearGradient>
+  //     </View>
+  //   );
+  // }
 
   // 🧠 AI MEDICAL AGENT PRELOAD + PERFORMANCE OPTIMIZATION
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ 
-        title: 'Tu Análisis de Fertilidad',
+        title: t('results.titulo'),
         headerStyle: { backgroundColor: theme.colors.primary },
         headerTintColor: 'white',
         headerTitleStyle: { fontWeight: 'bold' }
       }} />
       
-      {/* 🎯 COMPONENTE PRINCIPAL CON LAZY LOADING Y SUSPENSE - TU DISEÑO ORIGINAL */}
-      <React.Suspense fallback={
-        <View style={styles.suspenseContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.suspenseText}>Cargando interfaz avanzada...</Text>
-        </View>
-      }>
+      {/* 🎯 COMPONENTE PRINCIPAL (Suspense removido al usar import estático) */}
         <ResultsDisplay
-          evaluation={evaluation}
+          evaluation={correctedEvaluation}
           treatmentSuggestions={treatmentSuggestions}
           isPremiumReport={isPremiumReport}
           freemiumConfig={freemiumConfig}
           onUpgradeToPremium={handleUpgradeToPremium}
           onStartAIChat={handleStartAIChat}
         />
-      </React.Suspense>
     </View>
   );
 }
@@ -577,19 +577,5 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
-  },
-
-  // 🧠 SUSPENSE FALLBACK
-  suspenseContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  suspenseText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
   },
 });

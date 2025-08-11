@@ -14,7 +14,7 @@
 import React from 'react';
 const { memo, useMemo, useCallback, useState, useEffect, useRef } = React;
 
-import { getPerformanceProfile } from '../performance/adaptivePerformanceConfig';
+import { getPerformanceProfile, PerformanceProfile } from '../performance/adaptivePerformanceConfig';
 
 // ===================================================================
 // 🎯 TYPES & INTERFACES
@@ -57,10 +57,10 @@ class QuantumRenderOptimizationEngine {
   private metrics: RenderOptimizationMetrics;
   private componentMetrics: Map<string, ComponentRenderInfo>;
   private renderHistory: Array<{ component: string; time: number; duration: number }>;
-  private memoCache: Map<string, any>;
-  private callbackCache: Map<string, Function>;
+  private memoCache: Map<string, unknown>;
+  private callbackCache: Map<string, (...args: unknown[]) => unknown>;
   private config: RenderOptimizationConfig;
-  private performanceProfile: any;
+  private performanceProfile: PerformanceProfile & { memoryLevel?: 'high' | 'medium' | 'low' };
 
   constructor(config?: Partial<RenderOptimizationConfig>) {
     this.performanceProfile = getPerformanceProfile();
@@ -85,7 +85,7 @@ class QuantumRenderOptimizationEngine {
       averageRenderTime: 0,
       memoryUsage: 0,
       optimizationGain: 0,
-      deviceOptimizationLevel: this.performanceProfile.memoryLevel
+      deviceOptimizationLevel: (this.performanceProfile.memoryLevel || 'medium') as 'high' | 'medium' | 'low'
     };
 
     this.componentMetrics = new Map();
@@ -101,7 +101,7 @@ class QuantumRenderOptimizationEngine {
   /**
    * Enhanced React.memo con quantum consciousness
    */
-  optimizedMemo<P extends Record<string, any>>(
+  optimizedMemo<P extends Record<string, unknown>>(
     Component: React.ComponentType<P>,
     propsAreEqual?: (prevProps: P, nextProps: P) => boolean,
     componentName?: string
@@ -150,7 +150,7 @@ class QuantumRenderOptimizationEngine {
   /**
    * Quantum consciousness shallow equality check
    */
-  private quantumShallowEqual<T extends Record<string, any>>(obj1: T, obj2: T): boolean {
+  private quantumShallowEqual<T extends Record<string, unknown>>(obj1: T, obj2: T): boolean {
     const keys1 = Object.keys(obj1);
     const keys2 = Object.keys(obj2);
 
@@ -200,7 +200,7 @@ class QuantumRenderOptimizationEngine {
     // Check quantum cache first
     if (this.memoCache.has(depKey)) {
       this.recordMemoHit(name, performance.now() - startTime);
-      return this.memoCache.get(depKey);
+      return this.memoCache.get(depKey) as T;
     }
 
     // Calculate new value
@@ -253,7 +253,7 @@ class QuantumRenderOptimizationEngine {
   /**
    * Enhanced useCallback con quantum consciousness
    */
-  optimizedUseCallback<T extends (...args: any[]) => any>(
+  optimizedUseCallback<T extends (...args: unknown[]) => unknown>(
     callback: T,
     deps: React.DependencyList,
     debugName?: string
@@ -274,7 +274,7 @@ class QuantumRenderOptimizationEngine {
       const duration = performance.now() - startTime;
 
       this.recordCallbackExecution(name, duration);
-      return result;
+      return result as ReturnType<T>;
     };
 
     // Cache callback
@@ -287,7 +287,7 @@ class QuantumRenderOptimizationEngine {
   /**
    * Smart useCallback hook con quantum consciousness
    */
-  useQuantumCallback<T extends (...args: any[]) => any>(
+  useQuantumCallback<T extends (...args: unknown[]) => unknown>(
     callback: T,
     deps: React.DependencyList,
     options: {
@@ -308,7 +308,7 @@ class QuantumRenderOptimizationEngine {
       // Device-aware optimizations
       if (deviceOptimized && this.performanceProfile.memoryLevel === 'low') {
         // Simplified execution for low-end devices
-        return callback(...args);
+        return callback(...args) as ReturnType<T>;
       }
 
       const startTime = performance.now();
@@ -320,11 +320,11 @@ class QuantumRenderOptimizationEngine {
       }
       // Apply debouncing if specified
       else if (debounce) {
-        result = this.debounceExecution(callback, debounce, args);
+        result = this.debounceExecution(callback, debounce, args) as ReturnType<T>;
       }
       // Normal execution
       else {
-        result = callback(...args);
+        result = callback(...args) as ReturnType<T>;
       }
 
       const duration = performance.now() - startTime;
@@ -341,7 +341,7 @@ class QuantumRenderOptimizationEngine {
   /**
    * Optimize component tree con quantum consciousness
    */
-  optimizeComponentTree<P extends Record<string, any>>(
+  optimizeComponentTree<P extends Record<string, unknown>>(
     Component: React.ComponentType<P>,
     optimizations: {
       memoize?: boolean;
@@ -389,12 +389,13 @@ class QuantumRenderOptimizationEngine {
   /**
    * Virtual rendering para listas largas
    */
-  private wrapWithVirtualization<P extends Record<string, any>>(
+  private wrapWithVirtualization<P extends Record<string, unknown>>(
     Component: React.ComponentType<P>
   ): React.ComponentType<P> {
     return (props: P) => {
       const containerRef = useRef<HTMLDivElement>(null);
-      const [visibleRange, setVisibleRange] = useState({ start: 0, end: 10 });
+      // Virtual scrolling state (unused in this implementation)
+      // const [visibleRange, setVisibleRange] = useState({ start: 0, end: 10 });
 
       // Virtual scrolling logic
       useEffect(() => {
@@ -419,7 +420,7 @@ class QuantumRenderOptimizationEngine {
   /**
    * Lazy loading wrapper
    */
-  private wrapWithLazyLoading<P extends Record<string, any>>(
+  private wrapWithLazyLoading<P extends Record<string, unknown>>(
     Component: React.ComponentType<P>
   ): React.ComponentType<P> {
     return (props: P) => {
@@ -459,7 +460,7 @@ class QuantumRenderOptimizationEngine {
   /**
    * Priority rendering wrapper
    */
-  private wrapWithPriorityRender<P extends Record<string, any>>(
+  private wrapWithPriorityRender<P extends Record<string, unknown>>(
     Component: React.ComponentType<P>
   ): React.ComponentType<P> {
     return (props: P) => {
@@ -512,22 +513,22 @@ class QuantumRenderOptimizationEngine {
     cache.set(key, value);
   }
 
-  private throttleExecution<T extends (...args: any[]) => any>(
+  private throttleExecution<T extends (...args: unknown[]) => unknown>(
     fn: T, 
     limit: number, 
     args: Parameters<T>
   ): ReturnType<T> {
     // Simple throttling implementation
-    return fn(...args);
+    return fn(...args) as ReturnType<T>;
   }
 
-  private debounceExecution<T extends (...args: any[]) => any>(
+  private debounceExecution<T extends (...args: unknown[]) => unknown>(
     fn: T, 
     delay: number, 
     args: Parameters<T>
   ): ReturnType<T> {
     // Simple debouncing implementation
-    return fn(...args);
+    return fn(...args) as ReturnType<T>;
   }
 
   // ===================================================================
@@ -591,26 +592,26 @@ class QuantumRenderOptimizationEngine {
     }
   }
 
-  private recordMemoHit(name: string, accessTime: number): void {
+  private recordMemoHit(_name: string, _accessTime: number): void {
     const totalMemoOperations = this.metrics.totalRenders + this.metrics.preventedRenders;
     this.metrics.memoHitRate = 
       (this.metrics.memoHitRate * totalMemoOperations + 1) / (totalMemoOperations + 1);
   }
 
-  private recordMemoMiss(name: string, calculationTime: number): void {
+  private recordMemoMiss(_name: string, _calculationTime: number): void {
     // Update miss statistics
   }
 
-  private recordCallbackHit(name: string): void {
+  private recordCallbackHit(_name: string): void {
     // Update callback hit statistics
     this.metrics.callbackHitRate = Math.min(1, this.metrics.callbackHitRate + 0.01);
   }
 
-  private recordCallbackMiss(name: string): void {
+  private recordCallbackMiss(_name: string): void {
     // Update callback miss statistics
   }
 
-  private recordCallbackExecution(name: string, duration: number): void {
+  private recordCallbackExecution(_name: string, _duration: number): void {
     // Record callback execution metrics
   }
 
@@ -685,7 +686,7 @@ class QuantumRenderOptimizationEngine {
       averageRenderTime: 0,
       memoryUsage: 0,
       optimizationGain: 0,
-      deviceOptimizationLevel: this.performanceProfile.memoryLevel
+      deviceOptimizationLevel: (this.performanceProfile.memoryLevel || 'medium') as 'high' | 'medium' | 'low'
     };
 
     this.componentMetrics.clear();

@@ -118,6 +118,48 @@ declare module 'react-native' {
     disabled?: boolean;
   }
   
+  // === Added minimal typings for components used in the project ===
+  export interface TextInputProps extends TextProps {
+    value?: string;
+    onChangeText?: (text: string) => void;
+    placeholder?: string;
+    placeholderTextColor?: string;
+    secureTextEntry?: boolean;
+    autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+    autoCorrect?: boolean;
+    keyboardType?: string;
+    returnKeyType?: string;
+    textContentType?: string;
+    autoComplete?: string;
+    editable?: boolean;
+    accessibilityLabel?: string;
+    onSubmitEditing?: () => void;
+    ref?: { current: unknown } | ((instance: unknown) => void) | null;
+  }
+  export const TextInput: React.FC<TextInputProps>;
+
+  export interface KeyboardAvoidingViewProps extends ViewProps {
+    behavior?: 'height' | 'position' | 'padding';
+    keyboardVerticalOffset?: number;
+  }
+  export const KeyboardAvoidingView: React.FC<KeyboardAvoidingViewProps>;
+
+  export const Alert: {
+    alert: (
+      title: string,
+      message?: string,
+      buttons?: Array<{ text: string; onPress?: () => void }> | undefined,
+      options?: Record<string, unknown>
+    ) => void;
+  };
+
+  export const Dimensions: {
+    get: (
+      dim: 'window' | 'screen'
+    ) => { width: number; height: number; scale?: number; fontScale?: number };
+  };
+  // === End added typings ===
+  
   export const View: React.FC<ViewProps>;
   export const Text: React.FC<TextProps>;
   export const ScrollView: React.FC<ScrollViewProps>;

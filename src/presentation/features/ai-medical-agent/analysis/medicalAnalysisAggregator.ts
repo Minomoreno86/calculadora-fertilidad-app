@@ -31,7 +31,7 @@ import {
 } from './functionalAnalysis';
 
 // 🧠 COMPREHENSIVE OTHER FACTORS ANALYZER - SOLO ANALIZA FACTORES PRESENTES
-export const analyzeOtherFactors = (factors: Factors, inputData?: any): AnalysisResult[] => {
+export const analyzeOtherFactors = (factors: Factors, inputData?: unknown): AnalysisResult[] => {
   const allResults: AnalysisResult[] = [];
   
   // 🧬 HORMONAL DOMAIN ANALYSIS - Solo si factores hormonales están presentes Y alterados

@@ -14,10 +14,13 @@
 
 import { StyleSheet, View } from 'react-native';
 import { Control, FieldErrors } from 'react-hook-form';
+import { LinearGradient } from 'expo-linear-gradient';
 import Text from '../../../components/common/Text';
 import { OptimizedNumericInput } from '../../../components/common';
 import { CalculatedValue } from '../../../components/common/CalculatedValue';
 import { useDynamicTheme } from '../../../../hooks/useDynamicTheme';
+import { useLanguage } from '../../../../contexts/LanguageContext';
+import { theme as designTheme } from '../../../../config/theme';
 import { FormState } from '../types/calculator.types';
 
 type Props = {
@@ -80,6 +83,7 @@ export const DemographicsForm = ({
   
   // 🎨 TEMA DINÁMICO
   const theme = useDynamicTheme();
+  const { t } = useLanguage();
 
   // 🎨 Crear estilos dinámicos basados en el tema actual
   const styles = createStyles(theme);
@@ -126,8 +130,8 @@ export const DemographicsForm = ({
         <OptimizedNumericInput
           control={control}
           name="age"
-          label="Edad (años)"
-          placeholder="Ej: 32 años"
+          label={t('demographics.edad_anos')}
+          placeholder={t('demographics.edad_placeholder')}
           iconName="person-outline"
           error={errors.age}
           rangeValidation={getRangeValidation?.('age')}
@@ -142,8 +146,8 @@ export const DemographicsForm = ({
         <OptimizedNumericInput
           control={control}
           name="height"
-          label="Altura (cm)"
-          placeholder="Ej: 165 cm"
+          label={t('demographics.altura_cm')}
+          placeholder={t('demographics.altura_placeholder')}
           iconName="resize-outline"
           error={errors.height}
           rangeValidation={getRangeValidation?.('height')}
@@ -158,8 +162,8 @@ export const DemographicsForm = ({
         <OptimizedNumericInput
           control={control}
           name="weight"
-          label="Peso (kg)"
-          placeholder="Ej: 65 kg"
+          label={t('demographics.peso_kg')}
+          placeholder={t('demographics.peso_placeholder')}
           iconName="fitness-outline"
           error={errors.weight}
           rangeValidation={getRangeValidation?.('weight')}
@@ -173,9 +177,9 @@ export const DemographicsForm = ({
       {calculatedBmi && (
         <View style={styles.bmiContainer}>
           <CalculatedValue
-            label="Índice de Masa Corporal (BMI)"
+            label={t('demographics.imc_label')}
             value={calculatedBmi}
-            unit="kg/m²"
+            unit={t('demographics.imc_unidad')}
             interpretation={getBmiClinicalInterpretation(calculatedBmi)}
           />
           

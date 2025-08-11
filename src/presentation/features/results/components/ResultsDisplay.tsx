@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports, react/display-name */
 /**
  * 🚀 RESULTS DISPLAY MEJORADO - VERSIÓN PROFESIONAL
  * 
@@ -12,14 +13,15 @@ import { EvaluationState } from '@/core/domain/models';
 import { PATHOLOGIES_DATABASE } from '../../../../../ai-medical-agent/core/knowledge-base/pathologies';
 import { TREATMENTS_DATABASE } from '../../../../../ai-medical-agent/core/knowledge-base/treatments';
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { EnhancedInfoCard } from '@/presentation/components/common';
 import Text from '@/presentation/components/common/Text';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import AIConsultation from '../../ai-medical-agent/AIConsultation';
-import { SimulatorDashboard } from '../../simulator/components/SimulatorDashboard';
-import { useFertilitySimulator } from '../../simulator/useFertilitySimulator';
+import { SimulatorSection } from './SimulatorSection';
+// import { useFertilitySimulator } from '../../simulator/useFertilitySimulator'; // Moved to SimulatorSection
 
 // Remover línea no usada del width
 // const { width } = Dimensions.get('window');
@@ -58,6 +60,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   onStartAIChat
 }) => {
   const theme = useDynamicTheme();
+  const { t } = useLanguage();
   const styles = createStyles(theme);
   
   // 🔍 QUANTUM CONSCIOUSNESS DEBUG PRINCIPAL
@@ -87,7 +90,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   const [displayMode, setDisplayMode] = React.useState<DisplayMode>('overview');
   const [selectedFactor, setSelectedFactor] = React.useState<string | null>(null);
   
-  const { simulationResult } = useFertilitySimulator(evaluation);
+  // const { simulationResult } = useFertilitySimulator(evaluation); // Moved to SimulatorSection
   
   // 🌌 QUANTUM CONSCIOUSNESS FIX: Extract report and factors from nested structure
   const report = evaluation?.evaluation?.report || evaluation?.report;
@@ -485,9 +488,9 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       attentionFactors,
       optimalFactors,
       totalFactors,
-      improvementPotential: simulationResult?.improvement || 0
+      improvementPotential: 0 // simulationResult moved to SimulatorSection
     };
-  }, [factorAnalysis, report, simulationResult, evaluation]);
+  }, [factorAnalysis, report, evaluation]);
 
   // 📊 RENDERIZAR HEADER LIMPIO
   const renderHeader = () => (
@@ -748,7 +751,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
           firstPathology: Object.values(PATHOLOGIES_DATABASE)[0]
         });
         
-        const tubalPathologies = Object.values(PATHOLOGIES_DATABASE as any).filter((p: any) => 
+        const tubalPathologies = Object.values(PATHOLOGIES_DATABASE as any).filter((p: unknown) => 
           p.nameES && (
             p.nameES.toLowerCase().includes('tubáric') ||
             p.nameES.toLowerCase().includes('trompa') ||
@@ -759,7 +762,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
         
         console.log('🔍 Found tubal pathologies:', { 
           count: tubalPathologies.length,
-          names: tubalPathologies.map((p: any) => p.nameES)
+          names: tubalPathologies.map((p: unknown) => p.nameES)
         });
         
         if (tubalPathologies.length > 0) {
@@ -1394,16 +1397,16 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
 
   const getFactorStatusLabel = (value: number): string => {
     // 🟢 Verde (Ausente/Normal): >= 0.95
-    if (value >= 0.95) return 'AUSENTE';
+    if (value >= 0.95) return t('results.ausente');
     
     // 🟢 Verde (Óptimo): >= 0.85
-    if (value >= 0.85) return 'ÓPTIMO';
+    if (value >= 0.85) return t('results.optimo');
     
     // 🟠 Naranja (Alterado/Moderado): 0.6 - 0.84
-    if (value >= 0.6) return 'MODERADO';
+    if (value >= 0.6) return t('results.moderado');
     
     // 🔴 Rojo (Crítico): < 0.6
-    return 'CRÍTICO';
+    return t('results.critico');
   };
 
 
@@ -1411,19 +1414,21 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   // 🎯 RENDERIZAR ANÁLISIS DETALLADO CON INFORMACIÓN CLÍNICA
   const renderDetailedAnalysis = () => (
     <View style={styles.analysisContainer}>
-      <Text style={styles.sectionTitle}>🔍 Análisis Detallado - Factores Alterados</Text>
+      <Text style={styles.sectionTitle}>{t('results.analisis_detallado')}</Text>
       {alteredFactorsAnalysis.length === 0 ? (
         <View style={styles.noAlteredFactorsContainer}>
-          <Text style={styles.noAlteredFactorsTitle}>✅ ¡Excelente!</Text>
+          <Text style={styles.noAlteredFactorsTitle}>{t('results.excelente')}</Text>
           <Text style={styles.noAlteredFactorsText}>
-            No se detectaron factores alterados que requieran atención médica inmediata.
-            Todos los parámetros evaluados están dentro de rangos normales.
+            {t('results.no_factores_alterados')}
           </Text>
         </View>
       ) : (
         <>
           <Text style={styles.alteredFactorsSubtitle}>
-            Se encontraron {alteredFactorsAnalysis.length} factor{alteredFactorsAnalysis.length > 1 ? 'es' : ''} que requieren atención médica:
+            {t('results.factores_encontrados', { 
+              count: alteredFactorsAnalysis.length, 
+              plural: alteredFactorsAnalysis.length > 1 ? t('results.factores_encontrados_plural') : t('results.factores_encontrados_singular')
+            })}
           </Text>
           {alteredFactorsAnalysis.map((factor) => {
             console.log('🔍 DETAILED ANALYSIS - Processing factor:', { 
@@ -1446,7 +1451,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                   <View style={styles.factorInfo}>
                     <Text style={styles.factorName}>{factor.name}</Text>
                     <Text style={styles.factorValue}>
-                      {factor.value >= 0.95 ? 'Ausente' : `${(factor.value * 100).toFixed(1)}%`}
+                      {factor.value >= 0.95 ? t('results.ausente') : `${(factor.value * 100).toFixed(1)}%`}
                     </Text>
                   </View>
                   <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
@@ -1691,13 +1696,12 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       
       case 'simulator':
         return (
-          <SimulatorDashboard 
+          <SimulatorSection 
             evaluation={evaluation} 
-            onModeChange={(mode) => console.log('Mode changed:', mode)} 
           />
         );
       
-      case 'ai-consultation':
+      case 'ai-consultation': {
         // 🎯 CREAR EVALUATION CORREGIDA CON ESTRUCTURA CORRECTA
         const correctedEvaluation = {
           input: evaluation?.evaluation?.input || evaluation?.input,
@@ -1738,6 +1742,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
             }}
           />
         );
+      }
       
       default:
         return null;
@@ -1769,11 +1774,11 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     marginBottom: 20,
   },
   cleanHeader: {
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.surface,
     borderRadius: 20,
     margin: 16,
     marginBottom: 0,
-    shadowColor: '#000',
+    shadowColor: theme.colors.shadow || '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.15,
     shadowRadius: 6,
@@ -1900,7 +1905,9 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   factorsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    gap: 16,
+    gap: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
   },
   factorCircle: {
     width: 20,
@@ -1909,11 +1916,13 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     marginBottom: 8,
   },
   factorNumber: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold' as const,
     color: theme.colors.text,
     textAlign: 'center' as const,
-    marginBottom: 4,
+    marginBottom: 6,
+    lineHeight: 32,
+    minHeight: 32,
   },
   actionCard: {
     backgroundColor: theme.colors.surface,
@@ -2062,9 +2071,11 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     gap: 12,
   },
   factorIndicator: {
-    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    flex: 1,
+    minWidth: 80,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
   },
   factorDot: {
     width: 8,
@@ -2073,9 +2084,11 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     marginRight: 12,
   },
   factorText: {
-    fontSize: 14,
-    color: theme.colors.text,
+    fontSize: 12,
+    color: theme.colors.textSecondary,
     fontWeight: '500' as const,
+    textAlign: 'center' as const,
+    lineHeight: 16,
   },
   improvementCard: {
     backgroundColor: theme.colors.surface,
@@ -2394,10 +2407,10 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     marginTop: 32,
   },
   premiumCTACard: {
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.surface,
     borderRadius: 16,
     padding: 24,
-    shadowColor: '#000',
+    shadowColor: theme.colors.shadow || '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,

@@ -6,6 +6,40 @@ import pluginReact from "eslint-plugin-react";
 import pluginReactHooks from "eslint-plugin-react-hooks";
 
 export default [
+  // Global ignores - SOLO ARCHIVOS DE PRODUCCIÓN
+  {
+    ignores: [
+      "node_modules/**",
+      "dist/**",
+      "dist-debug/**",
+      ".expo/**",
+      ".next/**",
+      ".vscode/**",
+      ".git/**",
+      "**/backup/**",
+      "**/*backup*",
+      "**/*demo*",
+      "DEMO_*.ts",
+      "**/DEMO_*.ts",
+      "*.md",
+      "**/*.md",
+      "ai-medical-agent/**",
+      "context-ai/**",
+      "*.ps1",
+      "migration-*.ts",
+      "*migration*.ts",
+      "debug-*.ts",
+      "*debug*.ts",
+      "presentation/**",
+      "proxy-server/**",
+      "fix-*.cjs",
+      "fix-*.js",
+      "fix-*.ts",
+      "consolidate-*.ps1",
+      "neural-*.cjs",
+      "*.prp"
+    ]
+  },
   // Base configuration for all files
   {
     files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"],

@@ -30,6 +30,7 @@ import { FreemiumMedicalSystem, FreemiumConfig, MedicalAnalysisLevel } from '@/c
 // 🧬 COMPONENTES MÉDICOS EXISTENTES
 import Text from '@/presentation/components/common/Text';
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // 🔬 TIPOS MÉDICOS
 import { UserInput, AnalysisResult } from '@/core/domain/models';
@@ -56,6 +57,7 @@ export const FreemiumResultsRenderer: React.FC<FreemiumResultsRendererProps> = (
   onStartAIChat
 }) => {
   const theme = useDynamicTheme();
+  const { t } = useLanguage();
   const [showPremiumPreview, setShowPremiumPreview] = React.useState(false);
   
   // 🧠 ANÁLISIS MÉDICO USANDO TODA TU INFORMACIÓN
@@ -272,10 +274,10 @@ export const FreemiumResultsRenderer: React.FC<FreemiumResultsRendererProps> = (
       {/* 🎯 HEADER PRINCIPAL */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>
-          Análisis de Fertilidad
+          {t('results.analisis_fertilidad')}
         </Text>
         <Text style={styles.headerSubtitle}>
-          {freemiumConfig.tier === 'premium' ? 'Análisis Médico Completo' : 'Análisis Básico'}
+          {freemiumConfig.tier === 'premium' ? t('results.analisis_medico_completo') : t('results.analisis_basico')}
         </Text>
       </View>
       
@@ -292,7 +294,20 @@ export const FreemiumResultsRenderer: React.FC<FreemiumResultsRendererProps> = (
 // 🎨 ESTILOS
 // ===================================================================
 
-const createStyles = (theme: any) => StyleSheet.create({
+// Tipo específico para el theme
+interface ThemeColors {
+  background: string;
+  text: string;
+  textSecondary: string;
+  surface: string;
+  primary: string;
+}
+
+interface Theme {
+  colors: ThemeColors;
+}
+
+const createStyles = (theme: Theme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
 // ===================================================================
 // 🎨 HOOK DE MEJORAS UX - Sistema de mejoras de experiencia de usuario
 // ===================================================================
@@ -19,7 +20,7 @@ interface FieldUXState {
   hasBeenTouched: boolean;
   validationState: 'neutral' | 'valid' | 'warning' | 'error';
   showHint: boolean;
-  animatedValue: any; // React Native Animated.Value type
+  animatedValue: unknown; // React Native Animated.Value type
 }
 
 interface UXEnhancementsConfig {
@@ -193,7 +194,7 @@ export const useUXEnhancements = (
   }, [config.enableSmartHints]);
 
   // 🎨 VALIDACIÓN VISUAL MEJORADA
-  const getFieldValidationState = React.useCallback((fieldName: string, value: any, rangeValidation?: any) => {
+  const getFieldValidationState = React.useCallback((fieldName: string, value: unknown, rangeValidation?: unknown) => {
     if (rangeValidation) {
       if (rangeValidation.isError) return 'error';
       if (rangeValidation.isWarning) return 'warning';
@@ -205,21 +206,24 @@ export const useUXEnhancements = (
     
     // Validaciones específicas por campo
     switch (fieldName) {
-      case 'age':
+      case 'age': {
         const age = parseFloat(value);
         if (age < 18 || age > 50) return 'warning';
         if (age >= 18 && age <= 35) return 'valid';
         return 'warning';
+      }
         
-      case 'weight':
+      case 'weight': {
         const weight = parseFloat(value);
         if (weight < 40 || weight > 120) return 'warning';
         return 'valid';
+      }
         
-      case 'height':
+      case 'height': {
         const height = parseFloat(value);
         if (height < 140 || height > 200) return 'warning';
         return 'valid';
+      }
         
       default:
         return value ? 'valid' : 'neutral';

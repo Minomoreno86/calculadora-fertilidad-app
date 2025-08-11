@@ -1,11 +1,14 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Control, FieldErrors, useWatch } from 'react-hook-form';
+
 import Text from '@/presentation/components/common/Text';
 import { ControlledTextInput } from '@/presentation/components/common/ControlledTextInput';
 import { ControlledOptionSelector } from '@/presentation/components/common/ControlledOptionSelector';
 import { ControlledSwitch } from '@/presentation/components/common/ControlledSwitch';
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
+import { useLanguage } from '@/contexts/LanguageContext';
+
 import { OtbMethod } from '@/core/domain/models';
 import { FormState } from '../types/calculator.types';
 
@@ -63,6 +66,7 @@ type Props = {
 export const GynecologyHistoryForm = React.memo<Props>(({ control, errors }) => {
   // 🎨 TEMA DINÁMICO
   const theme = useDynamicTheme();
+  const { t } = useLanguage();
   
   // 🎨 Crear estilos dinámicos
   const styles = createStyles(theme);
@@ -70,94 +74,127 @@ export const GynecologyHistoryForm = React.memo<Props>(({ control, errors }) => 
   const hasPelvicSurgery = useWatch({ control, name: 'hasPelvicSurgery' });
   const hasOtb = useWatch({ control, name: 'hasOtb' });
 
-  // 🚀 FASE 2C: Usar opciones memoizadas en lugar de recrear en cada render
+  // 🚀 FASE 2C: Usar opciones traducidas dinámicamente
   const options = {
-    endometriosis: ENDOMETRIOSIS_OPTIONS,
-    myoma: MYOMA_OPTIONS,
-    polyp: POLYP_OPTIONS,
-    adenomyosis: ADENOMYOSIS_OPTIONS,
-    hsg: HSG_OPTIONS,
-    otbMethod: OTB_METHOD_OPTIONS,
+    endometriosis: [
+      { label: t('gynecology.sin_endometriosis'), value: '0' },
+      { label: t('gynecology.grado_1_minima'), value: '1' },
+      { label: t('gynecology.grado_2_leve'), value: '2' },
+      { label: t('gynecology.grado_3_moderada'), value: '3' },
+      { label: t('gynecology.grado_4_severa'), value: '4' },
+    ],
+    myoma: [
+      { label: t('gynecology.sin_miomas'), value: 'none' },
+      { label: t('gynecology.submucoso'), value: 'submucosal' },
+      { label: t('gynecology.intramural_grande'), value: 'intramural_large' },
+      { label: t('gynecology.subseroso'), value: 'subserosal' },
+    ],
+    polyp: [
+      { label: t('gynecology.sin_polipos'), value: 'none' },
+      { label: t('gynecology.polipo_pequeno'), value: 'small' },
+      { label: t('gynecology.polipo_grande'), value: 'large' },
+      { label: t('gynecology.polipo_ostium'), value: 'ostium' },
+    ],
+    adenomyosis: [
+      { label: t('gynecology.sin_adenomiosis'), value: 'none' },
+      { label: t('gynecology.adenomiosis_focal'), value: 'focal' },
+      { label: t('gynecology.adenomiosis_difusa'), value: 'diffuse' },
+    ],
+    hsg: [
+      { label: t('gynecology.hsg_no_realizado'), value: 'unknown' },
+      { label: t('gynecology.hsg_normal'), value: 'normal' },
+      { label: t('gynecology.hsg_obstruccion_unilateral'), value: 'unilateral' },
+      { label: t('gynecology.hsg_obstruccion_bilateral'), value: 'bilateral' },
+      { label: t('gynecology.hsg_malformacion'), value: 'malformacion' },
+    ],
+    otbMethod: [
+      { label: t('gynecology.otb_desconocido'), value: OtbMethod.Unknown },
+      { label: t('gynecology.otb_clips'), value: OtbMethod.Clips },
+      { label: t('gynecology.otb_anillos'), value: OtbMethod.Rings },
+      { label: t('gynecology.otb_ligadura'), value: OtbMethod.Ligation },
+      { label: t('gynecology.otb_cauterizacion'), value: OtbMethod.ExtensiveCauterization },
+      { label: t('gynecology.otb_salpingectomia'), value: OtbMethod.PartialSalpingectomy },
+    ],
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.groupLabel}>Historia Ginecológica</Text>
+      <Text style={styles.groupLabel}>{t('gynecology.historia_ginecologica')}</Text>
 
       <ControlledTextInput
         control={control}
         name="infertilityDuration"
-        label="Duración de infertilidad (años)"
+        label={t('gynecology.duracion_infertilidad')}
         keyboardType="numeric"
-        placeholder="Ej: 2 (acepta cualquier duración)"
+        placeholder={t('gynecology.duracion_infertilidad_placeholder')}
         error={errors.infertilityDuration}
       />
       <ControlledTextInput
         control={control}
         name="cycleLength"
-        label="Duración promedio del ciclo (días)"
+        label={t('gynecology.duracion_ciclo')}
         keyboardType="numeric"
-        placeholder="Ej: 28 (Normal: 21-35, acepta cualquier valor)"
+        placeholder={t('gynecology.duracion_ciclo_placeholder')}
         error={errors.cycleLength}
       />
       
       <ControlledOptionSelector
         control={control}
         name="endometriosisStage"
-        label="Endometriosis"
+        label={t('gynecology.endometriosis')}
         options={options.endometriosis}
         error={errors.endometriosisStage}
       />
       <ControlledOptionSelector
         control={control}
         name="myomaType"
-        label="Miomas Uterinos"
+        label={t('gynecology.miomas_uterinos')}
         options={options.myoma}
         error={errors.myomaType}
       />
       <ControlledOptionSelector
         control={control}
         name="polypType"
-        label="Pólipos Endometriales"
+        label={t('gynecology.polipos_endometriales')}
         options={options.polyp}
         error={errors.polypType}
       />
       <ControlledOptionSelector
         control={control}
         name="adenomyosisType"
-        label="Adenomiosis"
+        label={t('gynecology.adenomiosis')}
         options={options.adenomyosis}
         error={errors.adenomyosisType}
       />
       <ControlledOptionSelector
         control={control}
         name="hsgResult"
-        label="Resultado Histerosalpingografía (HSG)"
+        label={t('gynecology.histerosalpingografia')}
         options={options.hsg}
         error={errors.hsgResult}
       />
-      <ControlledSwitch control={control} name="hasPcos" label="¿Tiene SOP diagnosticado?" />
+      <ControlledSwitch control={control} name="hasPcos" label={t('gynecology.tiene_sop')} />
       <ControlledSwitch
         control={control}
         name="hasPelvicSurgery"
-        label="¿Cirugías pélvicas previas?"
+        label={t('gynecology.cirugias_pelvicas')}
       />
       {hasPelvicSurgery && (
         <ControlledTextInput
           control={control}
           name="numberOfPelvicSurgeries"
-          label="Número de cirugías pélvicas"
+          label={t('gynecology.numero_cirugias')}
           keyboardType="numeric"
-          placeholder="Ej: 1"
+          placeholder={t('gynecology.numero_cirugias_placeholder')}
           error={errors.numberOfPelvicSurgeries}
         />
       )}
-      <ControlledSwitch control={control} name="hasOtb" label="¿Ligadura de trompas (OTB)?" />
+      <ControlledSwitch control={control} name="hasOtb" label={t('gynecology.ligadura_trompas')} />
       {hasOtb && (
         <ControlledOptionSelector
           control={control}
           name="otbMethod"
-          label="Método de Ligadura de Trompas (OTB)"
+          label={t('gynecology.metodo_ligadura')}
           options={options.otbMethod}
           error={errors.otbMethod}
         />
@@ -172,7 +209,17 @@ GynecologyHistoryForm.displayName = 'GynecologyHistoryForm';
 // 🎨 Función para crear estilos dinámicos
 const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
   container: {
-    marginBottom: theme.spacing.l,
+    backgroundColor: theme.colors.surface,
+    marginHorizontal: 16,
+    marginVertical: 10,
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: theme.colors.shadow || '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 12,
+    gap: 16,
   },
   groupLabel: {
     ...theme.typography.h3,

@@ -3,17 +3,38 @@ import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import Text from './Text';
 import { useDynamicTheme } from '../../../hooks/useDynamicTheme';
 
-// Safe imports for React Native components
-let Modal: any;
-let FlatList: any;
+// Safe imports con tipos específicos
+let Modal: React.ComponentType<{
+  visible: boolean;
+  animationType?: string;
+  transparent?: boolean;
+  onRequestClose?: () => void;
+  children?: React.ReactNode;
+}>;
+let FlatList: React.ComponentType<{
+  data: unknown[];
+  renderItem: (item: { item: unknown; index: number }) => React.ReactNode;
+  keyExtractor?: (item: unknown, index: number) => string;
+  showsVerticalScrollIndicator?: boolean;
+}>;
+
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const RN = require('react-native');
   Modal = RN.Modal;
   FlatList = RN.FlatList;
 } catch {
   // Fallback for environments without Modal/FlatList
-  Modal = View;
-  FlatList = View;
+  const FallbackModal = ({ children }: { children?: React.ReactNode }) => <View>{children}</View>;
+  FallbackModal.displayName = 'FallbackModal';
+  
+  const FallbackFlatList = ({ data, renderItem }: { data: unknown[]; renderItem: (item: { item: unknown; index: number }) => React.ReactNode }) => (
+    <View>{data?.map((item, index) => renderItem({ item, index }))}</View>
+  );
+  FallbackFlatList.displayName = 'FallbackFlatList';
+  
+  Modal = FallbackModal;
+  FlatList = FallbackFlatList;
 }
 
 type OptionSelectorModalProps = {

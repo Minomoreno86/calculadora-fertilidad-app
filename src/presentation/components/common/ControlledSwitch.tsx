@@ -5,8 +5,9 @@ import { Control, Controller, FieldValues, Path } from 'react-hook-form';
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 
 // Safe Switch import for React Native compatibility
-let Switch: any;
+let Switch: unknown;
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const RN = require('react-native');
   Switch = RN.Switch;
 } catch {

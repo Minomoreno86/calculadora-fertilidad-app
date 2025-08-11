@@ -31,7 +31,7 @@ import {
 
 export class EnhancedMedicalChatEngine {
   private evaluation: EvaluationState | null = null;
-  private analysisResults: any[] = [];
+  private analysisResults: unknown[] = [];
 
   constructor(evaluation?: EvaluationState) {
     this.evaluation = evaluation || null;
@@ -226,7 +226,7 @@ export class EnhancedMedicalChatEngine {
 
     let response = `📊 **Análisis de tus Resultados de Fertilidad**\n\n`;
     
-    response += `🎯 **Tu probabilidad de embarazo actual es del ${(probability * 100).toFixed(1)}%**\n\n`;
+    response += `🎯 **Tu probabilidad de embarazo actual es del ${probability.toFixed(1)}%**\n\n`;
     
     if (age > 0) {
       response += `📈 **Factores considerados:**\n`;
@@ -534,7 +534,7 @@ export class EnhancedMedicalChatEngine {
     
     if (this.evaluation) {
       const probability = this.evaluation.report?.numericPrognosis || 0;
-      response += `Basado en tu evaluación (${(probability * 100).toFixed(1)}% probabilidad), `;
+      response += `Basado en tu evaluación (${probability.toFixed(1)}% probabilidad), `;
       
       if (probability > 0.15) {
         response += `tienes buenas posibilidades naturales. Te ayudo a optimizar tus factores de fertilidad.`;

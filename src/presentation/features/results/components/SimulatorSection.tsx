@@ -6,6 +6,7 @@ import { EvaluationState, SimulatableFactor, Diagnostics } from '../../../../cor
 import { useFertilitySimulator } from '../../../features/simulator/useFertilitySimulator';
 import { theme } from '../../../../config/theme';
 import { SimulatorDashboard } from '../../../features/simulator/components/SimulatorDashboard';
+import { ModernSimulatorDashboard } from '../../../features/simulator/components/ModernSimulatorDashboard';
 
 type SimulationInsightProps = {
   label: string;
@@ -44,20 +45,79 @@ const factorLabels: Partial<Record<keyof Diagnostics, string>> = {
 type Props = { evaluation: EvaluationState };
 
 export const SimulatorSection: React.FC<Props> = ({ evaluation }) => {
-  const [useAdvancedSimulator, setUseAdvancedSimulator] = React.useState(true);
+  
+  const [simulatorMode, setSimulatorMode] = React.useState<'basic' | 'advanced' | 'modern'>('modern');
   const { simulationResult, simulateFactor, simulateAllImprovements } = useFertilitySimulator(evaluation);
+  // ✅ LÓGICA MEJORADA: Permitir que ModernSimulatorDashboard haga su propio filtrado inteligente
+  const hasAnyData = evaluation && evaluation.factors && Object.keys(evaluation.factors).length > 0;
+  
+  console.log('🔍 [SimulatorSection] ANÁLISIS DE DATOS:', {
+    hasEvaluation: !!evaluation,
+    hasFactors: !!evaluation?.factors,
+    factorsCount: Object.keys(evaluation?.factors || {}).length,
+    hasAnyData,
+    simulatorMode
+  });
+  
+  if (!hasAnyData) {
+    console.log('❌ [SimulatorSection] NO HAY DATOS - Ocultando simulador');
+    return null;
+  }
+  
+  // 🔄 MANTENER para compatibilidad con simulador básico
   const suboptimalFactors = Object.entries(evaluation.factors).filter(
     ([key, value]) => key !== 'baseAgeProbability' && (value as number) < 1.0,
   );
 
-  if (suboptimalFactors.length === 0) return null;
-
   const toggleSimulator = () => {
-    setUseAdvancedSimulator(prev => !prev);
+    setSimulatorMode(prev => {
+      if (prev === 'modern') return 'advanced';
+      if (prev === 'advanced') return 'basic';
+      return 'modern';
+    });
   };
 
-  // 🚀 Usar el nuevo SimulatorDashboard si está activado
-  if (useAdvancedSimulator) {
+  const getToggleText = () => {
+    switch (simulatorMode) {
+      case 'modern': return '✨ Vista Moderna';
+      case 'advanced': return '📊 Vista Avanzada';
+      case 'basic': return '📋 Vista Básica';
+      default: return '✨ Vista Moderna';
+    }
+  };
+
+  // ✨ NUEVA LÓGICA: 3 modos de simulador
+  console.log('🎯 [SimulatorSection] RENDERIZANDO - Modo:', simulatorMode);
+  
+  if (simulatorMode === 'modern') {
+    console.log('🚀 [SimulatorSection] EJECUTANDO MODO MODERNO - Llamando a ModernSimulatorDashboard');
+    console.log('📊 [SimulatorSection] Datos que se pasan:', {
+      evaluationExists: !!evaluation,
+      factorsExists: !!evaluation?.factors,
+      inputExists: !!evaluation?.input
+    });
+    
+    return (
+      <View style={styles.container}>
+        <View style={styles.toggleContainer}>
+          <TouchableOpacity
+            style={[styles.toggleButton, styles.modernToggle]}
+            onPress={toggleSimulator}
+          >
+            <Text style={[styles.toggleText, styles.modernToggleText]}>
+              {getToggleText()}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <ModernSimulatorDashboard 
+          evaluation={evaluation} 
+          onModeChange={(mode: string) => console.log('Mode changed:', mode)}
+        />
+      </View>
+    );
+  }
+
+  if (simulatorMode === 'advanced') {
     return (
       <View style={styles.container}>
         <View style={styles.toggleContainer}>
@@ -66,7 +126,7 @@ export const SimulatorSection: React.FC<Props> = ({ evaluation }) => {
             onPress={toggleSimulator}
           >
             <Text style={styles.toggleText}>
-              {useAdvancedSimulator ? '📊 Vista Avanzada' : '📋 Vista Básica'}
+              {getToggleText()}
             </Text>
           </TouchableOpacity>
         </View>
@@ -87,20 +147,29 @@ export const SimulatorSection: React.FC<Props> = ({ evaluation }) => {
           onPress={toggleSimulator}
         >
           <Text style={styles.toggleText}>
-            {useAdvancedSimulator ? '📊 Vista Avanzada' : '📋 Vista Básica'}
+            {getToggleText()}
           </Text>
         </TouchableOpacity>
       </View>
       
       {simulationResult && (
-        <Box style={[styles.card, styles.simulatedCard]}>
-          <Text style={styles.title}>✨ Pronóstico Simulado</Text>
-          <Text style={styles.simulatedText}>
-            Al mejorar tu <Text style={{ fontWeight: 'bold' as const }}>{simulationResult.explanation}</Text>, tu probabilidad
-            podría aumentar de {simulationResult.originalPrognosis.toFixed(1)}% a:
+        <Box style={styles.simulatedCardRedesigned}>
+          <Text style={styles.simulatedTitle}>🌱 Optimización Completa</Text>
+          
+          <View style={styles.prognosisContainer}>
+            <Text style={styles.prognosisFrom}>{simulationResult.originalPrognosis.toFixed(1)}%</Text>
+            <Text style={styles.prognosisArrow}>→</Text>
+            <Text style={styles.prognosisTo}>{simulationResult.newPrognosis.toFixed(1)}%</Text>
+          </View>
+          
+          <View style={styles.improvementContainer}>
+            <Text style={styles.improvementLabel}>Mejora:</Text>
+            <Text style={styles.improvementValue}>+{Math.abs(simulationResult.improvement).toFixed(1)}%</Text>
+          </View>
+          
+          <Text style={styles.explanationText}>
+            {simulationResult.explanation.replace('(Motor: basic + Neural IA)', '').trim()}
           </Text>
-          <Text style={styles.prognosisHighlight}>{simulationResult.newPrognosis.toFixed(1)}%</Text>
-          <Text style={styles.improvementText}>(una mejora de +{simulationResult.improvement.toFixed(1)} puntos)</Text>
         </Box>
       )}
 
@@ -167,11 +236,37 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold' as const,
   },
+  // ✨ ESTILOS MODERNOS PARA EL TOGGLE
+  modernToggle: {
+    backgroundColor: '#0066CC',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+    elevation: 4,
+    shadowColor: '#0066CC',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+  },
+  modernToggleText: {
+    color: 'white',
+    fontSize: 15,
+    fontWeight: '600' as const,
+    letterSpacing: 0.5,
+  },
   card: { ...theme.card, padding: theme.spacing.l, marginBottom: theme.spacing.m },
   simulatedCard: {
     backgroundColor: theme.colors.surface,
     borderLeftWidth: 4,
     borderLeftColor: theme.colors.primary,
+  },
+  simulatedCardFixed: {
+    backgroundColor: theme.colors.surface,
+    borderLeftWidth: 4,
+    borderLeftColor: theme.colors.primary,
+    minHeight: 220, // ✅ Más altura para garantizar visibilidad completa
+    paddingHorizontal: theme.spacing.l + 4, // ✅ Más padding horizontal
+    paddingVertical: theme.spacing.l, // ✅ Más padding vertical
   },
   title: { ...theme.typography.h3, marginBottom: theme.spacing.m },
   simulatedText: {
@@ -192,6 +287,14 @@ const styles = StyleSheet.create({
     textAlign: 'center' as const,
     color: theme.colors.textSecondary,
     marginBottom: 8,
+  },
+  improvementTextFixed: {
+    fontSize: 15, // ✅ Ligeramente más grande
+    textAlign: 'center' as const,
+    color: theme.colors.textSecondary,
+    marginBottom: 12, // ✅ Más margen
+    lineHeight: 22, // ✅ Mejor espaciado de línea
+    paddingHorizontal: 8, // ✅ Padding para evitar cortes
   },
   insightRow: {
     flexDirection: 'row',
@@ -217,4 +320,65 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   simulateAllButtonText: { ...theme.typography.bodyBold, color: theme.colors.buttonText },
+  // 🆕 NUEVOS ESTILOS PARA TARJETA REDISEÑADA
+  simulatedCardRedesigned: {
+    backgroundColor: theme.colors.surface,
+    borderLeftWidth: 4,
+    borderLeftColor: theme.colors.primary,
+    minHeight: 160,
+    paddingHorizontal: theme.spacing.l + 4,
+    paddingVertical: theme.spacing.l,
+    marginBottom: theme.spacing.m,
+    borderRadius: 12,
+  },
+  simulatedTitle: {
+    fontSize: 18,
+    fontWeight: 'bold' as const,
+    color: theme.colors.primary,
+    marginBottom: 16,
+    textAlign: 'center' as const,
+  },
+  prognosisContainer: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginBottom: 12,
+  },
+  prognosisFrom: {
+    fontSize: 24,
+    fontWeight: 'bold' as const,
+    color: theme.colors.text,
+  },
+  prognosisArrow: {
+    fontSize: 20,
+    color: theme.colors.primary,
+    marginHorizontal: 12,
+  },
+  prognosisTo: {
+    fontSize: 24,
+    fontWeight: 'bold' as const,
+    color: theme.colors.success,
+  },
+  improvementContainer: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginBottom: 12,
+  },
+  improvementLabel: {
+    fontSize: 16,
+    color: theme.colors.text,
+    marginRight: 8,
+  },
+  improvementValue: {
+    fontSize: 18,
+    fontWeight: 'bold' as const,
+    color: theme.colors.success,
+  },
+  explanationText: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    textAlign: 'center' as const,
+    lineHeight: 20,
+  },
 });

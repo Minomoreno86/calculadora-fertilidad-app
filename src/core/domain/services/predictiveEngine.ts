@@ -30,7 +30,7 @@ type UnifiedEngineMetrics = {
 };
 
 // Función de compatibilidad temporal
-const calculateProbabilityUnified = async (input: UserInput, options?: any) => {
+const calculateProbabilityUnified = async (input: UserInput, _options?: unknown) => {
   const engine = new ModularFertilityEngine();
   const result = await engine.calculate(input);
   const metrics: UnifiedEngineMetrics = {

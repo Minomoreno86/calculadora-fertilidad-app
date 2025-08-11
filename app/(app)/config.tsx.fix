@@ -1,0 +1,505 @@
+/**
+ * ⚙️ PANTALLA DE CONFIGURACIÓN PROFESIONAL
+ * 
+ * Incluye todas las opciones necesarias para App Store compliance:
+ * - Modo oscuro, idiomas, legal, redes sociales, soporte
+ */
+
+import React from 'react';
+import {
+  StyleSheet,
+  View,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  Switch,
+  Alert,
+  Linking,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+
+// Contextos y themes
+import { useTheme } from '@/contexts/ThemeContext';
+import { theme as designTheme } from '@/config/theme';
+
+// ===================================================================
+// 🎨 INTERFAZ Y TIPOS
+// ===================================================================
+
+interface ConfigOption {
+  id: string;
+  title: string;
+  subtitle?: string;
+  icon: string;
+  type: 'toggle' | 'navigation' | 'external' | 'language';
+  value?: boolean;
+  onPress?: () => void;
+  url?: string;
+}
+
+// ===================================================================
+// 🏠 COMPONENTE PRINCIPAL
+// ===================================================================
+
+export default function ConfigScreen() {
+  const { themeMode, toggleTheme, isDark } = useTheme();
+  const [selectedLanguage, setSelectedLanguage] = React.useState<'es' | 'en'>('es');
+
+  // 🌍 Manejar cambio de idioma
+  const handleLanguageChange = (language: 'es' | 'en') => {
+    setSelectedLanguage(language);
+    Alert.alert(
+      '🌍 Idioma',
+      `Idioma cambiado a ${language === 'es' ? 'Español' : 'English'}`,
+      [{ text: 'OK' }]
+    );
+  };
+
+  // 🔗 Abrir URL externa
+  const openURL = async (url: string) => {
+    try {
+      await Linking.openURL(url);
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo abrir el enlace');
+    }
+  };
+
+  // 📧 Abrir email
+  const openEmail = async (email: string) => {
+    try {
+      await Linking.openURL(`mailto:${email}`);
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo abrir el email');
+    }
+  };
+
+  // 📋 Configuración de opciones
+  const configSections = [
+    {
+      title: '🎨 Apariencia y Personalización',
+      options: [
+        {
+          id: 'dark_mode',
+          title: 'Modo Oscuro',
+          subtitle: 'Activa el tema oscuro para mejor visualización',
+          icon: 'moon',
+          type: 'toggle' as const,
+          value: isDark,
+          onPress: toggleTheme,
+        },
+        {
+          id: 'language',
+          title: 'Idioma / Language',
+          subtitle: `Actual: ${selectedLanguage === 'es' ? 'Español' : 'English'}`,
+          icon: 'language',
+          type: 'language' as const,
+        },
+      ],
+    },
+    {
+      title: '📜 Legal y Compliance',
+      options: [
+        {
+          id: 'privacy',
+          title: 'Política de Privacidad',
+          subtitle: 'Cómo protegemos tus datos médicos',
+          icon: 'shield-checkmark',
+          type: 'navigation' as const,
+          onPress: () => router.push('/privacy-policy'),
+        },
+        {
+          id: 'terms',
+          title: 'Términos de Servicio',
+          subtitle: 'Condiciones de uso de la aplicación',
+          icon: 'document-text',
+          type: 'navigation' as const,
+          onPress: () => router.push('/terms-of-service'),
+        },
+        {
+          id: 'medical_disclaimer',
+          title: 'Aviso Médico',
+          subtitle: 'Importante: Esta app no sustituye consulta médica',
+          icon: 'medical',
+          type: 'navigation' as const,
+          onPress: () => router.push('/medical-disclaimer'),
+        },
+        {
+          id: 'copyright',
+          title: 'Derechos de Autor',
+          subtitle: '© 2024 Dr Jorge Vasquez R.',
+          icon: 'shield-checkmark',
+          type: 'navigation' as const,
+          onPress: () => router.push('/copyright'),
+        },
+      ],
+    },
+    {
+      title: '📚 Información Científica',
+      options: [
+        {
+          id: 'bibliography',
+          title: 'Bibliografía Médica',
+          subtitle: 'Referencias científicas utilizadas',
+          icon: 'library',
+          type: 'navigation' as const,
+          onPress: () => router.push('/bibliography'),
+        },
+        {
+          id: 'age_rating',
+          title: 'Clasificación por Edad',
+          subtitle: '17+ años - Información médica especializada',
+          icon: 'information-circle',
+          type: 'navigation' as const,
+          onPress: () => router.push('/age-rating'),
+        },
+      ],
+    },
+    {
+      title: '🌐 Redes y Soporte',
+      options: [
+        {
+          id: 'social_networks',
+          title: 'Nuestras Redes Sociales',
+          subtitle: 'Síguenos para actualizaciones médicas',
+          icon: 'logo-instagram',
+          type: 'navigation' as const,
+          onPress: () => router.push('/social-networks'),
+        },
+        {
+          id: 'customer_support',
+          title: 'Servicio al Cliente',
+          subtitle: 'Contacta nuestro equipo de soporte',
+          icon: 'headset',
+          type: 'navigation' as const,
+          onPress: () => router.push('/customer-support'),
+        },
+        {
+          id: 'website',
+          title: 'Sitio Web Oficial',
+          subtitle: 'Visita nuestro portal médico',
+          icon: 'globe',
+          type: 'external' as const,
+          url: 'https://www.drjorgeavasquezr.com',
+        },
+      ],
+    },
+    {
+      title: '👤 Cuenta y Sesión',
+      options: [
+        {
+          id: 'login',
+          title: 'Iniciar Sesión',
+          subtitle: 'Accede a funciones premium',
+          icon: 'log-in',
+          type: 'navigation' as const,
+          onPress: () => router.push('/login'),
+        },
+      ],
+    },
+  ];
+
+  // 🎨 Renderizar opción individual
+  const renderOption = (option: ConfigOption) => {
+    const iconColor = isDark ? '#fff' : designTheme.colors.primary;
+
+    return (
+      <TouchableOpacity
+        key={option.id}
+        style={[styles.optionContainer, isDark && styles.optionContainerDark]}
+        onPress={() => {
+          if (option.onPress) {
+            option.onPress();
+          } else if (option.type === 'external' && option.url) {
+            openURL(option.url);
+          }
+        }}
+        activeOpacity={0.7}
+      >
+        <View style={styles.optionLeft}>
+          <View style={[styles.iconContainer, { backgroundColor: `${iconColor}20` }]}>
+            <Ionicons name={option.icon as any} size={24} color={iconColor} />
+          </View>
+          <View style={styles.optionText}>
+            <Text style={[styles.optionTitle, isDark && styles.textDark]}>
+              {option.title}
+            </Text>
+            {option.subtitle && (
+              <Text style={[styles.optionSubtitle, isDark && styles.subtitleDark]}>
+                {option.subtitle}
+              </Text>
+            )}
+          </View>
+        </View>
+
+        <View style={styles.optionRight}>
+          {option.type === 'toggle' && (
+            <Switch
+              value={option.value}
+              onValueChange={option.onPress}
+              trackColor={{ false: '#767577', true: designTheme.colors.primary }}
+              thumbColor={option.value ? '#fff' : '#f4f3f4'}
+            />
+          )}
+          {option.type === 'language' && (
+            <View style={styles.languageContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.languageButton,
+                  selectedLanguage === 'es' && styles.languageButtonActive,
+                ]}
+                onPress={() => handleLanguageChange('es')}
+              >
+                <Text style={[
+                  styles.languageText,
+                  selectedLanguage === 'es' && styles.languageTextActive,
+                ]}>
+                  ES
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.languageButton,
+                  selectedLanguage === 'en' && styles.languageButtonActive,
+                ]}
+                onPress={() => handleLanguageChange('en')}
+              >
+                <Text style={[
+                  styles.languageText,
+                  selectedLanguage === 'en' && styles.languageTextActive,
+                ]}>
+                  EN
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          {(option.type === 'navigation' || option.type === 'external') && (
+            <Ionicons 
+              name="chevron-forward" 
+              size={20} 
+              color={isDark ? '#888' : '#ccc'} 
+            />
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  // 🎨 Renderizar sección
+  const renderSection = (section: any) => (
+    <View key={section.title} style={styles.section}>
+      <Text style={[styles.sectionTitle, isDark && styles.textDark]}>
+        {section.title}
+      </Text>
+      <View style={[styles.sectionContent, isDark && styles.sectionContentDark]}>
+        {section.options.map(renderOption)}
+      </View>
+    </View>
+  );
+
+  return (
+    <View style={[styles.container, isDark && styles.containerDark]}>
+      {/* 🎨 Header Gradient */}
+      <LinearGradient
+        colors={[designTheme.colors.primary, designTheme.colors.secondary]}
+        style={styles.headerGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>Configuración</Text>
+          <Text style={styles.headerSubtitle}>
+            Personaliza tu experiencia médica
+          </Text>
+        </View>
+      </LinearGradient>
+
+      {/* 📋 Contenido Scrollable */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {configSections.map(renderSection)}
+
+        {/* 📱 Información de la App */}
+        <View style={styles.appInfo}>
+          <Text style={[styles.appVersion, isDark && styles.subtitleDark]}>
+            Calculadora de Fertilidad IA v1.0.0
+          </Text>
+          <Text style={[styles.appCopyright, isDark && styles.subtitleDark]}>
+            © 2024 Dr Jorge Vasquez R. - Desarrollado con ❤️ para la salud reproductiva
+          </Text>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+// ===================================================================
+// 🎨 ESTILOS MODERNOS
+// ===================================================================
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  containerDark: {
+    backgroundColor: '#121212',
+  },
+  
+  // Header
+  headerGradient: {
+    paddingTop: 20,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+  },
+  headerContent: {
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
+  },
+  
+  // Scroll
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 40,
+  },
+  
+  // Secciones
+  section: {
+    marginBottom: 32,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: designTheme.colors.text,
+    marginBottom: 12,
+    paddingLeft: 4,
+  },
+  sectionContent: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  sectionContentDark: {
+    backgroundColor: '#1e1e1e',
+  },
+  
+  // Opciones
+  optionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  optionContainerDark: {
+    borderBottomColor: '#333',
+  },
+  optionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  optionText: {
+    flex: 1,
+  },
+  optionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: designTheme.colors.text,
+    marginBottom: 2,
+  },
+  optionSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 18,
+  },
+  optionRight: {
+    alignItems: 'center',
+  },
+  
+  // Idiomas
+  languageContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  languageButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#f0f0f0',
+    minWidth: 40,
+    alignItems: 'center',
+  },
+  languageButtonActive: {
+    backgroundColor: designTheme.colors.primary,
+  },
+  languageText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+  },
+  languageTextActive: {
+    color: 'white',
+  },
+  
+  // Textos oscuros
+  textDark: {
+    color: '#fff',
+  },
+  subtitleDark: {
+    color: '#aaa',
+  },
+  
+  // Info de la app
+  appInfo: {
+    alignItems: 'center',
+    paddingTop: 20,
+    marginTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  appVersion: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  appCopyright: {
+    fontSize: 12,
+    color: '#999',
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+});

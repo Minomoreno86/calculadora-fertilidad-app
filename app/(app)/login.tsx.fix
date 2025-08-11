@@ -1,0 +1,625 @@
+/**
+ * 👤 PANTALLA DE LOGIN PROFESIONAL
+ * 
+ * Diseño moderno para acceso a funciones premium de fertilidad
+ */
+
+import React from 'react';
+import {
+  StyleSheet,
+  View,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+
+// Contextos y themes
+import { useTheme } from '@/contexts/ThemeContext';
+import { theme as designTheme } from '@/config/theme';
+
+const { width, height } = Dimensions.get('window');
+
+// ===================================================================
+// 🏠 COMPONENTE PRINCIPAL
+// ===================================================================
+
+export default function LoginScreen() {
+  const { isDark } = useTheme();
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [loginMode, setLoginMode] = React.useState<'login' | 'register'>('login');
+
+  // 🔐 Handle Login
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('⚠️ Campos Requeridos', 'Por favor completa email y contraseña');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setIsLoading(false);
+      Alert.alert(
+        '✅ Login Exitoso',
+        'Bienvenido a tu cuenta premium de Fertilidad IA',
+        [
+          {
+            text: 'Continuar',
+            onPress: () => router.replace('/'),
+          },
+        ]
+      );
+    }, 2000);
+  };
+
+  // 📝 Handle Register
+  const handleRegister = async () => {
+    if (!email || !password) {
+      Alert.alert('⚠️ Campos Requeridos', 'Por favor completa todos los campos');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    setTimeout(() => {
+      setIsLoading(false);
+      Alert.alert(
+        '🎉 Registro Exitoso',
+        'Tu cuenta ha sido creada. ¡Ya puedes acceder a funciones premium!',
+        [
+          {
+            text: 'Comenzar',
+            onPress: () => router.replace('/'),
+          },
+        ]
+      );
+    }, 2000);
+  };
+
+  // 🔑 Social Login
+  const handleSocialLogin = (provider: string) => {
+    Alert.alert(
+      `🔐 ${provider} Login`,
+      `Conectar con ${provider} estará disponible próximamente`,
+      [{ text: 'OK' }]
+    );
+  };
+
+  return (
+    <KeyboardAvoidingView
+      style={[styles.container, isDark && styles.containerDark]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      {/* 🎨 Background Gradient */}
+      <LinearGradient
+        colors={[
+          designTheme.colors.primary,
+          designTheme.colors.secondary,
+          '#4a90e2',
+        ]}
+        style={styles.backgroundGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* 🏥 Logo y Header */}
+        <View style={styles.header}>
+          <View style={styles.logoContainer}>
+            <LinearGradient
+              colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.1)']}
+              style={styles.logoBackground}
+            >
+              <Ionicons name="medical" size={48} color="white" />
+            </LinearGradient>
+          </View>
+          
+          <Text style={styles.appTitle}>Fertilidad IA</Text>
+          <Text style={styles.appSubtitle}>
+            {loginMode === 'login' 
+              ? 'Accede a tu análisis médico personalizado'
+              : 'Únete a la comunidad médica premium'
+            }
+          </Text>
+        </View>
+
+        {/* 📱 Formulario Principal */}
+        <View style={[styles.formContainer, isDark && styles.formContainerDark]}>
+          {/* 🔄 Toggle Login/Register */}
+          <View style={styles.modeToggle}>
+            <TouchableOpacity
+              style={[
+                styles.modeButton,
+                loginMode === 'login' && styles.modeButtonActive,
+              ]}
+              onPress={() => setLoginMode('login')}
+            >
+              <Text style={[
+                styles.modeButtonText,
+                loginMode === 'login' && styles.modeButtonTextActive,
+              ]}>
+                Iniciar Sesión
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.modeButton,
+                loginMode === 'register' && styles.modeButtonActive,
+              ]}
+              onPress={() => setLoginMode('register')}
+            >
+              <Text style={[
+                styles.modeButtonText,
+                loginMode === 'register' && styles.modeButtonTextActive,
+              ]}>
+                Registrarse
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* 📧 Email Input */}
+          <View style={styles.inputContainer}>
+            <View style={styles.inputIconContainer}>
+              <Ionicons 
+                name="mail" 
+                size={20} 
+                color={isDark ? '#aaa' : '#666'} 
+              />
+            </View>
+            <TextInput
+              style={[styles.input, isDark && styles.inputDark]}
+              placeholder="Email médico profesional"
+              placeholderTextColor={isDark ? '#888' : '#999'}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
+
+          {/* 🔒 Password Input */}
+          <View style={styles.inputContainer}>
+            <View style={styles.inputIconContainer}>
+              <Ionicons 
+                name="lock-closed" 
+                size={20} 
+                color={isDark ? '#aaa' : '#666'} 
+              />
+            </View>
+            <TextInput
+              style={[styles.input, isDark && styles.inputDark]}
+              placeholder="Contraseña segura"
+              placeholderTextColor={isDark ? '#888' : '#999'}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <TouchableOpacity
+              style={styles.passwordToggle}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Ionicons 
+                name={showPassword ? "eye-off" : "eye"} 
+                size={20} 
+                color={isDark ? '#aaa' : '#666'} 
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* 🔑 Main Action Button */}
+          <TouchableOpacity
+            style={[styles.mainButton, isLoading && styles.mainButtonDisabled]}
+            onPress={loginMode === 'login' ? handleLogin : handleRegister}
+            disabled={isLoading}
+          >
+            <LinearGradient
+              colors={[designTheme.colors.primary, designTheme.colors.secondary]}
+              style={styles.mainButtonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              {isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <Ionicons name="hourglass" size={20} color="white" />
+                  <Text style={styles.mainButtonText}>
+                    {loginMode === 'login' ? 'Iniciando...' : 'Registrando...'}
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.buttonContent}>
+                  <Ionicons 
+                    name={loginMode === 'login' ? "log-in" : "person-add"} 
+                    size={20} 
+                    color="white" 
+                  />
+                  <Text style={styles.mainButtonText}>
+                    {loginMode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
+                  </Text>
+                </View>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* 🔗 Divider */}
+          <View style={styles.divider}>
+            <View style={[styles.dividerLine, isDark && styles.dividerLineDark]} />
+            <Text style={[styles.dividerText, isDark && styles.dividerTextDark]}>
+              o continúa con
+            </Text>
+            <View style={[styles.dividerLine, isDark && styles.dividerLineDark]} />
+          </View>
+
+          {/* 🌐 Social Login Buttons */}
+          <View style={styles.socialContainer}>
+            <TouchableOpacity
+              style={[styles.socialButton, isDark && styles.socialButtonDark]}
+              onPress={() => handleSocialLogin('Google')}
+            >
+              <Ionicons name="logo-google" size={24} color="#4285f4" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.socialButton, isDark && styles.socialButtonDark]}
+              onPress={() => handleSocialLogin('Apple')}
+            >
+              <Ionicons name="logo-apple" size={24} color={isDark ? 'white' : 'black'} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.socialButton, isDark && styles.socialButtonDark]}
+              onPress={() => handleSocialLogin('Facebook')}
+            >
+              <Ionicons name="logo-facebook" size={24} color="#1877f2" />
+            </TouchableOpacity>
+          </View>
+
+          {/* 🔄 Forgot Password */}
+          {loginMode === 'login' && (
+            <TouchableOpacity
+              style={styles.forgotPassword}
+              onPress={() => Alert.alert('🔐 Recuperar', 'Función disponible próximamente')}
+            >
+              <Text style={[styles.forgotPasswordText, isDark && styles.linkTextDark]}>
+                ¿Olvidaste tu contraseña?
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* 📋 Beneficios Premium */}
+        <View style={[styles.benefitsContainer, isDark && styles.benefitsContainerDark]}>
+          <Text style={[styles.benefitsTitle, isDark && styles.textDark]}>
+            🌟 Beneficios Premium
+          </Text>
+          
+          <View style={styles.benefitsList}>
+            <View style={styles.benefit}>
+              <Ionicons name="checkmark-circle" size={20} color={designTheme.colors.primary} />
+              <Text style={[styles.benefitText, isDark && styles.textDark]}>
+                Análisis médico completo con IA
+              </Text>
+            </View>
+            
+            <View style={styles.benefit}>
+              <Ionicons name="checkmark-circle" size={20} color={designTheme.colors.primary} />
+              <Text style={[styles.benefitText, isDark && styles.textDark]}>
+                Simulador avanzado de mejoras
+              </Text>
+            </View>
+            
+            <View style={styles.benefit}>
+              <Ionicons name="checkmark-circle" size={20} color={designTheme.colors.primary} />
+              <Text style={[styles.benefitText, isDark && styles.textDark]}>
+                Reportes PDF profesionales
+              </Text>
+            </View>
+            
+            <View style={styles.benefit}>
+              <Ionicons name="checkmark-circle" size={20} color={designTheme.colors.primary} />
+              <Text style={[styles.benefitText, isDark && styles.textDark]}>
+                Soporte médico prioritario
+              </Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+// ===================================================================
+// 🎨 ESTILOS PROFESIONALES
+// ===================================================================
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  containerDark: {
+    backgroundColor: '#121212',
+  },
+  
+  backgroundGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: height * 0.4,
+  },
+  
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    paddingBottom: 40,
+  },
+  
+  // Header
+  header: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  logoContainer: {
+    marginBottom: 20,
+  },
+  logoBackground: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  appTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 8,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  appSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
+    lineHeight: 22,
+    maxWidth: width * 0.8,
+  },
+  
+  // Form
+  formContainer: {
+    backgroundColor: 'white',
+    borderRadius: 24,
+    padding: 24,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  formContainerDark: {
+    backgroundColor: '#1e1e1e',
+  },
+  
+  // Mode Toggle
+  modeToggle: {
+    flexDirection: 'row',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 24,
+  },
+  modeButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  modeButtonActive: {
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  modeButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+  },
+  modeButtonTextActive: {
+    color: designTheme.colors.primary,
+  },
+  
+  // Inputs
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    marginBottom: 16,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  inputIconContainer: {
+    marginRight: 12,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 16,
+    fontSize: 16,
+    color: '#333',
+  },
+  inputDark: {
+    color: '#fff',
+    backgroundColor: '#2a2a2a',
+  },
+  passwordToggle: {
+    padding: 4,
+  },
+  
+  // Main Button
+  mainButton: {
+    borderRadius: 16,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  mainButtonDisabled: {
+    opacity: 0.7,
+  },
+  mainButtonGradient: {
+    paddingVertical: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  mainButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  
+  // Divider
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e9ecef',
+  },
+  dividerLineDark: {
+    backgroundColor: '#333',
+  },
+  dividerText: {
+    paddingHorizontal: 16,
+    fontSize: 14,
+    color: '#666',
+  },
+  dividerTextDark: {
+    color: '#aaa',
+  },
+  
+  // Social
+  socialContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 16,
+    marginBottom: 24,
+  },
+  socialButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'white',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  socialButtonDark: {
+    backgroundColor: '#2a2a2a',
+    borderColor: '#333',
+  },
+  
+  // Links
+  forgotPassword: {
+    alignItems: 'center',
+  },
+  forgotPasswordText: {
+    fontSize: 16,
+    color: designTheme.colors.primary,
+    fontWeight: '600',
+  },
+  linkTextDark: {
+    color: '#4a9eff',
+  },
+  
+  // Benefits
+  benefitsContainer: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  benefitsContainerDark: {
+    backgroundColor: '#1e1e1e',
+  },
+  benefitsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  benefitsList: {
+    gap: 12,
+  },
+  benefit: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  benefitText: {
+    fontSize: 16,
+    color: '#666',
+    flex: 1,
+  },
+  textDark: {
+    color: '#fff',
+  },
+});

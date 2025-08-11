@@ -6,11 +6,12 @@
 import { EvaluationState, Factors } from '@/core/domain/models';
 
 // Safe imports for AI Medical Agent components
-let MedicalKnowledgeEngine: any;
-let NeuralMedicalAISystem: any;
-let SuperintellignentAnalysisResult: any;
+let MedicalKnowledgeEngine: unknown;
+let NeuralMedicalAISystem: unknown;
+let SuperintellignentAnalysisResult: unknown;
 
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const ModulesIntegration = require('../../../../../ai-medical-agent/core/modules-integration/ModulesIntegration');
   MedicalKnowledgeEngine = ModulesIntegration.MedicalKnowledgeEngine || class { 
     constructor() {} 
@@ -18,6 +19,7 @@ try {
     getKnowledgeForQuery() { return null; }
   };
   
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const NeuralSystem = require('../../../../../ai-medical-agent/core/neural-engines/NeuralMedicalAISystem');
   NeuralMedicalAISystem = NeuralSystem.NeuralMedicalAISystem || class {
     constructor() {}
@@ -56,11 +58,11 @@ import {
 
 export class MedicalAIChatEngine {
   private readonly context: ConversationContext;
-  private readonly medicalKnowledge: any;
+  private readonly medicalKnowledge: unknown;
   private readonly medicalResponseGenerator: MedicalResponseGenerator;
-  private readonly neuralPatternEngine: any;
-  private readonly neuralConversationEngine: any;
-  private readonly neuralMedicalAI: any;
+  private readonly neuralPatternEngine: unknown;
+  private readonly neuralConversationEngine: unknown;
+  private readonly neuralMedicalAI: unknown;
   
   constructor(evaluation: EvaluationState) {
     this.context = {
@@ -112,6 +114,7 @@ export class MedicalAIChatEngine {
   /**
    * 🧠 NEURAL PATTERN ANALYSIS V13.0
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async performNeuralPatternAnalysis(factors: Factors): Promise<any | null> {
     try {
       if (!this.neuralMedicalAI) {

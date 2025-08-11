@@ -17,16 +17,19 @@ import { Control, Controller, FieldError } from 'react-hook-form';
 import { Ionicons } from '@expo/vector-icons';
 import Text from './Text';
 import { useDynamicTheme } from '../../../hooks/useDynamicTheme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { theme as designTheme } from '../../../config/theme';
 import { RangeValidation } from '../../features/calculator/utils/rangeValidation';
 
 // Safe TextInput and Keyboard import for React Native compatibility
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-let TextInput: any;
+let TextInput: unknown;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-let Keyboard: any;
+let Keyboard: unknown;
 
 try {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const RN = require('react-native');
   TextInput = RN.TextInput;
   Keyboard = RN.Keyboard;
@@ -223,41 +226,55 @@ export const OptimizedNumericInput = <T extends Record<string, unknown> = Record
         // @ts-expect-error - Controller type compatibility issue with generic keyof T
         name={name}
         render={({ field: { onChange, onBlur, value } }) => (
-          <View style={[
-            styles.inputContainer,
-            {
-              borderColor: colors.borderColor,
-              backgroundColor: colors.backgroundColor,
-            },
-          ]}>
-            {iconName && (
-              <Ionicons
-                name={iconName}
-                size={20}
-                color={colors.iconColor}
-                style={styles.icon}
-              />
-            )}
-            <TextInput
-              ref={inputRef}
-              style={[
-                styles.input,
-                iconName && styles.inputWithIcon,
+          <View style={styles.inputWrapper}>
+            {/* 🎨 Gradiente de fondo para inputs */}
+            <LinearGradient
+              colors={[
+                designTheme.colors.primary + '15', // 15% opacity
+                designTheme.colors.secondary + '10', // 10% opacity
+                '#4a90e2' + '08', // 8% opacity
               ]}
-              onFocus={handleFocus}
-              onBlur={() => {
-                handleBlur();
-                onBlur();
-              }}
-              onChangeText={(text) => handleTextChange(text, onChange)}
-              value={localValue || value?.toString() || ''}
-              placeholder={placeholder}
-              placeholderTextColor={theme?.colors?.textSecondary}
-              keyboardType="numeric"
-              returnKeyType="done"
-              maxLength={10}
-              selectTextOnFocus={true}
+              style={styles.inputGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
             />
+            
+            <View style={[
+              styles.inputContainer,
+              {
+                borderColor: colors.borderColor,
+                backgroundColor: 'rgba(255,255,255,0.95)', // Fondo blanco semitransparente
+              },
+            ]}>
+              {iconName && (
+                <Ionicons
+                  name={iconName}
+                  size={20}
+                  color={colors.iconColor}
+                  style={styles.icon}
+                />
+              )}
+              <TextInput
+                ref={inputRef}
+                style={[
+                  styles.input,
+                  iconName && styles.inputWithIcon,
+                ]}
+                onFocus={handleFocus}
+                onBlur={() => {
+                  handleBlur();
+                  onBlur();
+                }}
+                onChangeText={(text) => handleTextChange(text, onChange)}
+                value={localValue || value?.toString() || ''}
+                placeholder={placeholder}
+                placeholderTextColor={theme?.colors?.textSecondary}
+                keyboardType="numeric"
+                returnKeyType="done"
+                maxLength={10}
+                selectTextOnFocus={true}
+              />
+            </View>
           </View>
         )}
       />
@@ -297,6 +314,18 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     fontSize: 12,
     fontStyle: 'italic' as const,
   },
+  inputWrapper: {
+    position: 'relative',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  inputGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -305,11 +334,11 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     paddingHorizontal: theme?.spacing?.m,
     paddingVertical: theme?.spacing?.s,
     minHeight: 48,
-    shadowColor: theme.isDark ? theme?.colors?.black : '#000000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: theme.isDark ? 0.3 : 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
   },
   icon: {
     marginRight: theme?.spacing?.s,

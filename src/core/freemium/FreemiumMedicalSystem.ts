@@ -136,6 +136,7 @@ export class FreemiumMedicalSystem {
     Object.entries(PATHOLOGIES_DATABASE).forEach(([id, pathology]) => {
       // Lógica de detección basada en síntomas y factores de riesgo
       if (this.matchesPathologyCriteria(userInput, pathology)) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
         detectedPathologies.push((pathology as any).nameES || id);
       }
     });
@@ -152,6 +153,7 @@ export class FreemiumMedicalSystem {
     // Usar tu TREATMENTS_DATABASE existente
     Object.entries(TREATMENTS_DATABASE).forEach(([id, treatment]) => {
       if (this.matchesTreatmentCriteria(userInput, pathologies, treatment)) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
         recommendations.push((treatment as any).nameES || id);
       }
     });
@@ -223,28 +225,28 @@ export class FreemiumMedicalSystem {
   }
   
   // 🔍 Métodos auxiliares para matching
-  private static matchesPathologyCriteria(userInput: UserInput, pathology: any): boolean {
+  private static matchesPathologyCriteria(_userInput: UserInput, _pathology: unknown): boolean {
     // Lógica para determinar si los síntomas del usuario coinciden con la patología
     // Implementar basado en los criterios diagnósticos de cada patología
     return false; // Placeholder
   }
   
-  private static matchesTreatmentCriteria(userInput: UserInput, pathologies: string[], treatment: any): boolean {
+  private static matchesTreatmentCriteria(_userInput: UserInput, _pathologies: string[], _treatment: unknown): boolean {
     // Lógica para determinar si el tratamiento es apropiado
     return false; // Placeholder
   }
   
-  private static isRelevantClinicalContent(userInput: UserInput, contentKey: string): boolean {
+  private static isRelevantClinicalContent(_userInput: UserInput, _contentKey: string): boolean {
     // Lógica para determinar si el contenido clínico es relevante
     return false; // Placeholder
   }
   
-  private static getClinicalReferences(pathologies: string[]): string[] {
+  private static getClinicalReferences(_pathologies: string[]): string[] {
     // Extraer referencias científicas de las patologías detectadas
     return [];
   }
   
-  private static getDetailedProtocols(treatments: string[]): string[] {
+  private static getDetailedProtocols(_treatments: string[]): string[] {
     // Extraer protocolos detallados de los tratamientos recomendados
     return [];
   }
@@ -259,7 +261,7 @@ export class SubscriptionManager {
   /**
    * 🔐 Verificar estado de suscripción premium
    */
-  static async checkPremiumStatus(userId: string): Promise<boolean> {
+  static async checkPremiumStatus(_userId: string): Promise<boolean> {
     // Implementar verificación con sistema de pagos
     // App Store / Google Play billing
     return false; // Placeholder
@@ -268,7 +270,7 @@ export class SubscriptionManager {
   /**
    * 💳 Activar suscripción premium
    */
-  static async activatePremiumSubscription(userId: string): Promise<boolean> {
+  static async activatePremiumSubscription(_userId: string): Promise<boolean> {
     // Implementar activación de suscripción
     return false; // Placeholder
   }
@@ -276,7 +278,7 @@ export class SubscriptionManager {
   /**
    * 📊 Obtener métricas de uso
    */
-  static async getUsageMetrics(userId: string) {
+  static async getUsageMetrics(_userId: string) {
     // Implementar tracking de uso para optimización
     return {
       calculationsPerformed: 0,

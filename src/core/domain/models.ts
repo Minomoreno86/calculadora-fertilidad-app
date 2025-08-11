@@ -108,7 +108,7 @@ export interface SmartFertilityInput extends Partial<UserInput> {
   age: number; // Requerido
   endometriosisStage?: number;
   cycleLength?: number;
-  [key: string]: any; // Flexibilidad para migración
+  [key: string]: unknown; // Flexibilidad para migración
 }
 
 export interface Factors {

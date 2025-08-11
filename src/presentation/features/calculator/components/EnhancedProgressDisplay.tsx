@@ -6,8 +6,9 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 
 // Safe import for Animated
-let Animated: any;
+let Animated: unknown;
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const RNComponents = require('react-native');
   Animated = RNComponents.Animated || {
     Value: class { constructor() {} },
@@ -158,7 +159,7 @@ export const EnhancedProgressDisplay: React.FC<Props> = ({
       </View>
 
       {/* 💡 Sugerencia de próximo campo */}
-      {Object.values(sectionProgress).some((s: any) => s?.nextSuggestedField) && (
+      {Object.values(sectionProgress).some((s: unknown) => s?.nextSuggestedField) && (
         <View style={styles.suggestionContainer}>
           <Ionicons name="bulb-outline" size={16} color={theme.colors.primary} />
           <Text style={styles.suggestionText}>

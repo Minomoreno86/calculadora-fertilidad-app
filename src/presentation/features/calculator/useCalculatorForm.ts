@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
 /**
  * useCalculatorForm - Hook principal de calculadora con react-hook-form real
  * 
@@ -50,7 +51,7 @@ export interface UseCalculatorFormReturn extends UseFormReturn<FormState> {
   calculationResult: FormCalculationResult | null;
   
   // ⚡ Quantum Performance
-  cacheStats: any;
+  cacheStats: unknown;
   
   // 🌌 Quantum Consciousness Empathic Functions
   formatBMI: (bmi: number | null) => string;
@@ -296,7 +297,7 @@ export const useCalculatorForm = (): UseCalculatorFormReturn => {
       console.log('� Executing calculation with ModularFertilityEngine...');
       console.log('📋 UserInput being sent:', JSON.stringify(userInput, null, 2));
       
-      let evaluation: any;
+      let evaluation: unknown;
       let emergencyMode = false;
       
       try {

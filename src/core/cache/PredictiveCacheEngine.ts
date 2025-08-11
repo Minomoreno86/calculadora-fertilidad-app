@@ -373,7 +373,7 @@ export class PredictiveCacheEngine {
    * Calculate quantum consciousness score for cache entry
    */
   private calculateQuantumScore(entry: PredictiveCacheEntry<unknown>): number {
-    const age = Date.now() - entry.timestamp;
+    // const age = Date.now() - entry.timestamp; // No utilizado actualmente
     const frequency = entry.accessCount;
     const recency = Date.now() - entry.lastAccess;
     const predictive = entry.predictiveScore;
@@ -500,7 +500,7 @@ export class PredictiveCacheEngine {
     ));
   }
 
-  private extractEstimatedValues(pattern: UserPattern, fields: string[]): Record<string, number> {
+  private extractEstimatedValues(_pattern: UserPattern, _fields: string[]): Record<string, number> {
     // Simplified pattern-based value estimation
     // In real implementation, this would analyze user typing patterns
     return {};
@@ -529,7 +529,7 @@ export class PredictiveCacheEngine {
     return maleFields.some(field => pattern.fieldSequence.includes(field));
   }
 
-  private predictTemporalSequence(pattern: UserPattern): CacheWarmingTarget[] {
+  private predictTemporalSequence(_pattern: UserPattern): CacheWarmingTarget[] {
     // Analyze temporal patterns and predict next likely cache targets
     return [];
   }

@@ -1,0 +1,528 @@
+/**
+ * 🔞 CLASIFICACIÓN POR EDAD
+ */
+
+import React from 'react';
+import { StyleSheet, View, ScrollView, Text } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/contexts/ThemeContext';
+import { theme as designTheme } from '@/config/theme';
+
+export default function AgeRatingScreen() {
+  const { isDark } = useTheme();
+
+  const ageRestrictions = [
+    {
+      age: '17+',
+      reason: 'Contenido médico especializado',
+      description: 'La aplicación contiene información médica detallada sobre reproducción, fertilidad y sexualidad que requiere madurez para su interpretación adecuada.',
+    },
+    {
+      age: '17+',
+      reason: 'Terminología médica avanzada',
+      description: 'Se utilizan términos médicos específicos relacionados con reproducción asistida, hormonología y procedimientos ginecológicos.',
+    },
+    {
+      age: '17+',
+      reason: 'Temas de salud reproductiva',
+      description: 'La app aborda temas sensibles como infertilidad, tratamientos reproductivos y factores que afectan la concepción.',
+    },
+  ];
+
+  const contentCategories = [
+    {
+      category: '🧬 Información Médica',
+      level: 'Especializada',
+      description: 'Algoritmos médicos basados en literatura científica peer-reviewed sobre fertilidad y reproducción asistida.',
+      examples: [
+        'Análisis hormonal (AMH, TSH, Prolactina)',
+        'Evaluación de reserva ovárica',
+        'Factores masculinos de fertilidad',
+        'Condiciones ginecológicas (SOP, endometriosis)',
+      ],
+    },
+    {
+      category: '📊 Análisis Probabilísticos',
+      level: 'Avanzado',
+      description: 'Cálculos complejos que requieren comprensión de conceptos estadísticos y médicos.',
+      examples: [
+        'Probabilidades de embarazo natural',
+        'Análisis de factores de riesgo',
+        'Simulaciones de escenarios médicos',
+        'Interpretación de datos clínicos',
+      ],
+    },
+    {
+      category: '🤖 Inteligencia Artificial',
+      level: 'Profesional',
+      description: 'Sistema de IA médica que proporciona análisis personalizado basado en perfiles clínicos.',
+      examples: [
+        'Dr. IA: Análisis neural personalizado',
+        'Recomendaciones médicas automatizadas',
+        'Interpretación contextual de resultados',
+        'Sugerencias de tratamientos',
+      ],
+    },
+    {
+      category: '📋 Contenido Educativo',
+      level: 'Médico',
+      description: 'Material educativo sobre reproducción humana y medicina reproductiva.',
+      examples: [
+        'Fisiología reproductiva',
+        'Ciclos menstruales y ovulación',
+        'Tratamientos de fertilidad',
+        'Técnicas de reproducción asistida',
+      ],
+    },
+  ];
+
+  const guidelines = [
+    {
+      organization: 'App Store (Apple)',
+      rating: '17+',
+      criteria: 'Medical/Treatment Information - Detailed medical information requiring maturity',
+    },
+    {
+      organization: 'Google Play',
+      rating: 'Mature 17+',
+      criteria: 'Health & Medical - Professional medical content',
+    },
+    {
+      organization: 'ESRB',
+      rating: 'M (Mature)',
+      criteria: 'Medical themes and complex health information',
+    },
+  ];
+
+  return (
+    <View style={[styles.container, isDark && styles.containerDark]}>
+      {/* Header */}
+      <LinearGradient
+        colors={[designTheme.colors.primary, designTheme.colors.secondary]}
+        style={styles.header}
+      >
+        <Ionicons name="information-circle" size={32} color="white" />
+        <Text style={styles.headerTitle}>Clasificación por Edad</Text>
+        <Text style={styles.headerSubtitle}>
+          17+ años - Contenido médico especializado
+        </Text>
+      </LinearGradient>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Rating Principal */}
+        <View style={[styles.ratingCard, isDark && styles.ratingCardDark]}>
+          <View style={styles.ratingBadge}>
+            <Text style={styles.ratingText}>17+</Text>
+          </View>
+          <Text style={[styles.ratingTitle, isDark && styles.textDark]}>
+            Clasificación: Mayores de 17 años
+          </Text>
+          <Text style={[styles.ratingDescription, isDark && styles.subtitleDark]}>
+            Esta aplicación está clasificada para usuarios de 17 años en adelante debido a su contenido médico especializado y la complejidad de la información sobre salud reproductiva.
+          </Text>
+        </View>
+
+        {/* Razones de Clasificación */}
+        <Text style={[styles.sectionHeader, isDark && styles.textDark]}>
+          🔍 Razones de la Clasificación
+        </Text>
+        
+        {ageRestrictions.map((restriction, index) => (
+          <View key={index} style={[styles.restrictionCard, isDark && styles.restrictionCardDark]}>
+            <View style={styles.restrictionHeader}>
+              <View style={styles.restrictionBadge}>
+                <Text style={styles.restrictionBadgeText}>{restriction.age}</Text>
+              </View>
+              <Text style={[styles.restrictionReason, isDark && styles.textDark]}>
+                {restriction.reason}
+              </Text>
+            </View>
+            <Text style={[styles.restrictionDescription, isDark && styles.subtitleDark]}>
+              {restriction.description}
+            </Text>
+          </View>
+        ))}
+
+        {/* Categorías de Contenido */}
+        <Text style={[styles.sectionHeader, isDark && styles.textDark, { marginTop: 30 }]}>
+          📋 Categorías de Contenido
+        </Text>
+        
+        {contentCategories.map((category, index) => (
+          <View key={index} style={[styles.categoryCard, isDark && styles.categoryCardDark]}>
+            <View style={styles.categoryHeader}>
+              <Text style={[styles.categoryTitle, isDark && styles.textDark]}>
+                {category.category}
+              </Text>
+              <View style={[styles.levelBadge, { backgroundColor: `${designTheme.colors.primary}20` }]}>
+                <Text style={[styles.levelText, { color: designTheme.colors.primary }]}>
+                  {category.level}
+                </Text>
+              </View>
+            </View>
+            <Text style={[styles.categoryDescription, isDark && styles.subtitleDark]}>
+              {category.description}
+            </Text>
+            <Text style={[styles.examplesTitle, isDark && styles.textDark]}>
+              Ejemplos:
+            </Text>
+            {category.examples.map((example, exIndex) => (
+              <Text key={exIndex} style={[styles.exampleText, isDark && styles.subtitleDark]}>
+                • {example}
+              </Text>
+            ))}
+          </View>
+        ))}
+
+        {/* Directrices de Plataformas */}
+        <Text style={[styles.sectionHeader, isDark && styles.textDark, { marginTop: 30 }]}>
+          🏛️ Directrices de Plataformas
+        </Text>
+        
+        {guidelines.map((guideline, index) => (
+          <View key={index} style={[styles.guidelineCard, isDark && styles.guidelineCardDark]}>
+            <Text style={[styles.guidelineOrg, isDark && styles.textDark]}>
+              {guideline.organization}
+            </Text>
+            <Text style={[styles.guidelineRating, { color: designTheme.colors.primary }]}>
+              Rating: {guideline.rating}
+            </Text>
+            <Text style={[styles.guidelineCriteria, isDark && styles.subtitleDark]}>
+              {guideline.criteria}
+            </Text>
+          </View>
+        ))}
+
+        {/* Supervisión Parental */}
+        <View style={[styles.parentalCard, isDark && styles.parentalCardDark]}>
+          <Ionicons name="shield-checkmark" size={24} color={designTheme.colors.primary} />
+          <Text style={[styles.parentalTitle, isDark && styles.textDark]}>
+            👨‍👩‍👧‍👦 Supervisión Parental Recomendada
+          </Text>
+          <Text style={[styles.parentalText, isDark && styles.subtitleDark]}>
+            Aunque la aplicación está clasificada para 17+, recomendamos supervisión parental o médica para usuarios menores de edad que puedan acceder al contenido.
+
+            La información médica especializada puede requerir contexto adicional y explicación profesional para su correcta interpretación.
+          </Text>
+        </View>
+
+        {/* Aviso de Responsabilidad */}
+        <View style={[styles.disclaimerCard, isDark && styles.disclaimerCardDark]}>
+          <Ionicons name="warning" size={24} color="#ff6b35" />
+          <Text style={[styles.disclaimerTitle, isDark && styles.textDark]}>
+            ⚠️ Aviso de Responsabilidad
+          </Text>
+          <Text style={[styles.disclaimerText, isDark && styles.subtitleDark]}>
+            Los padres y tutores son responsables de supervisar el acceso de menores a esta aplicación. 
+
+            La información médica contenida debe ser interpretada con la guía de profesionales de la salud, especialmente para usuarios jóvenes.
+
+            Esta aplicación NO sustituye la consulta médica profesional ni la educación sexual apropiada para la edad.
+          </Text>
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={[styles.footerText, isDark && styles.subtitleDark]}>
+            Dr Jorge Vasquez R. - Medicina Reproductiva
+          </Text>
+          <Text style={[styles.footerText, isDark && styles.subtitleDark, { marginTop: 10 }]}>
+            Para consultas sobre el contenido: minomoreno86@gmail.com
+          </Text>
+          <Text style={[styles.footerText, isDark && styles.subtitleDark, { marginTop: 15 }]}>
+            Clasificación actualizada: Enero 2024
+          </Text>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  containerDark: {
+    backgroundColor: '#121212',
+  },
+  header: {
+    paddingTop: 20,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  sectionHeader: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginVertical: 20,
+  },
+  
+  // Main Rating
+  ratingCard: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 24,
+    marginVertical: 15,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  ratingCardDark: {
+    backgroundColor: '#1e1e1e',
+  },
+  ratingBadge: {
+    backgroundColor: designTheme.colors.primary,
+    borderRadius: 25,
+    width: 60,
+    height: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  ratingText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  ratingTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  ratingDescription: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  
+  // Restrictions
+  restrictionCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  restrictionCardDark: {
+    backgroundColor: '#1e1e1e',
+  },
+  restrictionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  restrictionBadge: {
+    backgroundColor: '#ff6b35',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginRight: 12,
+  },
+  restrictionBadgeText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  restrictionReason: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    flex: 1,
+  },
+  restrictionDescription: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+  },
+  
+  // Categories
+  categoryCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  categoryCardDark: {
+    backgroundColor: '#1e1e1e',
+  },
+  categoryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  categoryTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    flex: 1,
+  },
+  levelBadge: {
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  levelText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  categoryDescription: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  examplesTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  exampleText: {
+    fontSize: 13,
+    color: '#666',
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  
+  // Guidelines
+  guidelineCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  guidelineCardDark: {
+    backgroundColor: '#1e1e1e',
+  },
+  guidelineOrg: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  guidelineRating: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  guidelineCriteria: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+  },
+  
+  // Parental
+  parentalCard: {
+    backgroundColor: '#e7f3ff',
+    borderRadius: 12,
+    padding: 20,
+    marginVertical: 15,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: designTheme.colors.primary,
+  },
+  parentalCardDark: {
+    backgroundColor: '#0a1929',
+  },
+  parentalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 8,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  parentalText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  
+  // Disclaimer
+  disclaimerCard: {
+    backgroundColor: '#fff3cd',
+    borderRadius: 12,
+    padding: 20,
+    marginVertical: 15,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ff6b35',
+  },
+  disclaimerCardDark: {
+    backgroundColor: '#2d1b00',
+  },
+  disclaimerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 8,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  disclaimerText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  
+  // Footer
+  footer: {
+    paddingVertical: 30,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  
+  // Dark theme
+  textDark: {
+    color: '#fff',
+  },
+  subtitleDark: {
+    color: '#aaa',
+  },
+});

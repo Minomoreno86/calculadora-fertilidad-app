@@ -1,0 +1,199 @@
+/**
+ * ©️ PÁGINA DE DERECHOS DE AUTOR
+ */
+
+import React from 'react';
+import { StyleSheet, View, ScrollView, Text } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/contexts/ThemeContext';
+import { theme as designTheme } from '@/config/theme';
+
+export default function CopyrightScreen() {
+  const { isDark } = useTheme();
+
+  return (
+    <View style={[styles.container, isDark && styles.containerDark]}>
+      {/* Header */}
+      <LinearGradient
+        colors={[designTheme.colors.primary, designTheme.colors.secondary]}
+        style={styles.header}
+      >
+        <Ionicons name="shield-checkmark" size={32} color="white" />
+        <Text style={styles.headerTitle}>Derechos de Autor</Text>
+        <Text style={styles.headerSubtitle}>
+          Propiedad intelectual y licencias
+        </Text>
+      </LinearGradient>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Autor Principal */}
+        <View style={[styles.section, isDark && styles.sectionDark]}>
+          <Text style={[styles.sectionTitle, isDark && styles.textDark]}>
+            👨‍⚕️ Autor Principal
+          </Text>
+          <Text style={[styles.sectionContent, isDark && styles.subtitleDark]}>
+            <Text style={styles.bold}>Dr Jorge Vasquez R.</Text>
+            
+            Médico especialista en reproducción asistida y desarrollador de esta aplicación médica.
+
+            📧 Contacto: minomoreno86@gmail.com
+            🌐 Web: https://www.drjorgeavasquezr.com
+          </Text>
+        </View>
+
+        {/* Copyright */}
+        <View style={[styles.section, isDark && styles.sectionDark]}>
+          <Text style={[styles.sectionTitle, isDark && styles.textDark]}>
+            ©️ Derechos Reservados
+          </Text>
+          <Text style={[styles.sectionContent, isDark && styles.subtitleDark]}>
+            © 2024 Dr Jorge Vasquez R. - Todos los derechos reservados.
+
+            Esta aplicación, incluyendo su código fuente, algoritmos médicos, diseño de interfaz y contenido, está protegida por las leyes de propiedad intelectual.
+          </Text>
+        </View>
+
+        {/* Algoritmos Médicos */}
+        <View style={[styles.section, isDark && styles.sectionDark]}>
+          <Text style={[styles.sectionTitle, isDark && styles.textDark]}>
+            🧬 Algoritmos Médicos Proprietarios
+          </Text>
+          <Text style={[styles.sectionContent, isDark && styles.subtitleDark]}>
+            Los algoritmos de cálculo de fertilidad, análisis de IA y simuladores desarrollados son propiedad exclusiva del Dr Jorge Vasquez R.
+
+            • Motor de cálculo de fertilidad
+            • Sistema de análisis neural "Dr. IA"
+            • Simulador inteligente de mejoras
+            • Base de datos médica integrada
+          </Text>
+        </View>
+
+        {/* Licencia de Uso */}
+        <View style={[styles.section, isDark && styles.sectionDark]}>
+          <Text style={[styles.sectionTitle, isDark && styles.textDark]}>
+            📄 Licencia de Uso
+          </Text>
+          <Text style={[styles.sectionContent, isDark && styles.subtitleDark]}>
+            Se otorga una licencia limitada, no exclusiva e intransferible para:
+
+            ✅ Uso personal con fines educativos
+            ✅ Consulta médica informativa
+            ✅ Análisis de fertilidad personal
+
+            ❌ Redistribución o copia
+            ❌ Uso comercial sin autorización
+            ❌ Ingeniería inversa de algoritmos
+          </Text>
+        </View>
+
+        {/* Atribuciones */}
+        <View style={[styles.section, isDark && styles.sectionDark]}>
+          <Text style={[styles.sectionTitle, isDark && styles.textDark]}>
+            🙏 Referencias y Atribuciones
+          </Text>
+          <Text style={[styles.sectionContent, isDark && styles.subtitleDark]}>
+            Esta aplicación utiliza:
+
+            • Expo Framework - Licencia MIT
+            • React Native - Licencia MIT
+            • Ionicons - Licencia MIT
+            • Literatura médica peer-reviewed (ver Bibliografía)
+            • Guías clínicas internacionales
+
+            Agradecimientos especiales a la comunidad médica y científica.
+          </Text>
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={[styles.footerText, isDark && styles.subtitleDark]}>
+            Para consultas sobre licencias comerciales o colaboraciones médicas:
+          </Text>
+          <Text style={[styles.footerText, isDark && styles.subtitleDark, { marginTop: 10 }]}>
+            📧 minomoreno86@gmail.com
+          </Text>
+          <Text style={[styles.footerText, isDark && styles.subtitleDark, { marginTop: 15 }]}>
+            © 2024 Dr Jorge Vasquez R.
+          </Text>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  containerDark: {
+    backgroundColor: '#121212',
+  },
+  header: {
+    paddingTop: 20,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  section: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    marginVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  sectionDark: {
+    backgroundColor: '#1e1e1e',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 12,
+  },
+  sectionContent: {
+    fontSize: 16,
+    color: '#666',
+    lineHeight: 24,
+  },
+  bold: {
+    fontWeight: 'bold',
+    color: designTheme.colors.primary,
+  },
+  footer: {
+    paddingVertical: 30,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  textDark: {
+    color: '#fff',
+  },
+  subtitleDark: {
+    color: '#aaa',
+  },
+});

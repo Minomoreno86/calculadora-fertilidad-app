@@ -1,0 +1,371 @@
+/**
+ * 🏥 AVISO MÉDICO (MEDICAL DISCLAIMER)
+ * 
+ * Documento legal crítico para apps médicas en App Store
+ */
+
+import React from 'react';
+import { StyleSheet, View, ScrollView, Text } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/contexts/ThemeContext';
+import { theme as designTheme } from '@/config/theme';
+
+export default function MedicalDisclaimerScreen() {
+  const { isDark } = useTheme();
+
+  return (
+    <View style={[styles.container, isDark && styles.containerDark]}>
+      {/* Header */}
+      <LinearGradient
+        colors={[designTheme.colors.primary, designTheme.colors.secondary]}
+        style={styles.header}
+      >
+        <Ionicons name="medical" size={32} color="white" />
+        <Text style={styles.headerTitle}>Aviso Médico Importante</Text>
+        <Text style={styles.headerSubtitle}>
+          Información crítica sobre el uso de esta aplicación
+        </Text>
+      </LinearGradient>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Aviso Principal */}
+        <View style={[styles.warningBox, isDark && styles.warningBoxDark]}>
+          <Ionicons name="warning" size={24} color="#ff6b35" />
+          <Text style={[styles.warningTitle, isDark && styles.textDark]}>
+            ⚠️ AVISO MÉDICO CRÍTICO
+          </Text>
+          <Text style={[styles.warningText, isDark && styles.subtitleDark]}>
+            Esta aplicación NO sustituye la consulta médica profesional. 
+            Los resultados son únicamente informativos y educativos.
+          </Text>
+        </View>
+
+        {/* Propósito */}
+        <View style={[styles.section, isDark && styles.sectionDark]}>
+          <Text style={[styles.sectionTitle, isDark && styles.textDark]}>
+            🎯 Propósito de la Aplicación
+          </Text>
+          <Text style={[styles.sectionContent, isDark && styles.subtitleDark]}>
+            La "Calculadora de Fertilidad IA" es una herramienta educativa diseñada para:
+
+• Proporcionar estimaciones probabilísticas basadas en literatura científica
+• Ayudar en la comprensión de factores que afectan la fertilidad
+• Facilitar conversaciones informadas con profesionales médicos
+• Ofrecer información educativa sobre reproducción asistida
+
+NO está diseñada para diagnosticar, tratar, curar o prevenir ninguna condición médica.
+          </Text>
+        </View>
+
+        {/* Limitaciones */}
+        <View style={[styles.section, isDark && styles.sectionDark]}>
+          <Text style={[styles.sectionTitle, isDark && styles.textDark]}>
+            ⚖️ Limitaciones Importantes
+          </Text>
+          <Text style={[styles.sectionContent, isDark && styles.subtitleDark]}>
+            Los cálculos de esta aplicación tienen limitaciones significativas:
+
+• Basados en promedios poblacionales, no en casos individuales
+• No consideran factores médicos únicos o complejos
+• No reemplazan exámenes médicos especializados
+• Las probabilidades son estimativas, no garantías
+• No incluyen todos los factores que afectan la fertilidad
+• Pueden no aplicar a condiciones médicas específicas
+
+Cada caso de fertilidad es único y requiere evaluación médica personalizada.
+          </Text>
+        </View>
+
+        {/* Consulta Médica */}
+        <View style={[styles.section, isDark && styles.sectionDark]}>
+          <Text style={[styles.sectionTitle, isDark && styles.textDark]}>
+            👩‍⚕️ Consulta Médica Obligatoria
+          </Text>
+          <Text style={[styles.sectionContent, isDark && styles.subtitleDark]}>
+            SIEMPRE consulte con profesionales médicos calificados para:
+
+• Diagnóstico preciso de problemas de fertilidad
+• Tratamientos personalizados
+• Interpretación de resultados de laboratorio
+• Decisiones sobre reproducción asistida
+• Manejo de condiciones médicas subyacentes
+• Planificación familiar personalizada
+
+Los especialistas en reproducción son la única fuente confiable para decisiones médicas.
+          </Text>
+        </View>
+
+        {/* Emergencias */}
+        <View style={[styles.emergencyBox, isDark && styles.emergencyBoxDark]}>
+          <Ionicons name="alert-circle" size={24} color="#dc3545" />
+          <Text style={[styles.emergencyTitle, isDark && styles.textDark]}>
+            🚨 EMERGENCIAS MÉDICAS
+          </Text>
+          <Text style={[styles.emergencyText, isDark && styles.subtitleDark]}>
+            Si experimenta síntomas graves relacionados con fertilidad:
+            
+• Dolor pélvico severo
+• Sangrado anormal abundante
+• Síntomas de embarazo ectópico
+• Reacciones adversas a tratamientos
+
+BUSQUE ATENCIÓN MÉDICA INMEDIATA
+No use esta aplicación para emergencias médicas.
+          </Text>
+        </View>
+
+        {/* Responsabilidad */}
+        <View style={[styles.section, isDark && styles.sectionDark]}>
+          <Text style={[styles.sectionTitle, isDark && styles.textDark]}>
+            ⚖️ Limitación de Responsabilidad
+          </Text>
+          <Text style={[styles.sectionContent, isDark && styles.subtitleDark]}>
+            Los desarrolladores de esta aplicación NO se hacen responsables de:
+
+• Decisiones médicas basadas únicamente en los resultados de la app
+• Retrasos en diagnóstico por depender de estimaciones de la app
+• Consecuencias de no buscar atención médica profesional
+• Resultados de tratamientos basados en información de la app
+• Pérdidas o daños derivados del uso de la aplicación
+
+La responsabilidad médica recae exclusivamente en profesionales de la salud licenciados.
+          </Text>
+        </View>
+
+        {/* Base Científica */}
+        <View style={[styles.section, isDark && styles.sectionDark]}>
+          <Text style={[styles.sectionTitle, isDark && styles.textDark]}>
+            📚 Base Científica
+          </Text>
+          <Text style={[styles.sectionContent, isDark && styles.subtitleDark]}>
+            Los algoritmos se basan en:
+
+• Literatura médica peer-reviewed
+• Guías de sociedades de reproducción
+• Datos epidemiológicos publicados
+• Consensos médicos internacionales
+
+Sin embargo, la ciencia médica evoluciona constantemente. 
+Los algoritmos pueden no reflejar los avances más recientes.
+          </Text>
+        </View>
+
+        {/* Edad y Uso */}
+        <View style={[styles.section, isDark && styles.sectionDark]}>
+          <Text style={[styles.sectionTitle, isDark && styles.textDark]}>
+            👶 Restricción de Edad
+          </Text>
+          <Text style={[styles.sectionContent, isDark && styles.subtitleDark]}>
+            Esta aplicación está clasificada para usuarios de 17+ años debido a:
+
+• Contenido médico especializado sobre reproducción
+• Información sobre fertilidad y sexualidad
+• Terminología médica avanzada
+• Temas sensibles de salud reproductiva
+
+Usuarios menores de edad deben usar la aplicación bajo supervisión de adultos y consulta médica.
+          </Text>
+        </View>
+
+        {/* Contacto Médico */}
+        <View style={[styles.contactBox, isDark && styles.contactBoxDark]}>
+          <Ionicons name="medical" size={24} color={designTheme.colors.primary} />
+          <Text style={[styles.contactTitle, isDark && styles.textDark]}>
+            👩‍⚕️ Recomendación Final
+          </Text>
+          <Text style={[styles.contactText, isDark && styles.subtitleDark]}>
+            Use esta aplicación como herramienta educativa inicial.
+            
+Para decisiones médicas reales, consulte SIEMPRE con:
+• Ginecólogos especializados en reproducción
+• Centros de fertilidad certificados
+• Endocrinólogos reproductivos
+
+Su salud reproductiva merece atención médica profesional especializada.
+          </Text>
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={[styles.footerText, isDark && styles.subtitleDark]}>
+            Este aviso médico es parte integral de los términos de uso.
+            Al usar la aplicación, acepta estas limitaciones y recomendaciones.
+          </Text>
+          <Text style={[styles.footerText, isDark && styles.subtitleDark, { marginTop: 10 }]}>
+            © 2024 Dr Jorge Vasquez R.
+          </Text>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  containerDark: {
+    backgroundColor: '#121212',
+  },
+  header: {
+    paddingTop: 20,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    marginTop: 12,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  
+  // Warning Box
+  warningBox: {
+    backgroundColor: '#fff3cd',
+    borderRadius: 12,
+    padding: 20,
+    marginVertical: 20,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#ff6b35',
+  },
+  warningBoxDark: {
+    backgroundColor: '#2d1b00',
+    borderColor: '#ff6b35',
+  },
+  warningTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 8,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  warningText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  
+  // Emergency Box
+  emergencyBox: {
+    backgroundColor: '#f8d7da',
+    borderRadius: 12,
+    padding: 20,
+    marginVertical: 16,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#dc3545',
+  },
+  emergencyBoxDark: {
+    backgroundColor: '#2d0a0e',
+    borderColor: '#dc3545',
+  },
+  emergencyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 8,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  emergencyText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  
+  // Contact Box
+  contactBox: {
+    backgroundColor: '#e7f3ff',
+    borderRadius: 12,
+    padding: 20,
+    marginVertical: 16,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: designTheme.colors.primary,
+  },
+  contactBoxDark: {
+    backgroundColor: '#0a1929',
+    borderColor: designTheme.colors.primary,
+  },
+  contactTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 8,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  contactText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  
+  // Sections
+  section: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  sectionDark: {
+    backgroundColor: '#1e1e1e',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 12,
+  },
+  sectionContent: {
+    fontSize: 16,
+    color: '#666',
+    lineHeight: 24,
+  },
+  
+  // Footer
+  footer: {
+    paddingVertical: 30,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    marginTop: 20,
+  },
+  footerText: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  
+  // Dark theme
+  textDark: {
+    color: '#fff',
+  },
+  subtitleDark: {
+    color: '#aaa',
+  },
+});

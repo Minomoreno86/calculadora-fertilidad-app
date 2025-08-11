@@ -1,0 +1,64 @@
+/**
+ * 🏥 PANTALLA PRINCIPAL - CALCULADORA MÉDICA PROFESIONAL
+ */
+
+import React from 'react';
+import { StyleSheet, View, Text } from 'react-native';
+
+// ===================================================================
+// 🏥 PANTALLA PRINCIPAL MÉDICA
+// ===================================================================
+
+export default function ProfessionalCalculatorScreen() {
+  // IMPORTACIÓN DINÁMICA PARA DEBUG
+  const [CalculatorFormMain, setCalculatorFormMain] = React.useState<React.ComponentType<object> | null>(null);
+
+  React.useEffect(() => {
+    import('@/presentation/features/calculator/components/CalculatorFormMain')
+      .then((module) => {
+        setCalculatorFormMain(() => module.CalculatorFormMain);
+      })
+      .catch((error) => {
+        console.error('❌ ERROR importing CalculatorFormMain:', error);
+      });
+  }, []);
+
+  console.log('🚀 INDEX: Renderizando ProfessionalCalculatorScreen');
+  console.log('🚀 INDEX: CalculatorFormMain disponible?', !!CalculatorFormMain);
+  
+  return (
+    <View style={styles.container}>
+      <Text style={styles.debugText}>🚀 INDEX CARGADO - Debug Mode</Text>
+      {CalculatorFormMain ? (
+        <CalculatorFormMain />
+      ) : (
+        <Text style={styles.errorText}>❌ Error: CalculatorFormMain no disponible</Text>
+      )}
+    </View>
+  );
+}
+
+// ===================================================================
+// 🎨 ESTILOS MÍNIMOS
+// ===================================================================
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#f5f5f5',
+  },
+  debugText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#007AFF',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#FF3B30',
+    textAlign: 'center',
+    marginTop: 50,
+  },
+});

@@ -6,35 +6,39 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 
 // Safe imports for React Native components
-let TextInput: any;
-let Animated: any;
-let TextInputProps: any;
+let TextInput: React.ComponentType<Record<string, unknown>>;
+let Animated: {
+  Value: new (value: number) => {
+    interpolate: (config: Record<string, unknown>) => unknown;
+  };
+  View: React.ComponentType<Record<string, unknown>>;
+  Text: React.ComponentType<Record<string, unknown>>;
+  spring: (value: unknown, config: Record<string, unknown>) => { start: (callback?: () => void) => void };
+  timing: (value: unknown, config: Record<string, unknown>) => { start: (callback?: () => void) => void };
+  parallel: (animations: unknown[]) => { start: (callback?: () => void) => void };
+  sequence: (animations: unknown[]) => { start: (callback?: () => void) => void };
+};
 
 try {
-  const RNComponents = require('react-native');
-  TextInput = RNComponents.TextInput || (() => null);
-  Animated = RNComponents.Animated || {
-    Value: class { constructor() {} },
-    View: View,
-    Text: (() => null),
-    spring: () => ({ start: () => {} }),
-    timing: () => ({ start: () => {} }),
-    parallel: () => ({ start: () => {} }),
-    sequence: () => ({ start: () => {} })
-  };
-  TextInputProps = RNComponents.TextInputProps || {};
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const RN = require('react-native');
+  TextInput = RN.TextInput;
+  Animated = RN.Animated;
 } catch {
-  TextInput = () => null;
+  // Fallback for environments without these components
+  TextInput = View as React.ComponentType<Record<string, unknown>>;
   Animated = {
-    Value: class { constructor() {} },
-    View: View,
-    Text: (() => null),
+    Value: class AnimatedValue {
+      constructor(private _value: number) {}
+      interpolate = () => this;
+    },
+    View: View as React.ComponentType<Record<string, unknown>>,
+    Text: View as React.ComponentType<Record<string, unknown>>,
     spring: () => ({ start: () => {} }),
     timing: () => ({ start: () => {} }),
     parallel: () => ({ start: () => {} }),
     sequence: () => ({ start: () => {} })
   };
-  TextInputProps = {};
 }
 
 import { Control, Controller, FieldError } from 'react-hook-form';
@@ -44,8 +48,7 @@ import { theme } from '@/config/theme';
 import { RangeValidation } from '@/presentation/features/calculator/utils/rangeValidation';
 
 interface Props {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  control: Control<Record<string, any>>;
+  control: Control<Record<string, unknown>>;
   name: string;
   label: string;
   placeholder?: string;

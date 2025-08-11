@@ -25,14 +25,15 @@ import {
 } from 'react-native';
 
 // Importación segura de Alert usando tu patrón existente
-let Alert: any = null;
+let Alert: unknown = null;
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const RN = require('react-native');
   Alert = RN.Alert;
 } catch (error) {
   console.warn('Alert no disponible en esta versión de React Native');
   Alert = {
-    alert: (title: string, message: string, buttons?: any[]) => {
+    alert: (title: string, message: string, buttons?: unknown[]) => {
       console.log(`[FALLBACK ALERT] ${title}: ${message}`);
     }
   };
@@ -52,14 +53,18 @@ import { useCalculatorForm } from '../useCalculatorForm';
 // 🎨 UI COMPONENTS EXISTENTES
 import Text from '../../../components/common/Text';
 import { useDynamicTheme } from '../../../../hooks/useDynamicTheme';
+import { useLanguage } from '../../../../contexts/LanguageContext';
+import { theme as designTheme } from '../../../../config/theme';
 
 // ===================================================================
 // 🏥 CALCULADORA MÉDICA PRINCIPAL
 // ===================================================================
 
 export const CalculatorFormMain: React.FC = () => {
+  console.log('🏥 CALCULATOR FORM MAIN: Renderizando componente principal');
   // 🎨 TEMA DINÁMICO
   const theme = useDynamicTheme();
+  const { t } = useLanguage();
   const styles = createStyles(theme);
 
   // 🏥 HOOK PRINCIPAL CON MOTOR MODULAR AVANZADO
@@ -82,25 +87,25 @@ export const CalculatorFormMain: React.FC = () => {
   const sections = [
     { 
       id: 'demographics', 
-      title: 'Demografía', 
+      title: t('calculator.demografia'), 
       icon: 'person-outline',
       component: DemographicsForm
     },
     { 
       id: 'gynecology', 
-      title: 'Ginecología', 
+      title: t('calculator.ginecologia'), 
       icon: 'medical-outline',
       component: GynecologyHistoryForm
     },
     { 
       id: 'laboratory', 
-      title: 'Laboratorio', 
+      title: t('calculator.laboratorio'), 
       icon: 'flask-outline',
       component: LabTestsForm
     },
     { 
       id: 'malefactor', 
-      title: 'Factor Masculino', 
+      title: t('calculator.factor_masculino'), 
       icon: 'male-outline',
       component: MaleFactorForm
     }
@@ -110,19 +115,19 @@ export const CalculatorFormMain: React.FC = () => {
   const handleSubmitCalculation = async () => {
     try {
       Alert.alert(
-        '🧮 Iniciando Análisis',
-        'Procesando con Motor Médico Avanzado...',
+        `🧮 ${t('calculator.iniciando_analisis')}`,
+        t('calculator.procesando_motor'),
         [
-          { text: 'Cancelar', style: 'cancel' },
+          { text: t('calculator.cancelar'), style: 'cancel' },
           { 
-            text: 'Analizar', 
+            text: t('calculator.analizar'), 
             onPress: handleCalculate,
             style: 'default'
           }
         ]
       );
     } catch (error) {
-      Alert.alert('Error', 'No se pudo procesar el análisis médico');
+      Alert.alert('Error', t('calculator.error_procesamiento'));
     }
   };
 
@@ -148,15 +153,24 @@ export const CalculatorFormMain: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* 🎯 HEADER CON PROGRESO */}
+      {/* 🎨 Fondo gradiente completo como login */}
       <LinearGradient
-        colors={[theme.colors.primary, theme.colors.primary + '80']}
-        style={styles.header}
-      >
+        colors={[
+          designTheme.colors.primary,
+          designTheme.colors.secondary,
+          '#4a90e2',
+        ]}
+        style={styles.backgroundGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
+      
+      {/* 🎯 HEADER CON PROGRESO */}
+      <View style={styles.header}>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Calculadora de Fertilidad</Text>
+          <Text style={styles.headerTitle}>{t('calculator.titulo')}</Text>
           <Text style={styles.headerSubtitle}>
-            Motor Médico Avanzado • {completionPercentage.toFixed(0)}% Completo
+            {t('calculator.subtitulo', { percentage: completionPercentage.toFixed(0) })}
           </Text>
           
           {/* 📊 Barra de progreso */}
@@ -169,7 +183,7 @@ export const CalculatorFormMain: React.FC = () => {
             />
           </View>
         </View>
-      </LinearGradient>
+      </View>
 
       {/* 🎯 NAVEGACIÓN DE SECCIONES */}
       <View style={styles.sectionTabs}>
@@ -188,6 +202,7 @@ export const CalculatorFormMain: React.FC = () => {
               onPress={() => setActiveSection(section.id)}
             >
               <Ionicons 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 name={section.icon as any} 
                 size={20} 
                 color={
@@ -208,11 +223,13 @@ export const CalculatorFormMain: React.FC = () => {
       </View>
 
       {/* 🏥 FORMULARIO MÉDICO PRINCIPAL */}
-      <ScrollView style={styles.formContainer}>
-        <View style={styles.sectionContainer}>
-          {renderActiveSection()}
-        </View>
-      </ScrollView>
+      <View style={styles.formWrapper}>
+        <ScrollView style={styles.formContainer}>
+          <View style={styles.sectionContainer}>
+            {renderActiveSection()}
+          </View>
+        </ScrollView>
+      </View>
 
       {/* 🎯 BOTÓN DE ANÁLISIS */}
       <View style={styles.footer}>
@@ -228,12 +245,12 @@ export const CalculatorFormMain: React.FC = () => {
             {isLoading ? (
               <>
                 <Ionicons name="hourglass-outline" size={20} color="white" />
-                <Text style={styles.buttonText}>Procesando...</Text>
+                <Text style={styles.buttonText}>{t('calculator.procesando')}</Text>
               </>
             ) : (
               <>
                 <Ionicons name="analytics-outline" size={20} color="white" />
-                <Text style={styles.buttonText}>Analizar Fertilidad</Text>
+                <Text style={styles.buttonText}>{t('calculator.analizar_fertilidad')}</Text>
               </>
             )}
           </LinearGradient>
@@ -250,12 +267,19 @@ export const CalculatorFormMain: React.FC = () => {
 const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+  },
+  
+  backgroundGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
   },
   
   header: {
-    paddingTop: 60,
-    paddingBottom: 20,
+    paddingTop: 50,
+    paddingBottom: 25,
     paddingHorizontal: 20,
   },
   
@@ -264,17 +288,21 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   
   headerTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold' as const,
-    color: 'white',
-    marginBottom: 4,
+    color: theme.colors.onPrimary || 'white',
+    marginBottom: 8,
+    textAlign: 'center' as const,
+    lineHeight: 32,
   },
   
   headerSubtitle: {
     fontSize: 14,
-    color: 'white',
+    color: theme.colors.onPrimary || 'white',
     opacity: 0.9,
-    marginBottom: 16,
+    marginBottom: 20,
+    textAlign: 'center' as const,
+    lineHeight: 18,
   },
   
   progressBar: {
@@ -292,9 +320,9 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
   },
   
   sectionTabs: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderBottomColor: 'rgba(255,255,255,0.2)',
   },
   
   tabsContainer: {
@@ -309,22 +337,39 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     paddingVertical: 8,
     marginRight: 12,
     borderRadius: 20,
-    backgroundColor: theme.colors.background,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   
   activeTab: {
-    backgroundColor: theme.colors.primary + '20',
+    backgroundColor: 'rgba(255,255,255,0.4)',
+    borderColor: 'rgba(255,255,255,0.6)',
   },
   
   tabText: {
     fontSize: 14,
-    color: theme.colors.textSecondary,
+    color: 'rgba(255,255,255,0.8)',
     marginLeft: 6,
   },
   
   activeTabText: {
-    color: theme.colors.primary,
+    color: 'white',
     fontWeight: '600' as const,
+  },
+  
+  formWrapper: {
+    flex: 1,
+    backgroundColor: theme.colors.surface,
+    marginHorizontal: 16,
+    marginTop: 10,
+    marginBottom: 16,
+    borderRadius: 20,
+    shadowColor: theme.colors.shadow || '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 12,
   },
   
   formContainer: {
@@ -340,6 +385,10 @@ const createStyles = (theme: ReturnType<typeof useDynamicTheme>) => StyleSheet.c
     backgroundColor: theme.colors.surface,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   
   calculateButton: {

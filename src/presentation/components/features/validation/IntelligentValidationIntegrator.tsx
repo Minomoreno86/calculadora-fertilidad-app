@@ -7,10 +7,11 @@ import { View, TouchableOpacity, ViewStyle } from 'react-native';
 
 // Safe imports for optional React Native components
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-let Modal: any;
+let Modal: unknown;
 
 try {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const RNComponents = require('react-native');
   const FallbackModal = () => null;
   FallbackModal.displayName = 'FallbackModal';

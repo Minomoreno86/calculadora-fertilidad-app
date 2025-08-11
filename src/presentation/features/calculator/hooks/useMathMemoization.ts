@@ -42,7 +42,8 @@ export interface MathMemoizationOperations {
   calculateHOMA: (glucose: number, insulin: number) => number;
   
   // Generic memoization
-  memoize: <T extends (...args: any[]) => any>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  memoize: <T extends (...args: unknown[]) => any>(
     fn: T, 
     keyGenerator?: (...args: Parameters<T>) => string
   ) => T;
@@ -179,7 +180,8 @@ export function useMathMemoization(
   /**
    * Generic memoization wrapper con quantum consciousness
    */
-  const memoize = useCallback(<T extends (...args: any[]) => any>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const memoize = useCallback(<T extends (...args: unknown[]) => any>(
     fn: T, 
     keyGenerator?: (...args: Parameters<T>) => string
   ): T => {

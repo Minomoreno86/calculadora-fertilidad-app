@@ -1,0 +1,459 @@
+/**
+ * 🌐 REDES SOCIALES
+ */
+
+import React from 'react';
+import { StyleSheet, View, ScrollView, Text, TouchableOpacity, Linking, Alert } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { theme as designTheme } from '@/config/theme';
+
+export default function SocialNetworksScreen() {
+  const { isDark } = useTheme();
+  const { t } = useLanguage();
+
+  // 🔗 Abrir URL externa
+  const openURL = async (url: string, platform: string) => {
+    try {
+      await Linking.openURL(url);
+    } catch (error) {
+      Alert.alert('Error', `No se pudo abrir ${platform}`);
+    }
+  };
+
+  const socialPlatforms = [
+    {
+      id: 'website',
+      name: 'Sitio Web Oficial',
+              username: 'drjorgevasquezr.com/aplicaciones/calculadora-fertilidad',
+      description: 'Portal médico completo con información sobre reproducción asistida',
+      icon: 'globe',
+      color: '#4285f4',
+              url: 'https://drjorgevasquezr.com/aplicaciones/calculadora-fertilidad/index.html',
+    },
+    {
+      id: 'email',
+      name: 'Email Directo',
+      username: 'minomoreno86@gmail.com',
+      description: 'Contacto directo para consultas médicas y soporte',
+      icon: 'mail',
+      color: '#ea4335',
+      url: 'mailto:minomoreno86@gmail.com',
+    },
+    {
+      id: 'whatsapp',
+      name: 'WhatsApp',
+      username: 'Próximamente',
+      description: 'Consultas rápidas y soporte inmediato',
+      icon: 'logo-whatsapp',
+      color: '#25d366',
+      url: null,
+    },
+    {
+      id: 'instagram',
+      name: 'Instagram',
+      username: 'Próximamente',
+      description: 'Contenido educativo sobre fertilidad y salud reproductiva',
+      icon: 'logo-instagram',
+      color: '#e4405f',
+      url: null,
+    },
+    {
+      id: 'linkedin',
+      name: 'LinkedIn',
+      username: 'Próximamente',
+      description: 'Red profesional médica y actualizaciones científicas',
+      icon: 'logo-linkedin',
+      color: '#0077b5',
+      url: null,
+    },
+    {
+      id: 'youtube',
+      name: 'YouTube',
+      username: 'Próximamente',
+      description: 'Videos educativos sobre fertilidad y reproducción asistida',
+      icon: 'logo-youtube',
+      color: '#ff0000',
+      url: null,
+    },
+  ];
+
+  const upcomingFeatures = [
+    '📱 Newsletter médico semanal',
+    '🎥 Webinars sobre fertilidad',
+    '📊 Casos clínicos comentados',
+    '🔬 Actualizaciones científicas',
+    '👥 Comunidad de pacientes',
+    '📚 Biblioteca médica ampliada',
+  ];
+
+  return (
+    <View style={[styles.container, isDark && styles.containerDark]}>
+      {/* Header */}
+      <LinearGradient
+        colors={[designTheme.colors.primary, designTheme.colors.secondary]}
+        style={styles.header}
+      >
+        <Ionicons name="logo-instagram" size={32} color="white" />
+        <Text style={styles.headerTitle}>{t('social_networks.titulo')}</Text>
+        <Text style={styles.headerSubtitle}>
+          {t('social_networks.subtitulo')}
+        </Text>
+      </LinearGradient>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Mensaje de bienvenida */}
+        <View style={[styles.welcomeCard, isDark && styles.welcomeCardDark]}>
+          <Text style={[styles.welcomeTitle, isDark && styles.textDark]}>
+            🌟 ¡Síguenos para más contenido médico!
+          </Text>
+          <Text style={[styles.welcomeText, isDark && styles.subtitleDark]}>
+            Dr Jorge Vasquez R. comparte regularmente información valiosa sobre:
+            
+            • Fertilidad y reproducción asistida
+            • Nuevos tratamientos y técnicas
+            • Casos clínicos educativos
+            • Consejos de salud reproductiva
+            • Avances en medicina reproductiva
+          </Text>
+        </View>
+
+        {/* Plataformas Sociales */}
+        <Text style={[styles.sectionHeader, isDark && styles.textDark]}>
+          📱 Canales de Comunicación
+        </Text>
+        
+        {socialPlatforms.map((platform) => (
+          <TouchableOpacity
+            key={platform.id}
+            style={[styles.platformCard, isDark && styles.platformCardDark]}
+            onPress={() => {
+              if (platform.url) {
+                openURL(platform.url, platform.name);
+              } else {
+                Alert.alert(
+                  'Próximamente',
+                  `${platform.name} estará disponible en una futura actualización`
+                );
+              }
+            }}
+            activeOpacity={0.7}
+          >
+            <View style={styles.platformLeft}>
+              <View style={[styles.iconContainer, { backgroundColor: `${platform.color}20` }]}>
+                <Ionicons name={platform.icon as any} size={28} color={platform.color} />
+              </View>
+              <View style={styles.platformText}>
+                <Text style={[styles.platformName, isDark && styles.textDark]}>
+                  {platform.name}
+                </Text>
+                <Text style={[styles.platformUsername, { color: platform.color }]}>
+                  {platform.username}
+                </Text>
+                <Text style={[styles.platformDescription, isDark && styles.subtitleDark]}>
+                  {platform.description}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.platformRight}>
+              {platform.url ? (
+                <Ionicons name="open-outline" size={20} color={isDark ? '#888' : '#ccc'} />
+              ) : (
+                <Text style={[styles.comingSoon, isDark && styles.subtitleDark]}>
+                  Pronto
+                </Text>
+              )}
+            </View>
+          </TouchableOpacity>
+        ))}
+
+        {/* Próximas Funcionalidades */}
+        <Text style={[styles.sectionHeader, isDark && styles.textDark, { marginTop: 30 }]}>
+          🚀 Próximas Funcionalidades
+        </Text>
+        
+        <View style={[styles.featuresCard, isDark && styles.featuresCardDark]}>
+          <Text style={[styles.featuresTitle, isDark && styles.textDark]}>
+            🔮 En Desarrollo
+          </Text>
+          {upcomingFeatures.map((feature, index) => (
+            <Text key={index} style={[styles.featureText, isDark && styles.subtitleDark]}>
+              {feature}
+            </Text>
+          ))}
+          <Text style={[styles.featuresNote, isDark && styles.subtitleDark]}>
+            * Estas funcionalidades estarán disponibles en futuras actualizaciones de la aplicación.
+          </Text>
+        </View>
+
+        {/* Contacto Directo */}
+        <View style={[styles.contactCard, isDark && styles.contactCardDark]}>
+          <Ionicons name="chatbubbles" size={24} color={designTheme.colors.primary} />
+          <Text style={[styles.contactTitle, isDark && styles.textDark]}>
+            💬 Contacto Directo
+          </Text>
+          <Text style={[styles.contactText, isDark && styles.subtitleDark]}>
+            Para consultas médicas específicas o colaboraciones profesionales:
+            
+            📧 Email: minomoreno86@gmail.com
+            🌐 Web: drjorgevasquezr.com/aplicaciones/calculadora-fertilidad
+            
+            Respuesta garantizada en 24-48 horas.
+          </Text>
+          
+          <TouchableOpacity
+            style={styles.contactButton}
+            onPress={() => openURL('mailto:minomoreno86@gmail.com', 'Email')}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={[designTheme.colors.primary, designTheme.colors.secondary]}
+              style={styles.contactButtonGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+            >
+              <Ionicons name="mail" size={20} color="white" />
+              <Text style={styles.contactButtonText}>Enviar Email</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={[styles.footerText, isDark && styles.subtitleDark]}>
+            Dr Jorge Vasquez R. - Especialista en Reproducción Asistida
+          </Text>
+          <Text style={[styles.footerText, isDark && styles.subtitleDark, { marginTop: 10 }]}>
+            Síguenos para mantenerte informado sobre los últimos avances en fertilidad
+          </Text>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  containerDark: {
+    backgroundColor: '#121212',
+  },
+  header: {
+    paddingTop: 20,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  sectionHeader: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginVertical: 20,
+  },
+  
+  // Welcome
+  welcomeCard: {
+    backgroundColor: '#e7f3ff',
+    borderRadius: 12,
+    padding: 20,
+    marginVertical: 15,
+    borderWidth: 1,
+    borderColor: designTheme.colors.primary,
+  },
+  welcomeCardDark: {
+    backgroundColor: '#0a1929',
+  },
+  welcomeTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 12,
+  },
+  welcomeText: {
+    fontSize: 16,
+    color: '#666',
+    lineHeight: 24,
+  },
+  
+  // Platforms
+  platformCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  platformCardDark: {
+    backgroundColor: '#1e1e1e',
+  },
+  platformLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  iconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  platformText: {
+    flex: 1,
+  },
+  platformName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 2,
+  },
+  platformUsername: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  platformDescription: {
+    fontSize: 12,
+    color: '#999',
+    lineHeight: 16,
+  },
+  platformRight: {
+    marginLeft: 12,
+  },
+  comingSoon: {
+    fontSize: 12,
+    color: '#999',
+    fontStyle: 'italic',
+  },
+  
+  // Features
+  featuresCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  featuresCardDark: {
+    backgroundColor: '#1e1e1e',
+  },
+  featuresTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 16,
+  },
+  featureText: {
+    fontSize: 16,
+    color: '#666',
+    lineHeight: 24,
+    marginBottom: 8,
+  },
+  featuresNote: {
+    fontSize: 12,
+    color: '#999',
+    fontStyle: 'italic',
+    marginTop: 12,
+  },
+  
+  // Contact
+  contactCard: {
+    backgroundColor: '#f0f8f0',
+    borderRadius: 12,
+    padding: 20,
+    marginVertical: 15,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#4caf50',
+  },
+  contactCardDark: {
+    backgroundColor: '#0d1f0d',
+  },
+  contactTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 8,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  contactText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 20,
+  },
+  contactButton: {
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  contactButtonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    gap: 8,
+  },
+  contactButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  
+  // Footer
+  footer: {
+    paddingVertical: 30,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  
+  // Dark theme
+  textDark: {
+    color: '#fff',
+  },
+  subtitleDark: {
+    color: '#aaa',
+  },
+});

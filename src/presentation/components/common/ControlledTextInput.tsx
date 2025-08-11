@@ -4,11 +4,14 @@ import Text from './Text';
 import { Control, Controller, FieldValues, Path, FieldError } from 'react-hook-form';
 import { useDynamicTheme } from '@/hooks/useDynamicTheme';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { theme as designTheme } from '../../../config/theme';
 
 // Safe TextInput import for React Native compatibility
-let TextInput: any;
-let TextInputProps: any;
+let TextInput: unknown;
+let TextInputProps: unknown;
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const RN = require('react-native');
   TextInput = RN.TextInput;
   TextInputProps = RN.TextInputProps;
@@ -59,35 +62,49 @@ export const ControlledTextInput = <TFormValues extends FieldValues>({
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
-      <View style={[styles.inputContainer, error && styles.inputError]}>
-        {iconName && <Ionicons name={iconName} size={20} color={theme.colors.textSecondary} style={styles.icon} />}
-        <Controller
-          control={control}
-          name={name}
-          render={({ field: { onChange, onBlur, value } }) => (
-            <TextInput
-              style={styles.input}
-              onBlur={onBlur}
-              onChangeText={(text) => {
-                if (keyboardType === 'numeric' || keyboardType === 'decimal-pad') {
-                  onChange(text.replace(',', '.'));
-                } else {
-                  onChange(text);
-                }
-              }}
-              value={value}
-              placeholderTextColor={theme.colors.placeholder}
-              placeholder={placeholder}
-              keyboardType={keyboardType}
-              secureTextEntry={secureTextEntry}
-              multiline={multiline}
-              maxLength={maxLength}
-              autoCapitalize={autoCapitalize}
-              autoCorrect={autoCorrect}
-              editable={editable}
-            />
-          )}
+      <View style={styles.inputWrapper}>
+        {/* 🎨 Gradiente de fondo para inputs */}
+        <LinearGradient
+          colors={[
+            designTheme.colors.primary + '15', // 15% opacity
+            designTheme.colors.secondary + '10', // 10% opacity
+            '#4a90e2' + '08', // 8% opacity
+          ]}
+          style={styles.inputGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
         />
+        
+        <View style={[styles.inputContainer, error && styles.inputError]}>
+          {iconName && <Ionicons name={iconName} size={20} color={theme.colors.textSecondary} style={styles.icon} />}
+          <Controller
+            control={control}
+            name={name}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={styles.input}
+                onBlur={onBlur}
+                onChangeText={(text) => {
+                  if (keyboardType === 'numeric' || keyboardType === 'decimal-pad') {
+                    onChange(text.replace(',', '.'));
+                  } else {
+                    onChange(text);
+                  }
+                }}
+                value={value}
+                placeholderTextColor={theme.colors.placeholder}
+                placeholder={placeholder}
+                keyboardType={keyboardType}
+                secureTextEntry={secureTextEntry}
+                multiline={multiline}
+                maxLength={maxLength}
+                autoCapitalize={autoCapitalize}
+                autoCorrect={autoCorrect}
+                editable={editable}
+              />
+            )}
+          />
+        </View>
       </View>
       {error && <Text style={styles.errorText}>{error.message}</Text>}
     </View>

@@ -16,24 +16,49 @@ const getModernEmoji = (name: string): string => {
   return emojiMap[name] || emojiMap.default;
 };
 
-// Safe imports for React Native components
-let Animated: any;
-let ActivityIndicator: any;
+// Safe imports for React Native components con tipos específicos
+let Animated: {
+  Value: new (value: number) => {
+    interpolate: (config: Record<string, unknown>) => unknown;
+    setValue?: (value: number) => void;
+  };
+  View: React.ComponentType<Record<string, unknown>>;
+  loop: (animation: unknown) => { start: (callback?: () => void) => void };
+  sequence: (animations: unknown[]) => { start: (callback?: () => void) => void };
+  timing: (value: unknown, config: Record<string, unknown>) => { start: (callback?: () => void) => void };
+  spring: (value: unknown, config: Record<string, unknown>) => { start: (callback?: () => void) => void };
+};
+
+let ActivityIndicator: React.ComponentType<{
+  size?: string | number;
+  color?: string;
+}>;
+
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const RN = require('react-native');
   Animated = RN.Animated;
   ActivityIndicator = RN.ActivityIndicator;
 } catch {
   // Fallback for environments without components
   Animated = {
-    Value: class { constructor(v: number) { this.value = v; } value: number; setValue: (v: number) => void = () => {}; },
+    Value: class AnimatedValue { 
+      constructor(private value: number) {}
+      interpolate = () => this;
+      setValue = () => {};
+    },
+    View: View as React.ComponentType<Record<string, unknown>>,
     timing: () => ({ start: () => {} }),
     loop: () => ({ start: () => {} }),
     sequence: () => ({ start: () => {} }),
-    spring: () => ({ start: () => {} }),
-    View: View
+    spring: () => ({ start: () => {} })
   };
-  ActivityIndicator = View;
+  const FallbackActivityIndicator = ({ size, color }: { size?: string | number; color?: string }) => (
+    <View style={{ width: 20, height: 20, backgroundColor: color || '#ccc' }} />
+  );
+  FallbackActivityIndicator.displayName = 'FallbackActivityIndicator';
+  
+  ActivityIndicator = FallbackActivityIndicator;
 }
 
 // ===================================================================

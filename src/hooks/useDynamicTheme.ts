@@ -51,6 +51,8 @@ export const useDynamicTheme = () => {
       secondary: currentPalette.secondary,
       background: currentPalette.background,
       surface: currentPalette.surface,
+      onPrimary: isDark ? currentPalette.textPrimary : PALETTE.white,
+      shadow: isDark ? '#000000' : '#000000',
       
       // 📝 TEXTOS DINÁMICOS
       text: currentPalette.textPrimary,

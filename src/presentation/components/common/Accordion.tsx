@@ -5,16 +5,32 @@ import Text from './Text';
 import { useDynamicTheme } from '../../../hooks/useDynamicTheme';
 import { Ionicons } from '@expo/vector-icons';
 
-// Importación condicional para componentes que pueden no estar disponibles
-let LayoutAnimation: any = null;
-let UIManager: any = null;
+// Importación condicional con tipos específicos
+let LayoutAnimation: {
+  configureNext?: (config: Record<string, unknown>) => void;
+  Presets?: {
+    easeInEaseOut?: Record<string, unknown>;
+    [key: string]: unknown;
+  };
+};
+let UIManager: {
+  setLayoutAnimationEnabledExperimental?: (enabled: boolean) => void;
+};
 
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const RN = require('react-native');
   LayoutAnimation = RN.LayoutAnimation;
   UIManager = RN.UIManager;
 } catch (error) {
-  console.warn('LayoutAnimation/UIManager no disponibles en esta versión de React Native');
+  console.warn('LayoutAnimation/UIManager no disponibles en esta versión de React Native:', error);
+  LayoutAnimation = {
+    configureNext: () => {},
+    Presets: { easeInEaseOut: {} }
+  };
+  UIManager = {
+    setLayoutAnimationEnabledExperimental: () => {}
+  };
 }
 
 // Habilitar LayoutAnimation para Android si está disponible

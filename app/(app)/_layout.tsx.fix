@@ -1,0 +1,64 @@
+import { Stack, router } from 'expo-router';
+import { TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { theme } from '../../src/config/theme'; // <- Ruta relativa
+import { ParallelValidationProvider } from '@/core/context/ParallelValidationContext';
+
+export default function AppLayout() {
+  // 🔧 Botón de configuración mejorado para header
+  const ConfigButton = () => (
+    <TouchableOpacity
+      onPress={() => router.push('/config')}
+      style={{ 
+        marginRight: 12, 
+        padding: 10,
+        borderRadius: 22,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
+      }}
+      activeOpacity={0.7}
+    >
+      <Ionicons name="settings-outline" size={22} color="white" />
+    </TouchableOpacity>
+  );
+
+  return (
+    <ParallelValidationProvider>
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: theme.colors.card },
+          headerTintColor: theme.colors.text,
+          headerTitleStyle: { fontWeight: 'bold' },
+          headerRight: () => <ConfigButton />,
+        }}
+        initialRouteName="index"
+      >
+        <Stack.Screen name="welcome" options={{ headerShown: false }} />
+        <Stack.Screen name="index" options={{ title: 'Calculadora' }} />
+        <Stack.Screen name="results" options={{ title: 'Resultados' }} />
+        <Stack.Screen 
+          name="config" 
+          options={{ 
+            title: '⚙️ Configuración',
+            presentation: 'modal',
+            headerStyle: { backgroundColor: theme.colors.primary },
+            headerTintColor: 'white',
+          }} 
+        />
+        <Stack.Screen 
+          name="login" 
+          options={{ 
+            title: '👤 Iniciar Sesión',
+            presentation: 'modal',
+            headerStyle: { backgroundColor: theme.colors.primary },
+            headerTintColor: 'white',
+          }} 
+        />
+      </Stack>
+    </ParallelValidationProvider>
+  );
+}

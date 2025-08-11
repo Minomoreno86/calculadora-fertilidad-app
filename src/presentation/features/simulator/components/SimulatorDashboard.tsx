@@ -137,8 +137,7 @@ type SimulationMode = 'single' | 'batch' | 'treatment';
 
 const SIMULATION_MODES = [
   { key: 'single', label: 'Individual', icon: 'radio-button-on-outline' },
-  { key: 'batch', label: 'Múltiples', icon: 'list-outline' },
-  { key: 'treatment', label: 'Tratamientos', icon: 'medical-outline' },
+  // 🚨 ELIMINADOS: 'batch' y 'treatment' no tenían lógica implementada
 ] as const;
 
 export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({ 
@@ -166,7 +165,8 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
   // ✅ CORREGIDO: Hooks siempre se llaman, independientemente de evaluation
   const { 
     simulationResult, 
-    simulateFactor
+    simulateFactor,
+    simulateAllImprovements  // 🆕 AGREGAR simulación global
   } = useFertilitySimulator(evaluation);
 
   const [selectedMode, setSelectedMode] = React.useState<SimulationMode>('single');
@@ -184,21 +184,24 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
     const maxPotential = suboptimalFactors.reduce((acc, [key, value]) => {
       const factorData = FACTOR_IMPROVEMENT_MATRIX[key as keyof typeof FACTOR_IMPROVEMENT_MATRIX];
       if (factorData) {
-        // Mejora realista basada en evidencia clínica
+        // 🚨 CORRECCIÓN: Usar cálculo realista alineado con hook
         const currentDeficit = 1.0 - (value as number);
-        const possibleImprovement = currentDeficit * factorData.maxImprovement;
-        return acc + possibleImprovement;
+        const rawImprovement = currentDeficit * factorData.maxImprovement;
+        const realisticImprovement = Math.min(rawImprovement, 0.15); // 🔄 Cap realista 15%
+        return acc + realisticImprovement;
       }
       return acc + ((1.0 - (value as number)) * 0.1); // Fallback conservador
     }, 0);
 
-    const projectedPrognosis = evaluation.report?.numericPrognosis ? evaluation.report.numericPrognosis + (maxPotential * 100) : 0;
+    // 🆕 CORRECCIÓN: maxPotential ya está en decimal (0.076 = 7.6%)
+    const currentPrognosis = evaluation.report?.numericPrognosis || 0;
+    const projectedPrognosis = currentPrognosis + (maxPotential * 100); // Solo UNA multiplicación
     
     return {
-      currentPrognosis: evaluation.report?.numericPrognosis || 0,
-      maxPotential: Math.min(projectedPrognosis, 80), // Cap realista en 80%
+      currentPrognosis,
+      maxPotential: Math.min(projectedPrognosis, currentPrognosis + 15), // 🆕 Cap realista +15%
       factorsToImprove: suboptimalFactors.length,
-      improvement: maxPotential * 100,
+      improvement: maxPotential * 100, // 🆕 Para mostrar como porcentaje en UI
       realisticTimeframe: '2-6 meses', // Basado en evidencia médica
       totalCost: 'Bajo-Medio' // Estimación realista
     };
@@ -209,32 +212,42 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
     if (!evaluation?.factors) return [];
     
     const factors = Object.entries(evaluation.factors)
-      .filter(([key, value]) => 
-        key !== 'baseAgeProbability' && 
-        (value as number) < 0.95 &&
-        FACTOR_IMPROVEMENT_MATRIX[key as keyof typeof FACTOR_IMPROVEMENT_MATRIX]
-      )
+      .filter(([key, value]) => {
+        // 🚨 CORRECCIÓN: Solo factores que fueron REALMENTE ingresados
+        if (key === 'baseAgeProbability') return false;
+        
+        const originalInput = evaluation.input?.[key];
+        const wasEntered = originalInput !== undefined && 
+                          originalInput !== null && 
+                          originalInput !== 0 && 
+                          String(originalInput).trim() !== '';
+        
+        return wasEntered && (value as number) < 0.95;
+      })
       .map(([key, value]) => {
-        const factorData = FACTOR_IMPROVEMENT_MATRIX[key as keyof typeof FACTOR_IMPROVEMENT_MATRIX];
-        const currentDeficit = 1.0 - (value as number);
-        const possibleImprovement = currentDeficit * factorData.maxImprovement;
+        const factorData = FACTOR_IMPROVEMENT_MATRIX[key as keyof typeof FACTOR_IMPROVEMENT_MATRIX] || {
+          difficulty: 0.5,
+          timeframe: '2-6 meses',
+          evidence: 'Consultar con especialista',
+          cost: 'medium'
+        };
         
         return {
           factor: key as SimulatableFactor,
           name: getFactorDisplayName(key),
           currentValue: value as number,
-          improvement: possibleImprovement,
+          improvement: 0, // 🚨 NO CALCULAR - El hook lo hará cuando simules
           difficulty: factorData.difficulty,
           timeframe: factorData.timeframe,
           evidence: factorData.evidence,
           cost: factorData.cost,
-          priority: (possibleImprovement * 0.7) + ((1 - factorData.difficulty) * 0.3) // 70% impacto, 30% facilidad
+          priority: (1 - (value as number)) * 0.7 + ((1 - factorData.difficulty) * 0.3)
         };
       })
       .sort((a, b) => b.priority - a.priority);
 
     return factors;
-  }, [evaluation.factors, getFactorDisplayName]);
+  }, [evaluation.factors, evaluation.input, getFactorDisplayName]);
 
   // 🎯 MANEJAR SIMULACIÓN CON FEEDBACK VISUAL - MOVIDO ANTES DEL RETURN CONDICIONAL
   const handleFactorSimulation = React.useCallback((factor: SimulatableFactor) => {
@@ -309,7 +322,7 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
           <View style={styles.prognosisBox}>
             <Text style={styles.prognosisLabel}>Actual</Text>
             <Text style={styles.currentPrognosis}>
-              {dashboardMetrics.currentPrognosis.toFixed(1)}%
+              {dashboardMetrics ? dashboardMetrics.currentPrognosis.toFixed(1) : "0.0"}%
             </Text>
           </View>
           
@@ -320,7 +333,7 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
           <View style={styles.prognosisBox}>
             <Text style={styles.prognosisLabel}>Potencial</Text>
             <Text style={styles.potentialPrognosis}>
-              {dashboardMetrics.maxPotential.toFixed(1)}%
+              {dashboardMetrics ? dashboardMetrics.maxPotential.toFixed(1) : "0.0"}%
             </Text>
           </View>
         </View>
@@ -328,12 +341,12 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
         <View style={styles.improvementSummary}>
           <View style={styles.summaryItem}>
             <Ionicons name="trending-up" size={20} color={theme.colors.success} />
-            <Text style={styles.summaryValue}>+{dashboardMetrics.improvement.toFixed(1)}%</Text>
+            <Text style={styles.summaryValue}>+{dashboardMetrics ? dashboardMetrics.improvement.toFixed(1) : "0.0"}%</Text>
             <Text style={styles.summaryLabel}>Mejora posible</Text>
           </View>
           <View style={styles.summaryItem}>
             <Ionicons name="time" size={20} color={theme.colors.warning} />
-            <Text style={styles.summaryValue}>{dashboardMetrics.realisticTimeframe}</Text>
+            <Text style={styles.summaryValue}>{dashboardMetrics ? dashboardMetrics.realisticTimeframe : "N/A"}</Text>
             <Text style={styles.summaryLabel}>Tiempo estimado</Text>
           </View>
         </View>
@@ -372,6 +385,31 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
           </TouchableOpacity>
         ))}
       </View>
+    </Box>
+  );
+
+  // 🚀 RENDERIZAR BOTÓN SIMULAR TODO
+  const renderGlobalActions = () => (
+    <Box style={styles.globalActionsContainer}>
+      <TouchableOpacity 
+        style={styles.simulateAllButton}
+        onPress={() => {
+          setSimulatingFactor('all');
+          simulateAllImprovements();
+        }}
+        disabled={simulatingFactor === 'all'}
+      >
+        <View style={styles.simulateAllContent}>
+          <Ionicons 
+            name="flash" 
+            size={20} 
+            color={theme.colors.background} 
+          />
+          <Text style={styles.simulateAllText}>
+            {simulatingFactor === 'all' ? 'Simulando...' : '🚀 Simular Todo'}
+          </Text>
+        </View>
+      </TouchableOpacity>
     </Box>
   );
 
@@ -423,7 +461,7 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
                 <View style={styles.metric}>
                   <Ionicons name="trending-up" size={16} color={theme.colors.success} />
                   <Text style={styles.metricText}>
-                    +{(factor.improvement * 100).toFixed(1)}% mejora
+                    ⚡ Presiona para simular
                   </Text>
                 </View>
                 <View style={styles.metric}>
@@ -450,6 +488,8 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
   const renderSimulationResults = () => {
     if (!simulationResult) return null;
 
+
+
     return (
       <Box style={styles.resultsContainer}>
         <Text style={styles.sectionTitle}>Resultado de Simulación</Text>
@@ -458,11 +498,11 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
             <Text style={styles.resultTitle}>
               {getFactorDisplayName(simulationResult.factor as string)}
             </Text>
-            <View style={styles.improvementBadge}>
-              <Text style={styles.improvementText}>
-                +{simulationResult.improvement.toFixed(1)}%
-              </Text>
-            </View>
+                      <View style={styles.improvementBadge}>
+            <Text style={styles.improvementText}>
+              +{Math.abs(simulationResult.improvement).toFixed(1)}%
+            </Text>
+          </View>
           </View>
           
           <View style={styles.prognosisChange}>
@@ -495,6 +535,7 @@ export const SimulatorDashboard: React.FC<SimulatorDashboardProps> = ({
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {renderHeader()}
       {renderModeSelector()}
+      {renderGlobalActions()}
       {renderFactorsList()}
       {renderSimulationResults()}
     </ScrollView>
@@ -586,6 +627,11 @@ interface StylesInterface {
   prognosisChange: ViewStyle;
   prognosisChangeText: TextStyle;
   resultExplanation: TextStyle;
+  // 🚀 ESTILOS SIMULAR TODO
+  globalActionsContainer: ViewStyle;
+  simulateAllButton: ViewStyle;
+  simulateAllContent: ViewStyle;
+  simulateAllText: TextStyle;
 }
 
 // 🎨 ESTILOS PROFESIONALES CON PROPORCIONES CORRECTAS
@@ -986,5 +1032,35 @@ const createStyles = (theme: ThemeInterface): StylesInterface => ({
     ...DESIGN_SYSTEM.typography.caption,
     color: theme.colors.textSecondary,
     fontWeight: 'normal' as const,
+  },
+
+  // 🚀 ESTILOS SIMULAR TODO
+  globalActionsContainer: {
+    backgroundColor: theme.colors.surface,
+    padding: DESIGN_SYSTEM.spacing.md,
+    borderRadius: 12,
+    marginBottom: DESIGN_SYSTEM.spacing.md,
+  },
+  simulateAllButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: 12,
+    paddingVertical: DESIGN_SYSTEM.spacing.md,
+    paddingHorizontal: DESIGN_SYSTEM.spacing.lg,
+    shadowColor: theme.colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  simulateAllContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: DESIGN_SYSTEM.spacing.sm,
+  },
+  simulateAllText: {
+    ...DESIGN_SYSTEM.typography.button,
+    color: theme.colors.background,
+    fontWeight: '600' as const,
   },
 });

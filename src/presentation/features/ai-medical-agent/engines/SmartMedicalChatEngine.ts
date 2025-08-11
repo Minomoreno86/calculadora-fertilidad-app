@@ -60,7 +60,7 @@ interface ResponseTemplates {
 
 export class SmartMedicalChatEngine {
   private evaluation: EvaluationState | null = null;
-  private analysisResults: any[] = [];
+  private analysisResults: unknown[] = [];
   private conversationMemory: ConversationMemory;
   private responseTemplates: ResponseTemplates;
   private messageCount: number = 0;
@@ -535,7 +535,7 @@ export class SmartMedicalChatEngine {
     const template = this.getRandomTemplate('results');
     
     let response = `${template}\n\n`;
-    response += `🎯 **Tu probabilidad actual: ${(probability * 100).toFixed(1)}%**\n\n`;
+    response += `🎯 **Tu probabilidad actual: ${probability.toFixed(1)}%**\n\n`;
     
     // 🧠 INTERPRETACIÓN CONTEXTUAL INTELIGENTE
     if (probability > 0.25) {
@@ -1013,7 +1013,7 @@ export class SmartMedicalChatEngine {
     let response = `${encouragement}\n\n`;
     response += `🧠 **Basándome en tu perfil médico**, puedo ayudarte con:\n\n`;
     
-    response += `📊 **Interpretación completa** de tu ${(probability * 100).toFixed(1)}% probabilidad\n`;
+    response += `📊 **Interpretación completa** de tu ${probability.toFixed(1)}% probabilidad\n`;
     response += `🎯 **Estrategias personalizadas** para optimizar tu fertilidad\n`;
     response += `💊 **Opciones de tratamiento** específicas para tu caso\n`;
     response += `🌱 **Cambios de estilo de vida** con mayor impacto\n`;

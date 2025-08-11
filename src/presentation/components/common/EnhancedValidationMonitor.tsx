@@ -7,20 +7,34 @@ import { View, StyleSheet } from 'react-native';
 import Text from './Text';
 import { theme } from '@/config/theme';
 
-// Safe Animated import for React Native compatibility
-let Animated: any;
+// Safe Animated import con tipos específicos
+let Animated: {
+  Value: new (value: number) => {
+    interpolate: (config: Record<string, unknown>) => unknown;
+    setValue?: (value: number) => void;
+  };
+  View: React.ComponentType<Record<string, unknown>>;
+  timing: (value: unknown, config: Record<string, unknown>) => { start: (callback?: () => void) => void };
+  loop: (animation: unknown) => { start: (callback?: () => void) => void };
+  sequence: (animations: unknown[]) => { start: (callback?: () => void) => void };
+};
+
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const RN = require('react-native');
   Animated = RN.Animated;
 } catch {
   // Fallback for environments without Animated
   Animated = {
-    Value: class { constructor(v: number) { this.value = v; } value: number; setValue: (v: number) => void = () => {}; },
+    Value: class AnimatedValue {
+      constructor(private value: number) {}
+      interpolate = () => this;
+      setValue = () => {};
+    },
+    View: View as React.ComponentType<Record<string, unknown>>,
     timing: () => ({ start: () => {} }),
     loop: () => ({ start: () => {} }),
-    sequence: () => ({ start: () => {} }),
-    View: View,
-    interpolate: (config: any) => config
+    sequence: () => ({ start: () => {} })
   };
 }
 

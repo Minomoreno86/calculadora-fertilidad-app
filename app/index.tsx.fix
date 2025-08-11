@@ -1,0 +1,14 @@
+/**
+ * 🏠 REDIRECT TO WELCOME SCREEN
+ * 
+ * Esta es la pantalla inicial que redirige automáticamente a welcome
+ */
+
+import { useEffect } from 'react';
+import { router } from 'expo-router';
+
+export default function RootIndex() {
+  // Esta es la pantalla principal de la calculadora
+  // Ya no redirigimos automáticamente
+  return null; // El contenido real está en app/(app)/index.tsx
+}

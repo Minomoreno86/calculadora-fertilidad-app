@@ -171,7 +171,7 @@ export {
 
 export const AI_MEDICAL_VERSION = '3.0.0-UNIFIED';
 export const SYSTEM_NAME = 'UnifiedMedicalAI';
-export const SUPPORTED_LANGUAGES = ['es', 'en'];
+export const SUPPORTED_LANGUAGES = ['es'];
 export const SUPPORTED_SPECIALTIES = ['fertility', 'general', 'reproductive'];
 
 export const DEFAULT_CONFIG: UnifiedMedicalAIConfig = {

@@ -7,8 +7,9 @@ import React from 'react';
 import { View, Text, TouchableOpacity, ViewStyle, TextStyle } from 'react-native';
 
 // Safe import for Animated
-let Animated: any;
+let Animated: unknown;
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const RNComponents = require('react-native');
   Animated = RNComponents.Animated || {
     Value: class { constructor() {} },
@@ -563,7 +564,7 @@ export class ChatUIComponents {
   /**
    * ⌨️ RENDERIZAR INDICADOR DE ESCRITURA
    */
-  renderTypingIndicator = (typingAnimation: any) => {
+  renderTypingIndicator = (typingAnimation: unknown) => {
     return (
       <View style={this.styles.messageContainer as ViewStyle}>
         <View style={this.styles.aiAvatar as ViewStyle}>

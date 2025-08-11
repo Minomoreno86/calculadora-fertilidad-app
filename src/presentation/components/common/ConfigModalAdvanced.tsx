@@ -10,18 +10,46 @@ import {
 import Text from './Text';
 import { useDynamicTheme } from '../../../hooks/useDynamicTheme';
 
-// Importación segura de componentes que pueden no estar disponibles
-let Modal: any = null;
-let Switch: any = null;
-let Alert: any = null;
+// Importación segura de componentes con tipos específicos
+let Modal: React.ComponentType<{
+  visible: boolean;
+  animationType?: string;
+  transparent?: boolean;
+  onRequestClose?: () => void;
+  children?: React.ReactNode;
+}>;
+let Switch: React.ComponentType<{
+  value: boolean;
+  onValueChange: (value: boolean) => void;
+  trackColor?: { false?: string; true?: string };
+  thumbColor?: string;
+}>;
+let Alert: {
+  alert: (title: string, message?: string, buttons?: unknown[]) => void;
+};
 
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const RN = require('react-native');
   Modal = RN.Modal;
   Switch = RN.Switch;
   Alert = RN.Alert;
-} catch (error) {
+} catch {
   console.warn('Modal, Switch o Alert no disponibles en esta versión de React Native');
+  // Fallbacks with proper types
+  const FallbackModal = ({ children }: { children?: React.ReactNode }) => <View>{children}</View>;
+  FallbackModal.displayName = 'FallbackModal';
+  
+  const FallbackSwitch = ({ onValueChange, value }: { onValueChange: (value: boolean) => void; value: boolean }) => (
+    <TouchableOpacity onPress={() => onValueChange(!value)}>
+      <View style={{ width: 50, height: 30, backgroundColor: value ? '#4CAF50' : '#ccc' }} />
+    </TouchableOpacity>
+  );
+  FallbackSwitch.displayName = 'FallbackSwitch';
+  
+  Modal = FallbackModal;
+  Switch = FallbackSwitch;
+  Alert = { alert: (title: string, message?: string) => console.log(title, message) };
 }
 
 // 🎯 TIPOS DE CONFIGURACIÓN AVANZADA
@@ -57,7 +85,7 @@ interface AdvancedConfigState {
   // 🏥 Configuraciones Médicas
   medical: {
     units: 'metric' | 'imperial';
-    language: 'es' | 'en' | 'pt' | 'fr';
+
     medicalTerminology: 'simple' | 'technical';
     riskTolerance: 'conservative' | 'moderate' | 'aggressive';
     showMedicalReferences: boolean;
@@ -125,7 +153,7 @@ export const ConfigModalAdvanced: React.FC<ConfigModalAdvancedProps> = ({
     },
     medical: {
       units: 'metric',
-      language: 'es',
+
       medicalTerminology: 'simple',
       riskTolerance: 'moderate',
       showMedicalReferences: true,

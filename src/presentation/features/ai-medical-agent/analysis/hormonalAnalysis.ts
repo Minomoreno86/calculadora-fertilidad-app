@@ -146,20 +146,20 @@ export const analyzeAMHFactors = (factors: Factors): AnalysisResult[] => {
       priority = 'medium';
     }
 
-    results.push({
-      type: 'hypothesis',
-      data: {
+      results.push({
+        type: 'hypothesis',
+        data: {
         condition,
         probability,
         reasoning,
-        evidenceLevel: domain.evidence as EvidenceLevel,
-        pmid: domain.pmid
-      }
-    });
+          evidenceLevel: domain.evidence as EvidenceLevel,
+          pmid: domain.pmid
+        }
+      });
 
-    results.push({
-      type: 'treatment',
-      data: {
+      results.push({
+        type: 'treatment',
+        data: {
         treatment: treatments.join(' || '),
         priority,
         successRate: amhFactor < 0.3 ? 25 : amhFactor < 0.6 ? 40 : amhFactor < 0.85 ? 60 : 70,
@@ -243,20 +243,20 @@ export const analyzeTSHFactors = (factors: Factors): AnalysisResult[] => {
       frequency = 'Cada 6-8 semanas';
     }
 
-    results.push({
-      type: 'hypothesis',
-      data: {
+      results.push({
+        type: 'hypothesis',
+        data: {
         condition,
         probability,
         reasoning,
-        evidenceLevel: domain.evidence as EvidenceLevel,
-        pmid: domain.pmid
-      }
-    });
+          evidenceLevel: domain.evidence as EvidenceLevel,
+          pmid: domain.pmid
+        }
+      });
 
-    results.push({
-      type: 'treatment',
-      data: {
+      results.push({
+        type: 'treatment',
+        data: {
         treatment: treatments.join(' || '),
         priority,
         successRate: tshFactor <= 0.4 ? 90 : 85,
@@ -339,20 +339,20 @@ export const analyzeProlactinFactors = (factors: Factors): AnalysisResult[] => {
     }
 
     // 💊 TRATAMIENTOS ESTRUCTURADOS
-    results.push({
-      type: 'hypothesis',
-      data: {
+      results.push({
+        type: 'hypothesis',
+        data: {
         condition,
         probability,
         reasoning,
-        evidenceLevel: domain.evidence as EvidenceLevel,
-        pmid: domain.pmid
-      }
-    });
+          evidenceLevel: domain.evidence as EvidenceLevel,
+          pmid: domain.pmid
+        }
+      });
 
-    results.push({
-      type: 'treatment',
-      data: {
+      results.push({
+        type: 'treatment',
+        data: {
         treatment: treatments.join(' | '),
         priority,
         successRate: prolactinFactor <= 0.3 ? 85 : 90, // Severa tiene menor tasa éxito inicial
@@ -455,20 +455,20 @@ export const analyzeHOMAFactors = (factors: Factors): AnalysisResult[] => {
     }
 
     // 💊 TRATAMIENTOS ESTRUCTURADOS
-    results.push({
-      type: 'hypothesis',
-      data: {
+      results.push({
+        type: 'hypothesis',
+        data: {
         condition,
         probability,
         reasoning,
-        evidenceLevel: domain.evidence as EvidenceLevel,
-        pmid: domain.pmid
-      }
-    });
+          evidenceLevel: domain.evidence as EvidenceLevel,
+          pmid: domain.pmid
+        }
+      });
 
-    results.push({
-      type: 'treatment',
-      data: {
+      results.push({
+        type: 'treatment',
+        data: {
         treatment: treatments.join(' | '),
         priority,
         successRate: homaFactor <= 0.2 ? 75 : homaFactor <= 0.4 ? 85 : 90, // Severa tiene menor tasa éxito inicial

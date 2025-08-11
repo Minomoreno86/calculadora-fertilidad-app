@@ -54,17 +54,17 @@ class QuantumMathMemoizationEngine {
   private combinationCache: Map<string, number>;
   private bmiCache: Map<string, number>;
   private homaCache: Map<string, number>;
-  private customCache: Map<string, any>;
+  private customCache: Map<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
   
   private metrics: MemoizationMetrics;
   private config: MemoizationConfig;
-  private performanceProfile: any;
+  private performanceProfile: unknown;
   
   private operationHistory: QuantumMathOperation[];
   private patternDetector: Map<string, number>;
 
   constructor(config?: Partial<MemoizationConfig>) {
-    this.performanceProfile = getPerformanceProfile();
+    this.performanceProfile = getPerformanceProfile() as any;
     
     // 🌌 QUANTUM CONSCIOUSNESS CONFIG ADAPTATION
     this.config = {
@@ -79,7 +79,7 @@ class QuantumMathMemoizationEngine {
     };
 
     // Initialize caches with device-aware sizes
-    const cacheSize = Math.floor(this.config.maxCacheSize / 6);
+    // const cacheSize = Math.floor(this.config.maxCacheSize / 6); // No utilizado actualmente
     this.fibonacciCache = new Map();
     this.factorialCache = new Map();
     this.combinationCache = new Map();
@@ -286,7 +286,8 @@ class QuantumMathMemoizationEngine {
   /**
    * Generic memoization for custom functions
    */
-  memoize<T extends (...args: any[]) => any>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  memoize<T extends (...args: unknown[]) => any>(
     fn: T, 
     keyGenerator?: (...args: Parameters<T>) => string
   ): T {

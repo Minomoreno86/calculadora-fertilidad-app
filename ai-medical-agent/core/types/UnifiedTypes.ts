@@ -592,7 +592,7 @@ export type ComprehensiveAnalysisResult = {
 // ====================================================================
 
 export const SYSTEM_VERSION = '3.0-UNIFIED';
-export const SUPPORTED_LANGUAGES = ['es', 'en'] as const;
+export const SUPPORTED_LANGUAGES = ['es'] as const;
 export const EVIDENCE_LEVELS: readonly EvidenceLevel[] = ['A', 'B', 'C', 'D'] as const;
 export const PATHOLOGY_CATEGORIES: readonly PathologyCategory[] = ['female', 'male', 'couple', 'unexplained'] as const;
 export const TREATMENT_CATEGORIES: readonly TreatmentCategory[] = ['level1', 'level2', 'level3'] as const;

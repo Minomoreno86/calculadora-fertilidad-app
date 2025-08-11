@@ -1,0 +1,215 @@
+/**
+ * 🔒 POLÍTICA DE PRIVACIDAD
+ * 
+ * Documento legal requerido para App Store
+ */
+
+import React from 'react';
+import { StyleSheet, View, ScrollView, Text } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '@/contexts/ThemeContext';
+import { theme as designTheme } from '@/config/theme';
+
+export default function PrivacyPolicyScreen() {
+  const { isDark } = useTheme();
+
+  const sections = [
+    {
+      title: '📊 Información que Recopilamos',
+      content: `Recopilamos únicamente la información médica que tú proporcionas voluntariamente para realizar los cálculos de fertilidad:
+
+• Datos demográficos (edad, IMC)
+• Historial ginecológico
+• Resultados de laboratorio
+• Información del factor masculino
+
+IMPORTANTE: Todos los datos se procesan localmente en tu dispositivo. No enviamos información médica a servidores externos.`
+    },
+    {
+      title: '🔐 Cómo Protegemos tus Datos',
+      content: `Tu privacidad médica es nuestra prioridad máxima:
+
+• Procesamiento local: Los cálculos se realizan en tu dispositivo
+• Encriptación: Datos almacenados con cifrado AES-256
+• Sin servidores: No enviamos datos médicos a la nube
+• Anonimización: Si compartiera estadísticas, serían completamente anónimas
+
+Tu información médica NUNCA abandona tu dispositivo sin tu consentimiento explícito.`
+    },
+    {
+      title: '💾 Almacenamiento de Datos',
+      content: `• Los datos se guardan localmente en tu dispositivo
+• Puedes eliminar toda la información desde Configuración
+• Al desinstalar la app, todos los datos se eliminan automáticamente
+• No realizamos copias de seguridad automáticas en la nube`
+    },
+    {
+      title: '🤝 Compartir Información',
+      content: `NO compartimos, vendemos o alquilamos tu información médica con terceros.
+
+Excepciones únicamente si:
+• Lo autorizas explícitamente
+• Es requerido por ley
+• Es necesario para proteger derechos legales
+
+Tu información médica es confidencial y permanece bajo tu control.`
+    },
+    {
+      title: '📱 Tecnologías de Seguimiento',
+      content: `• No usamos cookies de seguimiento
+• No implementamos análisis de comportamiento
+• No recopilamos datos de ubicación
+• No accedemos a otros datos del dispositivo
+
+Solo procesamos los datos médicos que tú proporcionas directamente.`
+    },
+    {
+      title: '👶 Protección de Menores',
+      content: `Esta aplicación está clasificada para mayores de 17 años debido a su contenido médico especializado. No recopilamos información de menores de edad de forma intencional.`
+    },
+    {
+      title: '🌍 Transferencias Internacionales',
+      content: `Al procesar datos localmente, no realizamos transferencias internacionales de tu información médica personal.`
+    },
+    {
+      title: '⚖️ Tus Derechos',
+      content: `Tienes derecho a:
+• Acceder a toda tu información
+• Rectificar datos incorrectos
+• Eliminar toda tu información
+• Portabilidad de datos
+• Retirar consentimiento en cualquier momento
+
+Para ejercer estos derechos, contacta: privacy@calculadora-fertilidad.com`
+    },
+            {
+          title: '📞 Contacto',
+          content: `Para preguntas sobre privacidad:
+
+📧 Email: minomoreno86@gmail.com
+🌐 Web: https://www.drjorgeavasquezr.com
+📱 App: Configuración > Servicio al Cliente
+
+Tiempo de respuesta: 48 horas máximo.`
+        }
+  ];
+
+  return (
+    <View style={[styles.container, isDark && styles.containerDark]}>
+      {/* Header */}
+      <LinearGradient
+        colors={[designTheme.colors.primary, designTheme.colors.secondary]}
+        style={styles.header}
+      >
+        <Ionicons name="shield-checkmark" size={32} color="white" />
+        <Text style={styles.headerTitle}>Política de Privacidad</Text>
+        <Text style={styles.headerSubtitle}>
+          Tu información médica está protegida
+        </Text>
+      </LinearGradient>
+
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={[styles.lastUpdated, isDark && styles.textDark]}>
+          Última actualización: Enero 2024
+        </Text>
+
+        {sections.map((section, index) => (
+          <View key={index} style={[styles.section, isDark && styles.sectionDark]}>
+            <Text style={[styles.sectionTitle, isDark && styles.textDark]}>
+              {section.title}
+            </Text>
+            <Text style={[styles.sectionContent, isDark && styles.subtitleDark]}>
+              {section.content}
+            </Text>
+          </View>
+        ))}
+
+        <View style={styles.footer}>
+          <Text style={[styles.footerText, isDark && styles.subtitleDark]}>
+            © 2024 Dr Jorge Vasquez R. - Todos los derechos reservados
+          </Text>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  containerDark: {
+    backgroundColor: '#121212',
+  },
+  header: {
+    paddingTop: 20,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  lastUpdated: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginVertical: 20,
+    fontStyle: 'italic',
+  },
+  section: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  sectionDark: {
+    backgroundColor: '#1e1e1e',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 12,
+  },
+  sectionContent: {
+    fontSize: 16,
+    color: '#666',
+    lineHeight: 24,
+  },
+  footer: {
+    paddingVertical: 30,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+  },
+  textDark: {
+    color: '#fff',
+  },
+  subtitleDark: {
+    color: '#aaa',
+  },
+});
